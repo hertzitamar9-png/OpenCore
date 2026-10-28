@@ -12,7 +12,7 @@ import time
 import urllib.request
 import uuid
 
-from asset_worker import bounded_integer,progress,validate_output_format
+from asset_worker import bounded_integer,progress,validate_output_format,save_image_output
 
 def canonical_path(value):
     path=Path(value).resolve()
@@ -302,8 +302,8 @@ def generate_comfy(request,output):
                 if generated:
                     source=validate_history_output(images,generated[0])
                     with Image.open(source) as image:
-                        image.load();extension='jpg' if output_format=='jpeg' else output_format
-                        image.convert('RGB').save(output/f'image-1.{extension}',format=output_format.upper())
+                        image.load()
+                        with image.convert('RGB') as rgb:save_image_output(rgb,output,1,settings)
                     break
             time.sleep(0.75)
         progress(output,'Generation complete')

@@ -13,6 +13,10 @@ if str(Path(__file__).resolve().parent) not in sys.path:
 
 def verify_generation(worker,request,output):
     output=Path(output)
+    settings=request.get('settings') or {}
+    for name in ('outputWidth','outputHeight'):
+        if name in settings and (type(settings[name]) is not int or not 128<=settings[name]<=8192 or settings[name]%8):
+            raise ValueError('Invalid image export dimensions')
     output.mkdir(parents=True,exist_ok=True)
     if any(output.iterdir()):
         raise RuntimeError('Use an empty verification output directory; old images are not execution evidence')
@@ -24,7 +28,7 @@ def verify_generation(worker,request,output):
         raise RuntimeError('Model verification returned no generated image')
     if len(images)>8:
         raise RuntimeError('Model verification returned too many images')
-    settings=request.get('settings') or {}
+    limit=8192 if 'outputWidth' in settings or 'outputHeight' in settings else 2048
     results=[]
     for path in images:
         if path.is_symlink() or path.resolve().parent!=output.resolve() or not path.is_file():
@@ -34,13 +38,15 @@ def verify_generation(worker,request,output):
         try:
             with Image.open(path) as image:
                 width,height=image.size
-                if width*height>2048*2048:
+                if width>limit or height>limit:
                     raise RuntimeError('Model verification image dimensions exceed the limit')
                 image.verify()
             with Image.open(path) as image:image.load()
         except Exception as error:
             raise RuntimeError(f'invalid generated image: {error}') from error
-        if (settings.get('width') is not None and width!=settings['width']) or (settings.get('height') is not None and height!=settings['height']):
+        expected_width=settings.get('outputWidth',settings.get('width'))
+        expected_height=settings.get('outputHeight',settings.get('height'))
+        if (expected_width is not None and width!=expected_width) or (expected_height is not None and height!=expected_height):
             raise RuntimeError('Generated image dimensions do not match the requested verification task')
         metadata=path.stat()
         results.append({'path':str(path.resolve()),'bytes':metadata.st_size,'modifiedNanos':str(metadata.st_mtime_ns),

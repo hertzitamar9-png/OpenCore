@@ -169,6 +169,9 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
     void refresh();
   }
   async function invoke(command, args, run) {
+    if(command==='runtime_setup_start'&&args.options?.installWeights===true){
+      args.options={...args.options,verifyInference:true};
+    }
     if (starts.has(command)) {
       if (!snapshot.initialized) await refresh(true);
       if (!snapshot.initialized) throw new Error('Cannot check installation status. Retry when the current status is available.');

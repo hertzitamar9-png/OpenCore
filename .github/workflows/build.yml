@@ -77,6 +77,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --disable-pip-version-check Pillow==11.3.0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s ../src-tauri/resources/studio -p "test*.py"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Test Hugging Face metadata, token protection, downloads and runtime isolation

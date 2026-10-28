@@ -109,6 +109,38 @@ def validate_output_format(value, allowed, label):
     return value.lower()
 
 
+def save_image_output(image, output, index, settings):
+    """Export separately from inference size; large outputs never enlarge GPU latents."""
+    output_format=validate_output_format(settings.get('outputFormat','png'),{'png','webp','jpeg'},'outputFormat')
+    extension='jpg' if output_format=='jpeg' else output_format
+    path=output/f'image-{index}.{extension}'
+    if 'outputWidth' not in settings and 'outputHeight' not in settings:
+        image.save(path,format=output_format.upper())
+        return path
+    from PIL import Image, PngImagePlugin
+    render=image.size
+    width=bounded_integer(settings,'outputWidth',render[0],128,8192)
+    height=bounded_integer(settings,'outputHeight',render[1],128,8192)
+    if width%8 or height%8:raise ValueError('Output dimensions must be multiples of 8')
+    resized=None
+    options={}
+    try:
+        if (width,height)!=render:
+            action='Upscaling' if width>render[0] or height>render[1] else 'Resizing'
+            progress(output,f'{action} image to {width} × {height} with Lanczos',outputWidth=width,outputHeight=height)
+            resized=image.resize((width,height),Image.Resampling.LANCZOS)
+        if output_format=='png':
+            metadata=PngImagePlugin.PngInfo()
+            metadata.add_text('OpenCore.RenderSize',f'{render[0]}x{render[1]}')
+            metadata.add_text('OpenCore.OutputSize',f'{width}x{height}')
+            metadata.add_text('OpenCore.ResizeMethod','Lanczos' if resized is not None else 'None')
+            options['pnginfo']=metadata
+        (resized if resized is not None else image).save(path,format=output_format.upper(),**options)
+    finally:
+        if resized is not None:resized.close()
+    return path
+
+
 def load_moss_pipeline(model,torch,diffusers):
     required=['model_index.json','pipeline_moss_image.py','scheduler/scheduler_config.json',
               'text_encoder/config.json','tokenizer/tokenizer.json','tokenizer/tokenizer_config.json',
@@ -250,10 +282,8 @@ def generate(request, output):
         result = generator(**args)
         if not getattr(result, "images", None):
             raise RuntimeError("The selected pipeline did not return images")
-        output_format = validate_output_format(settings.get("outputFormat", "png"), {"png", "webp", "jpeg"}, "outputFormat")
-        extension = "jpg" if output_format == "jpeg" else output_format
         for index, image in enumerate(result.images):
-            image.save(output / f"image-{index+1}.{extension}", format=output_format.upper())
+            save_image_output(image,output,index+1,settings)
     else:
         raise RuntimeError(f"The installed runtime does not support {model_id}'s architecture. Its weights are retained; choose a supported model in Chat or Media Studio.")
     progress(output, "Generation complete")

@@ -1,5 +1,12 @@
 import React from 'react';
 
+export const IMAGE_SIZE_OPTIONS = [256,512,768,1024,2048,4096,8192].map(value=>({value,label:(value>=2048?(value/1024)+'K · ':'')+value+' × '+value}));
+
+export function imageSizeSettings(size) {
+  if(!IMAGE_SIZE_OPTIONS.some(option=>option.value===size))throw Error('Choose an available image output size.');
+  return {width:Math.min(size,1024),height:Math.min(size,1024),outputWidth:size,outputHeight:size};
+}
+
 export function imageAdaptersForModel(model, adapters) {
   const id=model?.id||'';
   let base=id.startsWith('moss-')?'OpenMOSS-Team/MOSS-Image-SFT':id.startsWith('qwen-image-21')?'Qwen/Qwen-Image-2.1':model?.hubEntry?.repository;
@@ -84,7 +91,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     if(!model||busy||!prompt.trim())return;setBusy(true);setError('');
     try{
       const adapter=choices.find(a=>a.id===adapterId),file=adapter?.installReceipt.files.find(f=>f.role==='model'&&f.localPath);
-      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(prompt)?'moss_xvstyle, '+prompt.trim():prompt.trim(),conversationId:conversation.current,settings:{width:size,height:size,steps,guidanceScale:guidance,numImages:1,outputFormat:'png',...(file?{loraPath:file.localPath,loraStrength:strength}:{})}};
+      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(prompt)?'moss_xvstyle, '+prompt.trim():prompt.trim(),conversationId:conversation.current,settings:{...imageSizeSettings(size),steps,guidanceScale:guidance,numImages:1,outputFormat:'png',...(file?{loraPath:file.localPath,loraStrength:strength}:{})}};
       if(model.hubEntry?.format==='diffusers'&&!model.hubEntry?.nativeProfile){
         const hub=globalThis.__opencoreImageHub;if(!hub)throw Error('Update OpenCore to enable imported image generation.');
         try{window.localStorage.setItem('opencore.image-chat-history','1');}catch{}
@@ -107,7 +114,8 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       models.length?h('label',null,'Downloaded image model',h('select',{'aria-label':'Downloaded image model',value:modelId,disabled:busy,onChange:e=>{setModelId(e.target.value);setAdapterId('');}},...models.map(m=>h('option',{key:m.id,value:m.id},m.label+' · '+m.precision)))):h('p',{role:'status'},'No image models are downloaded. Install an image model in Models to start.'),
       choices.length?h('div',{className:'image-panel-fields'},h('label',null,'LoRA',h('select',{'aria-label':'Image LoRA',value:choices.some(a=>a.id===adapterId)?adapterId:'',disabled:busy,onChange:e=>setAdapterId(e.target.value)},h('option',{value:''},'None'),...choices.map(a=>h('option',{key:a.id,value:a.id},a.familyLabel||a.name||a.repository)))),adapterId?h('label',null,'LoRA strength',h('input',{'aria-label':'Image LoRA strength',type:'number',min:0,max:2,step:0.1,value:strength,disabled:busy,onChange:e=>setStrength(Number(e.target.value))})):null):null,
       h('label',null,'Image prompt',h('textarea',{'aria-label':'Image generation prompt',placeholder:'Describe the image you want…',rows:3,value:prompt,disabled:busy,onChange:e=>setPrompt(e.target.value)})),
-      h('div',{className:'image-panel-fields'},h('label',null,'Size',h('select',{'aria-label':'Image size',value:size,disabled:busy,onChange:e=>setSize(Number(e.target.value))},...[256,512,768,1024].map(n=>h('option',{key:n,value:n},n+' × '+n)))),h('label',null,'Steps',h('input',{'aria-label':'Image steps',type:'number',min:1,max:100,value:steps,disabled:busy,onChange:e=>setSteps(Number(e.target.value))})),h('label',null,'Guidance',h('input',{'aria-label':'Image guidance',type:'number',min:0,max:30,step:0.5,value:guidance,disabled:busy,onChange:e=>setGuidance(Number(e.target.value))}))),
+      h('div',{className:'image-panel-fields'},h('label',null,'Output size',h('select',{'aria-label':'Image size',value:size,disabled:busy,onChange:e=>setSize(Number(e.target.value))},...IMAGE_SIZE_OPTIONS.map(option=>h('option',{key:option.value,value:option.value},option.label)))),h('label',null,'Steps',h('input',{'aria-label':'Image steps',type:'number',min:1,max:100,value:steps,disabled:busy,onChange:e=>setSteps(Number(e.target.value))})),h('label',null,'Guidance',h('input',{'aria-label':'Image guidance',type:'number',min:0,max:30,step:0.5,value:guidance,disabled:busy,onChange:e=>setGuidance(Number(e.target.value))}))),
+      size>1024?h('small',{className:'image-output-size-note'},'Output: '+size+' × '+size+'. Generated at 1024 × 1024 and upscaled locally with Lanczos.'):null,
       h('button',{type:'button',className:'image-generate-button',disabled:busy||!model||!prompt.trim()||!Number.isInteger(steps)||steps<1||steps>100||!Number.isFinite(strength)||strength<0||strength>2||!Number.isFinite(guidance)||guidance<0||guidance>30,onClick:()=>void generate()},busy?'Preparing…':'Generate image'),
       stage?h('div',{role:'status'},h('progress',{'aria-label':'Image runtime preparation'}),h('span',null,stage)):null,
       error?h('p',{role:'alert'},error):null,

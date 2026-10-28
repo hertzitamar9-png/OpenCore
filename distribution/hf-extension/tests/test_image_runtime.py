@@ -31,6 +31,12 @@ class ImageRuntimeTests(unittest.TestCase):
             with self.assertRaises(ValueError):validate_request({**request,'settings':settings})
         with self.assertRaises(ValueError):validate_request({**request,'conversationId':'../other'})
 
+    def test_large_exports_remain_separate_from_bounded_inference(self):
+        request={'modelId':'hf-test','prompt':'A blue cup','settings':{'width':1024,'height':1024,'outputWidth':8192,'outputHeight':8192}}
+        self.assertEqual(validate_request(request)['settings'],request['settings'])
+        for settings in ({'outputWidth':8193},{'outputHeight':True},{'outputWidth':2049},{'width':8192}):
+            with self.assertRaises(ValueError):validate_request({**request,'settings':settings})
+
     def test_local_worker_completion_is_persisted_and_preview_is_scoped(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);entry=self.entry(root);manager=ImageRuntimeManager(root,root/'resources')

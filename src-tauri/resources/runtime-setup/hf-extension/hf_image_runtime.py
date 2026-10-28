@@ -35,7 +35,10 @@ def validate_request(request):
         value=settings.get(name,default)
         if type(value) is not int or not low<=value<=high:raise ValueError(f'{name} must be an integer from {low} to {high}')
     if any(settings.get(name,512)%8 for name in ('width','height')):raise ValueError('Image dimensions must be multiples of 8')
-    if set(settings)-{'width','height','steps','numImages','seed','guidanceScale','negativePrompt','outputFormat','loraPath','loraStrength'}:
+    for name in ('outputWidth','outputHeight'):
+        if name in settings and (type(settings[name]) is not int or not 128<=settings[name]<=8192 or settings[name]%8):
+            raise ValueError(f'{name} must be a multiple of 8 from 128 to 8192')
+    if set(settings)-{'width','height','outputWidth','outputHeight','steps','numImages','seed','guidanceScale','negativePrompt','outputFormat','loraPath','loraStrength'}:
         raise ValueError('This image request contains unsupported controls')
     for name,default,high in [('guidanceScale',4,30),('loraStrength',0.8,2)]:
         value=settings.get(name,default)

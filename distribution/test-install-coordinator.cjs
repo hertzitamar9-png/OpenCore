@@ -75,6 +75,15 @@ test('ordinary download failure remains a failure with its actual error', async 
   assert.equal(state.coordinator.getSnapshot().progress.error, 'Disk full');
 });
 
+test('managed installation always verifies actual inference before readiness', async () => {
+  const state=fixture();await state.coordinator.refresh();
+  const args={targetId:'image-model',options:{installWeights:true,verifyInference:false,acceptLicenses:false}};
+  await state.coordinator.invoke('runtime_setup_start',args,async()=>{
+    assert.equal(args.options.verifyInference,true);
+    assert.equal(args.options.acceptLicenses,false);
+  });
+});
+
 test('a rejected pause cannot replace a later successful native result', async () => {
   const state = fixture();
   state.setStatus({ activeJobId: 'job', jobs: [{ id: 'job', targetId: 'edge', status: 'running', stage: 'verifying' }], receipts: [] });
