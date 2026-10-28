@@ -7,7 +7,7 @@ module.exports=function applyImageUi(app,{editFunction,replaceOnce}){
   let panel=fs.readFileSync(path.join(__dirname,'../src/image-generation-panel.js'),'utf8').replace(/^\uFEFF/,'').replace("import React from 'react';",'').replace(/export function /g,'function ');
   app+='\nconst $ImageGenerationPanel=(()=>{const React=p;'+panel+';globalThis.__opencoreImageAdapterChoices=imageAdaptersForModel;return ImageGenerationPanel})();\n';
   app+='\nglobalThis.__opencoreImageAdapters=async()=>{await $hubRefresh();return $hubState.catalog||[]};\n';
-  app+='\nglobalThis.__opencoreImageHub={list:async()=>(await $hubRequest("/images/jobs",null,"GET")).jobs||[],generate:request=>$hubRequest("/images/generate",{request}),preview:(id,path)=>$hubRequest("/images/preview",{id,path}),cancel:id=>$hubRequest("/images/cancel",{id})};\n';
+  app+='\nglobalThis.__opencoreImageHub={list:async()=>(await $hubRequest("/images/jobs")).jobs||[],generate:request=>$hubRequest("/images/generate",{request}),preview:(id,path)=>$hubRequest("/images/preview",{id,path}),cancel:id=>$hubRequest("/images/cancel",{id})};\n';
   app+='\n'+fs.readFileSync(path.join(__dirname,'image-conversation-ui.js'),'utf8')+'\n';
   const css=fs.readFileSync(path.join(__dirname,'../src/ImageGenerationPanel.css'),'utf8');
   app+='\nconst $imagePanelStyle=document.createElement("style");$imagePanelStyle.textContent='+JSON.stringify(css)+';document.head.appendChild($imagePanelStyle);\n';

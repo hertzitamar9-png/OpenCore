@@ -5,7 +5,7 @@ globalThis.__opencoreImageConversationInvoke=async(command,args,run)=>{
   if(!['get_snapshot','list_conversations','get_conversation','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command)||!$hubDescriptor)return run();
   if(command==='get_snapshot'||command==='list_conversations'){
     const native=await run();
-    try{$imageConversations=(await $hubRequest('/images/conversations',null,'GET')).conversations||[];}catch{return native;}
+    try{$imageConversations=(await $hubRequest('/images/conversations')).conversations||[];}catch{return native;}
     const rows=command==='get_snapshot'?native.conversations:native;
     if(!Array.isArray(rows))return native;
     $imageNativeIds=new Set(rows.map(row=>row.id));
