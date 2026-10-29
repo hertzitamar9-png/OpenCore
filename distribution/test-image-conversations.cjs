@@ -23,3 +23,13 @@ test('a verified memory receipt never marks a completed answer as interrupted',a
   assert.equal(rows[0].metadata.recovered,undefined);
   assert.match(rows[0].content,/Saved 1 verified memory/);
 });
+
+test('image duration survives chat reload with the generated response',async()=>{
+  const job={id:'01234567-abcd-1234-abcd-0123456789ab',category:'image',request:{conversationId:'chat',prompt:'A cup'},status:'completed',createdAt:'2026-10-28T12:00:00Z',updatedAt:'2026-10-28T12:02:13Z',outputs:['C:\\Studio\\image-1.png']};
+  const context=vm.createContext({$hubDescriptor:null,window:{__TAURI_INTERNALS__:{invoke:async()=>[job]}}});
+  vm.runInContext(fs.readFileSync(require.resolve('./image-conversation-ui.js'),'utf8'),context);
+  for(let attempt=0;attempt<2;attempt++){
+    const rows=await context.__opencoreImageConversationInvoke('get_conversation',{id:'chat'},async()=>[]);
+    assert.equal(rows.find(row=>row.role==='assistant').metadata.responseDurationMs,133000);
+  }
+});

@@ -9,9 +9,14 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
+import sys
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0,str(ROOT.parent))
+sys.path.insert(0,str(ROOT.parents[1]/'src-tauri/resources/runtime-setup/hf-extension'))
+from echo_catalog import native_echo_coverage
+from hf_catalog import echo_context_tokens
 SLOT_BYTES = 5256247
 REQUESTED = [
     'RecursiveSI/flint', 'ornith-ai/Ornith-1.5-122B',
@@ -301,11 +306,12 @@ def build_catalog(include_official_companions=True):
         updated.append(model['id'])
 
     catalog['models'], aliases = deduplicate_generic_models(catalog['models'], catalog['artifacts'])
+    echo_coverage=native_echo_coverage(catalog,ROOT,echo_context_tokens)
     validate_catalog(catalog)
     raw = json.dumps(catalog, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     if len(raw) > SLOT_BYTES:
         raise ValueError('Expanded catalog exceeds the existing embedded slot')
-    report = {'requestedRepositories': REQUESTED,
+    report = {'echoCoverage':echo_coverage,'requestedRepositories': REQUESTED,
               'officialCompanionRepositories': COMPANIONS if include_official_companions else [],
               'companionEvidence': 'Official publisher repositories and matching model/base-model identity; main README files do not enumerate every companion.',
               'coverage': {repo: sorted(names) for repo, names in sorted(coverage.items())},

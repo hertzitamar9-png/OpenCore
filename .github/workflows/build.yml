@@ -75,7 +75,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-mobile-host.cjs test-hub-reconnect.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs
+          node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs test-echo-profiles.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install --disable-pip-version-check Pillow==11.3.0 aiohttp==3.11.8
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -98,6 +98,10 @@ jobs:
           python distribution/hf-research/build_catalog.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python distribution/build-publisher-catalog.py --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify ECHO context continuity and cache ownership
+        run: |
+          python -m unittest discover -s src-tauri/resources/echo -p "test_echo*.py"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Prepare the verified newer native baseline and current committed frontend
         env:
@@ -135,6 +139,8 @@ jobs:
           node qa-footer.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-updates.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-model-removal.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-cached-views.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -182,12 +188,22 @@ jobs:
         run: |
           npx tauri signer sign 'distribution/.output/release/OpenCore Package.exe'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx tauri signer sign 'distribution/.output/release/OpenCore Update.exe'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Update.exe' 'distribution/.output/release/OpenCore Update.exe.sig' src-tauri/tauri.conf.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Package.exe' 'distribution/.output/release/OpenCore Package.exe.sig' src-tauri/tauri.conf.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Setup.exe' 'distribution/.output/release/OpenCore Setup.exe.sig' src-tauri/tauri.conf.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify the small setup accepts only genuine signed packages
         run: python distribution/qa-bootstrap.py --exe 'distribution/.output/release/OpenCore Setup.exe' --package 'distribution/.output/release/OpenCore Package.exe' --signature 'distribution/.output/release/OpenCore Package.exe.sig'
+      - name: Verify changed-file updater payload and transaction behavior
+        run: |
+          python -m unittest discover -s distribution -p test_incremental_update.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python distribution/qa-incremental-update.py --directory distribution/.output/release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Retain the verified signed installer for independent publication retries
         uses: actions/upload-artifact@v4
         with:

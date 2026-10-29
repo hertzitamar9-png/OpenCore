@@ -4,6 +4,8 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+from contextlib import ExitStack
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -13,6 +15,59 @@ from echo_server import ArchiveSet, EchoState  # noqa: E402
 
 
 class EchoMemoryContinuityTests(unittest.TestCase):
+    def test_resident_frame_is_not_reused_after_query_scope_model_or_budget_changes(self):
+        changes = [dict(query='different fact'), dict(scopes=['other']),
+                   dict(model=True), dict(force=True), dict(reserve_tokens=30000),
+                   dict(reason='new_turn'), dict(frame=True)]
+        for change in changes:
+            with self.subTest(change=change), ExitStack() as stack:
+                temporary=stack.enter_context(tempfile.TemporaryDirectory())
+                archives=ArchiveSet(Path(temporary),idle_seconds=60)
+                stack.callback(archives.close)
+                state=EchoState(archives,'http://127.0.0.1:1',0,4,False)
+                stack.callback(state.memory_controller.close)
+                state._ctx_size=32768
+                state.count_tokens=lambda text:len(text.split())
+                from evoagent.echo_adapters import adapter_for
+                state._memory_adapter=adapter_for({'architecture':'qwen','revision':'test'},state.count_tokens)
+                state.memory_adapter=lambda:state._memory_adapter
+                archive=archives.get('a')
+                archive.append('The physics controller uses swept capsules.','a')
+                live=LiveTranscript(archive,'a')
+                state.refresh_memory(live,'physics controller','a',256,1024,'new_turn')
+                if change.get('model'):live.model_fingerprint='different-model'
+                if change.get('frame'):live.entries[0]['message']['content']='changed resident evidence'
+                options=dict(query='physics controller',conversation='a',pinned_tokens=256,
+                             reserve_tokens=1024,reason='generation_block')
+                options.update({k:v for k,v in change.items() if k not in ('model','frame')})
+                with patch.object(archives,'get',wraps=archives.get) as read:
+                    state.refresh_memory(live,**options)
+                    self.assertGreater(read.call_count,0)
+
+    def test_generation_continuations_reuse_the_resident_frame_without_archive_reads(self):
+        with ExitStack() as stack:
+            temporary=stack.enter_context(tempfile.TemporaryDirectory())
+            archives=ArchiveSet(Path(temporary),idle_seconds=60)
+            stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False)
+            stack.callback(state.memory_controller.close)
+            state._ctx_size=32768
+            state.count_tokens=lambda text:len(text.split())
+            from evoagent.echo_adapters import adapter_for
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'test'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter
+            archive=archives.get('a')
+            archive.append('The physics controller uses swept capsules.','a')
+            live=LiveTranscript(archive,'a')
+            first=state.refresh_memory(live,'Recall physics controller', 'a',256,1024,'new_turn')
+            live.mark_backend_sent()
+            with patch.object(archives,'get',side_effect=AssertionError('Continuation reopened its archive')):
+                for index in range(4):
+                    result=state.refresh_memory(live,'Recall physics controller','a',256,1024,'generation_block')
+                    self.assertEqual(result['source_hashes'],first['source_hashes'])
+                    self.assertFalse(result['layout_changed'])
+            self.assertTrue(all(entry['backend_sent'] for entry in live.entries))
+
     def test_legacy_transcript_has_no_virtual_telemetry_before_first_refresh(self):
         with tempfile.TemporaryDirectory() as temporary:
             archive = EchoArchive(Path(temporary) / "archive.db")

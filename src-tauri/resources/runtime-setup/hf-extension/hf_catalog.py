@@ -6,6 +6,21 @@ import re
 from urllib.parse import unquote, urlsplit
 
 HUB = "https://huggingface.co"
+ECHO_WINDOW_TOKENS = 32768
+
+
+def echo_context_tokens(metadata, fallback=ECHO_WINDOW_TOKENS):
+    """Target 32K without advertising more than a published text context limit."""
+    config = metadata.get('config') or {}
+    if not isinstance(config,dict):config={}
+    for block in (config.get('text_config') or {}, config, metadata.get('gguf') or {}):
+        if not isinstance(block,dict):continue
+        for key in ('max_position_embeddings', 'context_length', 'n_positions', 'max_seq_len', 'seq_length'):
+            value = block.get(key)
+            if type(value) is int and value > 0:
+                return min(ECHO_WINDOW_TOKENS, value)
+    return max(1, min(ECHO_WINDOW_TOKENS, int(fallback or ECHO_WINDOW_TOKENS)))
+
 HEX40 = re.compile(r"[0-9a-fA-F]{40}\Z")
 HEX64 = re.compile(r"[0-9a-fA-F]{64}\Z")
 REPO_PART = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,95}\Z")
@@ -260,6 +275,8 @@ def build_plan(metadata):
             "reason": reason, "modelType": config.get("model_type") or (metadata.get("gguf") or {}).get("architecture"), "architectures": config.get("architectures", []),
             "runtime": runtime, "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),
             "sourceUrl": HUB + "/" + repo, "status": "not-installed"})
+        if category == 'text':
+            variants[-1].update(contextTokens=echo_context_tokens(metadata), memoryMode='echo')
         if group.get('diffusersVariant'):variants[-1]['diffusersVariant']=group['diffusersVariant']
         if is_adapter:
             variants[-1]['packageKind'] = 'adapter'

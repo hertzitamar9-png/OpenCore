@@ -91,7 +91,9 @@ def runtime_plan(entry, root, resources):
     models = [folder / f['filename'] for f in entry.get('files', []) if f.get('role') == 'model']
     if not models:
         raise ValueError('No model weights are present for the runtime adapter')
-    context = max(8192, min(int(entry.get('contextTokens') or 8192), 32768))
+    context = min(int(entry.get('contextTokens') or 32768), 32768)
+    if context < 8192:
+        raise ValueError('This model has less than the 8,192-token context required by the chat agent. Its downloaded files are retained.')
     if fmt == 'gguf':
         from managed_engines import engine_for, executable
         publisher_engine = engine_for(entry)
@@ -179,7 +181,7 @@ class RuntimeManager:
     def models(self, catalog):
         values = catalog.get('models', []) if isinstance(catalog, dict) else catalog
         return {'object': 'list', 'data': [{'id': e['id'], 'object': 'model', 'owned_by': 'local-huggingface',
-            'context_length': max(8192, min(int(e.get('contextTokens') or 8192), 32768))} for e in values
+            'context_length': max(1, min(int(e.get('contextTokens') or 32768), 32768))} for e in values
             if e.get('category','text')=='text' and e.get('status') == 'installed' and (e.get('runtimeReady') or e.get('runtimePreparation', {}).get('runtimeReady'))]}
 
     def set_context(self, model_id, conversation_id, request_id):
@@ -361,7 +363,7 @@ class RuntimeManager:
         stats = [{'filename': str(path.relative_to(Path(plan['folder']))), 'bytes': path.stat().st_size,
                   'modifiedNs': path.stat().st_mtime_ns} for path in files]
         proof = {'runtimeReady': True, 'inferenceVerified': True, 'echoReady': True, 'contextTokens': plan['context'],
-                 'echoMode': 'archive-retrieval',
+                 'echoMode': 'main-context-v1',
                  'verifiedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'repository': entry['repository'],
                  'revision': entry['revision'], 'receiptSha256': _hash(entry['receiptPath']),
                  'generatedTokens': proof_result.get('usage', {}).get('completion_tokens'),
@@ -503,7 +505,7 @@ def _worker_main():
         module.Handler = _echo_handler(module.Handler)
         sys.argv = ['echo_server.py', '--port', str(args.port), '--host', '127.0.0.1', '--upstream', args.upstream,
                     '--archive', str(args.archive), '--context-size', str(args.context),
-                    '--legacy-context', '--no-model-search', '--no-console', '--quiet']
+                    '--max-continuations', '0', '--warm-cache-budget-mb', '128', '--no-console', '--quiet']
         return module.main()
     module = _load('opencore_hub_text', args.resources / 'text-runtime/serve_text.py')
     original_server = module.ThreadingHTTPServer

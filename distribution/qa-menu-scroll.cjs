@@ -50,10 +50,19 @@ fixture+=String.raw`
         await wheel(header,160);
         if(!short){
           assert.ok(await owner.evaluate(e=>e.scrollTop)>0,'Wheel over header should reach the model list');
+          const afterDown=await owner.evaluate(e=>e.scrollTop);
+          await wheel(owner,-80);
+          assert.ok(await owner.evaluate(e=>e.scrollTop)<afterDown,'Wheel upward must reverse scrolling inside the list');
+          await wheel(header,-1000);
+          assert.equal(await owner.evaluate(e=>e.scrollTop),0,'Scrolling upward over the heading must return to the first model');
           await owner.evaluate(e=>e.scrollTop=e.scrollHeight);
           const bottom=await owner.evaluate(e=>e.scrollTop);
           await wheel(owner,300);assert.equal(await owner.evaluate(e=>e.scrollTop),bottom);
           await wheel(header,300);assert.equal(await owner.evaluate(e=>e.scrollTop),bottom);
+          await wheel(owner,-1000);
+          assert.ok(await owner.evaluate(e=>e.scrollTop)<bottom,'The list must scroll back up after reaching its bottom');
+          await wheel(header,-1000);
+          assert.equal(await owner.evaluate(e=>e.scrollTop),0,'The first model must remain reachable after bottom overflow');
           await owner.evaluate(e=>e.scrollTop=0);
           await wheel(owner,-300);assert.equal(await owner.evaluate(e=>e.scrollTop),0);
           await wheel(header,-300);assert.equal(await owner.evaluate(e=>e.scrollTop),0);

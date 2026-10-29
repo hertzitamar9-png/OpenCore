@@ -27,6 +27,12 @@ test('app updates select the complete package when the small setup is also prese
     prefix+'app-v0.3.145/OpenCore.Package.exe');
 });
 
+test('app updates select the signed changed-file updater when published',()=>{
+  const metadata=release(false);
+  metadata.assets.push({name:'OpenCore.Update.exe',state:'uploaded',browser_download_url:prefix+'app-v0.3.145/OpenCore.Update.exe'});
+  assert.equal(createUpdateManifest(metadata,'0.3.145','update-signature').platforms['windows-x86_64'].url,prefix+'app-v0.3.145/OpenCore.Update.exe');
+});
+
 test('temporary URLs are accepted only for a draft in the expected repository',()=>{
   for(const url of [prefix+'app-v0.3.144/OpenCore.Package.exe',
     'https://github.com/someone/Other/releases/download/untagged-abc/OpenCore.Package.exe',

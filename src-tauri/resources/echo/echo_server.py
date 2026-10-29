@@ -799,6 +799,30 @@ class EchoState:
 
     def refresh_memory(self, live, query, conversation, pinned_tokens=0, reserve_tokens=0,
                        reason="new_turn", force=False, scopes=None):
+        # A generation continuation has already read and materialized this turn's
+        # evidence. Keep it resident instead of reopening/searching SQLite every
+        # refresh interval. New input, explicit page faults, model/scope changes
+        # and pressure on the real working window still require a fresh plan.
+        capacity = self.context_size()
+        def key():
+            return (str(query), conversation, tuple(scopes or ()), live.model_fingerprint,
+                    capacity, pinned_tokens, reserve_tokens, self.memory_controller.memory_tokens)
+        def frame():
+            return tuple((entry.get("tokens"), str(entry.get("message")),
+                          tuple(entry.get("echo_source_hashes") or ()))
+                         for entry in live.entries if entry.get("kind") == live.MEMORY)
+        resident = getattr(live, "_echo_resident_recall", None)
+        if (reason == "generation_block" and not force and resident
+                and resident["key"] == key() and resident["frame"] == frame()
+                and pinned_tokens + live.tokens + reserve_tokens + 2560 <= capacity):
+            telemetry = dict(live.virtual_memory)
+            telemetry["resident_frame_reuses"] = telemetry.get("resident_frame_reuses", 0) + 1
+            telemetry["physical_context_tokens"] = pinned_tokens + live.tokens
+            telemetry["recent_tokens"] = sum(entry["tokens"] for entry in live.entries
+                                              if entry.get("kind") != live.MEMORY)
+            live.virtual_memory = telemetry
+            return {**resident["result"], "layout_changed": False, "latency_ms": 0,
+                    "reason": "resident frame reused for continuation", "telemetry": telemetry}
         archives = [(self.archives.get(conversation), conversation)]
         for source_scope in dict.fromkeys([conversation] + list(scopes or [])):
             if source_scope != conversation and self.archives.path_for(source_scope).exists():
@@ -811,6 +835,7 @@ class EchoState:
         if result["layout_changed"]:
             self._backend_conversation = None
             self._backend_needs_reset = True
+        live._echo_resident_recall = {"key": key(), "frame": frame(), "result": result}
         return result
 
     def append_automatic_recall(self, live, query, conversation, budget_tokens=None):

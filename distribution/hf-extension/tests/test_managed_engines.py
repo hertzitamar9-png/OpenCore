@@ -116,12 +116,12 @@ class PublisherCatalogTests(unittest.TestCase):
             self.addCleanup(state.close)
             selected = engines.engine_for(entry)
             entry['runtimePreparation'] = {'runtimeReady': True, 'receiptRevision': entry['revision'],
-                'engineArchiveSha256': engines.definition(selected)['sha256'], 'echoMode': 'archive-retrieval'}
+                'engineArchiveSha256': engines.definition(selected)['sha256'], 'echoMode': 'main-context-v1'}
             with patch.object(state, '_receipt', return_value={'localDirectory': 'fixture', 'receiptPath': 'fixture'}):
                 self.assertTrue(state._hydrate(entry)['runtimeReady'])
-                entry['runtimePreparation']['echoMode'] = 'old-proof'
-                self.assertFalse(state._hydrate(entry)['runtimeReady'])
                 entry['runtimePreparation']['echoMode'] = 'archive-retrieval'
+                self.assertFalse(state._hydrate(entry)['runtimeReady'])
+                entry['runtimePreparation']['echoMode'] = 'main-context-v1'
                 entry['runtimePreparation']['engineArchiveSha256'] = '0' * 64
                 self.assertFalse(state._hydrate(entry)['runtimeReady'])
 

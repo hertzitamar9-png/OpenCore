@@ -76,6 +76,7 @@ class BridgeState:
         self.client = client or HubClient(self.tokens.get)
         self.downloader = Downloader(self.root, self.client)
         self.entries, self.plans, self.receipt_cache = {}, {}, {}
+        self.removal_plans = {}
         self.catalog_epoch, self.catalog_snapshot = 0, None
         self.catalog_snapshot_at, self.catalog_fingerprint, self.catalog_revision = 0, None, None
         self.progress, self.worker = None, None
@@ -279,10 +280,12 @@ class BridgeState:
         preparation = entry.get("runtimePreparation") or {}
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
         if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
+        if result['runtimeReady'] and entry.get('category')=='text' and preparation.get('echoMode')!='main-context-v1':
+            result['runtimeReady']=False
         if result['runtimeReady']:
             from managed_engines import engine_for, definition
             selected = engine_for(entry)
-            if selected and (preparation.get('engineArchiveSha256') != definition(selected)['sha256'] or preparation.get('echoMode') != 'archive-retrieval'):
+            if selected and (preparation.get('engineArchiveSha256') != definition(selected)['sha256'] or preparation.get('echoMode') != 'main-context-v1'):
                 result['runtimeReady'] = False
         if receipt:
             result.update(localDirectory=receipt["localDirectory"], receiptPath=receipt["receiptPath"], installReceipt=copy.deepcopy(receipt))
@@ -528,8 +531,34 @@ class BridgeState:
         result = self.runtime.stop()
         return result if isinstance(result, dict) else {"stopped": True}
 
-    def uninstall(self, model_id):
+    def _removal_files(self, model_id):
+        folder=managed_path(managed_path(self.root,'models','hub'),self.entry(model_id)['id'])
+        files=[]
+        if folder.is_dir():
+            for path in sorted(folder.rglob('*')):
+                if path.is_symlink() or not path.resolve().is_relative_to(folder):
+                    raise ValueError('Linked model files cannot be deleted by this dialog')
+                if path.is_file():
+                    stat=path.stat()
+                    files.append({'path':str(path),'bytes':stat.st_size,'modifiedNs':stat.st_mtime_ns,'external':False,'sharedWith':[]})
+        return folder,files
+
+    def removal_plan(self, model_id):
         with self.lock:
+            entry=self.entry(model_id)
+            _,files=self._removal_files(model_id)
+            token=secrets.token_hex(32)
+            self.removal_plans={key:value for key,value in self.removal_plans.items() if value['expires']>time.monotonic()}
+            self.removal_plans[token]={'id':model_id,'files':files,'expires':time.monotonic()+300}
+            return {'modelId':model_id,'label':entry.get('name',entry['repository']),'files':files,
+                    'retainedFiles':[],'totalBytes':sum(file['bytes'] for file in files),'confirmationToken':token}
+
+    def uninstall(self, model_id, confirmation_token=None):
+        with self.lock:
+            plan=self.removal_plans.pop(confirmation_token,None)
+            folder,files=self._removal_files(model_id)
+            if not plan or plan['id']!=model_id or plan['expires']<time.monotonic() or plan['files']!=files:
+                raise ValueError('Model files changed or the confirmation expired. Open the uninstall dialog again.')
             if self.progress and self.progress.get('status') in ACTIVE:
                 raise Conflict('Pause or finish the current installation before removing model files')
             if self.ocr.active():
@@ -540,7 +569,6 @@ class BridgeState:
                 raise Conflict('Wait for the current response before removing this model')
             if getattr(self.runtime,'_active',None) and self.runtime._active['id']==model_id:
                 self.runtime.stop()
-            folder=managed_path(managed_path(self.root,'models','hub'),entry['id'])
             if folder.is_dir():shutil.rmtree(folder)
             self.entries[model_id].pop('runtimePreparation',None)
             self.entries[model_id].pop('specialistPreparation',None)
@@ -829,7 +857,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif route == "/stop":
             self._send(200, state.stop())
         elif route == "/uninstall":
-            self._send(200,state.uninstall(body.get('id')))
+            self._send(200,state.uninstall(body.get('id'),body.get('confirmationToken')))
+        elif route == '/removal-plan':
+            self._send(200,state.removal_plan(body.get('id')))
         elif route in ("/context", "/context/release"):
             method = getattr(state.runtime, "set_context" if route == "/context" else "release_context", None)
             if method is None:

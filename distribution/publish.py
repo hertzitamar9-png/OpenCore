@@ -92,6 +92,12 @@ def publish(folder, version, commit):
     for signed in [installer, bootstrap]:
         subprocess.run(['node', str(HERE / 'verify-signature.cjs'), str(signed), str(signed) + '.sig',
                         str(HERE.parent / 'src-tauri/tauri.conf.json')], check=True)
+    incremental=folder/'OpenCore Update.exe'
+    if incremental.is_file():
+        check=json.loads((folder/'incremental-verification.json').read_text(encoding='utf-8'))
+        if check.get('passed') is not True or check.get('version')!=version or check.get('updateSha256')!=file_hash(incremental):
+            raise ValueError('Incremental updater requires matching verification evidence')
+        subprocess.run(['node',str(HERE/'verify-signature.cjs'),str(incremental),str(incremental)+'.sig',str(HERE.parent/'src-tauri/tauri.conf.json')],check=True)
     release = find_release(tag)
     if release and not release['draft']:
         raise ValueError('This release is already public; never replace a published installer')
@@ -112,6 +118,8 @@ def publish(folder, version, commit):
                folder / 'bootstrap-verification.json', folder / 'package-manifest.json',
                folder / 'installer-verification.json', folder / 'runtime-verification.json']
     initial += prepare_mobile(folder)
+    if incremental.is_file():
+        initial += [incremental,folder/'OpenCore Update.exe.sig',folder/'OpenCore.Update.data',folder/'incremental-index.json',folder/'incremental-verification.json']
     pending = [local for local in initial if not asset_matches(remote_asset(release, local), local)]
     if pending:
         command('gh', 'release', 'upload', tag, '--repo', REPOSITORY, '--clobber', *map(str, pending))

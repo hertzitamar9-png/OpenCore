@@ -45,9 +45,10 @@ assert.equal(await page.getByRole('progressbar',{name:'Image generation progress
 assert.ok((await page.getByRole('progressbar',{name:'Image generation progress'}).boundingBox()).width>300);
 await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.ok((await page.getByRole('progressbar',{name:'Image generation progress'}).boundingBox()).width>250);
 await page.evaluate(()=>{Object.assign(fixture.jobs[0],{progress:{step:40,steps:40,stepsPerSecond:.25},stage:'Decoding image'});});await page.getByText('Decoding image',{exact:true}).waitFor();assert.notEqual(await page.getByRole('progressbar',{name:'Image generation progress'}).getAttribute('value'),'100');
-await page.evaluate(()=>{Object.assign(fixture.jobs[0],{status:'completed',stage:'Generation complete',updatedAt:new Date().toISOString(),outputs:['C:/Studio/image-1.png']});});
+await page.evaluate(()=>{Object.assign(fixture.jobs[0],{status:'completed',stage:'Generation complete',createdAt:'2026-10-29T20:00:00Z',updatedAt:'2026-10-29T20:02:13Z',outputs:['C:/Studio/image-1.png']});});
 await page.getByText('Image ready',{exact:true}).waitFor();assert.equal(await page.getByRole('progressbar',{name:'Image generation progress'}).getAttribute('value'),'100');
 await page.getByRole('img',{name:'Generated image',exact:true}).waitFor();assert.equal(await message.inputValue(),'');assert.equal(await page.getByText('Open Game Dev Studio',{exact:true}).count(),0);
+await page.getByText('Took 2m 13.0s',{exact:true}).waitFor();
 const previewCalls=await page.evaluate(()=>fixture.calls.filter(c=>c.command==='preview_attachment_image').length);
 await page.evaluate(()=>{window.fixtureFirstImage=document.querySelector('img[alt="Generated image"]');});
 for(let refresh=0;refresh<3;refresh++){

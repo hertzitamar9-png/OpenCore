@@ -1,5 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),acorn=require('acorn');
 module.exports=function applyImageUi(app,{editFunction,replaceOnce}){
+  app=editFunction(app,'gO',text=>replaceOnce(text,'o=UI(t.entries),','o=UI(t.entries)||(Number.isFinite(s.metadata?.responseDurationMs)?{durationMs:s.metadata.responseDurationMs,status:s.metadata.responseStatus||"completed"}:null),'));
   app=editFunction(app,'Xv',text=>{
     text=replaceOnce(text,'const[r,a]=p.useState(null)','const[$filesExpanded,$setFilesExpanded]=p.useState(()=>{try{return localStorage.getItem("opencore.ui.v1.file-changes")==="expanded"}catch{return false}});const $toggleFiles=()=>{$setFilesExpanded(value=>{try{localStorage.setItem("opencore.ui.v1.file-changes",value?"collapsed":"expanded")}catch{}return !value})};const[r,a]=p.useState(null)');
     text=replaceOnce(text,'labelled:!0})]}),g(m)]})','labelled:!0}),i.jsx("button",{type:"button",className:"file-changes-toggle","aria-expanded":$filesExpanded,"aria-label":$filesExpanded?"Collapse file changes":"Show all file changes",onClick:$toggleFiles,children:$filesExpanded?"Collapse":"Show all"})]}),$filesExpanded?g(m):null]})');

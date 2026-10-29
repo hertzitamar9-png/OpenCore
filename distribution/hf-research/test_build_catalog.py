@@ -33,6 +33,21 @@ class CatalogBuildTests(unittest.TestCase):
         self.assertEqual(len(self.models), len(self.catalog['models']))
         self.assertEqual(len(self.artifacts), len(self.catalog['artifacts']))
 
+    def test_every_selectable_text_weight_package_has_an_echo_profile(self):
+        groups={}
+        for model in self.catalog['models']:
+            if model.get('category') not in ('text','brain') or not model.get('selectable'):
+                continue
+            weights=tuple(sorted(a['sha256'] for a in self.weight_files(model)))
+            groups.setdefault(weights,[]).append(model)
+        self.assertGreater(len(groups),400)
+        for weights,models in groups.items():
+            self.assertTrue(any(m.get('memoryMode')=='echo' for m in models),[m['id'] for m in models])
+        self.assertEqual(self.report['echoCoverage']['missingEchoWeightPackages'],0)
+        original={a['id']:a for a in self.original['artifacts']}
+        for identifier,artifact in original.items():
+            self.assertEqual(self.artifacts[identifier],artifact)
+
     def test_added_artifacts_match_primary_repository_metadata(self):
         original = {a['id'] for a in self.original['artifacts']}
         support = json.loads((ROOT / 'support-pins.json').read_text(encoding='utf-8'))

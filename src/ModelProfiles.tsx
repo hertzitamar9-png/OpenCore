@@ -11,7 +11,8 @@ const catalogProfiles = new Map(catalogModels.filter(model => model.selectable).
 const catalogMemoryModes = new Map(catalogModels.map(model => [model.id, model.memoryMode]));
 
 export function profileUsesEcho(profile: string): boolean {
-  return profile === 'unsloth-echo' || catalogMemoryModes.get(profile) === 'echo';
+  return profile === 'unsloth-echo' || catalogMemoryModes.get(profile) === 'echo'
+    || (globalThis as typeof globalThis & {__opencoreHubEchoProfiles?:Set<string>}).__opencoreHubEchoProfiles?.has(profile) === true;
 }
 
 type InstalledModelProfile = { id: string; label: string; description: string };

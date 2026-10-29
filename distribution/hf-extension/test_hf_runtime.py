@@ -3,12 +3,25 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import types
 from unittest.mock import patch
 
-from hf_runtime import RuntimeManager, checked_model_files, conversation_key, runtime_plan, system_prefix
+from hf_runtime import RuntimeManager, checked_model_files, conversation_key, runtime_plan, system_prefix, _worker_main
 
 
 class RuntimeSafetyTests(unittest.TestCase):
+    def test_imported_models_launch_the_main_echo_context_loop(self):
+        import sys
+        seen=[]
+        module=types.SimpleNamespace(Handler=object,main=lambda:seen.extend(sys.argv) or 0)
+        args=['hf_runtime.py','--worker','echo','--resources','unused','--port','1234',
+              '--upstream','http://127.0.0.1:1235','--archive','unused-archive','--context','32768']
+        with patch('hf_runtime._load',return_value=module),patch.object(sys,'argv',args):
+            self.assertEqual(_worker_main(),0)
+        self.assertNotIn('--legacy-context',seen)
+        self.assertNotIn('--no-model-search',seen)
+        self.assertEqual(seen[seen.index('--context-size')+1],'32768')
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

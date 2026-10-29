@@ -12,6 +12,8 @@ async function $imageInlineEntries(rows,identity){
       const content=job.status==='completed'?'Image generated.'+(job.request.settings?.promptRecap?'\n\nRequest summary: '+job.request.settings.promptRecap:'')+'\n\n'+files.map(path=>'![Generated image]('+encodeURI('file:///'+path.replace(/\\/g,'/').replace(/^\//,'')).replace(/[()]/g,c=>'%'+c.charCodeAt(0).toString(16))+')').join('\n\n'):job.error?'Image generation failed. '+job.error:(job.stage||'Generating image…');
       const previous=index>=0?output[index]:null;
       const row={...(previous||{}),id:previous?.id||-parseInt(job.id.replace(/[^a-f0-9]/gi,'').slice(-11),16),conversationId:identity,source:'OpenCore',kind:'message',role:'assistant',title:'OpenCore',timestamp:job.updatedAt||job.createdAt,content,metadata:{...previous?.metadata,studioJobId:job.id,studioReceipt:true,files:[]}};
+      const elapsed=Date.parse(job.updatedAt||'')-Date.parse(job.createdAt||'');
+      if(['completed','failed','cancelled','interrupted'].includes(job.status)&&Number.isFinite(elapsed)&&elapsed>=0)row.metadata={...row.metadata,responseDurationMs:elapsed,responseStatus:job.status};
       if(index>=0)output[index]=row;else output.push(row);
     }
     return output.sort((a,b)=>a.timestamp.localeCompare(b.timestamp)||a.id-b.id);

@@ -306,6 +306,8 @@ def main():
         subprocess.run([str(args.nsis.resolve()), '/V2', str(source)], check=True)
         installer = args.output / 'OpenCore Package.exe'
         (args.output / 'SHA256SUMS.txt').write_text(file_hash(installer) + '  OpenCore Package.exe\n', encoding='ascii')
+        from incremental_update import build as build_incremental
+        build_incremental(args.app,args.python,args.output,args.version,args.commit,args.icon.resolve(),branding,args.webview.resolve(),args.nsis.resolve())
     print(json.dumps({'build': args.version, 'files': len(files), 'bytes': manifest['bytes'], 'output': str(args.output)}))
 
 

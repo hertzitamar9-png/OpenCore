@@ -4,7 +4,7 @@ import fnmatch
 import json
 from pathlib import PurePosixPath
 
-from hf_catalog import build_plan, _pin, stable_id
+from hf_catalog import build_plan, _pin, stable_id, echo_context_tokens
 from hf_download import validate_entry
 from hf_lineage import same_checkpoint, bases, quantized_relation, checkpoint_name
 
@@ -95,9 +95,11 @@ def append_requested(entries, manifest, snapshots):
                 entry['bytes'] = sum(pin['bytes'] for pin in entry['files'])
                 entry.update(familyId=row['familyId'], familyLabel=row['label'], originalRepository=row['repository'],
                              builtIn=True, nativeModelIds=[], libraryCategory=row['category'],
-                             builtInDescription=row['description'], contextTokens=8192, quantization=quant,
+                             builtInDescription=row['description'], contextTokens=echo_context_tokens(original) if entry['category']=='text' else 8192, quantization=quant,
                              license=(original.get('cardData') or {}).get('license', 'Publisher terms'))
                 entry['name'] = row['label'] + ' · ' + quant
+                if entry['category']=='text':
+                    entry['memoryMode']='echo'
                 if source.get('runtimeReason'):
                     entry['runtime'].update(adapter=None, reason=source['runtimeReason'])
                 elif entry['format'] == 'gguf' and entry['category'] == 'text':

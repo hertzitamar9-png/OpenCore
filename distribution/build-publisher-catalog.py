@@ -99,6 +99,9 @@ def build():
     entries = append_requested(entries, HERE / 'hf-research/requested-models.json', HERE / 'hf-research/requested-models')
     for entry in entries:
         entry['builtIn'] = True
+    from echo_catalog import publisher_echo_policy
+    from hf_catalog import echo_context_tokens
+    publisher_echo_policy(entries,HERE/'hf-research',echo_context_tokens)
     entries.sort(key=lambda e: (e['familyId'], e.get('catalogOrder', 0), e['format'] != 'gguf', e['bytes'], e['id']))
     return {'schema': 1, 'entries': entries}
 

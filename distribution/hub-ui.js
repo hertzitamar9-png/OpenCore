@@ -5,6 +5,7 @@ let $hubState = {catalog: [], progress: null, available: false, loaded: false, e
 let $hubTimer = null;
 const $hubProviderSync=new Set();
 function $hubPublish(value) {
+  if(value.catalog)globalThis.__opencoreHubEchoProfiles=new Set(value.catalog.filter(entry=>entry.profileId&&(entry.libraryCategory||entry.category||'text')==='text').map(entry=>entry.profileId));
   if (Object.entries(value).some(([key,item])=>item!==$hubState[key]&&JSON.stringify(item)!==JSON.stringify($hubState[key]))) {
     $hubState = {...$hubState,...value}; $hubListeners.forEach(fn => fn());
   }
@@ -122,6 +123,11 @@ async function $hubRegister(entry) {
   await $hubRefresh(true);return profile.profileId;
 }
 async function $hubInvoke(command,args,run) {
+  if(['model_removal_plan','uninstall_model'].includes(command)&&$hubState.catalog.some(entry=>entry.id===args.id&&!entry.nativeProfile)){
+    const value=await $hubRequest(command==='model_removal_plan'?'/removal-plan':'/uninstall',args);
+    if(command==='uninstall_model')await $hubRefresh(true);
+    return value;
+  }
   if(globalThis.__opencoreImageConversationInvoke&&['get_snapshot','list_conversations','get_conversation','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command))return globalThis.__opencoreImageConversationInvoke(command,args,run);
   if(command==='list_model_library'){
     const library=await run();$hubNativeLibrary=library;await $hubRefresh().catch(()=>{});return $hubAugment(library);
@@ -329,7 +335,7 @@ function $hubChosenAdapterPath(entry) {
   return entry.installReceipt.files.find(file=>file.role==='model'&&typeof file.localPath==='string')?.localPath||null;
 }
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,selectedProfile}) {
-  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[removing,setRemoving]=p.useState(false),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
+  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
   const model=group.variants.find(v=>v.id===choice)||group.variants[0],entry=state.catalog.find(v=>v.id===model.id)||model.hubEntry;
   const active=shared.active?.modelId===entry.id,locked=disabled||!!shared.active||busy;
   const adapter=entry.packageKind==='adapter'||entry.format==='lora';
@@ -403,8 +409,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function prepare(){setError('');try{await Ue(entry.nativeProfile?'install_model':'hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const profile=entry.nativeProfile?entry.id:await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
-  function askRemove(){setError('');if(entry.nativeProfile){onNativeRemove?.(model);return;}setRemoving(true);}
-  async function uninstall(){setBusy(true);try{await $hubRequest('/uninstall',{id:entry.id});await $hubRefresh(true);await onChanged?.();setRemoving(false);}catch(e){setError(String(e));}finally{setBusy(false);}}
+  function askRemove(){setError('');onNativeRemove?.(model);}
   return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady||entry.specialistReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
     h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='ocr'?'OCR · Image to text':entry.category==='image'?'Image model':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
@@ -448,7 +453,6 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
       h('button',{disabled:locked||!(entry.runtime?.adapter||entry.specialist==='ocr'),onClick:prepare},active?'Preparing…':entry.specialist==='ocr'?'Prepare OCR':'Prepare runtime'),
       entry.status==='installed'?h('button',{className:'model-delete-button',disabled:locked,onClick:askRemove},'Uninstall'):null),
     ocrOpen&&entry.specialistReady?h($HubOCR,{entry}):null,
-    removing?h('section',{role:'dialog','aria-label':'Uninstall '+entry.name},h('p',null,'Remove this downloaded package? Conversation history is kept.'),h('button',{disabled:busy,onClick:uninstall},'Remove downloaded files'),h('button',{disabled:busy,onClick:()=>setRemoving(false)},'Cancel')):null,
     active?h('p',{role:'status'},shared.progress?.currentFile||'Starting installation…'):null,error?h('p',{role:'alert'},error):null,
     entry.downloadProgress?.status==='failed'?h('p',{role:'alert'},entry.downloadProgress.error):null);
 }

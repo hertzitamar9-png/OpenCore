@@ -438,7 +438,7 @@
       "minimumDiskBytes": 2000000000,
       "fallbackDiskBytes": 9000000000,
       "minimumRamBytes": 24000000000,
-      "minimumAvailableRamBytes": 18000000000,
+      "minimumAvailableRamBytes": 4000000000,
       "requiresCuda": true,
       "sourceArchive": {
         "url": "https://codeload.github.com/Comfy-Org/ComfyUI/zip/fc04da91b2ab12f99e4716371a7e4f98ac982597",
@@ -481,7 +481,7 @@
         "https://github.com/leejet/ComfyUI-GGUF/tree/373048b8403a7820620065210a691263d4da0a61",
         "https://github.com/Comfy-Org/workflow_templates/blob/main/templates/image_qwen_image_2_1_t2i.json"
       ],
-      "limitations": "Pinned Windows ComfyUI workflow and Qwen-Image-2.1 GGUF loader. Active GGUF tensors are copied into RAM; safetensors mmap is disabled. Available RAM is checked against the complete chosen package before startup. Only a real generated verification image marks Ready. Apple MLX checkpoints are not compatible with this Windows adapter.",
+      "limitations": "Pinned Windows ComfyUI workflow and Qwen-Image-2.1 GGUF loader. Active GGUF tensors use owned memory; safetensors mmap is disabled. Runtime admission accounts for free VRAM, CPU staging and sampling reserves. Real generated verification output is required before Ready. Apple MLX checkpoints need a different runtime.",
       "pluginName": "qwen-image-gguf",
       "pluginSource": "qwen-image-gguf"
     },

@@ -14,6 +14,25 @@ import uuid
 
 from asset_worker import bounded_integer,progress,validate_output_format,save_image_output,prepare_reference_images,SamplingProgress
 
+
+def image_memory_plan(component_bytes, host_available, gpu_free):
+    """ComfyUI splits resident weights; a complete component still stages on CPU."""
+    sizes=[max(0,int(value)) for value in component_bytes]
+    # Leave VRAM for the sampler, dequantization and VAE activations. CPU staging
+    # cannot borrow GPU bytes, even when the complete model fits on the GPU.
+    gpu_budget=max(0,int(gpu_free)-3_000_000_000)
+    host_required=max(max(sizes,default=0),sum(sizes)-gpu_budget)+2_000_000_000
+    return {'fits':host_available>=host_required,'hostRequiredBytes':host_required,
+            'hostAvailableBytes':host_available,'gpuFreeBytes':gpu_free,'gpuWeightBudgetBytes':gpu_budget}
+
+
+def available_gpu_memory():
+    try:
+        import torch
+        return int(torch.cuda.mem_get_info()[0]) if torch.cuda.is_available() else 0
+    except (ImportError,RuntimeError,OSError):
+        return 0
+
 def start_progress_stream(address,client_id,tracker,prompt_identity):
     """Read actual sampler events from this job's private ComfyUI connection."""
     import asyncio,threading
@@ -280,10 +299,10 @@ def generate_comfy(request,output):
     for path in weight_paths:
         if not path.is_file():raise RuntimeError(f'A required pinned {label} component is missing: '+path.name)
     # Avoid starting a worker that would page its active weights onto the SSD.
-    weight_bytes=sum(path.stat().st_size for path in weight_paths)+(lora.stat().st_size if lora else 0)
-    required_ram=weight_bytes+4_000_000_000
-    if psutil.virtual_memory().available<required_ram:
-        raise RuntimeError(f'This {label} variant needs about {required_ram/1e9:.1f} GB available RAM including load buffers. Close other applications and retry; disk weight offload is disabled.')
+    gpu_free=available_gpu_memory()
+    memory=image_memory_plan([path.stat().st_size for path in weight_paths]+([lora.stat().st_size] if lora else []),psutil.virtual_memory().available,gpu_free)
+    if not memory['fits']:
+        raise RuntimeError(f"This {label} load plan needs about {memory['hostRequiredBytes']/1e9:.1f} GB free RAM for staging and CPU-resident weights; {memory['hostAvailableBytes']/1e9:.1f} GB RAM and {gpu_free/1e9:.1f} GB VRAM are free. VRAM is already included in this estimate, with space reserved for image sampling. Free memory or choose a smaller quantization.")
     output.mkdir(parents=True,exist_ok=True)
     paths=output/'comfy-model-paths.json'
     model_folders={'base_path':str(root),'diffusion_models':str(dit),'text_encoders':str(component/'text_encoders'),'vae':str(vae)}
@@ -341,6 +360,7 @@ def generate_comfy(request,output):
         deadline=time.monotonic()+1200
         while True:
             if process.poll() is not None:raise RuntimeError(f'Managed {label} runtime exited during generation')
+            if psutil.virtual_memory().available<750_000_000:raise RuntimeError('Available RAM became too low during image generation. The worker was stopped before heavy paging; close other applications or choose a smaller quantization.')
             if time.monotonic()>deadline:raise RuntimeError(f'{label} generation exceeded twenty minutes')
             result=api('/history/'+prompt_id).get(prompt_id)
             if result:
