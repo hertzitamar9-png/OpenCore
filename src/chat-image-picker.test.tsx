@@ -1,4 +1,5 @@
 import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {useLayoutEffect} from 'react';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import * as api from './api';
 import {ModelProfileOptions} from './ModelProfiles';
@@ -10,6 +11,15 @@ const qwen={id:'qwen-image-21-uc-nvfp4',label:'Qwen Image',category:'image',back
 afterEach(()=>{cleanup();clearChatImageSelection();vi.restoreAllMocks();delete (window as any).__TAURI_INTERNALS__;delete (globalThis as any).__opencoreImageAdapters;});
 
 describe('image models in the regular chat picker',()=>{
+  it('accepts the first image prompt as soon as its composer is committed',async()=>{
+    let accepted=false;const calls:string[]=[];
+    (window as any).__TAURI_INTERNALS__={invoke:async(command:string)=>{calls.push(command);if(command==='list_model_library')return{models:[moss]};if(command==='list_studio_jobs')return[];if(command==='get_snapshot')return{runtime:{status:'stopped'},activeConversationIds:[]};if(command==='runtime_setup_status')return{receipts:[],recipes:[{modelIds:[moss.id]}],jobs:[]};if(command==='runtime_setup_start')return{id:'first-prompt'};return null;}};
+    selectChatImageModel(moss);
+    function ImmediatePrompt(){useLayoutEffect(()=>{accepted=submitChatImagePrompt({prompt:'A blue cup'});},[]);return <ImageGenerationPanel conversationId="first-image"/>;}
+    render(<ImmediatePrompt/>);
+    expect(accepted).toBe(true);
+    await waitFor(()=>expect(calls).toContain('runtime_setup_start'));
+  });
   it('stops automatic preparation through the actual native cancellation command',async()=>{
     const calls:any[]=[];(window as any).__TAURI_INTERNALS__={invoke:async(command:string,args:any={})=>{calls.push({command,args});
       if(command==='list_model_library')return{models:[moss]};if(command==='list_studio_jobs')return[];

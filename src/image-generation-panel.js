@@ -160,7 +160,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     window.addEventListener('opencore-chat-image-selected',accept);window.addEventListener('opencore-chat-text-selected',accept);
     return()=>{window.removeEventListener('opencore-chat-image-selected',accept);window.removeEventListener('opencore-chat-text-selected',accept);};
   },[studio,embedded,busy,!!activeJob,onNotice]);
-  React.useEffect(()=>{
+  React.useLayoutEffect(()=>{
     if(studio||!open)return;
     const matches=event=>event.detail?.scope?event.detail.scope.contains(panel.current):!embedded;
     const send=event=>{if(!matches(event))return;event.preventDefault();if(!submitting.current&&!busy&&!activeJob)void generate(event.detail);};
