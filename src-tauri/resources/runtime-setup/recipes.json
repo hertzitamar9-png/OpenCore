@@ -481,7 +481,7 @@
         "https://github.com/leejet/ComfyUI-GGUF/tree/373048b8403a7820620065210a691263d4da0a61",
         "https://github.com/Comfy-Org/workflow_templates/blob/main/templates/image_qwen_image_2_1_t2i.json"
       ],
-      "limitations": "Pinned Windows ComfyUI workflow and Qwen-Image-2.1 GGUF loader. Active GGUF tensors use owned memory; safetensors mmap is disabled. Runtime admission accounts for free VRAM, CPU staging and sampling reserves. Real generated verification output is required before Ready. Apple MLX checkpoints need a different runtime.",
+      "limitations": "Pinned Windows ComfyUI workflow and Qwen-Image-2.1 GGUF loader. Prompt encoding and image sampling run in separate processes so their weights do not coexist. Safetensors are read directly into owned RAM without a duplicate file mapping; active GGUF tensors also use owned memory. CPU staging and GPU sampling reserves are checked separately. Real generated verification output is required before Ready. Apple MLX checkpoints need a different runtime.",
       "pluginName": "qwen-image-gguf",
       "pluginSource": "qwen-image-gguf"
     },

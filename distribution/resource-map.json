@@ -189,6 +189,7 @@
   "studio/ai_upscale.py": "src-tauri/resources/studio/ai_upscale.py",
   "studio/asset_worker.py": "src-tauri/resources/studio/asset_worker.py",
   "studio/comfy_worker.py": "src-tauri/resources/studio/comfy_worker.py",
+  "studio/qwen_phase_nodes.py": "src-tauri/resources/studio/qwen_phase_nodes.py",
   "studio/model_smoke.py": "src-tauri/resources/studio/model_smoke.py",
   "text-runtime/edgerock/OPENCORE-NOTICE.txt": "src-tauri/resources/text-runtime/edgerock/OPENCORE-NOTICE.txt",
   "text-runtime/edgerock/__init__.py": "src-tauri/resources/text-runtime/edgerock/__init__.py",

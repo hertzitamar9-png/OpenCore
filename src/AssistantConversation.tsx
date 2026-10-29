@@ -791,7 +791,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   }, [backendActive]);
 
   const submit = () => {
-    if(submitChatImagePrompt({scope:draftInput.current?.closest('.chat-composer-wrap'),prompt:draft,files,onAccepted:()=>{setDraft('');setFiles([]);}}))return;
+    if(submitChatImagePrompt({scope:draftInput.current?.closest('.chat-composer-wrap'),prompt:draft,files,onError:onNotice,onAccepted:()=>{setDraft('');setFiles([]);}}))return;
     if (inferenceBlocked && !sendingRef.current) { onNotice(inferenceBlocked); return; }
     if (backendActive && !sendingRef.current) return;
     let text = draft.trim();

@@ -32,6 +32,32 @@ def image_memory_plan(component_bytes, host_available, gpu_free):
             'gpuFreeBytes':gpu_free,'gpuWeightBudgetBytes':gpu_budget}
 
 
+def qwen_memory_plan(component_bytes, host_available, gpu_free):
+    """The encoder process exits before the diffusion process starts."""
+    dit, encoder, vae, *adapters = component_bytes
+    encode = image_memory_plan([encoder, vae], host_available, gpu_free)
+    sample = image_memory_plan([dit, vae, *adapters], host_available, gpu_free)
+    peak = dict(max((encode, sample), key=lambda value: value['hostRequiredBytes']))
+    peak['phases'] = {'encode': encode, 'sample': sample}
+    return peak
+
+
+def split_qwen_workflow(graph):
+    """Exchange only prompt conditioning; model objects never cross processes."""
+    import copy
+    graph = copy.deepcopy(graph)
+    encode_ids = {'2', '4'} | ({'3'} if 'vae' in graph['4']['inputs'] else set()) | {key for key in graph if int(key) >= 100}
+    encode = {key: value for key, value in graph.items() if key in encode_ids}
+    encode['20'] = {'class_type': 'OpenCoreSaveConditioning', 'inputs': {'positive': ['4', 0], 'negative': ['4', 1], 'latent': ['4', 2]}}
+    sample = {key: value for key, value in graph.items() if key not in encode_ids and key != '6'}
+    # The VAE is needed again for final decoding after the encoder has exited.
+    sample['3'] = graph['3']
+    size = graph['6']['inputs']
+    sample['20'] = {'class_type': 'OpenCoreLoadConditioning', 'inputs': {'width': size['width'], 'height': size['height'], 'reference': any(int(key) >= 100 for key in encode)}}
+    sample['16']['inputs'].update(positive=['20', 0], negative=['20', 1], latent_image=['20', 2])
+    return encode, sample
+
+
 def available_gpu_memory():
     try:
         import torch
@@ -79,7 +105,11 @@ def canonical_path(value):
 
 def owned_listener(psutil,process,port):
     owner=psutil.Process(process.pid)
-    return any(connection.status==psutil.CONN_LISTEN and connection.laddr.port==port
+    # Some Windows psutil builds report a bound TCP listener as NONE. An owned
+    # unconnected stream is eligible for the subsequent HTTP readiness check;
+    # established connections and UDP sockets must never qualify.
+    return any((connection.status==psutil.CONN_LISTEN or
+                connection.status=='NONE' and getattr(connection,'type',None)==socket.SOCK_STREAM and not getattr(connection,'raddr',None)) and connection.laddr.port==port
                for child in [owner,*owner.children(recursive=True)]
                for connection in child.net_connections(kind='tcp'))
 
@@ -306,9 +336,15 @@ def generate_comfy(request,output):
         if not path.is_file():raise RuntimeError(f'A required pinned {label} component is missing: '+path.name)
     # Avoid starting a worker that would page its active weights onto the SSD.
     gpu_free=available_gpu_memory()
-    memory=image_memory_plan([path.stat().st_size for path in weight_paths]+([lora.stat().st_size] if lora else []),psutil.virtual_memory().available,gpu_free)
+    planner=qwen_memory_plan if qwen else image_memory_plan
+    memory=planner([path.stat().st_size for path in weight_paths]+([lora.stat().st_size] if lora else []),psutil.virtual_memory().available,gpu_free)
     if not memory['fits']:
-        raise RuntimeError(f"This {label} load plan needs about {memory['hostRequiredBytes']/1e9:.1f} GB free RAM for CPU staging and load buffers; {memory['hostAvailableBytes']/1e9:.1f} GB RAM and {gpu_free/1e9:.1f} GB VRAM are free. VRAM is used during sampling, but cannot replace this loader's initial CPU staging. Free RAM or choose a smaller quantization.")
+        raise RuntimeError(f"This {label} load plan needs about {memory['hostRequiredBytes']/1e9:.1f} GB free RAM for CPU staging and load buffers; {memory['hostAvailableBytes']/1e9:.1f} GB RAM and {gpu_free/1e9:.1f} GB VRAM are free. Free RAM or choose a smaller quantization.")
+    phases=split_qwen_workflow(graph) if qwen else (graph,)
+    if qwen:
+        phase_plugin=engine/'custom_nodes'/'opencore-image-phases'
+        phase_plugin.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(Path(__file__).with_name('qwen_phase_nodes.py'),phase_plugin/'__init__.py')
     output.mkdir(parents=True,exist_ok=True)
     paths=output/'comfy-model-paths.json'
     model_folders={'base_path':str(root),'diffusion_models':str(dit),'text_encoders':str(component/'text_encoders'),'vae':str(vae)}
@@ -328,49 +364,58 @@ def generate_comfy(request,output):
             raw=response.read(16_000_001)
         if len(raw)>16_000_000:raise RuntimeError('ComfyUI response exceeded its size limit')
         return json.loads(raw)
-    process=None;finished_image=None;stop_progress=None
+    finished_image=None
     log_path=output/'comfy-runtime.log'
     for directory in ('comfy-user','comfy-temp'):
         (output/directory).mkdir(parents=True,exist_ok=True)
     try:
-        with log_path.open('wb') as log:
+      for phase_index,phase_graph in enumerate(phases):
+        process=None;stop_progress=None
+        encoding=qwen and phase_index==0
+        progress(output,'Encoding your prompt; the image model loads afterward' if encoding else f'Loading the selected {label} image model')
+        try:
+          with log_path.open('ab') as log:
             process=subprocess.Popen([sys.executable,str(engine/'main.py'),'--listen','127.0.0.1','--port',str(port),
                 '--disable-auto-launch','--offline','--disable-mmap','--disable-metadata',
-                '--disable-all-custom-nodes','--whitelist-custom-nodes',plugin,
+                *(['--disable-dynamic-vram','--disable-fast-disk','--cache-none'] if qwen else []),
+                '--disable-all-custom-nodes','--whitelist-custom-nodes',plugin,*(['opencore-image-phases'] if qwen else []),
                 '--extra-model-paths-config',str(paths),'--output-directory',str(images),'--input-directory',str(output/'comfy-inputs'),
                 '--user-directory',str(output/'comfy-user'),'--temp-directory',str(output/'comfy-temp')],
                 cwd=engine,stdin=subprocess.DEVNULL,stdout=log,stderr=log,
-                env={**os.environ,'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1'},
+                env={**os.environ,'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1','OPENCORE_IMAGE_PHASE_DIR':str(output)},
                 creationflags=0x08000000 if sys.platform=='win32' else 0)
-        progress(output,f'Starting the managed {label} runtime')
-        startup=time.monotonic()+120
-        while True:
+          startup=time.monotonic()+120
+          while True:
             if process.poll() is not None:raise RuntimeError(f'Managed {label} runtime exited during startup')
             if time.monotonic()>startup:raise RuntimeError(f'Managed {label} runtime did not become ready within two minutes')
             try:
                 listening=owned_listener(psutil,process,port)
                 if listening:
                     nodes=api('/object_info')
-                    if not required_nodes.issubset(nodes):raise RuntimeError(f'Pinned {label} loader nodes are missing from the managed runtime')
+                    needed={node['class_type'] for node in phase_graph.values()}
+                    if not needed.issubset(nodes):raise RuntimeError(f'Pinned {label} loader nodes are missing from the managed runtime: '+', '.join(sorted(needed-set(nodes))))
                     break
             except (OSError,urllib.error.URLError):pass
             time.sleep(0.25)
-        client_id=str(uuid.uuid4());prompt_identity=[None]
-        tracker=SamplingProgress(output,bounded_integer(settings,'steps',40 if label.startswith('Qwen') else 50,1,100))
-        stop_progress=start_progress_stream(address,client_id,tracker,prompt_identity)
-        queued=api('/prompt',{'prompt':graph,'client_id':client_id})
-        prompt_id=queued.get('prompt_id')
-        if not prompt_id:raise RuntimeError(f'{label} workflow was rejected: '+json.dumps(queued))
-        prompt_identity[0]=prompt_id
-        progress(output,f'Loading the selected {label} image model and prompt encoder')
-        deadline=time.monotonic()+1200
-        while True:
+          client_id=str(uuid.uuid4());prompt_identity=[None]
+          tracker=SamplingProgress(output,bounded_integer(settings,'steps',40 if label.startswith('Qwen') else 50,1,100))
+          stop_progress=start_progress_stream(address,client_id,tracker,prompt_identity)
+          queued=api('/prompt',{'prompt':phase_graph,'client_id':client_id})
+          prompt_id=queued.get('prompt_id')
+          if not prompt_id:raise RuntimeError(f'{label} workflow was rejected: '+json.dumps(queued))
+          prompt_identity[0]=prompt_id
+          deadline=time.monotonic()+1200
+          while True:
             if process.poll() is not None:raise RuntimeError(f'Managed {label} runtime exited during generation')
             if psutil.virtual_memory().available<750_000_000:raise RuntimeError('Available RAM became too low during image generation. The worker was stopped before heavy paging; close other applications or choose a smaller quantization.')
             if time.monotonic()>deadline:raise RuntimeError(f'{label} generation exceeded twenty minutes')
             result=api('/history/'+prompt_id).get(prompt_id)
             if result:
                 if result.get('status',{}).get('status_str')=='error':raise RuntimeError(f'{label} generation failed: '+json.dumps(result.get('status',{}))[-4000:])
+                if encoding and result.get('status',{}).get('completed'):
+                    if not (output/'prompt-conditioning.pt').is_file():raise RuntimeError('Prompt encoding finished without its conditioning output')
+                    progress(output,'Prompt encoded; releasing the prompt encoder before image sampling')
+                    break
                 generated=result.get('outputs',{}).get('18',{}).get('images',[])
                 if generated:
                     source=validate_history_output(images,generated[0])
@@ -379,6 +424,9 @@ def generate_comfy(request,output):
                         finished_image=image.convert('RGB')
                     break
             time.sleep(0.75)
+        finally:
+          if stop_progress:stop_progress()
+          stop_owned_process(process,psutil)
     except Exception as error:
         tail=''
         if log_path.is_file():
@@ -386,23 +434,24 @@ def generate_comfy(request,output):
                 log.seek(max(0,log_path.stat().st_size-4096));tail=log.read().decode('utf-8',errors='replace')
         raise RuntimeError(f'{error}\n{tail}') from error
     finally:
-        if stop_progress:stop_progress()
-        if process is not None and process.poll() is None:
-            try:
-                descendants=psutil.Process(process.pid).children(recursive=True)
-            except psutil.NoSuchProcess:
-                descendants=[]
-            for child in reversed(descendants):
-                try:child.terminate()
-                except psutil.NoSuchProcess:pass
-            process.terminate()
-            try:process.wait(timeout=10)
-            except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
-            _,alive=psutil.wait_procs(descendants,timeout=5)
-            for child in alive:
-                try:child.kill()
-                except psutil.NoSuchProcess:pass
+        if qwen:(output/'prompt-conditioning.pt').unlink(missing_ok=True)
     if finished_image is not None:
         try:save_image_output(finished_image,output,1,settings)
         finally:finished_image.close()
     progress(output,'Generation complete')
+
+
+def stop_owned_process(process,psutil):
+    if process is None or process.poll() is not None:return
+    try:descendants=psutil.Process(process.pid).children(recursive=True)
+    except psutil.NoSuchProcess:descendants=[]
+    for child in reversed(descendants):
+        try:child.terminate()
+        except psutil.NoSuchProcess:pass
+    process.terminate()
+    try:process.wait(timeout=10)
+    except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
+    _,alive=psutil.wait_procs(descendants,timeout=5)
+    for child in alive:
+        try:child.kill()
+        except psutil.NoSuchProcess:pass

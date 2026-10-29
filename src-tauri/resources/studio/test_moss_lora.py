@@ -27,6 +27,17 @@ class MossLoRATest(unittest.TestCase):
         self.assertTrue(owned_listener(psutil,SimpleNamespace(pid=42),12345))
         self.assertFalse(owned_listener(psutil,SimpleNamespace(pid=42),54321))
 
+    def test_windows_tcp_state_none_requires_an_owned_unconnected_stream_socket(self):
+        import socket
+        connection=SimpleNamespace(status='NONE',laddr=SimpleNamespace(port=12345),raddr=(),type=socket.SOCK_STREAM)
+        owner=SimpleNamespace(children=lambda **kw:[],net_connections=lambda **kw:[connection])
+        psutil=SimpleNamespace(Process=lambda pid:owner,CONN_LISTEN='LISTEN')
+        self.assertTrue(owned_listener(psutil,SimpleNamespace(pid=42),12345))
+        connection.raddr=('127.0.0.1',54321)
+        self.assertFalse(owned_listener(psutil,SimpleNamespace(pid=42),12345))
+        connection.raddr=();connection.type=socket.SOCK_DGRAM
+        self.assertFalse(owned_listener(psutil,SimpleNamespace(pid=42),12345))
+
     def test_base_and_lora_workflows_have_different_model_edges(self):
         request = {'prompt': 'a test photo', 'settings': {'steps': 30, 'guidanceScale': 3, 'loraStrength': 0.8}}
         base = build_moss_workflow(request, 'model.safetensors')

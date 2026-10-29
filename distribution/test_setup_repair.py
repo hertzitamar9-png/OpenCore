@@ -27,7 +27,7 @@ class ComfyRuntimeReleaseTests(unittest.TestCase):
             with self.subTest(loader=relative):
                 self.assertEqual(mappings.get(relative), 'src-tauri/resources/' + relative)
                 self.assertEqual(hashlib.sha256((repository/mappings[relative]).read_bytes()).hexdigest(), pin['sha256'])
-        for resource in ('studio/comfy_worker.py', 'studio/asset_worker.py',
+        for resource in ('studio/comfy_worker.py', 'studio/asset_worker.py', 'studio/qwen_phase_nodes.py',
                          'runtime-setup/recipes.json', 'runtime-setup/setup_manager.py',
                          'runtime-setup/managed_model_sources.py'):
             self.assertEqual(mappings.get(resource), 'src-tauri/resources/' + resource)

@@ -60,7 +60,7 @@ assert.equal(await page.evaluate(()=>fixture.calls.filter(c=>c.command==='previe
 await page.getByRole('button',{name:/Choose model profile, currently/}).click();await page.locator('.statusbar-model-popover').getByRole('button',{name:/MOSS Image \+ MOSS LoRA/}).click();await page.getByText('MOSS Image + MOSS LoRA · Automatic quality').waitFor();
 await page.getByRole('button',{name:/Choose model profile, currently MOSS Image \+ MOSS LoRA/}).waitFor();
 await page.getByRole('button',{name:/Choose model profile, currently/}).click();assert.equal(await page.locator('.statusbar-model-popover [aria-pressed=true]').count(),1);await page.locator('.statusbar-model-popover').getByRole('button',{name:/MOSS Image \+ MOSS LoRA/}).click();
-await message.fill('A red robot holding a cup');await page.getByRole('button',{name:'Send message',exact:true}).click();await page.waitForFunction(()=>fixture.calls.filter(c=>c.command==='submit_studio_job').length===2);
+await message.fill('A red robot holding a cup');await message.press('Enter');await page.waitForFunction(()=>fixture.calls.filter(c=>c.command==='submit_studio_job').length===2);
 const loraRequest=await page.evaluate(()=>fixture.calls.filter(c=>c.command==='submit_studio_job').at(-1).args.request);assert.equal(loraRequest.settings.loraPath,'C:/managed/adapter-ComfyUI.safetensors');assert.equal(loraRequest.settings.loraStrength,.8);assert.match(loraRequest.prompt,/^moss_xvstyle,/);
 await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.ok(await message.isVisible());assert.deepEqual(errors,[]);
 if(process.env.OPENCORE_IMAGE_QA_SCREENSHOT)await page.screenshot({path:process.env.OPENCORE_IMAGE_QA_SCREENSHOT});

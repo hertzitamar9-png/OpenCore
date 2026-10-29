@@ -126,7 +126,13 @@ export function automaticImageSettings(id,prompt,files=[],preset) {
 }
 
 export function submitChatImagePrompt(detail) {
-  return !window.dispatchEvent(new CustomEvent('opencore-chat-image-prompt',{cancelable:true,detail}));
+  if(!window.dispatchEvent(new CustomEvent('opencore-chat-image-prompt',{cancelable:true,detail})))return true;
+  // A missing image handler must never turn an image prompt into a text request.
+  const image=detail.scope?.querySelector('.chat-image-status[data-image-mode="open"]');
+  if(image||!detail.scope&&getChatImageSelection()){
+    detail.onError?.('The image composer is still opening. Your prompt is kept; please send it again.');return true;
+  }
+  return false;
 }
 export function stopChatImagePrompt(scope) {
   return !window.dispatchEvent(new CustomEvent('opencore-chat-image-stop',{cancelable:true,detail:{scope}}));
@@ -143,28 +149,31 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
   const initialSelection=!studio&&!embedded?getChatImageSelection():null;
   const [open,setOpen]=React.useState(studio||!!initialSelection),[models,setModels]=React.useState([]),[modelId,setModelId]=React.useState(initialModelId||initialSelection?.id||''),[adapters,setAdapters]=React.useState([]),[adapterId,setAdapterId]=React.useState(initialSelection?.adapterId||''),[prompt,setPrompt]=React.useState(''),[strength,setStrength]=React.useState(0.8),[steps,setSteps]=React.useState(30),[guidance,setGuidance]=React.useState(3),[size,setSize]=React.useState(512),[busy,setBusy]=React.useState(false),[stage,setStage]=React.useState(''),[error,setError]=React.useState(''),[jobs,setJobs]=React.useState([]),[images,setImages]=React.useState({});
   const panel=React.useRef(null),requestedModel=React.useRef(initialSelection?.id||''),pending=React.useRef(null),inFlight=React.useRef(false),previewing=React.useRef(new Set()),conversation=React.useRef(conversationId),submitting=React.useRef(false),fingerprint=React.useRef('');
+  const route=React.useRef(null);route.current={open,modelId,adapterId};
+  const [attemptJobId,setAttemptJobId]=React.useState(null);
   const generationPreference=useGenerationSettings(modelId);
   const activeJob=jobs.find(job=>['queued','starting','running','preparing'].includes(job.status));
-  const shownJob=activeJob||jobs.find(job=>job.request?.modelId===modelId);
+  const shownJob=activeJob||jobs.find(job=>job.id===attemptJobId);
   React.useEffect(()=>{if(!studio&&!embedded&&open)publishImageProgress(busy?{modelId,job:{status:'preparing',stage:stage||'Preparing image generation'}}:shownJob?{modelId,job:shownJob}:null);},[open,studio,embedded,modelId,shownJob,busy,stage]);
   React.useEffect(()=>{conversation.current=conversationId;},[conversationId]);
-  React.useEffect(()=>{
+  React.useLayoutEffect(()=>{
     if(studio)return;
     function accept(event){
       const detail=event.detail||{};
       if(detail.scope?!detail.scope.contains(panel.current):embedded)return;
       if(busy||activeJob||submitting.current){event.preventDefault();onNotice?.('Wait for image generation to finish before changing models.');return;}
-      if(event.type==='opencore-chat-text-selected'){setOpen(false);return;}
-      requestedModel.current=detail.modelId;setModelId(detail.modelId);setAdapterId(detail.adapterId||'');setOpen(true);setError('');
+      if(event.type==='opencore-chat-text-selected'){route.current.open=false;setOpen(false);return;}
+      route.current={open:true,modelId:detail.modelId,adapterId:detail.adapterId||''};
+      requestedModel.current=detail.modelId;setModelId(detail.modelId);setAdapterId(detail.adapterId||'');setOpen(true);setError('');setAttemptJobId(null);
     }
     window.addEventListener('opencore-chat-image-selected',accept);window.addEventListener('opencore-chat-text-selected',accept);
     return()=>{window.removeEventListener('opencore-chat-image-selected',accept);window.removeEventListener('opencore-chat-text-selected',accept);};
   },[studio,embedded,busy,!!activeJob,onNotice]);
   React.useLayoutEffect(()=>{
-    if(studio||!open)return;
+    if(studio)return;
     const matches=event=>event.detail?.scope?event.detail.scope.contains(panel.current):!embedded;
-    const send=event=>{if(!matches(event))return;event.preventDefault();if(!submitting.current&&!busy&&!activeJob)void generate(event.detail);};
-    const stop=event=>{if(!matches(event))return;event.preventDefault();void (async()=>{try{if(pending.current){await invoke('runtime_setup_cancel',{jobId:pending.current.setupId});pending.current=null;submitting.current=false;setBusy(false);setStage('');}else if(activeJob){await (activeJob.source==='hub-image'?globalThis.__opencoreImageHub.cancel(activeJob.id):invoke('cancel_studio_job',{id:activeJob.id}));}}catch(error){setError(String(error));}})();};
+    const send=event=>{if(event.defaultPrevented||!matches(event)||!route.current.open)return;event.preventDefault();if(!submitting.current&&!busy&&!activeJob)void generate(event.detail);};
+    const stop=event=>{if(event.defaultPrevented||!matches(event)||!route.current.open)return;event.preventDefault();void (async()=>{try{if(pending.current){await invoke('runtime_setup_cancel',{jobId:pending.current.setupId});pending.current=null;submitting.current=false;setBusy(false);setStage('');}else if(activeJob){await (activeJob.source==='hub-image'?globalThis.__opencoreImageHub.cancel(activeJob.id):invoke('cancel_studio_job',{id:activeJob.id}));}}catch(error){setError(String(error));}})();};
     window.addEventListener('opencore-chat-image-prompt',send);window.addEventListener('opencore-chat-image-stop',stop);
     return()=>{window.removeEventListener('opencore-chat-image-prompt',send);window.removeEventListener('opencore-chat-image-stop',stop);};
   });
@@ -172,7 +181,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
   React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')?2048:1024);},[modelId,imagePreset?.steps,imagePreset?.guidance]);
   const model=models.find(m=>m.id===modelId),choices=imageAdaptersForModel(model,adapters);
   const activeAdapter=choices.find(adapter=>adapter.id===adapterId),adapterLabel=activeAdapter?.familyLabel||activeAdapter?.name||activeAdapter?.repository||initialSelection?.adapterLabel;
-  React.useEffect(()=>{onStateChange?.({active:open,busy:busy||!!activeJob,modelId,adapterId,label:model?imageSelectionLabel({...model,adapterId,adapterLabel}):undefined});},[open,busy,!!activeJob,modelId,adapterId,model,adapterLabel,onStateChange]);
+  React.useLayoutEffect(()=>{onStateChange?.({active:open,busy:busy||!!activeJob,modelId,adapterId,label:model?imageSelectionLabel({...model,adapterId,adapterLabel}):undefined});},[open,busy,!!activeJob,modelId,adapterId,model,adapterLabel,onStateChange]);
   React.useEffect(()=>{if(open&&!studio&&!embedded&&model)rememberChatImageModel({...model,...(adapterId?{adapterId,adapterLabel}:{})});},[open,studio,embedded,model,adapterId,adapterLabel]);
   React.useEffect(()=>{const draft=globalThis.__opencoreImageDraft;if(draft?.modelId===modelId&&choices.some(a=>a.id===draft.adapterId)){setAdapterId(draft.adapterId);setPrompt(draft.prompt||'');setStrength(draft.strength??0.8);delete globalThis.__opencoreImageDraft;}},[modelId,adapters]);
   async function invoke(command,args={}) {
@@ -216,14 +225,16 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     await invoke('configure_studio_runtime',{runtime:{modelId:request.modelId,python:receipt.python,runner:receipt.runner||null,sourceDir:receipt.sourceDir||null}});
     const id=request.conversationId||(studio?null:'opencore:'+crypto.randomUUID());
     const job=await invoke('submit_studio_job',{request:{modelId:request.modelId,prompt:request.prompt,settings:request.settings,conversationId:id}});
+    setAttemptJobId(job.id);
     if(id){conversation.current=id;onConversationId?.(id);}
     request.onAccepted?.();setPrompt('');submitting.current=false;setBusy(false);setStage('');onRefresh?.();
     if(!studio)setJobs(old=>[job,...old].slice(0,6));
   }
   async function generate(input){
+    const {modelId,adapterId}=route.current;
     const text=studio?prompt:input?.prompt||'';
     if(submitting.current||busy||!text.trim())return;
-    submitting.current=true;setBusy(true);setError('');
+    submitting.current=true;setBusy(true);setError('');setAttemptJobId(null);setStage('Preparing image generation');
     try{
       const live=await readImageModelLibrary({fresh:true}),installed=downloadedImageModels(live.models).find(value=>value.id===modelId);
       if(!installed)throw Error('This image model is no longer installed. Choose a downloaded model or install its base weights in Models.');
@@ -244,7 +255,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
         const hub=globalThis.__opencoreImageHub;if(!hub)throw Error('Update OpenCore to enable imported image generation.');
         try{window.window.localStorage.setItem('opencore.image-chat-history','1');}catch{}
         request.conversationId=request.conversationId||(studio?null:'opencore:'+crypto.randomUUID());
-        const job=await hub.generate(request);if(request.conversationId){conversation.current=request.conversationId;onConversationId?.(request.conversationId);}
+        const job=await hub.generate(request);setAttemptJobId(job.id);if(request.conversationId){conversation.current=request.conversationId;onConversationId?.(request.conversationId);}
         request.onAccepted?.();submitting.current=false;setJobs(old=>[job,...old].slice(0,6));setPrompt('');setBusy(false);setStage('');onRefresh?.();return;
       }
       const status=await invoke('runtime_setup_status');const receipt=status.receipts.find(r=>r.targetId===modelId&&r.dependenciesVerified&&r.inferenceVerified);

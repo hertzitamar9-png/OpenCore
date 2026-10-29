@@ -118,7 +118,7 @@ class ImageRuntimeManager:
 
     def worker_identity(self):
         digest=hashlib.sha256()
-        for name in ('asset_worker.py','comfy_worker.py','model_smoke.py'):
+        for name in ('asset_worker.py','comfy_worker.py','qwen_phase_nodes.py','model_smoke.py'):
             digest.update((self.resources/'studio'/name).read_text(encoding='utf-8').replace('\r\n','\n').encode())
         source=self.resources/'runtime-setup/hf-extension/hf_sdcpp.py'
         if source.is_file():digest.update(source.read_text(encoding='utf-8').replace('\r\n','\n').encode())

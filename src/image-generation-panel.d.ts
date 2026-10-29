@@ -16,7 +16,7 @@ export function imageSizeSettings(size:number,modelId?:string): {width:number;he
 export function imageAdaptersForModel(model: {id:string;backend?:string;sourceUrl?:string;hubEntry?:any}|undefined, adapters: any[]): any[];
 export function imageGenerationDefaults(id:string): {steps:number;guidance:number};
 export function automaticImageSettings(id:string,prompt:string,files?:string[],preset?:{steps:number;guidance:number}):Record<string,unknown>;
-export function submitChatImagePrompt(detail:{scope?:Element|null;prompt:string;files?:string[];onAccepted?:()=>void}):boolean;
+export function submitChatImagePrompt(detail:{scope?:Element|null;prompt:string;files?:string[];onAccepted?:()=>void;onError?:(error:string)=>void}):boolean;
 export function stopChatImagePrompt(scope?:Element|null):boolean;
 export const ImageGenerationPanel: ComponentType<{conversationId?: string|null;onConversationId?:(id:string)=>void;onNotice?:(message:string)=>void;onRefresh?:()=>void;onStateChange?:(state:{active:boolean;busy:boolean;label?:string;modelId?:string;adapterId?:string})=>void;studio?:boolean;embedded?:boolean;initialModelId?:string}>;
 
