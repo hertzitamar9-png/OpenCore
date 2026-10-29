@@ -18,7 +18,7 @@ const fixtureNode=fixtureTree.body.flatMap(node=>node.declarations||[]).find(nod
 assert.equal(fixtureNode.expressions.length,0);
 const nativeFixture=fixtureNode.quasis[0].value.cooked;
 const baseHtml=(title,script,module)=>`<!doctype html><meta charset="utf-8"><title>${title}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/assets/index-CsoxYKnK.css"><link rel="stylesheet" href="/assets/App-C9duitZV.css"><style>body{margin:0;background:#0c1016;color:#dce4ef}.qa-nav{display:flex;padding:12px;gap:12px}#root{height:100vh}.qa-content{height:calc(100vh - 70px)}</style><div id="root"></div><script>${script}</script><script type="module">${module}</script>`;
-const startupScript=`window.fixture={attempts:0,accountCalls:0,authenticated:false,mode:'slow'};window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener:()=>{}};window.__TAURI_INTERNALS__={metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},transformCallback:()=>1,unregisterCallback:()=>{},invoke:async(command,args)=>{if(command==='account_action'){fixture.accountCalls++;throw Error('Optional account service is offline');}if(command==='get_snapshot'){fixture.attempts++;if(fixture.mode==='offline')return new Promise(()=>{});if(fixture.mode==='slow')await new Promise(resolve=>setTimeout(resolve,1000));return{conversations:[],runtime:{status:'stopped'}};}return null;}};`;
+const startupScript=`window.fixture={attempts:0,accountCalls:0,authenticated:false,mode:'slow'};window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener:()=>{}};window.__TAURI_INTERNALS__={metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},transformCallback:()=>1,unregisterCallback:()=>{},invoke:async(command,args)=>{if(command==='account_action'){fixture.accountCalls++;throw Error('Optional account service is offline');}if(command==='get_snapshot'){fixture.attempts++;if(fixture.mode==='offline')return new Promise(()=>{});if(fixture.mode==='slow')await new Promise(resolve=>{fixture.releaseStartup=resolve;});return{conversations:[],runtime:{status:'stopped'}};}return null;}};`;
 const startup=baseHtml('OpenCore startup QA',startupScript,`
 import{r as React,TestDOM,TestStartup}from'/assets/${indexName}';
 const root=TestDOM.createRoot(document.getElementById('root'));
@@ -58,10 +58,14 @@ const server=http.createServer((request,response)=>{
  try{
   await page.clock.install();
   await page.goto(url+'/startup');assert.equal(await page.title(),'OpenCore startup QA');
+  // Hold native startup explicitly, including when a slow CI worker misses a brief splash.
+  await page.waitForFunction(()=>fixture.releaseStartup);
+  await page.clock.runFor(3000);
   await page.getByRole('heading',{name:'Opening OpenCore',exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Retry opening OpenCore',exact:true}).count(),0);
   await page.getByRole('progressbar',{name:'Opening your local workspace'}).waitFor();
   await page.screenshot({path:path.join(screenshots,'startup-preparing.png')});
+  await page.evaluate(()=>fixture.releaseStartup());
   await page.clock.runFor(1700);await page.getByText('Workspace is open',{exact:true}).waitFor();
   assert.equal(await page.evaluate(()=>fixture.attempts),1);assert.equal(await page.evaluate(()=>fixture.accountCalls),0);
   record('local IPC opens the workspace with progress and no hosted account request');
