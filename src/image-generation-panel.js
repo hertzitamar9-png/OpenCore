@@ -173,9 +173,16 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     if(studio)return;
     const matches=event=>event.detail?.scope?event.detail.scope.contains(panel.current):!embedded;
     const send=event=>{if(event.defaultPrevented||!matches(event)||!route.current.open)return;event.preventDefault();if(!submitting.current&&!busy&&!activeJob)void generate(event.detail);};
+    const retry=event=>{
+      if(event.defaultPrevented||!matches(event))return;
+      const requestedConversation=event.detail?.conversationId;
+      if(requestedConversation&&requestedConversation!==conversation.current)return;
+      event.preventDefault();
+      void retryImageJob(event.detail?.jobId);
+    };
     const stop=event=>{if(event.defaultPrevented||!matches(event)||!route.current.open)return;event.preventDefault();void (async()=>{try{if(pending.current){await invoke('runtime_setup_cancel',{jobId:pending.current.setupId});pending.current=null;submitting.current=false;setBusy(false);setStage('');}else if(activeJob){await (activeJob.source==='hub-image'?globalThis.__opencoreImageHub.cancel(activeJob.id):invoke('cancel_studio_job',{id:activeJob.id}));}}catch(error){setError(String(error));}})();};
-    window.addEventListener('opencore-chat-image-prompt',send);window.addEventListener('opencore-chat-image-stop',stop);
-    return()=>{window.removeEventListener('opencore-chat-image-prompt',send);window.removeEventListener('opencore-chat-image-stop',stop);};
+    window.addEventListener('opencore-chat-image-prompt',send);window.addEventListener('opencore-chat-image-stop',stop);window.addEventListener('opencore-chat-image-retry',retry);
+    return()=>{window.removeEventListener('opencore-chat-image-prompt',send);window.removeEventListener('opencore-chat-image-stop',stop);window.removeEventListener('opencore-chat-image-retry',retry);};
   });
   const imagePreset=models.find(model=>model.id===modelId)?.hubEntry?.imageDefaults;
   React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')?2048:1024);},[modelId,imagePreset?.steps,imagePreset?.guidance]);
@@ -229,6 +236,47 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     if(id){conversation.current=id;onConversationId?.(id);}
     request.onAccepted?.();setPrompt('');submitting.current=false;setBusy(false);setStage('');onRefresh?.();
     if(!studio)setJobs(old=>[job,...old].slice(0,6));
+  }
+  async function retryImageJob(jobId){
+    if(submitting.current||busy||activeJob){onNotice?.('Wait for the current image generation to finish before retrying.');return;}
+    route.current={...route.current,open:true};setOpen(true);submitting.current=true;setBusy(true);setError('');setAttemptJobId(null);setStage('Retrying the saved image request');
+    try{
+      let job=jobs.find(value=>value.id===jobId);
+      if(!job){
+        const native=await invoke('list_studio_jobs'),hub=globalThis.__opencoreImageHub,imported=hub?await hub.list():[];
+        job=[...native,...imported].find(value=>value.id===jobId);
+      }
+      if(!job?.request?.modelId||!job.request.prompt)throw Error('The saved image request could not be found. Send the prompt again to start a new image job.');
+      const original=job.request,modelId=original.modelId;
+      if(!studio&&original.conversationId&&conversation.current&&original.conversationId!==conversation.current)throw Error('This image belongs to a different conversation. Open that conversation and retry there.');
+      const library=await readImageModelLibrary({fresh:true}),model=downloadedImageModels(library.models).find(value=>value.id===modelId);
+      if(!model)throw Error('The image model from this request is no longer installed. Reinstall it in Models before retrying.');
+      const settings={...(original.settings||{})};
+      const request={...original,modelId,prompt:original.prompt,conversationId:original.conversationId||(studio?null:conversation.current||'opencore:'+crypto.randomUUID()),settings};
+      let matchingAdapterId='';
+      if(settings.loraPath){
+        const liveAdapters=await globalThis.__opencoreImageAdapters?.()||[];
+        matchingAdapterId=imageAdaptersForModel(model,liveAdapters).find(adapter=>adapter.installReceipt.files.some(file=>file.role==='model'&&file.localPath?.toLowerCase()===String(settings.loraPath).toLowerCase()))?.id||'';
+      }
+      route.current={open:true,modelId,adapterId:matchingAdapterId};setModelId(modelId);setAdapterId(matchingAdapterId);setOpen(true);
+      const snapshot=await invoke('get_snapshot');
+      if(snapshot?.activeConversationIds?.length)throw Error('Another conversation is generating. Let it finish before retrying the image.');
+      if(['running','starting'].includes(snapshot?.runtime?.status)){setStage('Releasing the text model from memory for image generation');await invoke('stop_runtime');}
+      if((model.hubEntry?.format==='diffusers'||model.hubEntry?.imageRuntime==='iris-sdcpp-v1')&&!model.hubEntry?.nativeProfile){
+        const hub=globalThis.__opencoreImageHub;if(!hub)throw Error('Update OpenCore to enable imported image generation.');
+        try{window.localStorage.setItem('opencore.image-chat-history','1');}catch{}
+        const next=await hub.generate(request);setAttemptJobId(next.id);setJobs(old=>[next,...old.filter(value=>value.id!==next.id)].slice(0,6));
+        if(request.conversationId){conversation.current=request.conversationId;onConversationId?.(request.conversationId);}
+        submitting.current=false;setBusy(false);setStage('');onRefresh?.();return;
+      }
+      const status=await invoke('runtime_setup_status'),receipt=status.receipts.find(value=>value.targetId===modelId&&value.dependenciesVerified&&value.inferenceVerified);
+      if(receipt){await submitReady(request,receipt);return;}
+      const recipe=status.recipes.find(value=>value.modelIds.includes(modelId));
+      if(!recipe)throw Error('Automatic runtime setup is not available for this image architecture yet.');
+      if(recipe.requiresLicenseAcceptance)throw Error('Accept this model’s publisher license in Models before retrying.');
+      const setup=await invoke('runtime_setup_start',{targetId:modelId,options:{installWeights:!model.installed,verifyInference:true,acceptLicenses:false,allowAdministrator:false}});
+      pending.current={...request,setupId:setup.id};setStage('Preparing and verifying the image model. Your saved prompt will run automatically afterward.');
+    }catch(error){pending.current=null;submitting.current=false;setBusy(false);setStage('');setError(String(error));}
   }
   async function generate(input){
     const {modelId,adapterId}=route.current;

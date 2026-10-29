@@ -149,7 +149,7 @@ function convertTurn(turn: ConversationTurn, active: boolean): ThreadMessageLike
   return {
     role: turn.role,
     content: [{ type: "text", text: visible || " " }],
-    metadata: { custom: { source: entry.source, timestamp: entry.timestamp, kind: response ? "response" : entry.kind,
+    metadata: { custom: { source: entry.source, timestamp: entry.timestamp, conversationId: entry.conversationId, kind: response ? "response" : entry.kind,
       title: entry.title, raw: visible, details: entry.metadata, events: response ? turn.entries : undefined,
       active: response && active } },
   };
@@ -429,7 +429,7 @@ export function ResponseActivity({ events, active }: { events: TimelineEntry[]; 
 
 const ChatMessage = memo(function ChatMessage() {
   const role = useAuiState((state) => state.message.role);
-  const custom = useAuiState((state) => state.message.metadata.custom) as { source?: string; timestamp?: string; kind?: string; title?: string; raw?: string; details?: Record<string, unknown>; events?: TimelineEntry[]; active?: boolean } | undefined;
+  const custom = useAuiState((state) => state.message.metadata.custom) as { source?: string; timestamp?: string; conversationId?: string; kind?: string; title?: string; raw?: string; details?: Record<string, unknown>; events?: TimelineEntry[]; active?: boolean } | undefined;
   const time = formatMessageTimestamp(custom?.timestamp);
   const user = role === "user";
   const kind = custom?.kind || "message";
@@ -439,6 +439,9 @@ const ChatMessage = memo(function ChatMessage() {
   const importTotal = Number(custom?.details?.total) || 0;
   const importCurrent = Number(custom?.details?.current) || 0;
   const echoArtifact = custom?.details?.artifact && typeof custom.details.artifact === "object" ? custom.details.artifact as Record<string, unknown> : null;
+  const imageRetry = !user && custom?.details?.studioReceipt === true && typeof custom.details.studioJobId === "string"
+    ? { jobId: custom.details.studioJobId, conversationId: custom.conversationId }
+    : undefined;
 
   return <MessagePrimitive.Root className={`aui-message ${user ? "aui-user-message" : "aui-assistant-message"}`}>
     {user ? <div className="aui-user-column">
@@ -466,14 +469,17 @@ const ChatMessage = memo(function ChatMessage() {
             ? <ToolActivity kind={kind} title={custom?.title} raw={custom?.raw || ""} />
           : <details className={`assistant-disclosure kind-${kind}`} open={kind === "error" ? true : undefined}><summary><Code2 size={14} /><strong>{kind === "thinking" ? "Reasoning" : "Error"}</strong><span>{custom?.title}</span></summary><div><MessagePrimitive.Parts components={{ Text: MarkdownText }} /></div></details>
           : <MessagePrimitive.Parts components={{ Text: MarkdownText }} />}</div>
-        <MessageActions />
+        <MessageActions imageRetry={imageRetry} />
       </div>
     </>}
   </MessagePrimitive.Root>;
 });
 
-function MessageActions() {
+function MessageActions({ imageRetry }: { imageRetry?: { jobId: string; conversationId?: string } }) {
   return <ActionBarPrimitive.Root className="aui-message-actions">
+    {imageRetry ? <button type="button" title="Retry image generation" onClick={() => {
+      window.dispatchEvent(new CustomEvent("opencore-chat-image-retry", { cancelable: true, detail: imageRetry }));
+    }}><CornerUpLeft size={13} /> Retry</button> : null}
     <ActionBarPrimitive.Copy asChild>
       <button title="Copy message"><Copy size={13} /> Copy</button>
     </ActionBarPrimitive.Copy>
