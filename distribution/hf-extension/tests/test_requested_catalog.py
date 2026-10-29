@@ -14,6 +14,28 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_apex_keeps_the_exact_finetune_and_complete_published_packages(self):
+        entries=self.family('apex-35b-v1')
+        self.assertEqual(len(entries),26)
+        self.assertTrue(all(e['originalRepository']=='Apexintelligence-AI/Apex-35B-V1.0' for e in entries))
+        self.assertEqual(len({(e['format'],e['quantization']) for e in entries}),26)
+        gguf=[e for e in entries if e['format']=='gguf']
+        self.assertEqual(len(gguf),25)
+        self.assertTrue({'Q4_K_M','Q5_K_M','Q6_K','Q8_0','IQ4_XS'}.issubset({e['quantization'] for e in gguf}))
+        self.assertTrue(all(e['managedEngine']=='flint-cpu-v1' for e in gguf))
+        official=[e for e in gguf if e['repository']=='Apexintelligence-AI/Apex-35B-V1.0-GGUF']
+        self.assertEqual(len(official),5)
+        split=next(e for e in official if e['quantization']=='BF16')
+        self.assertEqual(sum(pin['role']=='model' for pin in split['files']),2)
+        original=next(e for e in entries if e['format']=='safetensors')
+        self.assertEqual(sum(pin['role']=='model' for pin in original['files']),26)
+        for entry in entries:
+            for pin in entry['files']:
+                self.assertTrue(pin['pinned'])
+                self.assertNotIn('imatrix',pin['filename'].lower())
+                if pin['filename'].startswith('mmproj-'):
+                    self.assertEqual(pin['role'],'companion')
+
     def test_lfm3_and_carbon_packages_keep_real_precisions_and_compatible_runtimes(self):
         expected = {'lfm3-vl-2b': 8, 'lfm3-1-7b': 8, 'carbon-x': 13}
         for suffix, count in expected.items():
@@ -99,7 +121,7 @@ class RequestedCatalogTests(unittest.TestCase):
             'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B',
             'IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF',
             'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'}.issubset({row['repository'] for row in self.rows}))
-        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 25)
+        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 26)
         self.assertEqual(len({entry['id'] for entry in self.entries}), len(self.entries))
         self.assertTrue(all(entry['builtIn'] and entry['installable'] for entry in self.entries))
         self.assertTrue(all(entry['originalRepository'] != 'Qwen/Qwen3.8-27B' for entry in self.entries))
@@ -138,8 +160,8 @@ class RequestedCatalogTests(unittest.TestCase):
             if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw', 'Q2_0'):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
-        self.assertEqual(report['families'], 25)
-        self.assertEqual(report['withFive'], 12)
+        self.assertEqual(report['families'], 26)
+        self.assertEqual(report['withFive'], 13)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

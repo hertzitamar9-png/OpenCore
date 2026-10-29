@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 550,
-  "withFive": 211,
+  "families": 551,
+  "withFive": 212,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5230,6 +5230,19 @@
         "KRAFTON/Raon-1-mini-preview-gguf",
         "KRAFTON/Raon-1-mini-preview-mlx",
         "KRAFTON/Raon-1-mini-preview-nvfp4"
+      ]
+    },
+    {
+      "id": "publisher-apex-35b-v1",
+      "label": "Apex 35B V1.0",
+      "category": "text",
+      "quantizations": 25,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Apexintelligence-AI/Apex-35B-V1.0",
+        "Apexintelligence-AI/Apex-35B-V1.0-GGUF",
+        "bartowski/Apexintelligence-AI_Apex-35B-V1.0-GGUF"
       ]
     },
     {

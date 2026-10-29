@@ -1,0 +1,541 @@
+{
+  "_id": "6ae1c75572a8505c7a84fd99",
+  "id": "Apexintelligence-AI/Apex-35B-V1.0",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3_5_moe",
+    "image-text-to-text",
+    "mixture-of-experts",
+    "agent",
+    "research",
+    "text-generation",
+    "conversational",
+    "base_model:Qwen/Qwen3.6-35B-A3B",
+    "base_model:finetune:Qwen/Qwen3.6-35B-A3B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 105,
+  "likes": 32,
+  "modelId": "Apexintelligence-AI/Apex-35B-V1.0",
+  "author": "Apexintelligence-AI",
+  "sha": "dde5ccd2c8da7ddbc99d804ac9dca656c6e927ef",
+  "lastModified": "2026-10-28T12:19:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3_5MoeForConditionalGeneration"
+    ],
+    "image_token_id": 248056,
+    "model_type": "qwen3_5_moe",
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "attn_output_gate": true,
+      "bos_token_id": 248044,
+      "dtype": "bfloat16",
+      "eos_token_id": 248044,
+      "full_attention_interval": 4,
+      "head_dim": 256,
+      "hidden_act": "silu",
+      "hidden_size": 2048,
+      "initializer_range": 0.02,
+      "layer_types": [
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention"
+      ],
+      "linear_conv_kernel_dim": 4,
+      "linear_key_head_dim": 128,
+      "linear_num_key_heads": 16,
+      "linear_num_value_heads": 32,
+      "linear_value_head_dim": 128,
+      "mamba_ssm_dtype": "float32",
+      "max_position_embeddings": 262144,
+      "model_type": "qwen3_5_moe_text",
+      "moe_intermediate_size": 512,
+      "mtp_num_hidden_layers": 1,
+      "mtp_use_dedicated_embeddings": false,
+      "num_attention_heads": 16,
+      "num_experts": 256,
+      "num_experts_per_tok": 8,
+      "num_hidden_layers": 40,
+      "num_key_value_heads": 2,
+      "output_router_logits": false,
+      "pad_token_id": null,
+      "partial_rotary_factor": 0.25,
+      "rms_norm_eps": 1e-06,
+      "rope_parameters": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          11,
+          11,
+          10
+        ],
+        "partial_rotary_factor": 0.25,
+        "rope_theta": 10000000,
+        "rope_type": "default"
+      },
+      "router_aux_loss_coef": 0.001,
+      "shared_expert_intermediate_size": 512,
+      "tie_word_embeddings": false,
+      "use_cache": true,
+      "vocab_size": 248320
+    },
+    "tie_word_embeddings": false,
+    "transformers_version": "5.8.1",
+    "video_token_id": 248057,
+    "vision_config": {
+      "deepstack_visual_indexes": [],
+      "depth": 27,
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1152,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4304,
+      "model_type": "qwen3_5_moe_vision",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 2048,
+      "patch_size": 16,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 248054,
+    "vision_start_token_id": 248053
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "license_link": "https://huggingface.co/Apexintelligence-AI/Apex-35B-V1.0/blob/main/LICENSE",
+    "library_name": "transformers",
+    "pipeline_tag": "text-generation",
+    "base_model": "Qwen/Qwen3.6-35B-A3B",
+    "base_model_relation": "finetune",
+    "tags": [
+      "mixture-of-experts",
+      "agent",
+      "research"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "f558c578a4fc5216c8d888c08114956ae1c3884a",
+      "size": 1612
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "1d5180a42f1c3383ba7c7bd0a50f0837ef0168df",
+      "size": 11343
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2d3e42218ccb2529ef0c9a18c737b8c8127e50aa",
+      "size": 39435
+    },
+    {
+      "rfilename": "assets/apex-intelligence-logo-dark.svg",
+      "blobId": "edd03a05aec531f1ce7b3324a93e9e686fe4993e",
+      "size": 393986
+    },
+    {
+      "rfilename": "assets/apex-intelligence-logo.png",
+      "blobId": "b5dafa3319a53f0b795989225754e2f228ddc259",
+      "size": 295009,
+      "lfs": {
+        "sha256": "3a691c1bec9b49a53ffceb573e401a9401e496e5130b9e189debb322daac1676",
+        "size": 295009,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/evaluation-overview.png",
+      "blobId": "c9a6b9ad008e09abc1ef3fc774a1eaceab321d78",
+      "size": 362292,
+      "lfs": {
+        "sha256": "2012527221f39b64e6afdec9d0455ec4e555a4d8e4f7ba4f5aa7ddae843d34ef",
+        "size": 362292,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "966cb63bfaa6f439641fe9263321a59670807e99",
+      "size": 7762
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "2a445065031bf07e3ea028fc7966aeb0a1fcf8e3",
+      "size": 3147
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "3e9789c226109346f8bca7443dcd6a180c4c3246",
+      "size": 242
+    },
+    {
+      "rfilename": "model-00001-of-00026.safetensors",
+      "blobId": "378a40307d5ad3bb08183ac06908b36148e5f8ff",
+      "size": 3996199680,
+      "lfs": {
+        "sha256": "2c011bb5f799f23cdef47df594482658dd740ae1fa8ac22c1d3c217a62a1b31f",
+        "size": 3996199680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00026.safetensors",
+      "blobId": "7e2cadf1ee669f3002e788c6223bbb2e18b0e246",
+      "size": 1284907672,
+      "lfs": {
+        "sha256": "99368924df1c95660c50b72dc823df6ea8489d748a4cd4983db1dff9c23ed99c",
+        "size": 1284907672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00026.safetensors",
+      "blobId": "d437aaa6c4840979eb61da434ef791345884090e",
+      "size": 3357898328,
+      "lfs": {
+        "sha256": "35850acf20d8d8ec149b5f3171d89d3655f11e938cf36d2ee6aafe4f2082a5c9",
+        "size": 3357898328,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00026.safetensors",
+      "blobId": "907c0c8c26c28da8f76b828d4e8e66bc3ad0d51a",
+      "size": 3370808680,
+      "lfs": {
+        "sha256": "28adc9a178997a45d4f712fe3e8034c78fd3979793fdef4199490e09b5b8a6ab",
+        "size": 3370808680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00026.safetensors",
+      "blobId": "1200f182cc0ddfb19a0b9df7300ce0126d2b2b49",
+      "size": 3357898328,
+      "lfs": {
+        "sha256": "6a1b6c79ea4aef1926440b39782dcd18d9ced40fed7963da73c8c7b222d05713",
+        "size": 3357898328,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00026.safetensors",
+      "blobId": "37cb90a81f8d6ab059e6b0c997da7c20e6f26057",
+      "size": 3959424872,
+      "lfs": {
+        "sha256": "75119540d12356de40497d34c86ef90fd58c9ee36028e796389c7a363b07ed97",
+        "size": 3959424872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00026.safetensors",
+      "blobId": "8532ed1d3569443de3bd526193f3d0fb382f246e",
+      "size": 1096788200,
+      "lfs": {
+        "sha256": "47713f8237dba861981935e5a21d0826758c6ef1650632e952942bf110f485d0",
+        "size": 1096788200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00008-of-00026.safetensors",
+      "blobId": "f0b9d9bfde346f7aa18efe98bb84f02870072a99",
+      "size": 3946841976,
+      "lfs": {
+        "sha256": "7b3a3e9f33dc639d0a02083472e190a2fa63693fdb2940a813a0c6f2fad5cfc5",
+        "size": 3946841976,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00009-of-00026.safetensors",
+      "blobId": "9cc195807eb9941631d0338fa1c8d0d18ef4a29d",
+      "size": 1096460816,
+      "lfs": {
+        "sha256": "9f5ffda6662ed9d33ee0a916f6223e80faac891c154c1887fc6529d5d1fb5ff5",
+        "size": 1096460816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00010-of-00026.safetensors",
+      "blobId": "36814398d91b632f70efe7f4fb8e237d8ec86808",
+      "size": 3946841960,
+      "lfs": {
+        "sha256": "4d7725e44f625255bba89ed91d99983bc1676e37c261c103017f4f383fde2bdd",
+        "size": 3946841960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00011-of-00026.safetensors",
+      "blobId": "f183fe0880e2923c42c0a5a06b0f82a0d35ad656",
+      "size": 1096460720,
+      "lfs": {
+        "sha256": "0e7bb150391a672d2ca44049e6f8916d51f0c46f4f1f7dffba7b1d2af1853d1f",
+        "size": 1096460720,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00012-of-00026.safetensors",
+      "blobId": "072c977a50a66af50447db8706bea6f96097f4a4",
+      "size": 3409971048,
+      "lfs": {
+        "sha256": "e782915f96b32ada5a2d78e543fa9787fef10f361b955ed715736a817661e610",
+        "size": 3409971048,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00013-of-00026.safetensors",
+      "blobId": "3f4dd85550f85acc051a27143ddb6871fe489bbe",
+      "size": 1633331632,
+      "lfs": {
+        "sha256": "7df27df450e3058d0f275f54fe22dc18ac769375edafcd791d29f1a0b3995280",
+        "size": 1633331632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00014-of-00026.safetensors",
+      "blobId": "c3afc1a4f79d0a37353fd1dafc4cb7577acb1a5e",
+      "size": 3422553840,
+      "lfs": {
+        "sha256": "f1e9acd72165607051af00cdde65acf5a4197571bf055b88341af2814086c950",
+        "size": 3422553840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00015-of-00026.safetensors",
+      "blobId": "912c83906fbe9b6437d94afce8fcec2a2864c75b",
+      "size": 1633659192,
+      "lfs": {
+        "sha256": "bb691cda4a98986b8a5efcf35501e0999186d5f5ed9e78c99bdd7f1ce39688a4",
+        "size": 1633659192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00016-of-00026.safetensors",
+      "blobId": "5850086decd6e993ea895d9ee33b156a0162ebf3",
+      "size": 3946842104,
+      "lfs": {
+        "sha256": "d1e72940e34adce1926862f0ee4c408a896063d316d23b2ca345522552e45e9f",
+        "size": 3946842104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00017-of-00026.safetensors",
+      "blobId": "49f1aa673fa27371fd01e4252843ca6a829fef1d",
+      "size": 1096460576,
+      "lfs": {
+        "sha256": "81dffed7c1a33333ab7903c5522c0efdd4545758676f60042e676b8cded97aa3",
+        "size": 1096460576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00018-of-00026.safetensors",
+      "blobId": "1bed87026d16f06b96d15ce6d20f2c6091723264",
+      "size": 3946841960,
+      "lfs": {
+        "sha256": "a7c680fbb6a0ce8688e47b87761cd269974b70b26329c270a9cd51639ef6979d",
+        "size": 3946841960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00019-of-00026.safetensors",
+      "blobId": "0810a2a6786190a31e2c3e4cbbe2d36ce75dbe61",
+      "size": 1096460776,
+      "lfs": {
+        "sha256": "052d4d4d02394bf295c5fa962cb2c4cf3b9c0b2c8ad6b108f7efca1ed10270ec",
+        "size": 1096460776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00020-of-00026.safetensors",
+      "blobId": "c2f05f0a764d9c27ab28933612ad1b75118e1254",
+      "size": 3409971040,
+      "lfs": {
+        "sha256": "1a2574a36ad84f979f0ecab1ba3ee0e934ff925a82661183dea983f3d1acd075",
+        "size": 3409971040,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00021-of-00026.safetensors",
+      "blobId": "43ee8f5afd520be61384edd5cdad380adb769ee7",
+      "size": 1633331712,
+      "lfs": {
+        "sha256": "dd9df11165b54120dec125bbdd3f778a7ea3659483ead43dc13004df3c2fc334",
+        "size": 1633331712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00022-of-00026.safetensors",
+      "blobId": "81d371a795112f63841a78ab0fb36a09e0147542",
+      "size": 3370808720,
+      "lfs": {
+        "sha256": "2d37c80c24fcc3377ef05613ea79790e94ea73f1f43d0e76f8878908e98252df",
+        "size": 3370808720,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00023-of-00026.safetensors",
+      "blobId": "5f9fd3209ced8770e5a3d3922f6e47b885e19c81",
+      "size": 3357898360,
+      "lfs": {
+        "sha256": "77778394cfc876bb81435ab89bdacdb84945a4671dc7a5f2ec792dcea9926516",
+        "size": 3357898360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00024-of-00026.safetensors",
+      "blobId": "798c56227be69c35e8d10c3d38d7017a6f3d8c17",
+      "size": 3370808720,
+      "lfs": {
+        "sha256": "8a87010ad7c50bee594f03cff0de900454bc54a2bebce0ab9fdc03af13596099",
+        "size": 3370808720,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00025-of-00026.safetensors",
+      "blobId": "d3ef1688abd97bbd03e7be752ea2fd0e667772e7",
+      "size": 3832888224,
+      "lfs": {
+        "sha256": "962dc99cb9a6cc272bb8836553f5e6da24da9b65995c5b15d366486db794bff7",
+        "size": 3832888224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00026-of-00026.safetensors",
+      "blobId": "1fc2de17f7b21aba160df8806fcd71e19b5025e7",
+      "size": 2231416816,
+      "lfs": {
+        "sha256": "062eef6449f7c606af24310b1aeda036cc1516899602e6d9e01f6639114ac9a0",
+        "size": 2231416816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "3b28ca75cc99a28907e2e223874c8a3b240cd2ea",
+      "size": 102574
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "8ed39680d90d989c35a3e308338a24875bafbc42",
+      "size": 443
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "33818c7f9e991ad735fd240209f4fa73e6c28c50",
+      "size": 1191
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "a73a846725794819aa6e1c9e97d8dc9671c2006d",
+      "size": 12807982,
+      "lfs": {
+        "sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+        "size": 12807982,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "801d3d27ae6c15858704df9c18911d2060fa67fb",
+      "size": 15149
+    }
+  ],
+  "spaces": [
+    "fastgpu/vram-and-gpu-cost-calculator"
+  ],
+  "createdAt": "2026-10-28T09:58:45.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 35951822704
+    },
+    "total": 35951822704
+  },
+  "usedStorage": 71917241235
+}

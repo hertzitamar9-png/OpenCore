@@ -1,0 +1,587 @@
+{
+  "_id": "6ae26154714a482f59eb4e3a",
+  "id": "bartowski/Apexintelligence-AI_Apex-35B-V1.0-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "mixture-of-experts",
+    "agent",
+    "research",
+    "image-text-to-text",
+    "base_model:Apexintelligence-AI/Apex-35B-V1.0",
+    "base_model:quantized:Apexintelligence-AI/Apex-35B-V1.0",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 928,
+  "likes": 3,
+  "modelId": "bartowski/Apexintelligence-AI_Apex-35B-V1.0-GGUF",
+  "author": "bartowski",
+  "sha": "3676b9bcacc1b6d0478d9bd7bbceba53398c0ef4",
+  "lastModified": "2026-10-28T21:47:06.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "Apexintelligence-AI/Apex-35B-V1.0",
+    "license": "apache-2.0",
+    "license_link": "https://huggingface.co/Apexintelligence-AI/Apex-35B-V1.0/blob/main/LICENSE",
+    "tags": [
+      "mixture-of-experts",
+      "agent",
+      "research"
+    ],
+    "base_model_relation": "quantized"
+  },
+  "gguf": {
+    "total": 35505251456,
+    "architecture": "qwen35moe",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/Apex-35B-V1.0-GGUF/Apexintelligence-AI_Apex-35B-V1.0-imatrix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if (preserve_thinking is defined and preserve_thinking is true) or (loop.index0 > ns.last_query_index) %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 13710764256
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "950d436ece83589238f7cdf216dcb9a3e9ab3f5d",
+      "size": 4000
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ2_M.gguf",
+      "blobId": "cab7bebdb85a7ec9f3d6002c8abe1b4bcad74648",
+      "size": 13710764256,
+      "lfs": {
+        "sha256": "45c10516a4b5dcb45063320faafd9c553eb24aad68b96b837fbde956edf823d6",
+        "size": 13710764256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ2_S.gguf",
+      "blobId": "b6b95ef1123c857a39a519e4ae59cc095e566818",
+      "size": 12456503520,
+      "lfs": {
+        "sha256": "cf7a638b165f89e43e63bf38e21e3cefc4fbb3f70985320cb19384cc2d0c6633",
+        "size": 12456503520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ2_XS.gguf",
+      "blobId": "c2b59d73c651bba1a39e218e4f313fbc784adb44",
+      "size": 11742218464,
+      "lfs": {
+        "sha256": "476acc947d41034e885143b9a56088f944af6f6bd3024a557fde11b2d4adc8fb",
+        "size": 11742218464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ2_XXS.gguf",
+      "blobId": "3dd51b348525bbd9d98a17ec369ced65bae0bf09",
+      "size": 11270154464,
+      "lfs": {
+        "sha256": "572ccb6123763540bee576f38bf8ea1d283c2044d3efc40ee7c3ee87a5407a73",
+        "size": 11270154464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ3_M.gguf",
+      "blobId": "2c4cb1a6d248e94dce5aa3fdccab360dacee2333",
+      "size": 19435178208,
+      "lfs": {
+        "sha256": "f22dd62027d210b454cbf07d62e4cd4bd44f6a32dafbbc58ffae28edb2c3b63e",
+        "size": 19435178208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ3_XS.gguf",
+      "blobId": "0365cf3c387fdfd205465277464a4734bab67198",
+      "size": 16795650272,
+      "lfs": {
+        "sha256": "c0fcaffe53298d04b82e7f13a68684e54bb0731d00189bf625e649359b3a190a",
+        "size": 16795650272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ3_XXS.gguf",
+      "blobId": "7357b2e465cc0c82a5b1f4d99e7dc359d7db0fc7",
+      "size": 16058632416,
+      "lfs": {
+        "sha256": "91992de0b5620491bc10baa97703528bb4a232976ae873575f5d8436fdec136a",
+        "size": 16058632416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ4_NL.gguf",
+      "blobId": "15a06e7f79950bfa561bca6bf7a60bbc824a8326",
+      "size": 22795471072,
+      "lfs": {
+        "sha256": "2c3d737f93e78f0b6165469ce7357e0a074424ca354a7e050f3f0822bb9abd26",
+        "size": 22795471072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-IQ4_XS.gguf",
+      "blobId": "27161f9a7517f3e9209bcf1349cc0428a9da990f",
+      "size": 20363888864,
+      "lfs": {
+        "sha256": "8f000f4aa1c66ca82fc6f2406d431d6e390966ea25e268a6beb2a00550b3f2d1",
+        "size": 20363888864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q2_K.gguf",
+      "blobId": "7c679d8560a4dc8c6b093dbb714d0d746244a918",
+      "size": 14316292320,
+      "lfs": {
+        "sha256": "3d0a6a5e62d83ec13c02b4f3c6a36b3f33c94de84ab8ebb3d0147d2a971502ee",
+        "size": 14316292320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q3_K_L.gguf",
+      "blobId": "a9bfc8586b9a72c9490276d4ed37719c0dbd5ab4",
+      "size": 18744035552,
+      "lfs": {
+        "sha256": "ad6814b54e3228f8191c80835942753d5fc7d98bc4a812ad8e0eb72cecb5695a",
+        "size": 18744035552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q3_K_M.gguf",
+      "blobId": "4c8af1bf2dc0a05735f7a709faabc4700a9fe96a",
+      "size": 17821288672,
+      "lfs": {
+        "sha256": "5e70d6cabf65db8c74b491cefac3bb233f9cf24656c794339fcea9019031f021",
+        "size": 17821288672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q3_K_S.gguf",
+      "blobId": "db48257dbef3a7a16bcdff06b04e72028b82d475",
+      "size": 16795650272,
+      "lfs": {
+        "sha256": "80686c76cd7e5c37888443d810a1db5ca55c2356f447e753dcf389ee3b922580",
+        "size": 16795650272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q4_0.gguf",
+      "blobId": "b74a099f14f8169756a33c465b934d58a9d61ae4",
+      "size": 20415244512,
+      "lfs": {
+        "sha256": "3acc03d4735a8b295e2eabca2ad470bd107d5f4f706f57a85d126396c169b79f",
+        "size": 20415244512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q4_1.gguf",
+      "blobId": "d352dd40d64dbbb05747dcfd326848d895fd6b45",
+      "size": 22447450336,
+      "lfs": {
+        "sha256": "12433982d7b74690844a4d3d7f443c890ab22df7fc2e20bf07fe02b4a857cdc8",
+        "size": 22447450336,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q4_K_L.gguf",
+      "blobId": "b2aa3c1631568518f9c4ec48cbb0a1746640fefb",
+      "size": 24590633184,
+      "lfs": {
+        "sha256": "00d4035ae45a2177f612a7817a7aedc9b1d4a56a8aab34166f594e033a7af50e",
+        "size": 24590633184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q4_K_M.gguf",
+      "blobId": "16a06dd9802c0efc824f3c21e5d3bef7118f45a1",
+      "size": 22795471072,
+      "lfs": {
+        "sha256": "c1bf4a6008bda54c6da3be1e5b6137a9b31cbe7d5a5432950215b0d13da2296b",
+        "size": 22795471072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q4_K_S.gguf",
+      "blobId": "5081fcada6131a5baab12647814e06e4c7535666",
+      "size": 21423933664,
+      "lfs": {
+        "sha256": "fd829c5d5b87d1df847360298f499652cdd0412d3c840fa396ae6d4b52512866",
+        "size": 21423933664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q5_K_M.gguf",
+      "blobId": "dc0fd3a244f5322afd944585f869e40bed9117c8",
+      "size": 27461634272,
+      "lfs": {
+        "sha256": "4ec24ca782654ab83c4bb27c8478230e22ccf1b55721ce48c051ffff89a52109",
+        "size": 27461634272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q5_K_S.gguf",
+      "blobId": "4e6b2a54a1859518888dd14aaf97fdfb954c00a2",
+      "size": 25614043360,
+      "lfs": {
+        "sha256": "81b49c1ced056d407796acfbb5f5b38019f7496b68d61888188a36720ec9d81d",
+        "size": 25614043360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q6_K.gguf",
+      "blobId": "5a1d514bdeea0a2a39c6b91c687d0b7b2ef4d8ad",
+      "size": 31215536352,
+      "lfs": {
+        "sha256": "392bc6ff1d62e64dd68349468415b7ed277bc2a59f8242951cd8fd0ba1c350f8",
+        "size": 31215536352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q6_K_L.gguf",
+      "blobId": "d6cae4fb33d968fd07c3e629dd37452af7351400",
+      "size": 32775817440,
+      "lfs": {
+        "sha256": "8c7e33e7dc8e8d1eae0abf56f4b72f063ca58e53cc56d11b9c1472a7349a186d",
+        "size": 32775817440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q6_K_S.gguf",
+      "blobId": "01f2be3b6d90a7f8d15fbc17f1bc5309418a4d45",
+      "size": 29850290400,
+      "lfs": {
+        "sha256": "527c8104d63b73da9794529a953d942b7e9c7abfb24ca24a6d4df88341c55c52",
+        "size": 29850290400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-Q8_0.gguf",
+      "blobId": "17d23882764b8355da3c86f6e89b1898a9786ebf",
+      "size": 37813700832,
+      "lfs": {
+        "sha256": "849af173d2931501ddbb2365211855e1fe087dc4130dc47c920485574e6c696c",
+        "size": 37813700832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-bf16/Apexintelligence-AI_Apex-35B-V1.0-bf16-00001-of-00002.gguf",
+      "blobId": "512c82ca4fabe5b8e7990d42d5cad37bb09d9dde",
+      "size": 39753376288,
+      "lfs": {
+        "sha256": "52560e2d4ac9b0b0d42412c01d0337ea9b6a85bb0979cc1b22406f9e1796958a",
+        "size": 39753376288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-bf16/Apexintelligence-AI_Apex-35B-V1.0-bf16-00002-of-00002.gguf",
+      "blobId": "663696e3b3e8ed23e362b1d5a39612bd59bfba2f",
+      "size": 31313618496,
+      "lfs": {
+        "sha256": "53b172761a39580fcd81bae15c74ae8372f181b4f2da4c3774136ec341de5a41",
+        "size": 31313618496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-calibration-v6.txt",
+      "blobId": "1ff4092f3c846843f1ae251440cf870a691e9202",
+      "size": 1177575
+    },
+    {
+      "rfilename": "Apexintelligence-AI_Apex-35B-V1.0-imatrix.gguf",
+      "blobId": "521a48aeafa473b3b8e4a0aee4b546a9adb8dcda",
+      "size": 384343168,
+      "lfs": {
+        "sha256": "b1f64857f0fa390657d8e9155e0bb0ac39ba7503b1f9dbd3c5705237016440e3",
+        "size": 384343168,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ad812ef1c73ba5203685c4f5779bb9ee9de83cda",
+      "size": 22141
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_M.layout.json",
+      "blobId": "95ef3944a7079375a010b3051a37b328804159e0",
+      "size": 9111
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_M.tensor-types.txt",
+      "blobId": "6e94e441fa4e5c5228a311bd5b413fb933f884a7",
+      "size": 15375
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_S.layout.json",
+      "blobId": "d3541d9ac90c7bcab0b8af7c7e4b6f97c2174d33",
+      "size": 9168
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_S.tensor-types.txt",
+      "blobId": "317968eb16e87a991f55d46d3ddb764914c0146c",
+      "size": 15535
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_XS.layout.json",
+      "blobId": "ac8ed42815e8d94d47b7fe6b954b869dde52bf89",
+      "size": 9045
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_XS.tensor-types.txt",
+      "blobId": "5c60e355f902e427a498947380b15d22d9c90ddf",
+      "size": 15588
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_XXS.layout.json",
+      "blobId": "1976c1a2073f98af485ed4352898eaafa9890271",
+      "size": 9187
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ2_XXS.tensor-types.txt",
+      "blobId": "a7d579054c513af2461a7530a5d62a5063c66268",
+      "size": 15777
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ3_M.layout.json",
+      "blobId": "3bf5b6dcca2e7be9ee731c7896880282d6391a97",
+      "size": 9016
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ3_M.tensor-types.txt",
+      "blobId": "2439be3ed29c54a177f9efc84d5621d57fbbdf81",
+      "size": 15323
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ3_XS.layout.json",
+      "blobId": "20156368a7af6fb03da9c66d10482a56676cd80e",
+      "size": 9016
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ3_XS.tensor-types.txt",
+      "blobId": "d350d5275a3ebd13312c30613c11094da4ab84bf",
+      "size": 15364
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ3_XXS.layout.json",
+      "blobId": "a8fb13f3c3023831b6f7b90f1203aae3d5849603",
+      "size": 9086
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ3_XXS.tensor-types.txt",
+      "blobId": "4f0b4a9fb9dafad2753e1ddad080ff056ace8d71",
+      "size": 15580
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ4_NL.layout.json",
+      "blobId": "5764453f6272e413de832c67ed6587093e0e91af",
+      "size": 8973
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ4_NL.tensor-types.txt",
+      "blobId": "f57c30933120bdade4518df808e8d36b0f60d81c",
+      "size": 15442
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ4_XS.layout.json",
+      "blobId": "fb8c5a1a9ce243364796d0664140dc327411499d",
+      "size": 8954
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-IQ4_XS.tensor-types.txt",
+      "blobId": "50d3fb2f8e90546692c16b93b07423a85d242e8e",
+      "size": 15482
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q2_K.layout.json",
+      "blobId": "d2bff32c4a8f78d79f875c47db2991f8bbd6918e",
+      "size": 9006
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q2_K.tensor-types.txt",
+      "blobId": "4abad44c95c4fb49321b10d11bf7651b938a1e16",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q3_K_L.layout.json",
+      "blobId": "3dc34b81fcb432716a8456356791d57db851d743",
+      "size": 9015
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q3_K_L.tensor-types.txt",
+      "blobId": "2a8b24e8d4959c94d4b39e0d8a8c8bb5e9012d7b",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q3_K_M.layout.json",
+      "blobId": "15bf2bc2db8aade1c36443fe3873b5f3294ed391",
+      "size": 8995
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q3_K_M.tensor-types.txt",
+      "blobId": "343be49e94795bf2b8194b7a2910f53b9922c7d8",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q3_K_S.layout.json",
+      "blobId": "0ad1a1beb0dd424c0f3e3f31f05609785bf19d1a",
+      "size": 8994
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q3_K_S.tensor-types.txt",
+      "blobId": "fdaa8b04d189774fd4784e6b845b39f8341b1c5d",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q4_K_L.layout.json",
+      "blobId": "47f7a3e1a712fc1e414b82c9f5d927073e88e425",
+      "size": 8965
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q4_K_L.tensor-types.txt",
+      "blobId": "2daee9c11621004acd169b2050588f6211fbf5a8",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q4_K_M.layout.json",
+      "blobId": "eb83e2fb0ef4c45909419b7f7992c94323bdd9c9",
+      "size": 8964
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q4_K_M.tensor-types.txt",
+      "blobId": "be6028302da90c9cda7d359208ccb5512e7751ff",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q4_K_S.layout.json",
+      "blobId": "1251619c4614fe974679641c53b277f80924520f",
+      "size": 8893
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q4_K_S.tensor-types.txt",
+      "blobId": "e3b6b479dea9982be526e6f35862a721403c834f",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q5_K_M.layout.json",
+      "blobId": "8b3ee5446bdd9598f709738f5900a42ad0dc9b05",
+      "size": 8930
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q5_K_M.tensor-types.txt",
+      "blobId": "533721e1fe06ba83ab6a73723c0d320b03363702",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q5_K_S.layout.json",
+      "blobId": "ed0fd04c87bd88edaa02f2d3ba387d32a10655aa",
+      "size": 8912
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q5_K_S.tensor-types.txt",
+      "blobId": "a3eac4a1eee4355fcf9924fa9a3887309d9525bd",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q6_K.layout.json",
+      "blobId": "ad79b018b87a6876c9038ca7476ed121fa15cbe6",
+      "size": 8906
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q6_K.tensor-types.txt",
+      "blobId": "035e93331cb5c978c2ddc01b01482df502e8134b",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q6_K_L.layout.json",
+      "blobId": "10917edc36f5ce810e5bce37f2329b2677bd9b62",
+      "size": 8912
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q6_K_L.tensor-types.txt",
+      "blobId": "d2924406da570f4ef9e86d10ea4dce05e3cf596e",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q6_K_S.layout.json",
+      "blobId": "e1f490d4e87a453e18d5deb55568bf4a2312de00",
+      "size": 8910
+    },
+    {
+      "rfilename": "layouts/Apexintelligence-AI_Apex-35B-V1.0-Q6_K_S.tensor-types.txt",
+      "blobId": "5e785739e6e9002830ca428f6cec458f84669f61",
+      "size": 15246
+    },
+    {
+      "rfilename": "mmproj-Apexintelligence-AI_Apex-35B-V1.0-bf16.gguf",
+      "blobId": "523aea058b9a7ad023d8ddd05252733f3878c9aa",
+      "size": 902822560,
+      "lfs": {
+        "sha256": "5245340cf7554ff11c9fd802ee674a7e1d8252b425806c195345a99f227b9034",
+        "size": 902822560,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-Apexintelligence-AI_Apex-35B-V1.0-f16.gguf",
+      "blobId": "bdf633e06c709444b9d27ce3d38a4af58adf407e",
+      "size": 899283616,
+      "lfs": {
+        "sha256": "a4800887a3920a29291276f00347ae07865c51117ceffe6573637aaf17474bfa",
+        "size": 899283616,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-28T20:55:48.000Z",
+  "usedStorage": 581962927904
+}

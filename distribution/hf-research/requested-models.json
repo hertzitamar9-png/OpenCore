@@ -496,6 +496,24 @@
           "repository": "HuggingFaceBio/Carbon-X"
         }
       ]
+    },
+    {
+      "repository": "Apexintelligence-AI/Apex-35B-V1.0",
+      "familyId": "publisher-apex-35b-v1",
+      "label": "Apex 35B V1.0",
+      "category": "text",
+      "description": "Qwen3.6-35B-A3B fine-tune for coding, research, tool use and agent tasks. Includes original BF16 weights, every official GGUF precision and verified community quantizations. Vision and action-harness execution require separate validation.",
+      "sources": [
+        {
+          "repository": "Apexintelligence-AI/Apex-35B-V1.0-GGUF"
+        },
+        {
+          "repository": "bartowski/Apexintelligence-AI_Apex-35B-V1.0-GGUF"
+        },
+        {
+          "repository": "Apexintelligence-AI/Apex-35B-V1.0"
+        }
+      ]
     }
   ]
 }
