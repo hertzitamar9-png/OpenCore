@@ -2,6 +2,8 @@
 license: apache-2.0
 base_model: Qwen/Qwen3.5-4B
 base_model_relation: finetune
+datasets:
+- ccore/ThreeJS-3D-Scenes
 tags:
 - qwen3_5
 - code
@@ -20,29 +22,45 @@ This is an early preview of a 4B model I am still training, with a particular fo
 
 This is an **independent fine-tune** by [CCORE](https://huggingface.co/ccore), based on [Qwen/Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B). **It is not an official Qwen release.**
 
-## Update — October 26, 2026
+## Technical report — now available
 
-Both **Q4_K_M** and **Q8_0** have been updated. If you downloaded an earlier version, please download the files again to get this update.
+The **technical report for this training experiment is now available**.
 
-- Fixed the **layer-related issue** reported by some users.
-- In my latest tests, this update appears to produce more successful **one-shot scene generations**.
+[**Read the technical report (PDF)**](https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder/blob/main/Qwen3.5-4B-3D-Coder_Technical_Report.pdf) · [**Download the PDF**](https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder/resolve/main/Qwen3.5-4B-3D-Coder_Technical_Report.pdf?download=true)
 
-The image below shows one example comparison from my tests.
+## Full FP16 weights — now available
 
-[![Example comparison of two voxel-style Rome scenes from testing](images/dif.png)](https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder/blob/main/images/dif.png)
+The **original FP16 weights** are now available in this repository in **Safetensors format**, alongside the Q4_K_M and Q8_0 GGUF versions.
 
-## Training and release schedule
+The release includes all **four weight shards**, the model configuration, tokenizer, generation configuration, chat template, and image/video processor settings. The FP16 weights were verified locally for **loading and text generation with Transformers 5.20.2**.
 
-Training is expected to finish on **October 28, 2026, at 07:30 UTC**.
+The FP16 generation defaults use **temperature 0.6**, **top-k 20**, **top-p 0.95**, and **repetition penalty 1.0**, with caching enabled.
 
-On **October 26 and 27, 2026**, I will update the **Q8_0 GGUF** to the latest available training checkpoint.
+[**Browse the FP16 files and GGUF versions**](https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder/tree/main)
 
-After training finishes, I will publish:
+## Training dataset — now available
 
-- The **full FP16 model weights**.
-- The **full set of quantized versions**.
-- The **training dataset**, so others can use it to train or fine-tune other models.
-- An **evaluation report with a variety of prompts**, showing how the model performed on them throughout training.
+The dataset used to train this model is now public: [**CCORE Three.js 3D Scenes**](https://huggingface.co/datasets/ccore/ThreeJS-3D-Scenes).
+
+It contains **4,146 scene examples** (**3,933 training / 213 validation**), including prompts, full thinking traces, complete HTML/JavaScript responses, and complexity levels. Rendered reference images are available in the optional `previews` configuration. The dataset is released under the **MIT License**.
+
+## October 27 checkpoint update
+
+Both **Q4_K_M** and **Q8_0** now contain the updated October 27 checkpoint. If you downloaded an earlier version, please download the files again to get this update.
+
+In my latest tests, **one-shot success has improved substantially**, along with **overall scene quality**. Some scenes can still require another attempt or a correction.
+
+**Generation parameters remain unchanged** for both quantizations. Use the settings listed below. The earlier fix for the layer-related issue reported by some users is also included.
+
+The comparison below shows the Rome scene across the **October 25, 26, and 27** previews.
+
+[![Rome scene progression across the October 25, 26, and 27 previews](images/roma3.png)](https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder/blob/main/images/roma3.png)
+
+## Release update — October 29, 2026
+
+The **full FP16 weights**, [**training dataset**](https://huggingface.co/datasets/ccore/ThreeJS-3D-Scenes), and [**technical report (PDF)**](https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder/blob/main/Qwen3.5-4B-3D-Coder_Technical_Report.pdf) are now available.
+
+The **full set of quantized versions** is also planned.
 
 ## Early examples
 

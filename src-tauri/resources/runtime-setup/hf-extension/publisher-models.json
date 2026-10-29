@@ -69313,7 +69313,7 @@
     {
       "id": "hf-0a6d05f30e9318c71b0893c9",
       "repository": "ccore/Qwen3.5-4B-3D-Coder",
-      "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+      "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
       "variantKey": "gguf:Qwen3.5-4B-3D-Coder-Q4_K_M.gguf",
       "name": "Qwen3.5 4B 3D Coder · Q4_K_M",
       "quantization": "Q4_K_M",
@@ -69324,10 +69324,10 @@
       "files": [
         {
           "repository": "ccore/Qwen3.5-4B-3D-Coder",
-          "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
           "filename": "Qwen3.5-4B-3D-Coder-Q4_K_M.gguf",
           "bytes": 2708804096,
-          "sha256": "ca7442573cdede7b62e80eabc1d78dfa1e0fade28058e414042ef714adadb36b",
+          "sha256": "32c37c83d3ca055d30aefa679f1a1670d3e2eb889ee7cc805792d53f219cfae8",
           "gitBlobSha1": null,
           "role": "model",
           "pinned": true
@@ -69335,8 +69335,10 @@
       ],
       "installable": true,
       "reason": null,
-      "modelType": "qwen35",
-      "architectures": [],
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
       "runtime": {
         "adapter": "gguf",
         "available": false,
@@ -69353,7 +69355,7 @@
       "builtIn": true,
       "nativeModelIds": [],
       "libraryCategory": "text",
-      "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the publisher's Q4_K_M and Q8_0 GGUF checkpoints.",
+      "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the updated publisher Q4_K_M and Q8_0 GGUF checkpoints and original FP16 weights.",
       "contextTokens": 8192,
       "license": "apache-2.0",
       "managedEngine": "flint-cpu-v1",
@@ -69362,7 +69364,7 @@
     {
       "id": "hf-c0548deccd6d28ad099cce96",
       "repository": "ccore/Qwen3.5-4B-3D-Coder",
-      "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+      "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
       "variantKey": "gguf:Qwen3.5-4B-3D-Coder-Q8_0.gguf",
       "name": "Qwen3.5 4B 3D Coder · Q8_0",
       "quantization": "Q8_0",
@@ -69373,10 +69375,10 @@
       "files": [
         {
           "repository": "ccore/Qwen3.5-4B-3D-Coder",
-          "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
           "filename": "Qwen3.5-4B-3D-Coder-Q8_0.gguf",
           "bytes": 4482402816,
-          "sha256": "fee6c198e151d8ba4b032c98e44d810a0a2dc8e947ee9f9f933137a3a5528b91",
+          "sha256": "c30b02629456aa2bc32e522de0f58eb1aafd8518a7634128fed67d1486fc2a9a",
           "gitBlobSha1": null,
           "role": "model",
           "pinned": true
@@ -69384,8 +69386,10 @@
       ],
       "installable": true,
       "reason": null,
-      "modelType": "qwen35",
-      "architectures": [],
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
       "runtime": {
         "adapter": "gguf",
         "available": false,
@@ -69402,10 +69406,170 @@
       "builtIn": true,
       "nativeModelIds": [],
       "libraryCategory": "text",
-      "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the publisher's Q4_K_M and Q8_0 GGUF checkpoints.",
+      "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the updated publisher Q4_K_M and Q8_0 GGUF checkpoints and original FP16 weights.",
       "contextTokens": 8192,
       "license": "apache-2.0",
       "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0
+    },
+    {
+      "id": "hf-e952a8939dac49a09a2ce8ce",
+      "repository": "ccore/Qwen3.5-4B-3D-Coder",
+      "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+      "variantKey": "safetensors:.",
+      "name": "Qwen3.5 4B 3D Coder · FP16",
+      "quantization": "FP16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 9098688092,
+      "files": [
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "model-00001-of-00004.safetensors",
+          "bytes": 2474053384,
+          "sha256": "ce6fa579c9933caebbe2e51e5a28d787b0c43fc32e7991b4f6a0ab972c7215f5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "model-00002-of-00004.safetensors",
+          "bytes": 2498894208,
+          "sha256": "7476f2d4f661c9e8105ffb3b527904cd26deb4b1450c5a7d62b4050498ab9318",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "model-00003-of-00004.safetensors",
+          "bytes": 2498899424,
+          "sha256": "64784f1f9eec6a370b13c68f9631fc0d64a93cc7c2a4befb015afafdfabd4cd1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "model-00004-of-00004.safetensors",
+          "bytes": 1606772384,
+          "sha256": "163fae81284c3a2bd539458426c68075f77d8c341ab549f5bd02a22acb2e18ed",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "chat_template.jinja",
+          "bytes": 7756,
+          "sha256": null,
+          "gitBlobSha1": "a585dec894e63da457d9440ec6aa7caa16d20860",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "config.json",
+          "bytes": 2902,
+          "sha256": null,
+          "gitBlobSha1": "814e530f8623320d4f4e03d3e53cee60686ca086",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "generation_config.json",
+          "bytes": 268,
+          "sha256": null,
+          "gitBlobSha1": "df90bcf77240822a370f58d5309d298670adabe6",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "model.safetensors.index.json",
+          "bytes": 66236,
+          "sha256": null,
+          "gitBlobSha1": "63b6d7a34eaeb991d62286b3a6af00ea587d42f6",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": null,
+          "gitBlobSha1": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "tokenizer.json",
+          "bytes": 19989339,
+          "sha256": "a5cd9732badce41de57e6efce8302930ded1c1188c5f81feb2bd6c24c4a1941f",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "tokenizer_config.json",
+          "bytes": 1416,
+          "sha256": null,
+          "gitBlobSha1": "6bf78b077e4fe83e8c9c74c52036242a6c264083",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 385,
+          "sha256": null,
+          "gitBlobSha1": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder",
+      "status": "not-installed",
+      "familyId": "publisher-qwen35-4b-3d-coder",
+      "familyLabel": "Qwen3.5 4B 3D Coder",
+      "originalRepository": "ccore/Qwen3.5-4B-3D-Coder",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the updated publisher Q4_K_M and Q8_0 GGUF checkpoints and original FP16 weights.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
       "catalogOrder": 0
     },
     {

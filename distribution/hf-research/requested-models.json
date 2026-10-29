@@ -381,7 +381,7 @@
       "familyId": "publisher-qwen35-4b-3d-coder",
       "label": "Qwen3.5 4B 3D Coder",
       "category": "text",
-      "description": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the publisher's Q4_K_M and Q8_0 GGUF checkpoints.",
+      "description": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the updated publisher Q4_K_M and Q8_0 GGUF checkpoints and original FP16 weights.",
       "sources": [
         {
           "repository": "ccore/Qwen3.5-4B-3D-Coder"

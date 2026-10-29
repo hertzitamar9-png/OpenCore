@@ -48,14 +48,17 @@ class RequestedCatalogTests(unittest.TestCase):
         coder=self.family('qwen35-4b-3d-coder')
         self.assertEqual(len(hi3d),1)
         self.assertEqual(len(ocr),1)
-        self.assertEqual({e['quantization'] for e in coder},{'Q4_K_M','Q8_0'})
+        self.assertEqual({e['quantization'] for e in coder},{'Q4_K_M','Q8_0','FP16'})
         self.assertEqual({e['originalRepository'] for e in hi3d+ocr+coder},
                          {'hi3d-official/Hi3Dv1.0','baidu/Unlimited-OCR-2','ccore/Qwen3.5-4B-3D-Coder'})
         self.assertTrue(all(p['pinned'] for entry in hi3d+ocr+coder for p in entry['files']))
         self.assertTrue(all(e['runtime']['adapter'] is None for e in hi3d+ocr))
         self.assertEqual(sum(p['role']=='model' for p in hi3d[0]['files']),3)
         self.assertEqual(sum(p['role']=='model' for p in ocr[0]['files']),2)
-        self.assertTrue(all(e['format']=='gguf' and e['runtime']['adapter']=='gguf' for e in coder))
+        self.assertTrue(all(e['runtime']['adapter']=='gguf' for e in coder if e['format']=='gguf'))
+        original=next(e for e in coder if e['format']=='safetensors')
+        self.assertEqual(sum(p['role']=='model' for p in original['files']),4)
+        self.assertTrue(all(e['revision']=='1bf0f958cb4bac8e04b98280dd9fb3f0e942c015' for e in coder))
 
     def test_latest_requested_models_have_all_verified_preset_options(self):
         expected = {'qwen38-jumbo-fusion-neo-mtp':7, 'phonon-2-5':1, 'kat-coder-apex-miniplus-v2-1':1,

@@ -5425,7 +5425,7 @@
       "id": "publisher-qwen35-4b-3d-coder",
       "label": "Qwen3.5 4B 3D Coder",
       "category": "text",
-      "quantizations": 2,
+      "quantizations": 3,
       "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [

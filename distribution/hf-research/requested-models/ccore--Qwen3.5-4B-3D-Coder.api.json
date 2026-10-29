@@ -1,1 +1,469 @@
-{"_id":"6add9706130a725e85d110c6","id":"ccore/Qwen3.5-4B-3D-Coder","private":false,"tags":["gguf","qwen3_5","code","threejs","3d","preview","base_model:Qwen/Qwen3.5-4B","base_model:finetune:Qwen/Qwen3.5-4B","license:apache-2.0","endpoints_compatible","region:us","conversational"],"downloads":3544,"likes":143,"modelId":"ccore/Qwen3.5-4B-3D-Coder","author":"ccore","sha":"521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e","lastModified":"2026-10-26T22:50:16.000Z","gated":false,"disabled":false,"model-index":null,"config":{},"cardData":{"license":"apache-2.0","base_model":"Qwen/Qwen3.5-4B","base_model_relation":"finetune","tags":["qwen3_5","code","threejs","3d","preview"]},"gguf":{"total":4205751296,"architecture":"qwen35","context_length":262144,"chat_template":"{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}","eos_token":"<|im_end|>","totalFileSize":2708804096},"siblings":[{"rfilename":".gitattributes","blobId":"4b5d342ee19b6afc8dc90632ecdcdc90dae83a80","size":2335},{"rfilename":"LICENSE","blobId":"f938136e3adacfd92be087f6e113b5d6d97f678f","size":11544},{"rfilename":"Qwen3.5-4B-3D-Coder-Q4_K_M.gguf","blobId":"e5aad7cd0fa5c7b352d0ba68bd646b70c5a5294a","size":2708804096,"lfs":{"sha256":"ca7442573cdede7b62e80eabc1d78dfa1e0fade28058e414042ef714adadb36b","size":2708804096,"pointerSize":135}},{"rfilename":"Qwen3.5-4B-3D-Coder-Q8_0.gguf","blobId":"1e7f8849a1aae8dd6fb83a182315c94b86ec0012","size":4482402816,"lfs":{"sha256":"fee6c198e151d8ba4b032c98e44d810a0a2dc8e947ee9f9f933137a3a5528b91","size":4482402816,"pointerSize":135}},{"rfilename":"README.md","blobId":"aa45c23371a4522dcbf5db5cb8fd486bae2a3afe","size":7634},{"rfilename":"images/bookbinding-bench.png","blobId":"1cf3c1bdb674912830eacb93cb3b92175d870155","size":188626,"lfs":{"sha256":"e23fffd22d0e3802d203dd2005725df1b768e671c8a65a60a0d30f6c5828f2d1","size":188626,"pointerSize":131}},{"rfilename":"images/dif.png","blobId":"ec8642bb5c65a2088b6b2163bc8aa515990c4257","size":481382,"lfs":{"sha256":"2d120e1542118f0d28756fd33a30530535eb54a5575db03c6bab5317b835cf73","size":481382,"pointerSize":131}},{"rfilename":"images/dragonrider-aerie.png","blobId":"daeb2177a925eb14a2cbbbbfa8eeeb4f066532ce","size":220212,"lfs":{"sha256":"6802bb3c54d824686ca7d5615d612f6991b0174342743b6b2e6da6a50b924f47","size":220212,"pointerSize":131}},{"rfilename":"images/gallery/bookbinding-bench.svg","blobId":"154476925aa73947b40bb481b1bcb79f2db7d01b","size":251887},{"rfilename":"images/gallery/dragonrider-aerie.svg","blobId":"112ecf2dae32586c5f8ebd40ccffff3533814199","size":293993},{"rfilename":"images/gallery/korin-garden.svg","blobId":"4c61d797ca7a7afa6517c1e28014952a3cbf3c78","size":257192},{"rfilename":"images/gallery/lga-3647-socket.svg","blobId":"67944b565536071d468cc6befc0a96baab1c8b96","size":276542},{"rfilename":"images/gallery/pelican-bike.svg","blobId":"c231d512575810c70f552340c309885a9ce0d95a","size":243024},{"rfilename":"images/gallery/sakura-bonsai.svg","blobId":"972f145c01673a75a90c9cc1ce8db515dae76ed1","size":568352},{"rfilename":"images/gallery/sakura-temple-garden.svg","blobId":"2647457a8aec65d32cd4aef490337f59d141c653","size":1103538},{"rfilename":"images/gallery/secretary-desk.svg","blobId":"13a412f7fab24dc517e7f850cce6ef00c60a3e27","size":168824},{"rfilename":"images/gallery/sunset-village.svg","blobId":"96ff7fae0c33c0d7a5ddec5813805e766571743b","size":1329900},{"rfilename":"images/gallery/voxel-launch-site.svg","blobId":"ab4f56710262c6f438777505d2638e8141d91435","size":744022},{"rfilename":"images/korin-garden.png","blobId":"c1e5b214c5c865e5641baef2a552d49eed9ff145","size":192614,"lfs":{"sha256":"c3fc81a60b7a8ac76b7fcbff1050b0d86c599b77e6fcf7ce826a518fbc0ade4a","size":192614,"pointerSize":131}},{"rfilename":"images/lga-3647-socket.png","blobId":"c8addc3588b4f45b0284303bd360625aa829c8f0","size":207127,"lfs":{"sha256":"e15ab3ce047c14b8684bf8e0c3b87a6b75adb62f991f20145a084ccc198b9b7f","size":207127,"pointerSize":131}},{"rfilename":"images/pelican-bike.png","blobId":"f6d1c6a6970d329061b4017e3951b3623077fbf4","size":181978,"lfs":{"sha256":"726ec04335bde1e1f2a50979ad09ac77e047a968e7a4fd584f020a60e09d006e","size":181978,"pointerSize":131}},{"rfilename":"images/sakura-bonsai.png","blobId":"d79565e3f1684ac53d13d6f8b4d9138375999ec1","size":425978,"lfs":{"sha256":"9c37c26c42d5de3f7d58ceeb70b30d19f81f362e1f9d0b2c83e2ed7c5b5fedff","size":425978,"pointerSize":131}},{"rfilename":"images/sakura-temple-garden.png","blobId":"84a539bd0f9d95c7600cdc5a7425f737ddae5f84","size":827364,"lfs":{"sha256":"7ea32363931b349ad7a98db67ef63c4eb622ccd06c2f34598a55b6740256ee6f","size":827364,"pointerSize":131}},{"rfilename":"images/secretary-desk.png","blobId":"a007e0d966103536a47b097b4dbc5ee6a6ae73ca","size":126324,"lfs":{"sha256":"0f07ca1cb85dd7c011987b2ee0e908839e87a84df184285e799ed6d8d300c405","size":126324,"pointerSize":131}},{"rfilename":"images/sunset-village.png","blobId":"033f6bb313f92f0f0e06e23fdacc5f876da1a9cf","size":997149,"lfs":{"sha256":"7c40f7e7a9914f5f68a993362434608c9afcf5af707ddfe8d6afa3bf018567a5","size":997149,"pointerSize":131}},{"rfilename":"images/voxel-launch-site.png","blobId":"4219645268bbac5e6d61e85e597c130afc688fbc","size":557732,"lfs":{"sha256":"c6af5d15995a54e49fef7120e01975979ceb67499209ecd1ebbff4d9e1af099e","size":557732,"pointerSize":131}}],"spaces":[],"createdAt":"2026-10-25T05:43:34.000Z","usedStorage":14386820310}
+{
+  "_id": "6add9706130a725e85d110c6",
+  "id": "ccore/Qwen3.5-4B-3D-Coder",
+  "private": false,
+  "tags": [
+    "safetensors",
+    "gguf",
+    "qwen3_5",
+    "code",
+    "threejs",
+    "3d",
+    "preview",
+    "dataset:ccore/ThreeJS-3D-Scenes",
+    "base_model:Qwen/Qwen3.5-4B",
+    "base_model:finetune:Qwen/Qwen3.5-4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 6944,
+  "likes": 243,
+  "modelId": "ccore/Qwen3.5-4B-3D-Coder",
+  "author": "ccore",
+  "sha": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
+  "lastModified": "2026-10-29T04:25:35.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3_5ForConditionalGeneration"
+    ],
+    "dtype": "float16",
+    "image_token_id": 248056,
+    "model_type": "qwen3_5",
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "attn_output_gate": true,
+      "bos_token_id": null,
+      "dtype": "float16",
+      "eos_token_id": 248046,
+      "full_attention_interval": 4,
+      "head_dim": 256,
+      "hidden_act": "silu",
+      "hidden_size": 2560,
+      "initializer_range": 0.02,
+      "intermediate_size": 9216,
+      "layer_types": [
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention"
+      ],
+      "linear_conv_kernel_dim": 4,
+      "linear_key_head_dim": 128,
+      "linear_num_key_heads": 16,
+      "linear_num_value_heads": 32,
+      "linear_value_head_dim": 128,
+      "mamba_ssm_dtype": "float32",
+      "max_position_embeddings": 262144,
+      "mlp_only_layers": [],
+      "model_type": "qwen3_5_text",
+      "mtp_num_hidden_layers": 1,
+      "mtp_use_dedicated_embeddings": false,
+      "num_attention_heads": 16,
+      "num_hidden_layers": 32,
+      "num_key_value_heads": 4,
+      "pad_token_id": 248044,
+      "rms_norm_eps": 1e-06,
+      "rope_parameters": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          11,
+          11,
+          10
+        ],
+        "partial_rotary_factor": 0.25,
+        "rope_theta": 10000000,
+        "rope_type": "default"
+      },
+      "tie_word_embeddings": true,
+      "use_cache": true,
+      "vocab_size": 248320
+    },
+    "tie_word_embeddings": true,
+    "transformers_version": "5.20.2",
+    "use_cache": true,
+    "video_token_id": 248057,
+    "vision_config": {
+      "deepstack_visual_indexes": [],
+      "depth": 24,
+      "dtype": "float16",
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1024,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4096,
+      "model_type": "qwen3_5_vision",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 2560,
+      "patch_size": 16,
+      "rope_parameters": {
+        "rope_theta": 10000.0,
+        "rope_type": "axial"
+      },
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 248054,
+    "vision_start_token_id": 248053
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "Qwen/Qwen3.5-4B",
+    "base_model_relation": "finetune",
+    "datasets": [
+      "ccore/ThreeJS-3D-Scenes"
+    ],
+    "tags": [
+      "qwen3_5",
+      "code",
+      "threejs",
+      "3d",
+      "preview"
+    ]
+  },
+  "gguf": {
+    "total": 4205751296,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 2708804096
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "4bde2470b2f41ad8e3a8122597bf748fe960368b",
+      "size": 2516
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f938136e3adacfd92be087f6e113b5d6d97f678f",
+      "size": 11544
+    },
+    {
+      "rfilename": "Qwen3.5-4B-3D-Coder-Q4_K_M.gguf",
+      "blobId": "2006122428ada2916f812cca6af83844b450b969",
+      "size": 2708804096,
+      "lfs": {
+        "sha256": "32c37c83d3ca055d30aefa679f1a1670d3e2eb889ee7cc805792d53f219cfae8",
+        "size": 2708804096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.5-4B-3D-Coder-Q8_0.gguf",
+      "blobId": "d705d04d2598bcdb389be2004bc891565f973d8f",
+      "size": 4482402816,
+      "lfs": {
+        "sha256": "c30b02629456aa2bc32e522de0f58eb1aafd8518a7634128fed67d1486fc2a9a",
+        "size": 4482402816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.5-4B-3D-Coder_Technical_Report.pdf",
+      "blobId": "bc8909576d297392e77da74a52f4b1b481a148ca",
+      "size": 1329647,
+      "lfs": {
+        "sha256": "49758364b633bd6c119848839dd5fc1b29368e978532c5e97498cf66db13c728",
+        "size": 1329647,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ca814b397814a910370a44503514c365ec6e0369",
+      "size": 9330
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "a585dec894e63da457d9440ec6aa7caa16d20860",
+      "size": 7756
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "814e530f8623320d4f4e03d3e53cee60686ca086",
+      "size": 2902
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "df90bcf77240822a370f58d5309d298670adabe6",
+      "size": 268
+    },
+    {
+      "rfilename": "images/bookbinding-bench.png",
+      "blobId": "1cf3c1bdb674912830eacb93cb3b92175d870155",
+      "size": 188626,
+      "lfs": {
+        "sha256": "e23fffd22d0e3802d203dd2005725df1b768e671c8a65a60a0d30f6c5828f2d1",
+        "size": 188626,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/dragonrider-aerie.png",
+      "blobId": "daeb2177a925eb14a2cbbbbfa8eeeb4f066532ce",
+      "size": 220212,
+      "lfs": {
+        "sha256": "6802bb3c54d824686ca7d5615d612f6991b0174342743b6b2e6da6a50b924f47",
+        "size": 220212,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/gallery/bookbinding-bench.svg",
+      "blobId": "154476925aa73947b40bb481b1bcb79f2db7d01b",
+      "size": 251887
+    },
+    {
+      "rfilename": "images/gallery/dragonrider-aerie.svg",
+      "blobId": "112ecf2dae32586c5f8ebd40ccffff3533814199",
+      "size": 293993
+    },
+    {
+      "rfilename": "images/gallery/korin-garden.svg",
+      "blobId": "4c61d797ca7a7afa6517c1e28014952a3cbf3c78",
+      "size": 257192
+    },
+    {
+      "rfilename": "images/gallery/lga-3647-socket.svg",
+      "blobId": "67944b565536071d468cc6befc0a96baab1c8b96",
+      "size": 276542
+    },
+    {
+      "rfilename": "images/gallery/pelican-bike.svg",
+      "blobId": "c231d512575810c70f552340c309885a9ce0d95a",
+      "size": 243024
+    },
+    {
+      "rfilename": "images/gallery/sakura-bonsai.svg",
+      "blobId": "972f145c01673a75a90c9cc1ce8db515dae76ed1",
+      "size": 568352
+    },
+    {
+      "rfilename": "images/gallery/sakura-temple-garden.svg",
+      "blobId": "2647457a8aec65d32cd4aef490337f59d141c653",
+      "size": 1103538
+    },
+    {
+      "rfilename": "images/gallery/secretary-desk.svg",
+      "blobId": "13a412f7fab24dc517e7f850cce6ef00c60a3e27",
+      "size": 168824
+    },
+    {
+      "rfilename": "images/gallery/sunset-village.svg",
+      "blobId": "96ff7fae0c33c0d7a5ddec5813805e766571743b",
+      "size": 1329900
+    },
+    {
+      "rfilename": "images/gallery/voxel-launch-site.svg",
+      "blobId": "ab4f56710262c6f438777505d2638e8141d91435",
+      "size": 744022
+    },
+    {
+      "rfilename": "images/korin-garden.png",
+      "blobId": "c1e5b214c5c865e5641baef2a552d49eed9ff145",
+      "size": 192614,
+      "lfs": {
+        "sha256": "c3fc81a60b7a8ac76b7fcbff1050b0d86c599b77e6fcf7ce826a518fbc0ade4a",
+        "size": 192614,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/lga-3647-socket.png",
+      "blobId": "c8addc3588b4f45b0284303bd360625aa829c8f0",
+      "size": 207127,
+      "lfs": {
+        "sha256": "e15ab3ce047c14b8684bf8e0c3b87a6b75adb62f991f20145a084ccc198b9b7f",
+        "size": 207127,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/pelican-bike.png",
+      "blobId": "f6d1c6a6970d329061b4017e3951b3623077fbf4",
+      "size": 181978,
+      "lfs": {
+        "sha256": "726ec04335bde1e1f2a50979ad09ac77e047a968e7a4fd584f020a60e09d006e",
+        "size": 181978,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/roma3.png",
+      "blobId": "f094c5e412e015f1e75c7874e0049efaff9ea5c6",
+      "size": 598452,
+      "lfs": {
+        "sha256": "4068211bb91feec454011ba8e83f96b512de2750046874cdd20e35264a58b11c",
+        "size": 598452,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/sakura-bonsai.png",
+      "blobId": "d79565e3f1684ac53d13d6f8b4d9138375999ec1",
+      "size": 425978,
+      "lfs": {
+        "sha256": "9c37c26c42d5de3f7d58ceeb70b30d19f81f362e1f9d0b2c83e2ed7c5b5fedff",
+        "size": 425978,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/sakura-temple-garden.png",
+      "blobId": "84a539bd0f9d95c7600cdc5a7425f737ddae5f84",
+      "size": 827364,
+      "lfs": {
+        "sha256": "7ea32363931b349ad7a98db67ef63c4eb622ccd06c2f34598a55b6740256ee6f",
+        "size": 827364,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/secretary-desk.png",
+      "blobId": "a007e0d966103536a47b097b4dbc5ee6a6ae73ca",
+      "size": 126324,
+      "lfs": {
+        "sha256": "0f07ca1cb85dd7c011987b2ee0e908839e87a84df184285e799ed6d8d300c405",
+        "size": 126324,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/sunset-village.png",
+      "blobId": "033f6bb313f92f0f0e06e23fdacc5f876da1a9cf",
+      "size": 997149,
+      "lfs": {
+        "sha256": "7c40f7e7a9914f5f68a993362434608c9afcf5af707ddfe8d6afa3bf018567a5",
+        "size": 997149,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/voxel-launch-site.png",
+      "blobId": "4219645268bbac5e6d61e85e597c130afc688fbc",
+      "size": 557732,
+      "lfs": {
+        "sha256": "c6af5d15995a54e49fef7120e01975979ceb67499209ecd1ebbff4d9e1af099e",
+        "size": 557732,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "a4fb267d7181f8d062e11c47243dead88e27ac58",
+      "size": 2474053384,
+      "lfs": {
+        "sha256": "ce6fa579c9933caebbe2e51e5a28d787b0c43fc32e7991b4f6a0ab972c7215f5",
+        "size": 2474053384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "516b1ace29768f188fffc70c4c32a9e69481e5a5",
+      "size": 2498894208,
+      "lfs": {
+        "sha256": "7476f2d4f661c9e8105ffb3b527904cd26deb4b1450c5a7d62b4050498ab9318",
+        "size": 2498894208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "70b2d657a6c3bc585f3e10272b85521074c33271",
+      "size": 2498899424,
+      "lfs": {
+        "sha256": "64784f1f9eec6a370b13c68f9631fc0d64a93cc7c2a4befb015afafdfabd4cd1",
+        "size": 2498899424,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "57eb0bc889a70850eb87113eae36086e60a8a72c",
+      "size": 1606772384,
+      "lfs": {
+        "sha256": "163fae81284c3a2bd539458426c68075f77d8c341ab549f5bd02a22acb2e18ed",
+        "size": 1606772384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "63b6d7a34eaeb991d62286b3a6af00ea587d42f6",
+      "size": 66236
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+      "size": 390
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "a200a8dd650a52c17957673398767ac34b96dbeb",
+      "size": 19989339,
+      "lfs": {
+        "sha256": "a5cd9732badce41de57e6efce8302930ded1c1188c5f81feb2bd6c24c4a1941f",
+        "size": 19989339,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "6bf78b077e4fe83e8c9c74c52036242a6c264083",
+      "size": 1416
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe",
+      "size": 385
+    }
+  ],
+  "spaces": [
+    "ReallyFloppyPenguin/3D-World-Generator-WebGPU"
+  ],
+  "createdAt": "2026-10-25T05:43:34.000Z",
+  "safetensors": {
+    "parameters": {
+      "F16": 4539265536
+    },
+    "total": 4539265536
+  },
+  "usedStorage": 30678564060
+}
