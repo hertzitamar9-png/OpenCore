@@ -29,7 +29,7 @@ export function applyImageGenerationOptions(modelId,settings){
   const options=generationOptions(modelId,'image');if(!options)return settings;
   const result={...settings,...options},cap=modelId.startsWith('qwen-image-21')?2048:1024;
   for(const [key,exportKey] of [['width','outputWidth'],['height','outputHeight']])if(options[key]){
-    if(options[key]%8)throw Error('Image dimensions must be multiples of 8.');
+    if(options[key]%16)throw Error('Image dimensions must be multiples of 16.');
     result[key]=Math.min(options[key],cap);result[exportKey]=options[key];
   }
   return result;
@@ -43,7 +43,7 @@ export function GenerationSettings({modelId='echo',conversationId,image=false,de
   React.useEffect(()=>{const element=dialog.current;if(!element)return;if(open){element.showModal?element.showModal():element.setAttribute('open','');}else element.close?.();},[open]);
   React.useEffect(()=>{if(!image)captureGenerationProfile(modelId,conversationId);},[modelId,conversationId,image]);
   function save(mode,next=values){saveGenerationSettings(modelId,{mode,values:next});}
-  const fields=image?[['steps','Sampling steps',1,100,1],['guidanceScale','Guidance (CFG)',0,30,.1],['width','Output width',128,8192,8],['height','Output height',128,8192,8]]:
+  const fields=image?[['steps','Sampling steps',1,100,1],['guidanceScale','Guidance (CFG)',0,30,.1],['width','Output width',128,8192,16],['height','Output height',128,8192,16]]:
     [['temperature','Temperature',0,2,.05],['top_p','Top P',.01,1,.01],['top_k','Top K',0,1000,1],['repeat_penalty','Repetition penalty',.5,2,.05],['max_tokens','Maximum output tokens',16,32768,1]];
   fields.push(['seed','Seed (blank = random)',0,4294967295,1]);
   return h(React.Fragment,null,h('button',{type:'button',className:'generation-settings-trigger','aria-label':'Generation settings','aria-expanded':open,title:'Generation settings · '+(manual?'Manual':'Automatic'),disabled,onClick:()=>setOpen(true)},

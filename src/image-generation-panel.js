@@ -239,7 +239,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
         try{const better=await globalThis.__opencoreImproveLocalPrompt(request.prompt,conversation.current,'image',setStage);request.settings.originalPrompt=text.trim();request.settings.promptRecap=better.recap;request.prompt=better.prompt;}
         catch(error){setError('Prompt assistant: '+String(error)+' Your original prompt will be used.');}
       }
-      if(studio&&request.settings.outputWidth>request.settings.width){setStage('Preparing the AI detail upscaler…');const upscaler=await globalThis.__opencoreImageHub.prepareUpscaler();request.settings.upscaleModelPath=upscaler.path;}
+      if(request.settings.outputWidth>request.settings.width||request.settings.outputHeight>request.settings.height){setStage('Preparing the AI detail upscaler…');const upscaler=await globalThis.__opencoreImageHub.prepareUpscaler();request.settings.upscaleModelPath=upscaler.path;}
       if((model.hubEntry?.format==='diffusers'||model.hubEntry?.imageRuntime==='iris-sdcpp-v1')&&!model.hubEntry?.nativeProfile){
         const hub=globalThis.__opencoreImageHub;if(!hub)throw Error('Update OpenCore to enable imported image generation.');
         try{window.window.localStorage.setItem('opencore.image-chat-history','1');}catch{}

@@ -2,6 +2,7 @@ import React from 'react';
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {ImageGenerationPanel,selectChatImageModel,clearChatImageSelection,submitChatImagePrompt,automaticImageSettings} from './image-generation-panel.js';
+import {saveGenerationSettings} from './generation-settings.js';
 
 afterEach(()=>{cleanup();clearChatImageSelection();vi.restoreAllMocks();delete (window as any).__TAURI_INTERNALS__;});
 it('uses the existing message box and send with automatic quality and attached reference images',async()=>{
@@ -32,4 +33,18 @@ it('chooses model-specific quality and aspect ratio without manual controls',()=
   expect(automaticImageSettings('moss-image-sft-int8-convrot','A landscape wallpaper')).toMatchObject({width:1024,height:576,steps:50,guidanceScale:3});
   expect(automaticImageSettings('flux-2-klein-4b','A portrait photo')).toMatchObject({width:576,height:1024,steps:4});
   expect(()=>automaticImageSettings('qwen-image-21','test',['C:/secret.txt'])).toThrow(/image/);
+});
+it('prepares learned upscaling for a larger manual output from the normal chat',async()=>{
+  const id='qwen-image-21-uc-nvfp4',calls:any[]=[];
+  const prepareUpscaler=vi.fn(async()=>({path:'C:/managed/ai-upscaler.pth'}));
+  (globalThis as any).__opencoreImageHub={prepareUpscaler};
+  (window as any).__TAURI_INTERNALS__={invoke:async(command:string,args:any={})=>{calls.push({command,args});if(command==='list_model_library')return{models:[{id,label:'Qwen Image',category:'image',installed:true}]};if(command==='list_studio_jobs')return[];if(command==='runtime_setup_status')return{receipts:[{targetId:id,dependenciesVerified:true,inferenceVerified:true,python:'managed/python.exe'}]};if(command==='submit_studio_job')return{id:'upscale-test',status:'queued',request:args.request,outputs:[]};return null;}};
+  saveGenerationSettings(id,{mode:'manual',values:{width:4096,height:4096,steps:40,guidanceScale:1}});
+  try{
+    render(<ImageGenerationPanel conversationId="upscale-normal-chat"/>);act(()=>{selectChatImageModel({id,label:'Qwen Image'});});
+    await screen.findByText(/Manual settings/);act(()=>{submitChatImagePrompt({prompt:'A blue mug'});});
+    await waitFor(()=>expect(calls.some(call=>call.command==='submit_studio_job')).toBe(true));
+    expect(prepareUpscaler).toHaveBeenCalledOnce();
+    expect(calls.find(call=>call.command==='submit_studio_job').args.request.settings).toMatchObject({width:2048,height:2048,outputWidth:4096,outputHeight:4096,upscaleModelPath:'C:/managed/ai-upscaler.pth'});
+  }finally{saveGenerationSettings(id,{mode:'automatic'});delete (globalThis as any).__opencoreImageHub;}
 });
