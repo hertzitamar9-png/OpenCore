@@ -16,14 +16,20 @@ from asset_worker import bounded_integer,progress,validate_output_format,save_im
 
 
 def image_memory_plan(component_bytes, host_available, gpu_free):
-    """ComfyUI splits resident weights; a complete component still stages on CPU."""
+    """Separate CPU loading peak from the later CPU/GPU resident split."""
     sizes=[max(0,int(value)) for value in component_bytes]
     # Leave VRAM for the sampler, dequantization and VAE activations. CPU staging
     # cannot borrow GPU bytes, even when the complete model fits on the GPU.
     gpu_budget=max(0,int(gpu_free)-3_000_000_000)
-    host_required=max(max(sizes,default=0),sum(sizes)-gpu_budget)+2_000_000_000
+    # These workflows create their model objects before sampling. Both the
+    # encoder and diffusion state dictionaries can coexist on CPU during load;
+    # free VRAM cannot replace that measured loader contract.
+    staging=sum(sizes)
+    resident_host=max(0,sum(sizes)-gpu_budget)
+    host_required=max(staging,resident_host)+2_000_000_000
     return {'fits':host_available>=host_required,'hostRequiredBytes':host_required,
-            'hostAvailableBytes':host_available,'gpuFreeBytes':gpu_free,'gpuWeightBudgetBytes':gpu_budget}
+            'hostAvailableBytes':host_available,'cpuStagingBytes':staging,'residentHostBytes':resident_host,
+            'gpuFreeBytes':gpu_free,'gpuWeightBudgetBytes':gpu_budget}
 
 
 def available_gpu_memory():
@@ -302,7 +308,7 @@ def generate_comfy(request,output):
     gpu_free=available_gpu_memory()
     memory=image_memory_plan([path.stat().st_size for path in weight_paths]+([lora.stat().st_size] if lora else []),psutil.virtual_memory().available,gpu_free)
     if not memory['fits']:
-        raise RuntimeError(f"This {label} load plan needs about {memory['hostRequiredBytes']/1e9:.1f} GB free RAM for staging and CPU-resident weights; {memory['hostAvailableBytes']/1e9:.1f} GB RAM and {gpu_free/1e9:.1f} GB VRAM are free. VRAM is already included in this estimate, with space reserved for image sampling. Free memory or choose a smaller quantization.")
+        raise RuntimeError(f"This {label} load plan needs about {memory['hostRequiredBytes']/1e9:.1f} GB free RAM for CPU staging and load buffers; {memory['hostAvailableBytes']/1e9:.1f} GB RAM and {gpu_free/1e9:.1f} GB VRAM are free. VRAM is used during sampling, but cannot replace this loader's initial CPU staging. Free RAM or choose a smaller quantization.")
     output.mkdir(parents=True,exist_ok=True)
     paths=output/'comfy-model-paths.json'
     model_folders={'base_path':str(root),'diffusion_models':str(dit),'text_encoders':str(component/'text_encoders'),'vae':str(vae)}
