@@ -27,6 +27,20 @@ DIFFUSERS_IMAGE_MODELS = {
 }
 
 
+def qwen_phase_nodes_path():
+    """Find the phase plugin beside this worker or in the installed app resources."""
+    candidates=[Path(__file__).with_name('qwen_phase_nodes.py')]
+    resource_root=os.environ.get('OPENCORE_RESOURCES_DIR')
+    if resource_root:
+        candidates.append(Path(resource_root)/'studio'/'qwen_phase_nodes.py')
+    local_app_data=os.environ.get('LOCALAPPDATA')
+    if local_app_data:
+        candidates.append(Path(local_app_data)/'OpenCore'/'studio'/'qwen_phase_nodes.py')
+    for candidate in candidates:
+        if candidate.is_file():return candidate.resolve()
+    raise FileNotFoundError('Qwen image phase helper is missing beside the worker and the installed OpenCore resources')
+
+
 def bounded_integer(settings, name, default, low, high):
     value = settings.get(name, default)
     if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:

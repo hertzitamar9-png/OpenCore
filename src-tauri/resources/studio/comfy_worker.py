@@ -12,7 +12,7 @@ import time
 import urllib.request
 import uuid
 
-from asset_worker import bounded_integer,progress,validate_output_format,save_image_output,prepare_reference_images,SamplingProgress
+from asset_worker import bounded_integer,progress,validate_output_format,save_image_output,prepare_reference_images,SamplingProgress,qwen_phase_nodes_path
 
 
 def image_memory_plan(component_bytes, host_available, gpu_free):
@@ -344,7 +344,7 @@ def generate_comfy(request,output):
     if qwen:
         phase_plugin=engine/'custom_nodes'/'opencore-image-phases'
         phase_plugin.mkdir(parents=True,exist_ok=True)
-        shutil.copyfile(Path(__file__).with_name('qwen_phase_nodes.py'),phase_plugin/'__init__.py')
+        shutil.copyfile(qwen_phase_nodes_path(),phase_plugin/'__init__.py')
     output.mkdir(parents=True,exist_ok=True)
     paths=output/'comfy-model-paths.json'
     model_folders={'base_path':str(root),'diffusion_models':str(dit),'text_encoders':str(component/'text_encoders'),'vae':str(vae)}

@@ -1,4 +1,9 @@
+import os
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
+import asset_worker
 import comfy_worker
 
 
@@ -25,6 +30,19 @@ class QwenPhaseTests(unittest.TestCase):
         self.assertLess(plan['hostRequiredBytes'], 13_000_000_000)
         self.assertGreaterEqual(plan['hostRequiredBytes'], 9_350_798_360 + 2_000_000_000)
         self.assertFalse(comfy_worker.qwen_memory_plan([4_197_574_696, 9_350_798_360, 675_509_688], 10_000_000_000, 24_000_000_000)['fits'])
+
+    def test_staged_native_worker_finds_phase_nodes_in_installed_app_resources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary)
+            helper=root/'.helpers'/'studio-release'
+            helper.mkdir(parents=True)
+            app_resources=root/'LocalAppData'/'OpenCore'/'studio'
+            app_resources.mkdir(parents=True)
+            source=app_resources/'qwen_phase_nodes.py'
+            source.write_text('# installed phase plugin',encoding='utf-8')
+            with patch.object(asset_worker,'__file__',str(helper/'asset_worker.py')), \
+                 patch.dict(os.environ,{'LOCALAPPDATA':str(root/'LocalAppData'),'OPENCORE_RESOURCES_DIR':''}):
+                self.assertEqual(asset_worker.qwen_phase_nodes_path(),source.resolve())
 
 
 if __name__ == '__main__':
