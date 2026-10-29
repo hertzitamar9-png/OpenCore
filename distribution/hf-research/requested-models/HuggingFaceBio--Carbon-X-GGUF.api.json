@@ -1,0 +1,160 @@
+{
+  "_id": "6ad8a1e36f1f3dc51afd846b",
+  "id": "HuggingFaceBio/Carbon-X-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "dna",
+    "genomics",
+    "biology",
+    "variant-effect-prediction",
+    "llama.cpp",
+    "conversational",
+    "text-generation",
+    "en",
+    "base_model:HuggingFaceBio/Carbon-X",
+    "base_model:quantized:HuggingFaceBio/Carbon-X",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 5039,
+  "likes": 21,
+  "modelId": "HuggingFaceBio/Carbon-X-GGUF",
+  "author": "HuggingFaceBio",
+  "sha": "ee736d861ae7a2d9778cccb815858a45d47815cc",
+  "lastModified": "2026-10-28T11:05:26.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "library_name": "gguf",
+    "license": "apache-2.0",
+    "base_model": "HuggingFaceBio/Carbon-X",
+    "base_model_relation": "quantized",
+    "language": [
+      "en",
+      "dna"
+    ],
+    "tags": [
+      "dna",
+      "genomics",
+      "biology",
+      "variant-effect-prediction",
+      "llama.cpp",
+      "gguf",
+      "conversational"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "gguf": {
+    "total": 14822046720,
+    "architecture": "qwen3",
+    "context_length": 40960,
+    "chat_template": "{#- Training variant of the Qwen3 chat template (see qwen3.jinja for the original).\n    Modifications vs the original:\n    - Removed the loop.index0 > ns.last_query_index conditional; always include thinking block.\n      This makes the template prefix-preserving for the [user, assistant] → [user, assistant, tool] transition.\n    - Added {% generation %} / {% endgeneration %} around assistant message output to support\n      assistant-only loss masking in SFT training.\n-#}\n{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- generation %}\n        {{- '<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n        {%- endgeneration %}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 29651012480
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "8da33cf0448ea6336f7aa0047d8412f807bf41e5",
+      "size": 1924
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "58e865bc08bb1b5c6c009fce081bc9c5dd8f370a",
+      "size": 6593
+    },
+    {
+      "rfilename": "carbon-x-bf16.gguf",
+      "blobId": "f61cc3b892ecc933466ae8c1a239e1608941e985",
+      "size": 29651012480,
+      "lfs": {
+        "sha256": "fb0184bc4131b0cf03f1ef53ea445946ca9f1aca3d942380f82cb98d9633eaec",
+        "size": 29651012480,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "carbon-x-q4_k_m.gguf",
+      "blobId": "cbc623ec0bd65fc31909d722e46f142722e9bfb0",
+      "size": 9636318080,
+      "lfs": {
+        "sha256": "f71cfa705527387d13f99ddf4111362ae80101fb9510ace64e7b99b86567ec1f",
+        "size": 9636318080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "carbon-x-q5_k_m.gguf",
+      "blobId": "de56a9483f8e721036d5faeef2a7056167044c5b",
+      "size": 11051895680,
+      "lfs": {
+        "sha256": "e0eec249d24e783c03f5ede188b19b544e26a2e4101918514d62c7bc1957ceff",
+        "size": 11051895680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "carbon-x-q6_k.gguf",
+      "blobId": "4aa8df8d6f1a835b601282e7f90d20d40ff80437",
+      "size": 12555946880,
+      "lfs": {
+        "sha256": "48469892d0e5d3163ea33f88bae097bf4a0a7494c65a7d74341b5a7b978cddf0",
+        "size": 12555946880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "carbon-x-q8_0.gguf",
+      "blobId": "df6207e2b2229a6f66acd43633eca9839409fb58",
+      "size": 15755742080,
+      "lfs": {
+        "sha256": "48241178b67ab5423a74f65552dd04628ac16f2fa5d1a60dc94019d86fa6f453",
+        "size": 15755742080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "figures/carbon-x-banner.png",
+      "blobId": "05685b506aa08a0251afef5e6e50589c79858ccb",
+      "size": 176455,
+      "lfs": {
+        "sha256": "78395b4649f6d83e260cb8fee0a8d087ecd959e25575c8af91344946d77f51d8",
+        "size": 176455,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "figures/partner-logos.png",
+      "blobId": "8cf6993e98e6475d1777106378a0ccf362bb6449",
+      "size": 195906,
+      "lfs": {
+        "sha256": "b68a98c4828da90eaaef533d3699ff7867193aff212a88e90414a06953409ef6",
+        "size": 195906,
+        "pointerSize": 131
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-21T11:28:35.000Z",
+  "usedStorage": 78651287561
+}

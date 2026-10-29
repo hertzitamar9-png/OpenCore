@@ -12,6 +12,17 @@ from hf_bridge import BridgeState
 
 
 class ManagedEngineTests(unittest.TestCase):
+    def test_lfm3_uses_its_newer_architecture_runtime_without_changing_other_engines(self):
+        for fields in ({'modelType': 'lfm3'}, {'modelType': 'lfm3_vl'},
+                       {'repository': 'LiquidAI/LFM3-1.7B-GGUF'},
+                       {'repository': 'LiquidAI/LFM3-VL-2B-GGUF'},
+                       {'managedEngine': 'lfm3-cpu-v1'}):
+            self.assertEqual(engines.engine_for({'format': 'gguf', **fields}), 'lfm3-cpu-v1')
+        self.assertIsNone(engines.engine_for({'format': 'safetensors', 'modelType': 'lfm3'}))
+        self.assertIsNone(engines.engine_for({'format': 'gguf', 'repository': 'unrelated/lfm3-lookalike'}))
+        self.assertEqual(engines.engine_for({'format': 'gguf', 'modelType': 'qwen3', 'managedEngine': 'flint-cpu-v1'}), 'flint-cpu-v1')
+        self.assertEqual(engines.definition('lfm3-cpu-v1')['version'], 'b11960')
+
     def test_spark_gguf_selects_the_pinned_engine_that_supports_its_architecture(self):
         for fields in ({'modelType': 'spark2_5'}, {'modelType': 'sparkx2_5'},
                        {'repository': 'XHToken/Spark-X2.6-4B-GGUF'}):

@@ -216,7 +216,7 @@
       "familyId": "publisher-nemotron-3-5-bolt-e4b",
       "label": "NVIDIA Nemotron 3.5 Bolt E4B",
       "category": "text",
-      "description": "Includes NVIDIA\u2019s official 4GB Q4_K_M edition and verified quantizations of its linked BF16 checkpoint. Other precisions have different memory requirements.",
+      "description": "Includes NVIDIA’s official 4GB Q4_K_M edition and verified quantizations of its linked BF16 checkpoint. Other precisions have different memory requirements.",
       "sources": [
         {
           "repository": "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB"
@@ -436,6 +436,64 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "repository": "LiquidAI/LFM3-VL-2B",
+      "familyId": "publisher-lfm3-vl-2b",
+      "label": "LFM3 VL 2B",
+      "category": "text",
+      "description": "Liquid AI vision-language model for image and video understanding with text replies. Official GGUF variants include a pinned vision projector. This is not an image generator.",
+      "sources": [
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "quantizationLabels": {
+            "Q4_0": "QAD Q4_0"
+          }
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B",
+          "runtimeReason": "This original BF16 package requires LFM3 Transformers custom-model support. Choose an official GGUF option for the automatically prepared Windows LFM3 runtime."
+        }
+      ]
+    },
+    {
+      "repository": "LiquidAI/LFM3-1.7B",
+      "familyId": "publisher-lfm3-1-7b",
+      "label": "LFM3 1.7B",
+      "category": "text",
+      "description": "Liquid AI 1.73B text and agent model with a convolution, sliding-attention and global-attention architecture. Includes all official GGUF precisions and the original BF16 package.",
+      "sources": [
+        {
+          "repository": "LiquidAI/LFM3-1.7B-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "quantizationLabels": {
+            "Q4_0": "QAD Q4_0"
+          }
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B",
+          "runtimeReason": "This original BF16 package requires LFM3 Transformers custom-model support. Choose an official GGUF option for the automatically prepared Windows LFM3 runtime."
+        }
+      ]
+    },
+    {
+      "repository": "HuggingFaceBio/Carbon-X",
+      "familyId": "publisher-carbon-x",
+      "label": "Carbon-X",
+      "category": "text",
+      "description": "Hugging Face Bio 14.8B Qwen3-based model for DNA understanding and generation with English explanations. Includes original weights, official GGUFs and verified community precisions.",
+      "sources": [
+        {
+          "repository": "HuggingFaceBio/Carbon-X-GGUF"
+        },
+        {
+          "repository": "mradermacher/Carbon-X-GGUF"
+        },
+        {
+          "repository": "HuggingFaceBio/Carbon-X"
         }
       ]
     }

@@ -1,0 +1,280 @@
+{
+  "_id": "6ad89210085903bea325a181",
+  "id": "HuggingFaceBio/Carbon-X",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3",
+    "text-generation",
+    "dna",
+    "genomics",
+    "biology",
+    "variant-effect-prediction",
+    "conversational",
+    "en",
+    "base_model:Qwen/Qwen3-14B",
+    "base_model:finetune:Qwen/Qwen3-14B",
+    "license:apache-2.0",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 2305,
+  "likes": 258,
+  "modelId": "HuggingFaceBio/Carbon-X",
+  "author": "HuggingFaceBio",
+  "sha": "a5f4e199957aa2ca3e0345eb28bd1254604db2b2",
+  "lastModified": "2026-10-28T11:41:11.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3ForCausalLM"
+    ],
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": null,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 5120,
+    "initializer_range": 0.02,
+    "intermediate_size": 17408,
+    "layer_types": [
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention"
+    ],
+    "max_position_embeddings": 40960,
+    "max_window_layers": 40,
+    "model_type": "qwen3",
+    "num_attention_heads": 40,
+    "num_hidden_layers": 40,
+    "num_key_value_heads": 8,
+    "pad_token_id": 151643,
+    "rms_norm_eps": 1e-06,
+    "rope_parameters": {
+      "rope_theta": 1000000,
+      "rope_type": "default"
+    },
+    "sliding_window": null,
+    "tie_word_embeddings": false,
+    "transformers_version": "5.13.0.dev0",
+    "use_cache": false,
+    "use_sliding_window": false,
+    "vocab_size": 157184
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "base_model": "Qwen/Qwen3-14B",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "dna",
+      "genomics",
+      "biology",
+      "variant-effect-prediction",
+      "conversational"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "pipeline_tag": "text-generation",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "d8206286602ba9d5f06ad795123960eb25b4887e",
+      "size": 1696
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "36507707df3844388863aa720f11b54ca1c058c1",
+      "size": 20501
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "46d2694b8d0a98ac8764ea16f12c6167af2665da",
+      "size": 4360
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "d39bb431187e09276e58054d8e0e39e998e78b00",
+      "size": 1689
+    },
+    {
+      "rfilename": "dna_config.json",
+      "blobId": "e540fd4b0421138014fa3b7082b37a04fa293ad3",
+      "size": 178
+    },
+    {
+      "rfilename": "examples/agent_tool.py",
+      "blobId": "10656acf8abdad3456239ccdd824018439936fd9",
+      "size": 2880
+    },
+    {
+      "rfilename": "examples/inspect_agent.py",
+      "blobId": "e99859e0085d5eb5775498ca9adb46ba8594b896",
+      "size": 2630
+    },
+    {
+      "rfilename": "figures/carbon-x-banner.png",
+      "blobId": "6e7a3dc55c7e550f0c6c9e0ceca1ecae205e8dfc",
+      "size": 387091,
+      "lfs": {
+        "sha256": "4d1fd7713d8476b5c6f1006166c836633a1f045c813c97db3beae0acb05df5c2",
+        "size": 387091,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "figures/partner-logos.png",
+      "blobId": "8cf6993e98e6475d1777106378a0ccf362bb6449",
+      "size": 195906,
+      "lfs": {
+        "sha256": "b68a98c4828da90eaaef533d3699ff7867193aff212a88e90414a06953409ef6",
+        "size": 195906,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "figures/score-vs-cost.png",
+      "blobId": "0dc28b0c98b837e84907d4338670693d1f26f5dc",
+      "size": 96292
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "82d2c6c36c4fbc499ef1bf199cbb3b3b50f74fbb",
+      "size": 200
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "548dafe538b6bf05ba273917c269193c058a2078",
+      "size": 24956844000,
+      "lfs": {
+        "sha256": "c7858d72aaf5d22e45e75196c4f7352b7423127329c7d1ece67ec072c980cfe4",
+        "size": 24956844000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "8cba4bfbd26efa577edc9a7a70e9b7d67b456289",
+      "size": 4687301152,
+      "lfs": {
+        "sha256": "9a9f69350110babbfab047b6f18358bdf7b0e1f4790b584c57063ed1d2e1f8d7",
+        "size": 4687301152,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "7b8be9ba455a83d135ac3475695c74090af69c9f",
+      "size": 36551
+    },
+    {
+      "rfilename": "skills/carbon-dna/SKILL.md",
+      "blobId": "0bd0d402095e58d897b121df999779f927e9ce3b",
+      "size": 2174
+    },
+    {
+      "rfilename": "skills/carbon-dna/scripts/carbon.py",
+      "blobId": "71b386bd91bb5ba9dbc3d73531f0bc7ccd08f7db",
+      "size": 5515
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "c7afbed2efcdf019f88ab0572ec29d3bf595dfe2",
+      "size": 11422650,
+      "lfs": {
+        "sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+        "size": 11422650,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer.py",
+      "blobId": "c37de9c706292157d3bd28b17b2b525e24596cb0",
+      "size": 31784
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "d7afd8e8aec0360a6421577d6ebbda0231157982",
+      "size": 851
+    }
+  ],
+  "spaces": [
+    "HuggingFaceBio/Carbon-X-Release",
+    "fffiloni/Carbon-X-Playground",
+    "mrfakename/carbon-x",
+    "mbcredits/carbon-x-demo"
+  ],
+  "createdAt": "2026-10-21T10:21:04.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 14822046720
+    },
+    "total": 14822046720
+  },
+  "usedStorage": 29656327254
+}

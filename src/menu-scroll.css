@@ -1,0 +1,22 @@
+.composer-action-popover,.statusbar-model-popover,.project-picker-menu,
+.chat-model-picker,.model-picker-options,.project-picker-options {
+  overscroll-behavior:contain;
+}
+.composer-model-popover {
+  display:flex;
+  flex-direction:column;
+  max-height:min(70dvh,560px);
+}
+.composer-model-heading { flex:none; }
+.composer-model-popover > .chat-model-picker,
+.composer-model-popover > .composer-model-options {
+  flex:0 1 auto;
+  min-height:0;
+  max-height:none;
+  overflow-y:auto;
+}
+.chat-model-picker .model-picker-options,
+.statusbar-model-popover > .chat-model-picker {
+  max-height:none;
+  overflow:visible;
+}

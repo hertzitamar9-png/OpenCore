@@ -28,7 +28,7 @@ for(const id of ['llama32-1b','sage-a15-q4-k-m','holo4-27b']){
  record(id+' offers direct installation',await card.getByRole('button',{name:'Install',exact:true}).isEnabled());
  await card.screenshot({path:path.join(__dirname,'.output/builtin-'+id+'.png')});
 }
-const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29],['publisher-tiel-coder-apex-miniplus-v2-1',1],['publisher-tals-coder-flash-02',1],['publisher-kestrel-4b-coder',2]];
+const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29],['publisher-tiel-coder-apex-miniplus-v2-1',1],['publisher-tals-coder-flash-02',1],['publisher-kestrel-4b-coder',2],['publisher-hi3d-v1',1],['publisher-qwen35-4b-3d-coder',2],['publisher-lfm3-vl-2b',8],['publisher-lfm3-1-7b',8],['publisher-carbon-x',13]];
 const screenshotDirectory=process.env.OPENCORE_MODEL_QA_DIR||path.join(require('os').tmpdir(),'opencore-requested-models-qa');fs.mkdirSync(screenshotDirectory,{recursive:true});
 for(const [family,count] of requested){
  const entries=presetCatalog.entries.filter(entry=>entry.familyId===family),entry=entries[0];

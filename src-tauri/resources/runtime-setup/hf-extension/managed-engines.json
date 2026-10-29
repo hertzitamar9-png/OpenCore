@@ -1,6 +1,15 @@
 {
   "schema": 1,
   "engines": {
+    "lfm3-cpu-v1": {
+      "label": "llama.cpp b11960 · LFM3",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11960/llama-b11960-bin-win-cpu-x64.zip",
+      "sha256": "73f962f82850d244db47eaacb9d913637027b82399124324298576d58c5f4287",
+      "bytes": 24407745,
+      "source": "https://github.com/ggml-org/llama.cpp/tree/b11960",
+      "revision": "8642541b255bfb5dc39cd351a178be09013a55d6",
+      "version": "b11960"
+    },
     "edgerock-cpu-v1": {
       "label": "EdgeRock RMA",
       "url": "https://github.com/hertzitamar9-png/OpenCore/releases/download/recovery-base-20261024/edgerock-windows-x64-a5e045c6.zip",

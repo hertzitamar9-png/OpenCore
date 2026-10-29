@@ -14,6 +14,34 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_lfm3_and_carbon_packages_keep_real_precisions_and_compatible_runtimes(self):
+        expected = {'lfm3-vl-2b': 8, 'lfm3-1-7b': 8, 'carbon-x': 13}
+        for suffix, count in expected.items():
+            entries = self.family(suffix)
+            self.assertEqual(len(entries), count)
+            self.assertTrue(all(pin['pinned'] for entry in entries for pin in entry['files']))
+            self.assertEqual(len({(e['format'], e['quantization']) for e in entries}), count)
+        for suffix in ('lfm3-vl-2b', 'lfm3-1-7b'):
+            entries = self.family(suffix)
+            gguf = [e for e in entries if e['format'] == 'gguf']
+            self.assertEqual({e['quantization'] for e in gguf},
+                             {'BF16', 'F16', 'QAD Q4_0', 'Q4_K_M', 'Q5_K_M', 'Q6_K', 'Q8_0'})
+            self.assertTrue(all(e['managedEngine'] == 'lfm3-cpu-v1' for e in gguf))
+            original = next(e for e in entries if e['format'] == 'safetensors')
+            self.assertIsNone(original['runtime']['adapter'])
+            self.assertIn('Choose an official GGUF', original['runtime']['reason'])
+            for entry in gguf:
+                companions = [pin for pin in entry['files'] if pin['role'] == 'companion']
+                self.assertEqual(len(companions), 1 if suffix == 'lfm3-vl-2b' else 0)
+                if companions:
+                    self.assertIn('mmproj-', companions[0]['filename'])
+        carbon = self.family('carbon-x')
+        original = next(e for e in carbon if e['format'] == 'safetensors')
+        self.assertEqual(sum(pin['role'] == 'model' for pin in original['files']), 2)
+        self.assertTrue(all(e['originalRepository'] == 'HuggingFaceBio/Carbon-X' for e in carbon))
+        self.assertTrue({'Q2_K', 'Q3_K_M', 'Q4_K_M', 'Q5_K_M', 'Q6_K', 'Q8_0'}.issubset(
+            {e['quantization'] for e in carbon}))
+
     def test_new_requested_publishers_have_pinned_real_packages(self):
         hi3d=self.family('hi3d-v1')
         ocr=self.family('unlimited-ocr-2')
@@ -68,7 +96,7 @@ class RequestedCatalogTests(unittest.TestCase):
             'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B',
             'IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF',
             'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'}.issubset({row['repository'] for row in self.rows}))
-        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 22)
+        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 25)
         self.assertEqual(len({entry['id'] for entry in self.entries}), len(self.entries))
         self.assertTrue(all(entry['builtIn'] and entry['installable'] for entry in self.entries))
         self.assertTrue(all(entry['originalRepository'] != 'Qwen/Qwen3.8-27B' for entry in self.entries))
@@ -107,8 +135,8 @@ class RequestedCatalogTests(unittest.TestCase):
             if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw', 'Q2_0'):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
-        self.assertEqual(report['families'], 22)
-        self.assertEqual(report['withFive'], 9)
+        self.assertEqual(report['families'], 25)
+        self.assertEqual(report['withFive'], 12)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

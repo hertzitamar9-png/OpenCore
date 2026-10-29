@@ -77,7 +77,7 @@ def append_requested(entries, manifest, snapshots):
                     projectors = [_pin(repository, metadata['sha'], candidates[0], 'companion')]
             for value in plan['variants']:
                 entry = copy.deepcopy(value)
-                quant = source.get('quantization', entry['quantization'])
+                quant = source.get('quantization', source.get('quantizationLabels', {}).get(entry['quantization'], entry['quantization']))
                 identity = (entry['format'], quant.upper().replace('FP16', 'F16').replace('FP32', 'F32'))
                 if identity in known:
                     continue
@@ -101,7 +101,10 @@ def append_requested(entries, manifest, snapshots):
                 if source.get('runtimeReason'):
                     entry['runtime'].update(adapter=None, reason=source['runtimeReason'])
                 elif entry['format'] == 'gguf' and entry['category'] == 'text':
-                    entry['managedEngine'] = 'flint-cpu-v1'
+                    engine = source.get('managedEngine', 'flint-cpu-v1')
+                    if engine not in ('flint-cpu-v1', 'lfm3-cpu-v1'):
+                        raise ValueError('Unreviewed requested-model runtime: ' + engine)
+                    entry['managedEngine'] = engine
                     entry['runtime']['reason'] = 'The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified.'
                 elif entry['runtime'].get('adapter') == 'transformers':
                     entry['runtime']['reason'] = 'The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified.'

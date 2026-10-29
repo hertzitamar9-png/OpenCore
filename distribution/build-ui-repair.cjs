@@ -122,6 +122,8 @@ app=editFunction(app,'w8',text=>replaceOnce(text,
   'className:"section-main",children:tr','className:"section-main",children:i.jsx($RetainedViews,{view:d,content:tr})'));
 app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
+app+='\n'+fs.readFileSync(path.join(root,'../src/menu-scroll.js'),'utf8').replace('export function ','function ')+'\ninstallMenuScrollGuard();\n';
+app+='\nconst $menuScrollStyle=document.createElement("style");$menuScrollStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/menu-scroll.css'),'utf8'))+';document.head.appendChild($menuScrollStyle);\n';
 app+='\nconst $railHoverStyle=document.createElement("style");$railHoverStyle.textContent=".conversation-app-rail .nav-item:hover:not(:disabled),.conversation-app-rail .nav-item:focus-visible{background:color-mix(in srgb,var(--theme-accent,#6dacf5) 22%,var(--theme-panel,#10283d))!important;box-shadow:inset 0 0 0 1px var(--theme-accent,#6dacf5);color:var(--theme-ink,#fff)!important}";document.head.appendChild($railHoverStyle);\n';
 app+='\nconst $navDividerStyle=document.createElement("style");$navDividerStyle.textContent=".nav-rail .nav-group-start{border-top:2px solid var(--theme-accent-ink,#8ec4ff)}";document.head.appendChild($navDividerStyle);\n';
 app+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';

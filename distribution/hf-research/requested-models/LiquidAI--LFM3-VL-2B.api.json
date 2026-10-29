@@ -1,0 +1,339 @@
+{
+  "_id": "6ad674d2e966eff9c11b6206",
+  "id": "LiquidAI/LFM3-VL-2B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "lfm3_vl",
+    "image-text-to-text",
+    "liquid",
+    "lfm3",
+    "edge",
+    "conversational",
+    "custom_code",
+    "en",
+    "ar",
+    "zh",
+    "fr",
+    "de",
+    "it",
+    "ja",
+    "ko",
+    "pt",
+    "es",
+    "vi",
+    "th",
+    "id",
+    "hi",
+    "ru",
+    "pl",
+    "base_model:LiquidAI/LFM3-1.7B-Base",
+    "base_model:finetune:LiquidAI/LFM3-1.7B-Base",
+    "license:other",
+    "eval-results",
+    "region:us"
+  ],
+  "downloads": 1596,
+  "likes": 138,
+  "modelId": "LiquidAI/LFM3-VL-2B",
+  "author": "LiquidAI",
+  "sha": "ba44bd51db20a2753f28c273a1571ccaa210d954",
+  "lastModified": "2026-10-28T23:16:11.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Lfm3VlForConditionalGeneration"
+    ],
+    "bos_token_id": 124894,
+    "downsample_factor": 2,
+    "dtype": "bfloat16",
+    "eos_token_id": 124900,
+    "image_token_id": 125030,
+    "model_type": "lfm3_vl",
+    "pad_token_id": 124893,
+    "projector_bias": true,
+    "projector_hidden_act": "gelu",
+    "projector_hidden_size": 4096,
+    "projector_layer_norm_eps": 1e-06,
+    "text_config": {
+      "bos_token_id": 124894,
+      "conv_L_cache": 7,
+      "conv_bias": false,
+      "dtype": "bfloat16",
+      "eos_token_id": 124900,
+      "head_dim": 128,
+      "hidden_size": 2048,
+      "initializer_range": 0.02,
+      "intermediate_size": 7680,
+      "layer_types": [
+        "conv",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv"
+      ],
+      "max_position_embeddings": 128000,
+      "model_type": "lfm3",
+      "norm_eps": 1e-05,
+      "num_attention_heads": 16,
+      "num_hidden_layers": 24,
+      "num_key_value_heads": 4,
+      "pad_token_id": 124893,
+      "rope_parameters": {
+        "full_attention": {
+          "partial_rotary_factor": 0.5,
+          "rope_theta": 1000000.0,
+          "rope_type": "default"
+        },
+        "sliding_attention": {
+          "rope_theta": 10000,
+          "rope_type": "default"
+        }
+      },
+      "sliding_window": 256,
+      "tie_word_embeddings": true,
+      "use_cache": true,
+      "use_sandwich_norm": true,
+      "vocab_size": 128000
+    },
+    "tie_word_embeddings": true,
+    "transformers_version": "5.19.0.dev0",
+    "video_token_id": 125029,
+    "vision_config": {
+      "conv_kernel_size": 3,
+      "dtype": "bfloat16",
+      "hidden_size": 1024,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 2560,
+      "layer_types": [
+        "conv",
+        "conv",
+        "full_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "full_attention",
+        "conv"
+      ],
+      "model_type": "lfm3_vl_vision",
+      "norm_eps": 1e-05,
+      "num_attention_heads": 16,
+      "num_hidden_layers": 14,
+      "num_key_value_heads": 8,
+      "patch_size": 16,
+      "rope_parameters": {
+        "rope_theta": 1000000.0,
+        "rope_type": "axial"
+      },
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 125010,
+    "vision_start_token_id": 125009,
+    "auto_map": {
+      "AutoConfig": "configuration_lfm3_vl.Lfm3VlConfig",
+      "AutoModel": "modeling_lfm3_vl.Lfm3VlModel",
+      "AutoModelForImageTextToText": "modeling_lfm3_vl.Lfm3VlForConditionalGeneration"
+    }
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "license": "other",
+    "license_name": "lfm1.0",
+    "license_link": "LICENSE",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "liquid",
+      "lfm3",
+      "edge",
+      "conversational",
+      "custom_code"
+    ],
+    "language": [
+      "en",
+      "ar",
+      "zh",
+      "fr",
+      "de",
+      "it",
+      "ja",
+      "ko",
+      "pt",
+      "es",
+      "vi",
+      "th",
+      "id",
+      "hi",
+      "ru",
+      "pl"
+    ],
+    "base_model": "LiquidAI/LFM3-1.7B-Base"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForImageTextToText",
+    "custom_class": "modeling_lfm3_vl.Lfm3VlForConditionalGeneration",
+    "pipeline_tag": "image-text-to-text"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "2a513f17eb4b8008fb100349fd2b7551d009fed0",
+      "size": 10574
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "70fcd2fe82496b9126663bfa9ef71228e97aa887",
+      "size": 143054
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "d0747b8b5fc99eaecfe02a04eefcff75eb181334",
+      "size": 12129
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "e533d46df1b9c3e3edfcb900d36ceaa9c8feb0a1",
+      "size": 2905
+    },
+    {
+      "rfilename": "configuration_lfm3.py",
+      "blobId": "f314814961969f97cdb91ad7e00ab4b9fab1e594",
+      "size": 6105
+    },
+    {
+      "rfilename": "configuration_lfm3_vl.py",
+      "blobId": "ef6fa2dbd2048fb0d9fca609f28aa726ff2ec031",
+      "size": 9138
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "818cc89bc3a6ecbbc452431442d7cdadc48f6907",
+      "size": 355
+    },
+    {
+      "rfilename": "image_processing_lfm3_vl.py",
+      "blobId": "8d27ebbca64a3aa55313c2d074fc684a8d9c335b",
+      "size": 12036
+    },
+    {
+      "rfilename": "lfm3_conv.py",
+      "blobId": "a1b67afdb605452f5a99751862863d5460a1fa69",
+      "size": 8532
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "32cf98bd0797a7972d6085c1b525c882feead47e",
+      "size": 3836417920,
+      "lfs": {
+        "sha256": "a9bb8b1c159c9d6c3007bc1c7ad8018b599f759d97da2701714e37426283e131",
+        "size": 3836417920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_lfm3.py",
+      "blobId": "c6e66b81281c20e5758c3b4d96e0a248c3d3a233",
+      "size": 42343
+    },
+    {
+      "rfilename": "modeling_lfm3_vl.py",
+      "blobId": "e6c75314edc860cadaa162ab595e2f96956d6cfe",
+      "size": 44999
+    },
+    {
+      "rfilename": "processing_lfm3_vl.py",
+      "blobId": "b15a003dcad67a5d9b8ba2113bb35d622be04619",
+      "size": 12152
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "1f38b9a150b604c3270dbfb883b6902a5763d3da",
+      "size": 1535
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "2ad6ecfda312be128ac878a61f3ee84dfe1134f8",
+      "size": 17908258,
+      "lfs": {
+        "sha256": "a39eed58008cbcbc09e5b629b81338a654269c64cd13348aaa6090f4db75c7e7",
+        "size": 17908258,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "e095df65c9ef161fc054821fc6773614ac728f03",
+      "size": 1759
+    },
+    {
+      "rfilename": "video_processing_lfm3_vl.py",
+      "blobId": "f26f48efc0ff1087dffdef2516b08c7ea905c9cb",
+      "size": 17161
+    }
+  ],
+  "spaces": [
+    "webml-community/LFM3-VL-2B-WebGPU",
+    "fusorlabs/liquidai-lmf3-wasm",
+    "hugging-apps/lfm3-vld-2b",
+    "hugging-apps/lfm3-vl-2b",
+    "hugging-apps/lfm3-vl-2b-multipass"
+  ],
+  "createdAt": "2026-10-19T19:51:46.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1918181888
+    },
+    "total": 1918181888
+  },
+  "usedStorage": 3854326178
+}

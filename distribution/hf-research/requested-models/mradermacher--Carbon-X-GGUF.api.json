@@ -1,0 +1,186 @@
+{
+  "_id": "6adb145f06f684965e95756f",
+  "id": "mradermacher/Carbon-X-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "dna",
+    "genomics",
+    "biology",
+    "variant-effect-prediction",
+    "conversational",
+    "en",
+    "base_model:HuggingFaceBio/Carbon-X",
+    "base_model:quantized:HuggingFaceBio/Carbon-X",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 971,
+  "likes": 0,
+  "modelId": "mradermacher/Carbon-X-GGUF",
+  "author": "mradermacher",
+  "sha": "cfee06b7ad9106a85a1629976d2a179ae2e10c3d",
+  "lastModified": "2026-10-23T18:02:58.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "HuggingFaceBio/Carbon-X",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "dna",
+      "genomics",
+      "biology",
+      "variant-effect-prediction",
+      "conversational"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 14822046720,
+    "architecture": "qwen3",
+    "context_length": 40960,
+    "chat_template": "{#- Training variant of the Qwen3 chat template (see qwen3.jinja for the original).\n    Modifications vs the original:\n    - Removed the loop.index0 > ns.last_query_index conditional; always include thinking block.\n      This makes the template prefix-preserving for the [user, assistant] → [user, assistant, tool] transition.\n    - Added {% generation %} / {% endgeneration %} around assistant message output to support\n      assistant-only loss masking in SFT training.\n-#}\n{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- generation %}\n        {{- '<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n        {%- endgeneration %}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 8216799680
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "299170169c9c562d85af450914b398ffc7365f0a",
+      "size": 2140
+    },
+    {
+      "rfilename": "Carbon-X.IQ4_XS.gguf",
+      "blobId": "ae0b1aa21e3ffbdbb23d194c95592b8708b78ab3",
+      "size": 8216799680,
+      "lfs": {
+        "sha256": "ce4a5f95d905c23790ab9e26e9ae072e3e2f0c8cc76c19ae602907caa25bc924",
+        "size": 8216799680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q2_K.gguf",
+      "blobId": "e8dd84ca6c8715d00ec78e1209090d33ce551ed2",
+      "size": 5784963520,
+      "lfs": {
+        "sha256": "9f6dbfab849cc0ac6a261c354cff966f167aa652acdbe8925bf491fb58136ca6",
+        "size": 5784963520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q3_K_L.gguf",
+      "blobId": "2fd1e66d8eebe98b4e7831ca3fdc8d8ba91927d9",
+      "size": 7934360000,
+      "lfs": {
+        "sha256": "78d76ed9ab8732ff35fa5cdcc162128482ec90d8f54cbc507feaef019f983ce4",
+        "size": 7934360000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q3_K_M.gguf",
+      "blobId": "73820c33f44fa11111640e2b77b81b677e481370",
+      "size": 7355021760,
+      "lfs": {
+        "sha256": "f184c2435e4f63b755e5cea7c04d97ef3ceee8b9ccc718971a1b9c04931d39a3",
+        "size": 7355021760,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q3_K_S.gguf",
+      "blobId": "90c7c5d9b01b8aa601613d35e6aa7853b4e037a2",
+      "size": 6690814400,
+      "lfs": {
+        "sha256": "aafec5c99ab15806f5f8e4bcb59f5d1bfdfde3754595581e2e1c36c39294b866",
+        "size": 6690814400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q4_K_M.gguf",
+      "blobId": "85997e098b715c2a0d0a65d1fabd4f38f3f6d26c",
+      "size": 9039030720,
+      "lfs": {
+        "sha256": "fd1765ea98dd599371475faa754de341b3dcfa5f0ca729e84b34843c6a66225f",
+        "size": 9039030720,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q4_K_S.gguf",
+      "blobId": "0d0d6579f33be0e39ef4ceaa5b9311b3d1f45fe3",
+      "size": 8610752960,
+      "lfs": {
+        "sha256": "42488f7253cfb5edbf7f3e37eb7000caece1af86d196c1e0c010f676ba315ff4",
+        "size": 8610752960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q5_K_M.gguf",
+      "blobId": "498473b0051ded5ede2c0982d1987be48715809e",
+      "size": 10555206080,
+      "lfs": {
+        "sha256": "58098aa27f9b1d3bbb31986cd0977788d5dab6f96778b957717c6559614ca1b4",
+        "size": 10555206080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q5_K_S.gguf",
+      "blobId": "cd9c396d521f4f8bf2baf5a6a2da2f6e336caa1f",
+      "size": 10304530880,
+      "lfs": {
+        "sha256": "ba061170e748b027a0faaf262b0f1ef25b8df4a2b830c17d795ec3bc088f3f9a",
+        "size": 10304530880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q6_K.gguf",
+      "blobId": "37465c078692f73823f26a6284418a529066f327",
+      "size": 12166142400,
+      "lfs": {
+        "sha256": "8b0659cc5d4690e1775cdc6bf8095b38071315f77d23aa8be29ae377b921420b",
+        "size": 12166142400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Carbon-X.Q8_0.gguf",
+      "blobId": "cdf33b907220d39fc1a7d10299f29375da075763",
+      "size": 15755753920,
+      "lfs": {
+        "sha256": "a7bbb2001056bb74488d0dd91f21e98c8761730aecf463b94f451930f203cd1e",
+        "size": 15755753920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "dc612cd9244d05d714ae824e85b34f7474c4a7df",
+      "size": 3265
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-23T08:01:35.000Z",
+  "usedStorage": 102413376320
+}

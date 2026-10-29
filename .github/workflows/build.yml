@@ -118,6 +118,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-chat-image-picker.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-menu-scroll.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub-pagination.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub-ocr.cjs

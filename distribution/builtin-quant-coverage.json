@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 547,
-  "withFive": 208,
+  "families": 550,
+  "withFive": 211,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5233,6 +5233,19 @@
       ]
     },
     {
+      "id": "publisher-carbon-x",
+      "label": "Carbon-X",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "HuggingFaceBio/Carbon-X",
+        "HuggingFaceBio/Carbon-X-GGUF",
+        "mradermacher/Carbon-X-GGUF"
+      ]
+    },
+    {
       "id": "publisher-cortiq-qwopus-dev",
       "label": "Cortiq Qwopus Dev",
       "category": "text",
@@ -5324,6 +5337,30 @@
       "repositories": [
         "Jackrong/Kestrel-4B-Coder",
         "Jackrong/Kestrel-4B-Coder-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b",
+      "label": "LFM3 1.7B",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "LiquidAI/LFM3-1.7B",
+        "LiquidAI/LFM3-1.7B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-vl-2b",
+      "label": "LFM3 VL 2B",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "LiquidAI/LFM3-VL-2B",
+        "LiquidAI/LFM3-VL-2B-GGUF"
       ]
     },
     {

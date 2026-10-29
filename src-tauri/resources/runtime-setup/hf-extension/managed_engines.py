@@ -49,6 +49,9 @@ def engine_for(entry):
     repository = str(entry.get('repository') or '').lower()
     if model_type == 'edgerock' or repository == 'hkust-aaron/edgerock-4b-gguf':
         return 'edgerock-cpu-v1'
+    if (model_type in ('lfm3', 'lfm3_vl') or entry.get('managedEngine') == 'lfm3-cpu-v1'
+            or repository in ('liquidai/lfm3-1.7b-gguf', 'liquidai/lfm3-vl-2b-gguf')):
+        return 'lfm3-cpu-v1'
     if model_type in ('flint', 'spark2_5', 'sparkx2_5') or repository.startswith(('recursivesi/flint', 'xhtoken/spark-x2')):
         return 'flint-cpu-v1'
     if model_type in ('raon1_mini', 'raon', 'raon1') or repository.startswith('krafton/raon-1-mini-preview'):
@@ -67,7 +70,7 @@ def definition(engine_id):
 
 
 def folder(root, engine_id):
-    if engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1'):
+    if engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1', 'lfm3-cpu-v1'):
         raise ValueError('Unknown managed publisher runtime')
     base = Path(root).resolve() / 'runtime-setup/engines'
     target = (base / engine_id).resolve()
