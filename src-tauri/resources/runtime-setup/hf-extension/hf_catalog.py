@@ -1,12 +1,22 @@
 """Pure Hugging Face model planning. Repository code is never imported or executed."""
 import hashlib
 import json
+import math
 from pathlib import PurePosixPath
 import re
 from urllib.parse import unquote, urlsplit
 
 HUB = "https://huggingface.co"
 ECHO_WINDOW_TOKENS = 32768
+
+def generation_defaults(metadata):
+    card=metadata.get('cardData');card=card if isinstance(card,dict) else {}
+    inference=card.get('inference');inference=inference if isinstance(inference,dict) else {}
+    source=metadata.get('generation_config') or inference.get('parameters') or {}
+    if not isinstance(source,dict):return {}
+    fields={'temperature':('temperature',0,2),'top_p':('top_p',.01,1),'top_k':('top_k',0,1000),
+            'repetition_penalty':('repeat_penalty',.5,2),'max_new_tokens':('max_tokens',16,32768)}
+    return {target:value for key,(target,low,high) in fields.items() if type(value:=source.get(key)) in (int,float) and math.isfinite(value) and low<=value<=high and (target not in ('top_k','max_tokens') or int(value)==value)}
 
 
 def echo_context_tokens(metadata, fallback=ECHO_WINDOW_TOKENS):
@@ -277,6 +287,7 @@ def build_plan(metadata):
             "sourceUrl": HUB + "/" + repo, "status": "not-installed"})
         if category == 'text':
             variants[-1].update(contextTokens=echo_context_tokens(metadata), memoryMode='echo')
+            if defaults:=generation_defaults(metadata):variants[-1]['generationDefaults']=defaults
         if group.get('diffusersVariant'):variants[-1]['diffusersVariant']=group['diffusersVariant']
         if is_adapter:
             variants[-1]['packageKind'] = 'adapter'

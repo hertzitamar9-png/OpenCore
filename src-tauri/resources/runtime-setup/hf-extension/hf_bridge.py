@@ -189,6 +189,28 @@ class BridgeState:
             helper.allowed_ports = frozenset((*helper.allowed_ports, runtime['backendPort'], runtime['echoPort']))
         return helper.recover({**body, 'runtime': runtime})
 
+    def generation_settings(self, body):
+        import importlib.util
+        source=self.resources/'echo/evoagent/generation_settings.py'
+        spec=importlib.util.spec_from_file_location('opencore_generation_settings',source)
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        with self.lock:
+            parameters=body.get('parameters')
+            if parameters is None:
+                identity=body.get('modelId')
+                entry=next((entry for entry in self.entries.values() if identity and identity in [entry['id'],entry.get('profileId'),*entry.get('nativeModelIds',[])]),None)
+                if entry:
+                    from hf_catalog import generation_defaults
+                    parameters=entry.get('generationDefaults') or None
+                    if not parameters:
+                        receipt=self._receipt(entry)
+                        if receipt:
+                            path=managed_path(Path(receipt['localDirectory']),entry.get('subdirectory') or '.', 'generation_config.json')
+                            if path.is_file() and path.stat().st_size<65536:
+                                try:parameters=generation_defaults({'generation_config':json.loads(path.read_text(encoding='utf-8'))}) or None
+                                except (OSError,ValueError):parameters=None
+            return module.save(self.root/'echo/generation-settings.json',body.get('conversationId'),parameters)
+
     def _load_catalog(self):
         try:
             saved = _read_json(self.catalog_path, MAX_CATALOG_BYTES)
@@ -860,6 +882,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200,state.uninstall(body.get('id'),body.get('confirmationToken')))
         elif route == '/removal-plan':
             self._send(200,state.removal_plan(body.get('id')))
+        elif route == '/generation/settings':
+            self._send(200,state.generation_settings(body))
         elif route in ("/context", "/context/release"):
             method = getattr(state.runtime, "set_context" if route == "/context" else "release_context", None)
             if method is None:

@@ -10,7 +10,10 @@ import {
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import ReactMarkdown from "react-markdown";
-import { ImageGenerationPanel,selectChatImageModel,submitChatImagePrompt,stopChatImagePrompt } from './image-generation-panel.js';
+import { ImageGenerationPanel,selectChatImageModel,submitChatImagePrompt,stopChatImagePrompt,imageGenerationDefaults } from './image-generation-panel.js';
+import {GenerationSettings} from './generation-settings.js';
+import {profileUsesEcho} from './ModelProfiles';
+import './generation-settings.css';
 import './ImageGenerationPanel.css';
 import {ChatMemoryStatus,chatPostprocessing} from './chat-postprocessing.js';
 import {cachedImagePreview,readImagePreview} from './image-preview-cache.js';
@@ -1018,6 +1021,7 @@ export const AssistantConversation = memo(function AssistantConversation({
         />
         {draggingFiles ? <div className="composer-drop-overlay" role="status" aria-live="polite">Drop files to attach</div> : null}
         <div className="composer-controls">
+          <GenerationSettings modelId={imageChat.active?imageChat.modelId:selectedProfile} conversationId={conversationId} image={imageChat.active} defaults={imageGenerationDefaults(imageChat.modelId||'')} supported={profileUsesEcho(selectedProfile)}/>
           <button type="button" className={`composer-control-button approval-trigger ${controlOpen === "approval" ? "active" : ""}`} aria-label={`Approval: ${approvalLabel}`} aria-expanded={controlOpen === "approval"} aria-controls={approvalPanelId} onClick={() => setControlOpen((open) => open === "approval" ? null : "approval")}>
             <ShieldCheck size={16} /><span className="control-copy"><small>Approval</small><strong>{approvalShort}</strong></span><ChevronDown size={13} />
           </button>

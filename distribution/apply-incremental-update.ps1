@@ -92,7 +92,8 @@ try{
   $logRoot=Join-Path $AppRoot 'logs';$null=New-Item -ItemType Directory -Path $logRoot -Force
   Start-Transcript -LiteralPath (Join-Path $logRoot 'incremental-update.log') -Force | Out-Null
   if($WindowHandle){
-    Add-Type -TypeDefinition @'
+    $systemAssembly=Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'System.dll'
+    Add-Type -ReferencedAssemblies $systemAssembly -TypeDefinition @'
 using System;using System.Runtime.InteropServices;
 public static class OpenCoreUpdateWindows {
  [DllImport("user32.dll")]static extern IntPtr FindWindowEx(IntPtr p,IntPtr after,string cls,string title);

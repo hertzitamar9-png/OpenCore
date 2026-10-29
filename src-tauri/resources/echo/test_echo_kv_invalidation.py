@@ -16,6 +16,9 @@ import echo_server
 class KvInvalidationTests(unittest.TestCase):
     def lease_state(self):
         state = echo_server.EchoState.__new__(echo_server.EchoState)
+        temporary=tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        state.archives=types.SimpleNamespace(directory=Path(temporary.name)/'archives')
         state._backend_lock = threading.RLock()
         state._backend_auxiliary_lock = threading.Lock()
         state._backend_lease_guard = threading.Lock()

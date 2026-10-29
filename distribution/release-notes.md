@@ -1,5 +1,7 @@
 Installed OpenCore apps now update through a small signed updater that checks existing files and downloads only changed file ranges. Unchanged CUDA libraries, Python and helpers remain in place. The update window shows checking, download size and progress, verification, and application; verified changes are applied together and OpenCore reopens. A failed apply restores the replaced files. The permanent 472 KiB OpenCore Setup remains unchanged and installs the complete app on a new PC.
 
+The round Generation settings button sits immediately left of Approvals. Automatic uses published presets or generation configuration when available, with runtime defaults otherwise. Manual controls image steps, guidance, dimensions and seed, or supported local ECHO text sampling and output limits. Each model keeps its choice until changed. Returning to Automatic clears manual overrides.
+
 Image responses retain their elapsed generation time beside Retry and Copy after reloading a chat. Image runtime admission now accounts for usable free VRAM, CPU staging, and sampling reserves instead of requiring all stored weights plus 4 GB in RAM. RAM and VRAM are reported separately. Runtime preparation and successful generation remain distinct checks.
 
 Imported model uninstall uses the existing file-review dialog: file count, disk space and paths, then one confirmation. A changed file list invalidates the confirmation. Mouse-wheel tests cover reversing from the middle and bottom of both model pickers at desktop and phone widths.

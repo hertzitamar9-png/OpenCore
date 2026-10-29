@@ -1147,6 +1147,29 @@ def _conversation_id(payload: dict, headers) -> str:
     return "default"
 
 
+def apply_generation_settings(path, conversation, payload):
+    # Keep this reader in the existing entrypoint: older desktop baselines may
+    # materialize a fixed list of ECHO modules. A new optional module must never
+    # prevent an otherwise compatible model from answering.
+    limits={'temperature':(0,2),'top_p':(.01,1),'top_k':(0,1000),
+            'repeat_penalty':(.5,2),'max_tokens':(16,32768),'seed':(0,4294967295)}
+    try:
+        if path.stat().st_size>256*1024:return payload
+        settings=json.loads(path.read_text(encoding='utf-8'))
+        values=settings['conversations'].get(conversation,{}) if settings.get('schema')==1 else {}
+        if not isinstance(values,dict) or set(values)-set(limits):return payload
+        for key,value in values.items():
+            low,high=limits[key]
+            if type(value) not in (int,float) or not low<=value<=high or key in ('top_k','max_tokens','seed') and int(value)!=value:return payload
+    except (OSError,ValueError,KeyError,AttributeError,TypeError):return payload
+    if not values:return payload
+    result={**payload,**values}
+    if 'max_tokens' in values:
+        result.pop('max_completion_tokens',None)
+        result['echo_max_total_tokens']=values['max_tokens']
+    return result
+
+
 def _is_user_request(message: dict) -> bool:
     # SDK environment/budget updates use a user-shaped compatibility envelope
     # because some native templates reject mid-history system roles. Their
@@ -1416,6 +1439,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self._passthrough(payload)
 
         conversation = _conversation_id(payload, self.headers)
+        payload = apply_generation_settings(self.state.archives.directory.parent / 'generation-settings.json', conversation, payload)
         messages = payload.get("messages") or []
         question = _last_user_message(messages)
         app_owns_timeline = self.headers.get("X-OpenCore-Timeline-Owner", "").lower() == "app"

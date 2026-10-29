@@ -48,6 +48,7 @@ function retainSupportPage(text) {
 }
 let index = fs.readFileSync(path.join(original, 'assets/index-CD0EH-dA.js'), 'utf8');
 index = editFunction(index, 'p', () => 'async function p(i,s={},h){const b=globalThis.__opencoreInstallBridge;const run=()=>window.__TAURI_INTERNALS__.invoke(i,s,h);return b?b.invoke(i,s,run):run()}');
+index=editFunction(index,'L0',text=>replaceOnce(text,'request:{conversationId:i,','request:{generationSettings:globalThis.__opencoreGenerationRequest?.(i),conversationId:i,'));
 index=editFunction(index,'bp',text=>replaceOnce(text,
   'const o=await Kn("model-library",()=>p("list_model_library"));',
   'const o=await globalThis.__opencoreModelLibrary.read(()=>p("list_model_library"),{fresh:!!i?.fresh});'));

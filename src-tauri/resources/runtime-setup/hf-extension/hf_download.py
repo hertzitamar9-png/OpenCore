@@ -126,7 +126,11 @@ class HubClient:
 
     def metadata(self, repository):
         repository = parse_repository(repository)
-        return self.json("/api/models/" + quote(repository, safe="/") + "/revision/main?blobs=true")
+        value=self.json("/api/models/" + quote(repository, safe="/") + "/revision/main?blobs=true")
+        if re.fullmatch('[a-f0-9]{40}',str(value.get('sha',''))) and any(item.get('rfilename')=='generation_config.json' for item in value.get('siblings',[])):
+            try:value['generation_config']=self.json('/'+quote(repository,safe='/')+'/resolve/'+value['sha']+'/generation_config.json')
+            except HubError:pass
+        return value
 
     def json_page(self, path, *, token, anonymous_first):
         """Read a bounded Hub page and extract only its trusted continuation cursor."""

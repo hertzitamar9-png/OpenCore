@@ -113,6 +113,8 @@ def generation_inputs(model,tokenizer,context,payload,stop):
           'do_sample':temperature>0,'stopping_criteria':StoppingCriteriaList([Cancelled()]),
           'pad_token_id':tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id}
     if temperature>0:args.update(temperature=temperature,top_p=float(payload.get('top_p',0.95)))
+    if 'top_k' in payload and temperature>0:args['top_k']=int(payload['top_k'])
+    if 'repeat_penalty' in payload:args['repetition_penalty']=float(payload['repeat_penalty'])
     return args,length
 
 
@@ -173,6 +175,7 @@ def serve(model,tokenizer,context,model_id,port,source_pin=''):
                 size=int(self.headers.get('Content-Length','0'))
                 if not 0<size<=8*1024**2:raise ValueError('Request exceeds the text worker limit')
                 payload=json.loads(self.rfile.read(size));args,prompt_tokens=generation_inputs(model,tokenizer,context,payload,stop)
+                if 'seed' in payload:torch.manual_seed(int(payload['seed']))
                 chat=self.path=='/v1/chat/completions';request_id='chatcmpl-'+uuid.uuid4().hex;created=int(time.time())
                 if not payload.get('stream'):
                     with torch.inference_mode():output=model.generate(**args)

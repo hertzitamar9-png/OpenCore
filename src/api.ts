@@ -488,7 +488,8 @@ export async function setAgentConnectorFolder(id: 'opencode' | 'hermes', folder:
 export async function sendChatMessage(conversationId: string, text: string, files: string[], reasoningEffort: ReasoningEffort, approvalMode: ApprovalMode, skills: string[] = [], subagentsEnabled = false, maxSubagents = 3, projectSkillsEnabled = true, compactAtTokens = 200000, submissionId = crypto.randomUUID()): Promise<ChatSendResult> {
   if (!desktop()) throw new Error("Interactive chat requires the desktop application.");
   return invoke<ChatSendResult>("send_chat_message", {
-    request: { conversationId, text, files, reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, submissionId },
+    request: { conversationId, text, files, reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, submissionId,
+      generationSettings:(globalThis as typeof globalThis & {__opencoreGenerationRequest?:(id:string)=>unknown}).__opencoreGenerationRequest?.(conversationId) },
   });
 }
 

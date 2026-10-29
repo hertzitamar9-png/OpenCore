@@ -123,6 +123,10 @@ async function $hubRegister(entry) {
   await $hubRefresh(true);return profile.profileId;
 }
 async function $hubInvoke(command,args,run) {
+  if(command==='send_chat_message'&&args.request?.generationSettings){
+    const {generationSettings,...request}=args.request;args.request=request;
+    await $hubRequest('/generation/settings',{conversationId:request.conversationId,modelId:generationSettings.modelId,parameters:generationSettings.parameters});
+  }
   if(['model_removal_plan','uninstall_model'].includes(command)&&$hubState.catalog.some(entry=>entry.id===args.id&&!entry.nativeProfile)){
     const value=await $hubRequest(command==='model_removal_plan'?'/removal-plan':'/uninstall',args);
     if(command==='uninstall_model')await $hubRefresh(true);

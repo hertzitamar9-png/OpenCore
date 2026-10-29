@@ -2,7 +2,7 @@
 import argparse,gzip,hashlib,json
 from pathlib import Path
 
-parser=argparse.ArgumentParser();parser.add_argument('--directory',type=Path,required=True);args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--directory',type=Path,required=True);parser.add_argument('--nsis',type=Path,required=True);args=parser.parse_args()
 root=args.directory
 index=json.loads((root/'incremental-index.json').read_text(encoding='utf-8'))
 manifest=json.loads((root/'package-manifest.json').read_text(encoding='utf-8'))
@@ -21,5 +21,7 @@ with (root/'OpenCore.Update.data').open('rb') as payload:
     assert not payload.read(1)
 exe=root/'OpenCore Update.exe'
 proof={'passed':True,'version':index['version'],'files':len(index['files']),'updateSha256':hashlib.sha256(exe.read_bytes()).hexdigest(),'independentFileHashesVerified':True,'rangeTransactionsTested':True}
+from incremental_smoke import run
+proof.update(run(args.nsis))
 (root/'incremental-verification.json').write_text(json.dumps(proof,indent=2),encoding='utf-8')
 print(json.dumps(proof))

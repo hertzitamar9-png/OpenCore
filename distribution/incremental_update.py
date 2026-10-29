@@ -32,14 +32,42 @@ def update_script(output,version,icon,branding,webview):
 {files}
   DetailPrint "Checking installed files; unchanged runtimes will be kept."
   SetDetailsView show
-  nsExec::ExecToLog '"$WINDIR\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\apply-incremental-update.ps1" -AppRoot "$INSTDIR" -PythonRoot "$PROFILE\\OpenCore\\runtime-setup\\python-3.12.10" -IndexPath "$PLUGINSDIR\\incremental-index.json" -WindowHandle $HWNDPARENT'
+  ; Keep the NSIS message loop responsive while the hidden worker downloads.
+  ; A blocking nsExec call deadlocks synchronous progress updates from PowerShell.
+  System::Alloc 68
   Pop $0
+  System::Call '*$0(i 68)'
+  System::Alloc 16
+  Pop $1
+  StrCpy $7 '"$WINDIR\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\apply-incremental-update.ps1" -AppRoot "$INSTDIR" -PythonRoot "$PROFILE\\OpenCore\\runtime-setup\\python-3.12.10" -IndexPath "$PLUGINSDIR\\incremental-index.json" -WindowHandle $HWNDPARENT'
+  System::Call 'kernel32::CreateProcessW(p 0, w r7, p 0, p 0, i 0, i 0x08000000, p 0, p 0, p r0, p r1) i.r2'
+  ${{If}} $2 == 0
+    System::Free $0
+    System::Free $1
+    SetErrorLevel 7
+    Quit
+  ${{EndIf}}
+  System::Call '*$1(p.r3, p.r4, i.r5, i.r6)'
+  System::Call 'kernel32::CloseHandle(p r4)'
+  System::Free $0
+  System::Free $1
+  update_wait:
+    System::Call 'kernel32::WaitForSingleObject(p r3, i 0) i.r2'
+    ${{If}} $2 == 258
+      Sleep 80
+      Goto update_wait
+    ${{EndIf}}
+  System::Call 'kernel32::GetExitCodeProcess(p r3, *i.r0)'
+  System::Call 'kernel32::CloseHandle(p r3)'
   ${{If}} $0 != "0"
+    IfSilent +2
     MessageBox MB_ICONSTOP "The update could not be applied. Your existing app and downloaded models were kept. See $LOCALAPPDATA\\OpenCore\\logs\\incremental-update.log."
     SetErrorLevel 7
     Quit
   ${{EndIf}}
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "DisplayVersion" "{version}"
+  ${{If}} $TestInstall != "1"
+    WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "DisplayVersion" "{version}"
+  ${{EndIf}}
   StrCpy $UpdateInstallSucceeded "1"
 SectionEnd'''
     return script[:start]+body+script[end:]

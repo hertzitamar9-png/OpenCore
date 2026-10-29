@@ -1,4 +1,5 @@
 import React from 'react';
+import {applyImageGenerationOptions,useGenerationSettings} from './generation-settings.js';
 
 let chatImageSelection=null;
 try{const value=JSON.parse(window.localStorage.getItem('opencore.ui.v1.chat-image-model'));if(typeof value?.id==='string'&&typeof value?.label==='string')chatImageSelection={id:value.id,label:value.label,...(typeof value.adapterId==='string'?{adapterId:value.adapterId,adapterLabel:value.adapterLabel||value.adapterId}:{})};}catch{}
@@ -142,6 +143,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
   const initialSelection=!studio&&!embedded?getChatImageSelection():null;
   const [open,setOpen]=React.useState(studio||!!initialSelection),[models,setModels]=React.useState([]),[modelId,setModelId]=React.useState(initialModelId||initialSelection?.id||''),[adapters,setAdapters]=React.useState([]),[adapterId,setAdapterId]=React.useState(initialSelection?.adapterId||''),[prompt,setPrompt]=React.useState(''),[strength,setStrength]=React.useState(0.8),[steps,setSteps]=React.useState(30),[guidance,setGuidance]=React.useState(3),[size,setSize]=React.useState(512),[busy,setBusy]=React.useState(false),[stage,setStage]=React.useState(''),[error,setError]=React.useState(''),[jobs,setJobs]=React.useState([]),[images,setImages]=React.useState({});
   const panel=React.useRef(null),requestedModel=React.useRef(initialSelection?.id||''),pending=React.useRef(null),inFlight=React.useRef(false),previewing=React.useRef(new Set()),conversation=React.useRef(conversationId),submitting=React.useRef(false),fingerprint=React.useRef('');
+  const generationPreference=useGenerationSettings(modelId);
   const activeJob=jobs.find(job=>['queued','starting','running','preparing'].includes(job.status));
   const shownJob=activeJob||jobs.find(job=>job.request?.modelId===modelId);
   React.useEffect(()=>{if(!studio&&!embedded&&open)publishImageProgress(busy?{modelId,job:{status:'preparing',stage:stage||'Preparing image generation'}}:shownJob?{modelId,job:shownJob}:null);},[open,studio,embedded,modelId,shownJob,busy,stage]);
@@ -232,6 +234,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       if(snapshot?.activeConversationIds?.length)throw Error('Another conversation is generating. Let it finish before starting image generation.');
       if(['running','starting'].includes(snapshot?.runtime?.status)){setStage('Releasing the text model from memory for image generation');await invoke('stop_runtime');}
       const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files,model.hubEntry?.imageDefaults)),...(file?{loraPath:file.localPath,loraStrength:strength}:{})},onAccepted:input?.onAccepted};
+      if(!studio)request.settings=applyImageGenerationOptions(modelId,request.settings);
       if(globalThis.__opencorePromptSettings?.().enabled&&globalThis.__opencorePromptSettings().automaticImages){
         try{const better=await globalThis.__opencoreImproveLocalPrompt(request.prompt,conversation.current,'image',setStage);request.settings.originalPrompt=text.trim();request.settings.promptRecap=better.recap;request.prompt=better.prompt;}
         catch(error){setError('Prompt assistant: '+String(error)+' Your original prompt will be used.');}
@@ -253,7 +256,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       pending.current={...request,setupId:job.id};setStage('Preparing and verifying the image model. Your prompt will run automatically afterward.');
     }catch(e){pending.current=null;submitting.current=false;setBusy(false);setStage('');setError(String(e));}
   }
-  if(!studio)return h('section',{ref:panel,className:'chat-image-status','data-image-mode':open?'open':'closed','aria-label':'Chat image generation'},open?h(React.Fragment,null,h('span',null,(model?.label||initialSelection?.label||'Image model')+(adapterId?' + '+(adapterLabel||'LoRA'):'')+' · Automatic quality'),busy||stage||shownJob?h(ImageProgressCard,{job:activeJob||(!busy?shownJob:null),stage:busy?stage||'Preparing image generation':undefined}):null,error||!busy&&!activeJob&&shownJob?.error?h(ImageError,{error:error||shownJob.error}):null):null);
+  if(!studio)return h('section',{ref:panel,className:'chat-image-status','data-image-mode':open?'open':'closed','aria-label':'Chat image generation'},open?h(React.Fragment,null,h('span',null,(model?.label||initialSelection?.label||'Image model')+(adapterId?' + '+(adapterLabel||'LoRA'):'')+(generationPreference.mode==='manual'?' · Manual settings':' · Automatic quality')),busy||stage||shownJob?h(ImageProgressCard,{job:activeJob||(!busy?shownJob:null),stage:busy?stage||'Preparing image generation':undefined}):null,error||!busy&&!activeJob&&shownJob?.error?h(ImageError,{error:error||shownJob.error}):null):null);
   return h('section',{ref:panel,className:'image-generation-panel','data-image-mode':open?'open':'closed','aria-label':studio?'Image generation':'Chat image generation'},
     !studio?h('div',{className:'image-mode-tabs',role:'group','aria-label':'Chat generation mode'},h('button',{type:'button','aria-pressed':!open,disabled:busy,onClick:()=>clearChatImageSelection({scope:panel.current?.closest('.chat-composer-wrap')||panel.current,primary:!embedded})},'Text'),h('button',{type:'button','aria-pressed':open,disabled:busy,onClick:()=>setOpen(true)},'Images')):null,
     open?h(React.Fragment,null,h('h3',null,studio?'Generate an image':'Generate images in this chat'),
