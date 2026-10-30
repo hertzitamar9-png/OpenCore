@@ -382,6 +382,7 @@ def generate_comfy(request,output):
             process=subprocess.Popen([sys.executable,str(engine/'main.py'),'--listen','127.0.0.1','--port',str(port),
                 '--disable-auto-launch','--offline','--disable-mmap','--disable-metadata',
                 *(['--disable-dynamic-vram','--disable-fast-disk','--cache-none'] if qwen else []),
+                *(['--disable-smart-memory'] if settings.get('cpuOffload') is True else []),
                 '--disable-all-custom-nodes','--whitelist-custom-nodes',plugin,*(['opencore-image-phases'] if qwen else []),
                 '--extra-model-paths-config',str(paths),'--output-directory',str(images),'--input-directory',str(output/'comfy-inputs'),
                 '--user-directory',str(output/'comfy-user'),'--temp-directory',str(output/'comfy-temp')],

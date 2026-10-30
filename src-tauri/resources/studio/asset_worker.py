@@ -352,7 +352,10 @@ def generate(request, output):
             # Release checkpoint mappings after the host-memory admission check.
             for component in generator.components.values():
                 if hasattr(component,'_apply'):component._apply(lambda tensor:tensor.clone())
-            generator.enable_model_cpu_offload()
+            if settings.get('cpuOffload') is True and hasattr(generator,'enable_sequential_cpu_offload'):
+                generator.enable_sequential_cpu_offload()
+            else:
+                generator.enable_model_cpu_offload()
         generator,reference_args=reference_pipeline(generator,settings,output,diffusers)
         apply_diffusers_image_lora(generator,model_id,Path(request['modelRoot']).resolve(),settings,request.get('sourceRepository'))
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
