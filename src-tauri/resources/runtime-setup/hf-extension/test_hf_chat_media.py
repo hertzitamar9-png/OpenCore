@@ -8,6 +8,7 @@ import threading
 import unittest
 from types import SimpleNamespace
 
+import hf_chat_media
 from hf_chat_media import ChatMedia, confined
 
 
@@ -73,5 +74,20 @@ class ChatMediaTests(unittest.TestCase):
         other=shard('other');other.write_bytes(b'other chat image')
         ChatMedia(self.data,self.images,root).delete('chat')
         self.assertFalse(target.exists());self.assertFalse(cold.exists());self.assertTrue(other.exists())
+
+    def test_saved_conversation_listing_reads_every_page_without_changing_any_chat(self):
+        database=self.data/'control-center.sqlite3'
+        with closing(sqlite3.connect(database)) as db,db:
+            db.execute('CREATE TABLE conversations(id TEXT PRIMARY KEY,title TEXT,client TEXT)')
+            db.executemany('INSERT INTO conversations VALUES(?,?,?)',[(f'chat-{n:04}',f'Chat {n}','Claude Code Mods' if n%2 else 'OpenCore') for n in range(725)])
+        before=database.read_bytes();rows=[];cursor=None
+        while True:
+            page=hf_chat_media.saved_conversations_page(self.data,cursor,200)
+            rows.extend(page['conversations']);cursor=page['nextCursor']
+            if cursor is None:break
+        self.assertEqual(len(rows),725);self.assertEqual(len({row['id'] for row in rows}),725)
+        self.assertEqual(rows[0]['id'],'chat-0000');self.assertEqual(rows[-1]['id'],'chat-0724')
+        self.assertEqual(database.read_bytes(),before)
+        with self.assertRaises(ValueError):hf_chat_media.saved_conversations_page(self.data,None,10000)
 
 if __name__=='__main__':unittest.main()

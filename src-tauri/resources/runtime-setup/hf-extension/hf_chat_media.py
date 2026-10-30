@@ -31,6 +31,23 @@ def confined(path, root):
     return path
 
 
+def saved_conversations_page(app_data, after=None, limit=200):
+    """Read saved identities beyond the native UI's 500-row recent-list limit."""
+    if type(limit) is not int or not 1 <= limit <= 500:
+        raise ValueError('Choose a saved-chat page size between 1 and 500')
+    if after is not None and (not isinstance(after, str) or not after or len(after)>512 or '\x00' in after):
+        raise ValueError('Invalid saved-chat cursor')
+    root=Path(app_data).absolute()
+    database=confined(root/'control-center.sqlite3',root)
+    if not database.is_file():
+        raise ValueError('The local chat database is unavailable; nothing was deleted')
+    with closing(sqlite3.connect(database.as_uri()+'?mode=ro',uri=True,timeout=3)) as db:
+        rows=db.execute('SELECT id,title,client FROM conversations WHERE id>? ORDER BY id LIMIT ?',
+                        (after or '',limit+1)).fetchall()
+    values=[{'id':key,'title':title,'client':client} for key,title,client in rows[:limit]]
+    return {'conversations':values,'nextCursor':values[-1]['id'] if len(rows)>limit else None}
+
+
 class ChatMedia:
     def __init__(self, app_data, images, root=None, echo_urls=()):
         self.data, self.images = Path(app_data).resolve(), images

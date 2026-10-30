@@ -15,13 +15,15 @@ const server=http.createServer((req,res)=>{
   if(!fs.existsSync(file)||!fs.statSync(file).isFile()){res.statusCode=404;res.end();return;}
   res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'image/png');res.end(fs.readFileSync(file));
 });
-const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false})=>{
-  window.fixture={calls:[],snapshot,timeline,listeners:{},nextListener:0,hangSnapshot};
+const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false,nativeCoreDelay=0})=>{
+  window.fixture={calls:[],snapshot,timeline,listeners:{},nextListener:0,hangSnapshot,nativeReady:!nativeCoreDelay};
+  if(nativeCoreDelay)setTimeout(()=>{fixture.nativeReady=true;},nativeCoreDelay);
   document.addEventListener('DOMContentLoaded',()=>{
     const channel=new MessageChannel();channel.port1.onmessage=async event=>{
       const request=JSON.parse(event.data);fixture.calls.push(request);let value=null;
       if(request.kind==='invoke'){
         const command=request.command,args=request.args||{};
+        if(['get_snapshot','account_action'].includes(command)&&!fixture.nativeReady){channel.port1.postMessage(JSON.stringify({type:'result',id:request.id,ok:false,error:'state not managed for field `core` on command `'+command+'`. You must call `.manage()` before using this command'}));return;}
         if(firstRun&&command==='account_action')return;
         if(command==='get_snapshot'&&fixture.hangSnapshot)return;
         if(command==='get_snapshot'&&startupDelay)await new Promise(resolve=>setTimeout(resolve,startupDelay));

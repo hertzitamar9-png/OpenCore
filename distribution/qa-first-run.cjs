@@ -22,6 +22,16 @@ code+=String.raw`
       assert.deepEqual(errors,[]);proof.push({width,emptyProfileOpened:true,accountServerRequired:false,visibleProgress:true});
       await page.close();
     }
+    const nativePage=await browser.newPage({viewport:{width:1366,height:852}});
+    await nativePage.addInitScript(fake,{snapshot,timeline:[],firstRun:true,nativeCoreDelay:1200});
+    await nativePage.goto('http://127.0.0.1:'+server.address().port+'/index.html',{waitUntil:'domcontentloaded'});
+    await nativePage.locator('.opencore-shell').waitFor({timeout:10000});
+    const nativeCalls=await nativePage.evaluate(()=>fixture.calls);
+    assert.ok(nativeCalls.filter(call=>call.command==='get_snapshot').length>1,'The webview can open before native setup finishes and must retry its read-only snapshot');
+    assert.equal(nativeCalls.some(call=>call.command==='account_action'),false,'Native setup completes independently of the optional account server');
+    assert.equal(await nativePage.getByRole('button',{name:'Retry opening OpenCore'}).count(),0);
+    proof.push({delayedNativeSetupOpened:true,temporaryCoreStateRetried:true,accountServerRequired:false});
+    await nativePage.close();
     const page=await browser.newPage({viewport:{width:393,height:852}});
     await page.clock.install();
     await page.addInitScript(fake,{snapshot,timeline:[],firstRun:true,hangSnapshot:true});

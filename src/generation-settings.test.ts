@@ -4,7 +4,7 @@ describe('generation settings',()=>{
   it('keeps automatic untouched and applies manual values to actual image settings',()=>{
     const automatic={steps:40,width:2048,height:2048,guidanceScale:1,seed:99};
     saveGenerationSettings('qwen-image-test',{mode:'automatic'});
-    expect(applyImageGenerationOptions('qwen-image-test',automatic)).toBe(automatic);
+    expect(applyImageGenerationOptions('qwen-image-test',automatic)).toStrictEqual(automatic);
     saveGenerationSettings('qwen-image-test',{mode:'manual',values:{steps:19,guidanceScale:1.3,seed:42,width:1024,height:1024}});
     expect(applyImageGenerationOptions('qwen-image-test',automatic)).toMatchObject({steps:19,guidanceScale:1.3,seed:42,width:1024,height:1024});
     expect(generationOptions('another-model')).toBeNull();

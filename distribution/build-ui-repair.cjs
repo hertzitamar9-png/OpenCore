@@ -54,6 +54,7 @@ index=editFunction(index,'bp',text=>replaceOnce(text,
   'const o=await globalThis.__opencoreModelLibrary.read(()=>p("list_model_library"),{fresh:!!i?.fresh});'));
 index=editFunction(index,'Xv',()=>fs.readFileSync(path.join(root,'startup-entry.js'),'utf8'));
 index+='\nconst $viewCacheVersion='+JSON.stringify(releaseVersion)+';\n'+fs.readFileSync(path.join(root,'model-view-cache.js'),'utf8');
+index+='\n'+fs.readFileSync(path.join(root,'conversation-deletion.js'),'utf8');
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 app=editFunction(app,'Kp',text=>replaceOnce(text,'function Kp(t){','function Kp(t){if(globalThis.__opencoreHubEchoProfiles?.has(t))return true;'));
 app=editFunction(app,'pk',text=>{

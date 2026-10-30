@@ -18,10 +18,22 @@ function Xv({workspace:Workspace=Gv}={}){
     const ticket=++generation.current;started.current=Date.now();setElapsed(0);setError('');setCopied(false);setPhase(1);
     let timeout;
     try{
+      const snapshot=()=>window.__TAURI_INTERNALS__.invoke('get_snapshot',{});
+      const missingCore=reason=>/state not managed for field [`'"]core[`'"].*get_snapshot/i.test(String(reason?.message||reason));
+      const openWorkspace=async()=>{
+        // The webview can mount before Tauri's setup hook registers AppCore.
+        // Retry that transient state; account_action needs the same core and
+        // cannot initialize it. Other errors still require attention.
+        while(ticket===generation.current&&Date.now()-started.current<20000){
+          try{return await snapshot();}catch(reason){if(!missingCore(reason))throw reason;}
+          await new Promise(resolve=>setTimeout(resolve,150));
+        }
+        throw Error('Your local workspace did not respond in time.');
+      };
       // Native IPC selects the current local workspace. Optional online account
       // configuration must not hold a new installation on the splash screen.
       await Promise.race([
-        window.__TAURI_INTERNALS__.invoke('get_snapshot',{}),
+        openWorkspace(),
         new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('Your local workspace did not respond in time.')),20000);deadline.current=timeout;})
       ]);
       if(ticket!==generation.current)return;

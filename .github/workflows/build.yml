@@ -114,6 +114,8 @@ jobs:
         env:
           OPENCORE_VIEW_QA_REPORT: .output/cached-views-qa.json
         run: |
+          node --test test-conversation-deletion.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-model-install.cjs candidate-dist
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub.cjs

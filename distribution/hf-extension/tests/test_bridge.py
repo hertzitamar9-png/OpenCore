@@ -1,7 +1,9 @@
 import hashlib
+from contextlib import closing
 import http.client
 import json
 import os
+import sqlite3
 from pathlib import Path
 import sys
 import tempfile
@@ -42,6 +44,23 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_complete_chat_listing_requires_authentication_and_reads_only_local_saved_rows(self):
+        appdata=self.root/'appdata';directory=appdata/'ai.opencore.control-center';directory.mkdir(parents=True)
+        database=directory/'control-center.sqlite3'
+        with closing(sqlite3.connect(database)) as db,db:
+            db.execute('CREATE TABLE conversations(id TEXT PRIMARY KEY,title TEXT,client TEXT)')
+            db.executemany('INSERT INTO conversations VALUES(?,?,?)',[(f'chat-{n:04}',f'Title {n}','Claude Code Mods') for n in range(725)])
+        before=database.read_bytes()
+        with patch.dict(os.environ,{'APPDATA':str(appdata)}):
+            self.assertEqual(self.request('POST','/api/conversations/list',{'limit':200},secret=None)[0],401)
+            status,_,page=self.request('POST','/api/conversations/list',{'limit':200})
+            self.assertEqual(status,200);self.assertEqual(len(page['conversations']),200)
+            self.assertEqual(page['nextCursor'],'chat-0199')
+            status,_,page=self.request('POST','/api/conversations/list',{'after':'chat-0599','limit':200})
+            self.assertEqual(status,200);self.assertEqual(len(page['conversations']),125)
+            self.assertIsNone(page['nextCursor']);self.assertEqual(database.read_bytes(),before)
+            self.assertEqual(self.request('POST','/api/conversations/list',{'limit':10000})[0],400)
+
     def test_connector_changes_require_authentication_and_route_to_owned_manager(self):
         with patch.object(self.state, 'connectors') as profiles:
             profiles.status.return_value = {'disconnected': {}}

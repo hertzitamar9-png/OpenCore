@@ -124,6 +124,7 @@ async function $hubRegister(entry) {
   await $hubRefresh(true);return profile.profileId;
 }
 async function $hubInvoke(command,args,run) {
+  if(command==='list_saved_conversations')return $hubRequest('/conversations/list',args);
   if(command==='get_snapshot'){
     const snapshot=globalThis.__opencoreImageConversationInvoke?await globalThis.__opencoreImageConversationInvoke(command,args,run):await run();
     if(snapshot?.connectors&&typeof $connectorView==='function')return {...snapshot,connectors:snapshot.connectors.map(row=>$connectorView(row,$connectorProfiles))};

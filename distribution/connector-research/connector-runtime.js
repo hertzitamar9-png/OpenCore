@@ -142,7 +142,7 @@ function $forgetConnectorClearFeedback(id) {
 function $clearConnectorHistory(id) {
     if ($connectorClearJobs.has(id)) return $connectorClearJobs.get(id);
     $connectorClearFeedback.set(id, {busy: true, message: "Removing imported history from OpenCore and ECHO…", error: false});
-    const request = Promise.resolve().then(() => p1(id)).then(message => {
+    const request = Promise.resolve().then(() => globalThis.__opencoreChatDeletion.clear(id)).then(message => {
         $connectorClearFeedback.set(id, {busy: false, message, error: false});
         $notifyConnectorHistory();
         return message;
