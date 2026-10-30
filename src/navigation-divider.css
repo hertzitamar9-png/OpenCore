@@ -1,0 +1,23 @@
+.nav-rail .nav-group-start {
+  border-top: 2px solid var(--theme-accent-ink, #8ec4ff);
+}
+
+.conversation-app-rail nav {
+  grid-auto-rows: minmax(min-content, 1fr);
+}
+
+.conversation-app-rail nav > .nav-group-start {
+  position: relative;
+  border-top: 0;
+  padding-top: 12px;
+}
+
+.conversation-app-rail nav > .nav-group-start::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 4px;
+  height: 2px;
+  background: var(--theme-accent-ink, #8ec4ff);
+  pointer-events: none;
+}

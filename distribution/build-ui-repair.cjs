@@ -56,6 +56,7 @@ index=editFunction(index,'Xv',()=>fs.readFileSync(path.join(root,'startup-entry.
 index+='\nconst $viewCacheVersion='+JSON.stringify(releaseVersion)+';\n'+fs.readFileSync(path.join(root,'model-view-cache.js'),'utf8');
 index+='\n'+fs.readFileSync(path.join(root,'conversation-deletion.js'),'utf8');
 index+='\nconst $sectionHighlights=document.createElement("style");$sectionHighlights.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/section-highlights.css'),'utf8'))+';document.head.appendChild($sectionHighlights);\n';
+index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement("style");style.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/navigation-divider.css'),'utf8'))+';document.head.appendChild(style);}\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 app=editFunction(app,'Kp',text=>replaceOnce(text,'function Kp(t){','function Kp(t){if(globalThis.__opencoreHubEchoProfiles?.has(t))return true;'));
 app=editFunction(app,'pk',text=>{
@@ -129,7 +130,6 @@ app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'../src/menu-scroll.js'),'utf8').replace('export function ','function ')+'\ninstallMenuScrollGuard();\n';
 app+='\nconst $menuScrollStyle=document.createElement("style");$menuScrollStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/menu-scroll.css'),'utf8'))+';document.head.appendChild($menuScrollStyle);\n';
 app+='\nconst $railHoverStyle=document.createElement("style");$railHoverStyle.textContent=".conversation-app-rail .nav-item:hover:not(:disabled),.conversation-app-rail .nav-item:focus-visible{background:color-mix(in srgb,var(--theme-accent,#6dacf5) 22%,var(--theme-panel,#10283d))!important;box-shadow:inset 0 0 0 1px var(--theme-accent,#6dacf5);color:var(--theme-ink,#fff)!important}";document.head.appendChild($railHoverStyle);\n';
-app+='\nconst $navDividerStyle=document.createElement("style");$navDividerStyle.textContent=".nav-rail .nav-group-start{border-top:2px solid var(--theme-accent-ink,#8ec4ff)}";document.head.appendChild($navDividerStyle);\n';
 app+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
 app+='\nfunction $OpenCoreUpdateProgress(){return i.jsx("div",{className:"app-update-overlay",role:"status","aria-live":"polite",children:i.jsxs("div",{className:"app-update-card",children:[i.jsx("h2",{children:"Updating OpenCore"}),i.jsx("p",{children:"Preparing and downloading the update…"}),i.jsx("progress",{"aria-label":"Update download in progress"}),i.jsx("small",{children:"Keep your PC on. An installation window will show the next step, then OpenCore will reopen."})]})})}\n';
 app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
