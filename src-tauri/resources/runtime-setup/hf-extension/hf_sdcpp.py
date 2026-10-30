@@ -134,8 +134,8 @@ def run(payload,output):
         with Image.open(path) as image:
             image.load()
             if image.width!=request['settings']['width'] or image.height!=request['settings']['height']:raise ValueError('The image runtime returned the wrong dimensions.')
-            save_image_output(image.copy(),output,index,request['settings'])
-        paths.append(str(output/('image-'+str(index)+'.png')))
+            exported=save_image_output(image,output,index,request['settings'])
+        paths.append(str(exported))
     if len(paths)!=request['settings'].get('numImages',1):raise ValueError('The runtime did not return every requested image.')
     (output/'smoke-result.json').write_text(json.dumps({'modelId':entry['id'],'inferenceVerified':True,'outputs':[{'path':path} for path in paths]}),encoding='utf-8')
 

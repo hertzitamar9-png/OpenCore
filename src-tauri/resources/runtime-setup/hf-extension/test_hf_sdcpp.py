@@ -5,6 +5,7 @@ import threading
 import unittest
 from unittest.mock import patch
 import zipfile
+from types import SimpleNamespace
 import hf_sdcpp as runtime
 from hf_catalog import build_plan
 
@@ -39,5 +40,22 @@ class IrisRuntimeTests(unittest.TestCase):
             with patch.object(runtime,'ENGINE_BYTES',archive.stat().st_size),patch.object(runtime,'ENGINE_SHA',runtime.digest(archive)):
                 with self.assertRaises(ValueError):runtime.ensure_engine(root,threading.Event(),lambda message:None)
             self.assertFalse((root/'runtime-setup/outside.exe').exists())
+
+    def test_output_receipt_points_to_the_real_png_webp_or_jpeg_export(self):
+        from PIL import Image
+        with tempfile.TemporaryDirectory() as temporary:
+            for format,extension in [('png','png'),('webp','webp'),('jpeg','jpg')]:
+                output=Path(temporary)/format
+                def generate(*args,**kwargs):
+                    with Image.new('RGB',(128,128),(30,80,150)) as image:image.save(output/'native-image.png')
+                    return SimpleNamespace(stdout=[],returncode=0,wait=lambda:0)
+                payload={'entry':{'id':'iris'},'request':{'settings':{'width':128,'height':128,'outputFormat':format}},'engine':'sd-cli.exe'}
+                with patch.object(runtime,'command',return_value=['sd-cli.exe']),patch.object(runtime.subprocess,'Popen',side_effect=generate):
+                    runtime.run(payload,output)
+                proof=json.loads((output/'smoke-result.json').read_text())
+                exported=Path(proof['outputs'][0]['path'])
+                self.assertEqual(exported,output/('image-1.'+extension))
+                self.assertTrue(exported.is_file())
+                with Image.open(exported) as image:self.assertEqual(image.size,(128,128))
 
 if __name__=='__main__':unittest.main()
