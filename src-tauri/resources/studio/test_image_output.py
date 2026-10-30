@@ -41,6 +41,20 @@ class ImageOutputTests(unittest.TestCase):
                 self.assertEqual(path.name,'image-2.webp')
                 with Image.open(path) as saved:self.assertEqual(saved.size,(256,128))
 
+    def test_webp_export_preserves_pixels_and_jpeg_retains_color_detail(self):
+        from PIL.JpegImagePlugin import get_sampling
+        with tempfile.TemporaryDirectory() as tmp:
+            pixels=bytes(channel for y in range(128) for x in range(128) for channel in (x*2,y*2,(x+y)%256))
+            with Image.frombytes('RGB',(128,128),pixels) as image:
+                for dimensions in ({},{'outputWidth':128,'outputHeight':128}):
+                    path=save_image_output(image,Path(tmp),1,{'outputFormat':'webp',**dimensions})
+                    with Image.open(path) as saved:self.assertEqual(saved.convert('RGB').tobytes(),pixels)
+                    path=save_image_output(image,Path(tmp),2,{'outputFormat':'jpeg',**dimensions})
+                    with Image.open(path) as saved:
+                        self.assertEqual(get_sampling(saved),0)
+                        error=sum(abs(a-b) for a,b in zip(saved.convert('RGB').tobytes(),pixels))/len(pixels)
+                        self.assertLess(error,2)
+
     def test_rejects_excessive_dimensions_before_resizing(self):
         with tempfile.TemporaryDirectory() as tmp:
             with Image.new('RGB',(128,128)) as image:

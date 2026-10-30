@@ -1,10 +1,22 @@
 import unittest
-from asset_worker import bounded_integer, checkpoint_dtypes, generate, supported_generation_kwargs, validate_output_format
+from asset_worker import bounded_integer, checkpoint_dtypes, generate, progress, supported_generation_kwargs, validate_output_format
 import json, struct, tempfile, sys, types
 from pathlib import Path
 from unittest.mock import patch
 
 class StudioBounds(unittest.TestCase):
+    def test_locked_progress_file_does_not_stop_later_updates(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);original=Path.replace;attempts=[]
+            def replace(path,target):
+                attempts.append(target)
+                if len(attempts)<=8:raise PermissionError('Windows reader holds the previous progress file')
+                return original(path,target)
+            with patch.object(Path,'replace',replace),patch('asset_worker.time.sleep'):
+                self.assertFalse(progress(root,'Sampling image',step=4,steps=4))
+                self.assertTrue(progress(root,'Decoding image',step=4,steps=4))
+            self.assertEqual(json.loads((root/'progress.json').read_text())['stage'],'Decoding image')
+
     def write_safetensors_header(self, path, dtype):
         path.parent.mkdir(parents=True, exist_ok=True)
         header=json.dumps({"weight":{"dtype":dtype,"shape":[1],"data_offsets":[0,2]}}).encode()

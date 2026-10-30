@@ -88,7 +88,16 @@ def progress(output, stage, **values):
         except (OSError,ValueError,TypeError):pass
         temporary = output / "progress.tmp"
         temporary.write_text(json.dumps({"stage": stage, **retained, **values}), encoding="utf-8")
-        temporary.replace(output / "progress.json")
+        for attempt in range(8):
+            try:
+                temporary.replace(output / "progress.json")
+                return True
+            except PermissionError:
+                # Windows readers can briefly hold a handle without delete
+                # sharing. A missed telemetry write must not stop the socket
+                # reader or the generation itself.
+                if attempt == 7:return False
+                time.sleep(.01)
 
 class SamplingProgress:
     """Measured sampler work; final output readiness remains the job's decision."""
@@ -192,8 +201,9 @@ def save_image_output(image, output, index, settings):
     output_format=validate_output_format(settings.get('outputFormat','png'),{'png','webp','jpeg'},'outputFormat')
     extension='jpg' if output_format=='jpeg' else output_format
     path=output/f'image-{index}.{extension}'
+    encode_options={'quality':95,'subsampling':0} if output_format=='jpeg' else {'lossless':True} if output_format=='webp' else {}
     if 'outputWidth' not in settings and 'outputHeight' not in settings:
-        image.save(path,format=output_format.upper())
+        image.save(path,format=output_format.upper(),**encode_options)
         return path
     from PIL import Image, PngImagePlugin
     render=image.size
@@ -201,7 +211,7 @@ def save_image_output(image, output, index, settings):
     height=bounded_integer(settings,'outputHeight',render[1],128,8192)
     if width%8 or height%8:raise ValueError('Output dimensions must be multiples of 8')
     resized=None
-    options={}
+    options=dict(encode_options)
     try:
         if (width,height)!=render:
             if width>render[0] or height>render[1]:

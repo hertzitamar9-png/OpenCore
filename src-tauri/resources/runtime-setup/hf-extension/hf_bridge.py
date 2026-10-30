@@ -32,6 +32,7 @@ from hf_specialist_ocr import OCRManager, supports as supports_ocr
 from hf_image_runtime import ImageRuntimeManager, supports as supports_image
 from hf_memory_repair import MemoryRepair
 from hf_prompt_assistant import PromptAssistant
+from hf_chat_media import ChatMedia
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -874,6 +875,15 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200,{'entries':state.images.conversation_entries(body.get('id'))})
         elif route=='/images/conversation/update':
             self._send(200,state.images.update_conversation(body))
+        elif route in ('/images/conversation/delete-check','/images/conversation/delete'):
+            appdata=os.environ.get('APPDATA')
+            if not appdata:raise ValueError('The OpenCore application data directory is unavailable')
+            active=getattr(state.runtime,'_active',None) or {}
+            urls=['http://127.0.0.1:8813']+([active['url']] if active.get('url') else [])
+            media=ChatMedia(Path(appdata)/'ai.opencore.control-center',state.images,state.root,urls)
+            if route.endswith('delete-check'):
+                media.check(body.get('id'));self._send(200,{'allowed':True})
+            else:self._send(200,media.delete(body.get('id')))
         elif route == "/pause":
             self._send(200, state.pause(body.get("jobId")))
         elif route == "/stop":

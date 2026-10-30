@@ -230,14 +230,24 @@ class MemoryRepairTests(unittest.TestCase):
         release = [body for path, body in self.server.posts if path == "/echo/kv/lease" and body.get("action") == "release"]
         self.assertTrue(release[-1]["invalidate"])
 
-    def test_busy_or_incapable_backend_does_not_generate(self):
-        for option in ["processing", "branch_supported"]:
-            setattr(self.server, option, option == "processing")
-            result = self.repair.recover(self.request)
-            self.assertIn(result["code"], {"backend_busy", "cache_preservation_unavailable"})
-            self.assertEqual(result["candidates"], [])
-            setattr(self.server, option, option != "processing")
+    def test_busy_backend_does_not_generate(self):
+        self.server.processing=True
+        result=self.repair.recover(self.request)
+        self.assertEqual(result['code'],'backend_busy')
+        self.assertEqual(result['candidates'],[])
         self.assertFalse(any(path == "/v1/chat/completions" for path, _ in self.server.posts))
+
+    def test_runtime_without_cache_branch_uses_exclusive_transcript_reset(self):
+        self.server.branch_supported=False
+        result=self.repair.recover(self.request)
+        self.assertEqual(result['status'],'ready')
+        self.assertEqual(result['diagnostics']['cacheMode'],'transcript-reset')
+        self.assertTrue(result['diagnostics']['cacheReset'])
+        completion=next(body for path,body in self.server.posts if path=='/v1/chat/completions')
+        self.assertFalse(completion['echo_append']);self.assertTrue(completion['echo_reset'])
+        self.assertNotIn('echo_memory_branch',completion)
+        self.assertNotIn('You played esports football.',json.dumps(completion))
+        self.assertTrue(self.server.posts[-1][1]['invalidate'])
 
     def test_cold_empty_slot_uses_standalone_schema_request_and_requires_next_turn_reset(self):
         self.server.slot_session = ""

@@ -13626,7 +13626,7 @@
       "builtIn": true,
       "presetSource": true,
       "managedEngine": "flint-cpu-v1",
-      "builtInDescription": "PTQ1_0 coding GGUF; 16K context with ECHO.",
+      "builtInDescription": "PTQ1_0 coding GGUF; 32K context with ECHO.",
       "libraryCategory": "text",
       "echoWorkingWindowTokens": 32768
     },
@@ -13683,7 +13683,7 @@
       "builtIn": true,
       "presetSource": true,
       "managedEngine": "flint-cpu-v1",
-      "builtInDescription": "PTQ1_0 coding GGUF; 16K context with ECHO.",
+      "builtInDescription": "PTQ1_0 coding GGUF; 32K context with ECHO.",
       "libraryCategory": "text",
       "echoWorkingWindowTokens": 32768
     },
@@ -13750,7 +13750,7 @@
       "builtIn": true,
       "presetSource": true,
       "managedEngine": "flint-cpu-v1",
-      "builtInDescription": "PTQ1_0 coding GGUF; 16K context with ECHO.",
+      "builtInDescription": "PTQ1_0 coding GGUF; 32K context with ECHO.",
       "libraryCategory": "text",
       "echoWorkingWindowTokens": 32768
     },
@@ -22275,7 +22275,7 @@
       "builtIn": true,
       "presetSource": true,
       "managedEngine": "flint-cpu-v1",
-      "builtInDescription": "Q4_K_M coding GGUF; 16K context with ECHO.",
+      "builtInDescription": "Q4_K_M coding GGUF; 32K context with ECHO.",
       "libraryCategory": "text",
       "echoWorkingWindowTokens": 32768
     },
@@ -28274,7 +28274,7 @@
       "builtIn": true,
       "presetSource": true,
       "managedEngine": "flint-cpu-v1",
-      "builtInDescription": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "builtInDescription": "Q8_0 coding GGUF; 32K context with ECHO.",
       "libraryCategory": "text",
       "echoWorkingWindowTokens": 32768
     },
@@ -28331,7 +28331,7 @@
       "builtIn": true,
       "presetSource": true,
       "managedEngine": "flint-cpu-v1",
-      "builtInDescription": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "builtInDescription": "Q8_0 coding GGUF; 32K context with ECHO.",
       "libraryCategory": "text",
       "echoWorkingWindowTokens": 32768
     },

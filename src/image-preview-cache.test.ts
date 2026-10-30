@@ -8,3 +8,9 @@ it('retains a loaded immutable image and shares pending reads across chat refres
  await readImagePreview('job:output',load);expect(reads).toBe(1);
  clearImagePreviews();expect(cachedImagePreview('job:output')).toBeUndefined();
 });
+it('does not resurrect an in-flight image after chat deletion clears previews',async()=>{
+ clearImagePreviews();let finish!:(value:string)=>void;
+ const pending=readImagePreview('deleted:output',()=>new Promise<string>(resolve=>{finish=resolve}));
+ await Promise.resolve();clearImagePreviews();finish('data:image/png;base64,deleted');await pending;
+ expect(cachedImagePreview('deleted:output')).toBeUndefined();
+});

@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "families": {
+    "davidau-27b": {
+      "repository": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/revision/ceb55042229d17dcf45df52ad84698339e63d4c5"
+    },
+    "oxcoder-9b": {
+      "repository": "sizzlebop/OxCoder-9B-GGUF",
+      "revision": "468132cf1e1fde2b98da5c87fda2ca5f14f55a30",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/sizzlebop/OxCoder-9B-GGUF/revision/468132cf1e1fde2b98da5c87fda2ca5f14f55a30"
+    },
+    "frognano-4b": {
+      "repository": "mradermacher/FrogNano-4B-2609-GGUF",
+      "revision": "35c8b6df60daa577dcf9681d11eac3d2f0ca16be",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/FrogNano-4B-2609-GGUF/revision/35c8b6df60daa577dcf9681d11eac3d2f0ca16be"
+    },
+    "qwen38-distill-9b": {
+      "repository": "empero-ai/Qwen3.8-9B-Distill-GGUF",
+      "revision": "760121cd70bb4c36b2b5ec58eb765e0df5987efe",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/empero-ai/Qwen3.8-9B-Distill-GGUF/revision/760121cd70bb4c36b2b5ec58eb765e0df5987efe"
+    },
+    "triumvirate-9b-coder": {
+      "repository": "mradermacher/Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-GGUF",
+      "revision": "2f24c1da35d22cb92fb89ac82a70dc9869d3d278",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-GGUF/revision/2f24c1da35d22cb92fb89ac82a70dc9869d3d278"
+    },
+    "orion-agentic-9b": {
+      "repository": "mradermacher/Orion-9B-Agentic-CodeCore-Merge-GGUF",
+      "revision": "6bb524774191a5cd1967ee98eecc49beae7d7b43",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/Orion-9B-Agentic-CodeCore-Merge-GGUF/revision/6bb524774191a5cd1967ee98eecc49beae7d7b43"
+    },
+    "zenith-9b-codecore": {
+      "repository": "mradermacher/Zenith-9B-CodeCore-Merge-GGUF",
+      "revision": "2de91d19d6469c9668fd944df10d933e873b60ce",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/Zenith-9B-CodeCore-Merge-GGUF/revision/2de91d19d6469c9668fd944df10d933e873b60ce"
+    },
+    "neohorse-1-9b": {
+      "repository": "mradermacher/NeoHorse-1-9B-i1-GGUF",
+      "revision": "2e677a795b8ecb1aa1ea648904837212832178d9",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/NeoHorse-1-9B-i1-GGUF/revision/2e677a795b8ecb1aa1ea648904837212832178d9"
+    },
+    "tiel-inspired-coder-9b": {
+      "repository": "VitreousCut/Tiel-Inspired-Coder-9B-GGUF",
+      "revision": "19d7bb395469bd9c8d56499c1c16b155c4c7e5ea",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/VitreousCut/Tiel-Inspired-Coder-9B-GGUF/revision/19d7bb395469bd9c8d56499c1c16b155c4c7e5ea"
+    },
+    "defiant-fable-9b": {
+      "repository": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/revision/8b192a8e203440d6492a133f6cdfa4bf7bffac98"
+    },
+    "pentacoder-9b": {
+      "repository": "mradermacher/PentaCoder-9B-GGUF",
+      "revision": "5e241b4c5727a51c39b3ed3a88d70e3a8123aa75",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/PentaCoder-9B-GGUF/revision/5e241b4c5727a51c39b3ed3a88d70e3a8123aa75"
+    },
+    "pentacoder-9b-q8": {
+      "repository": "mradermacher/PentaCoder-9B-GGUF",
+      "revision": "5e241b4c5727a51c39b3ed3a88d70e3a8123aa75",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/PentaCoder-9B-GGUF/revision/5e241b4c5727a51c39b3ed3a88d70e3a8123aa75"
+    },
+    "defiant-fable-9b-q6-mtp": {
+      "repository": "bernquant/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "b51cf92c1c73f9e859a742523ac5f3c2b856aa9d",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/bernquant/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/revision/b51cf92c1c73f9e859a742523ac5f3c2b856aa9d"
+    },
+    "lfm25-350m-q8": {
+      "repository": "LiquidAI/LFM2.5-350M-GGUF",
+      "revision": "657e078c94084481950a2d555a941481f715536b",
+      "publishedContextTokens": 128000,
+      "source": "https://huggingface.co/api/models/LiquidAI/LFM2.5-350M-GGUF/revision/657e078c94084481950a2d555a941481f715536b"
+    },
+    "lfm25-230m-q8": {
+      "repository": "LiquidAI/LFM2.5-230M-GGUF",
+      "revision": "03502067c64ce32ac4fe87b0cec0310a1a13d3e9",
+      "publishedContextTokens": 128000,
+      "source": "https://huggingface.co/api/models/LiquidAI/LFM2.5-230M-GGUF/revision/03502067c64ce32ac4fe87b0cec0310a1a13d3e9"
+    },
+    "lfm25-12b-q8": {
+      "repository": "LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
+      "revision": "8ed288026e23958ad9dfa92d53ed773a8eee7125",
+      "publishedContextTokens": 128000,
+      "source": "https://huggingface.co/api/models/LiquidAI/LFM2.5-1.2B-Instruct-GGUF/revision/8ed288026e23958ad9dfa92d53ed773a8eee7125"
+    },
+    "qwen35-08b-q8": {
+      "repository": "mradermacher/Qwen3.5-0.8B-GGUF",
+      "revision": "9d48fdbc0d8f133716da87ec1d904e5d2c7175a6",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/Qwen3.5-0.8B-GGUF/revision/9d48fdbc0d8f133716da87ec1d904e5d2c7175a6"
+    },
+    "qwen35-2b-q8": {
+      "repository": "AaryanK/Qwen3.5-2B-GGUF",
+      "revision": "3b3b8686d74f2ccfff1bcf36f80e114aff1b7881",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/AaryanK/Qwen3.5-2B-GGUF/revision/3b3b8686d74f2ccfff1bcf36f80e114aff1b7881"
+    },
+    "smollm3-3b-q8": {
+      "repository": "ggml-org/SmolLM3-3B-GGUF",
+      "revision": "4965cb60b150737b68a0408c36aeefb65078f894",
+      "publishedContextTokens": 65536,
+      "source": "https://huggingface.co/api/models/ggml-org/SmolLM3-3B-GGUF/revision/4965cb60b150737b68a0408c36aeefb65078f894"
+    },
+    "gemma4-e2b-q8": {
+      "repository": "bartowski/google_gemma-4-E2B-it-GGUF",
+      "revision": "81012ba3538e061d5ee003f11f25335b17f82e2d",
+      "publishedContextTokens": 131072,
+      "source": "https://huggingface.co/api/models/bartowski/google_gemma-4-E2B-it-GGUF/revision/81012ba3538e061d5ee003f11f25335b17f82e2d"
+    },
+    "qwen3-4b-official-gguf": {
+      "repository": "ggml-org/Qwen3-4B-GGUF",
+      "revision": "2f3b082b1356a6123f7ed71e65aea340da25d53c",
+      "publishedContextTokens": 40960,
+      "source": "https://huggingface.co/api/models/ggml-org/Qwen3-4B-GGUF/revision/2f3b082b1356a6123f7ed71e65aea340da25d53c"
+    },
+    "qwen3-30b-a3b-official-gguf": {
+      "repository": "unsloth/Qwen3-30B-A3B-GGUF",
+      "revision": "d5b1d57bd0b504ac62ae6c725904e96ef228dc74",
+      "publishedContextTokens": 40960,
+      "source": "https://huggingface.co/api/models/unsloth/Qwen3-30B-A3B-GGUF/revision/d5b1d57bd0b504ac62ae6c725904e96ef228dc74"
+    },
+    "smollm2-135m": {
+      "repository": "Alcoft/SmolLM2-135M-Instruct-GGUF",
+      "revision": "bd2155e8c614fea6765fb5fc014d8ca99e4c746e",
+      "publishedContextTokens": 8192,
+      "source": "https://huggingface.co/api/models/Alcoft/SmolLM2-135M-Instruct-GGUF/revision/bd2155e8c614fea6765fb5fc014d8ca99e4c746e"
+    },
+    "smollm2-360m": {
+      "repository": "bartowski/SmolLM2-360M-Instruct-GGUF",
+      "revision": "7be6f65f1db715fe5dc5a4634c0d459b4eed42ec",
+      "publishedContextTokens": 8192,
+      "source": "https://huggingface.co/api/models/bartowski/SmolLM2-360M-Instruct-GGUF/revision/7be6f65f1db715fe5dc5a4634c0d459b4eed42ec"
+    },
+    "mimo-distill-qwen-9b": {
+      "repository": "mradermacher/MiMo-V2.6-Distill-Qwen-9B-GGUF",
+      "revision": "88526399a743fecca877b981758a6fff7f9ed628",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/mradermacher/MiMo-V2.6-Distill-Qwen-9B-GGUF/revision/88526399a743fecca877b981758a6fff7f9ed628"
+    },
+    "qwen3-8b-official-gguf": {
+      "repository": "unsloth/Qwen3-8B-GGUF",
+      "revision": "a6adef130ffb23ddaf1a62fec9dced968c9bc482",
+      "publishedContextTokens": 40960,
+      "source": "https://huggingface.co/api/models/unsloth/Qwen3-8B-GGUF/revision/a6adef130ffb23ddaf1a62fec9dced968c9bc482"
+    },
+    "dory-4b": {
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/api/models/cloudnathan5/Dory1.0-4B-GGUF/revision/9abcb0453c0382e6852fb57893102a7ed0fe17be"
+    },
+    "ornith-15-122b": {
+      "repository": "ornith-ai/Ornith-1.5-122B",
+      "revision": "7681ef608624e7532d8164128bcffdbdbaf1b1af",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/ornith-ai/Ornith-1.5-122B/resolve/7681ef608624e7532d8164128bcffdbdbaf1b1af/config.json"
+    }
+  }
+}

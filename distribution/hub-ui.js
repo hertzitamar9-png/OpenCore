@@ -113,7 +113,7 @@ function $hubAugment(library) {
 async function $hubRegister(entry) {
   const descriptor=await $hubConnect();
   const input={...(entry.providerId?{id:entry.providerId}:{}),name:'Local · '+(entry.familyLabel||entry.repository.split('/').at(-1))+' · '+entry.quantization,baseUrl:descriptor.url+'/v1',model:entry.id,
-    contextTokens:Math.max(8192,Math.min(entry.runtimePreparation?.contextTokens||entry.contextTokens||32768,32768)),apiKey:descriptor.secret};
+    contextTokens:Math.max(8192,Math.min(entry.echoWorkingWindowTokens||entry.contextTokens||entry.runtimePreparation?.contextTokens||32768,32768)),apiKey:descriptor.secret};
   let provider=await window.__TAURI_INTERNALS__.invoke('api_provider_save',{input});
   provider=await window.__TAURI_INTERNALS__.invoke('api_provider_model',{id:provider.id,model:entry.id,enabled:true,manual:true});
   const profile=provider.models?.find(m=>m.id===entry.id);
@@ -132,7 +132,7 @@ async function $hubInvoke(command,args,run) {
     if(command==='uninstall_model')await $hubRefresh(true);
     return value;
   }
-  if(globalThis.__opencoreImageConversationInvoke&&['get_snapshot','list_conversations','get_conversation','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command))return globalThis.__opencoreImageConversationInvoke(command,args,run);
+  if(globalThis.__opencoreImageConversationInvoke&&['get_snapshot','list_conversations','get_conversation','list_studio_jobs','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command))return globalThis.__opencoreImageConversationInvoke(command,args,run);
   if(command==='list_model_library'){
     const library=await run();$hubNativeLibrary=library;await $hubRefresh().catch(()=>{});return $hubAugment(library);
   }

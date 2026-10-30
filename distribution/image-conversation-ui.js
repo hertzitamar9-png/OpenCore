@@ -21,7 +21,21 @@ async function $imageInlineEntries(rows,identity){
 }
 globalThis.__opencoreImageConversationInvoke=async(command,args,run)=>{
   args=args||{};
+  if(command==='list_studio_jobs'){
+    const jobs=await run();return args.includeChatImages?jobs:jobs.filter(job=>job.category!=='image'||!job.request?.conversationId);
+  }
   if(!['get_snapshot','list_conversations','get_conversation','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command))return run();
+  if(command==='delete_conversation'){
+    if(!$hubDescriptor&&typeof $hubConnect==='function')await $hubConnect();
+    if(!$hubDescriptor)throw Error('OpenCore is reconnecting its local image storage. Please retry deleting the chat.');
+    await $hubRequest('/images/conversation/delete-check',{id:args.id});
+    if($imageNativeIds.has(args.id)||!$imageConversations.some(row=>row.id===args.id))await run();
+    await $hubRequest('/images/conversation/delete',{id:args.id});
+    $imageConversations=$imageConversations.filter(row=>row.id!==args.id);
+    globalThis.__opencoreClearImagePreviews?.();
+    globalThis.dispatchEvent?.(new CustomEvent('opencore-chat-media-deleted',{detail:{conversationId:args.id}}));
+    return null;
+  }
   if(command==='get_conversation'){
     const rows=await run();let extra=[];
     try{if($hubDescriptor)extra=(await $hubRequest('/images/conversation',{id:args.id})).entries||[];}catch{}

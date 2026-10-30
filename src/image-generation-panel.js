@@ -123,6 +123,13 @@ export function imageGenerationDefaults(id,repository='') {
   return {steps:30,guidance:id.startsWith('moss-')?3:id.startsWith('qwen-image-21')?4:4.5};
 }
 
+export function imageGenerationPreset(model,adapter){
+  const preset=model?.hubEntry?.imageDefaults||imageGenerationDefaults(model?.id||'',model?.hubEntry?.repository);
+  if(adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora')return {...preset,steps:30,guidance:3,loraStrength:(adapter.variantKey||'').includes('original-checkpoint-2000/')?0.7:0.8};
+  if(adapter?.repository==='f23gg/NSFW-LORA-Qwen-Image-2.1')return {...preset,loraStrength:1};
+  return preset;
+}
+
 export function automaticImageSettings(id,prompt,files=[],preset,repository='') {
   if(files.length>4||files.some(path=>typeof path!=='string'||!/^([A-Za-z]:[\\/]|\/)/.test(path)||! /\.(png|jpe?g|webp)$/i.test(path)))throw Error('Attach up to four PNG, JPEG or WebP reference images.');
   const qwen=id.startsWith('qwen-image-21')||repository.toLowerCase()==='qwen/qwen-image-2.1-turbo';
@@ -193,7 +200,8 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
   React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId,selectedImageModel?.hubEntry?.repository);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')||selectedImageModel?.hubEntry?.repository?.toLowerCase()==='qwen/qwen-image-2.1-turbo'?2048:1024);},[modelId,imagePreset?.steps,imagePreset?.guidance,selectedImageModel?.hubEntry?.repository]);
   const model=models.find(m=>m.id===modelId),choices=imageAdaptersForModel(model,adapters);
   const activeAdapter=choices.find(adapter=>adapter.id===adapterId),adapterLabel=activeAdapter?.familyLabel||activeAdapter?.name||activeAdapter?.repository||initialSelection?.adapterLabel;
-  React.useLayoutEffect(()=>{onStateChange?.({active:open,busy:busy||!!activeJob,modelId,adapterId,label:model?imageSelectionLabel({...model,adapterId,adapterLabel}):undefined});},[open,busy,!!activeJob,modelId,adapterId,model,adapterLabel,onStateChange]);
+  const selectionPreset=imageGenerationPreset(model,activeAdapter),presetSteps=selectionPreset.steps,presetGuidance=selectionPreset.guidance;
+  React.useLayoutEffect(()=>{onStateChange?.({active:open,busy:busy||!!activeJob,modelId,adapterId,defaults:{steps:presetSteps,guidance:presetGuidance},label:model?imageSelectionLabel({...model,adapterId,adapterLabel}):undefined});},[open,busy,!!activeJob,modelId,adapterId,model,adapterLabel,presetSteps,presetGuidance,onStateChange]);
   React.useEffect(()=>{if(open&&!studio&&!embedded&&model)rememberChatImageModel({...model,...(adapterId?{adapterId,adapterLabel}:{})});},[open,studio,embedded,model,adapterId,adapterLabel]);
   React.useEffect(()=>{const draft=globalThis.__opencoreImageDraft;if(draft?.modelId===modelId&&choices.some(a=>a.id===draft.adapterId)){setAdapterId(draft.adapterId);setPrompt(draft.prompt||'');setStrength(draft.strength??0.8);delete globalThis.__opencoreImageDraft;}},[modelId,adapters]);
   async function invoke(command,args={}) {
@@ -207,9 +215,9 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     setModelId(id=>requested||id||available[0]?.id||'');
     if(requested&&available.some(m=>m.id===requested)){requestedModel.current='';delete globalThis.__opencoreRequestedImageModel;}
     const load=globalThis.__opencoreImageAdapters; if(load)setAdapters(await load());
-    const all=await invoke('list_studio_jobs'),hub=globalThis.__opencoreImageHub;
+    const all=await invoke('list_studio_jobs',{includeChatImages:!studio}),hub=globalThis.__opencoreImageHub;
     const imported=hub?await hub.list():[];
-    const next=[...all,...imported].filter(j=>j.category==='image'&&!j.internalVerification&&!j.hidden&&(studio||j.request.conversationId===conversation.current)).slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+    const next=[...all,...imported].filter(j=>j.category==='image'&&!j.internalVerification&&!j.hidden&&(studio?!j.request.conversationId:j.request.conversationId===conversation.current)).slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
     setJobs(next);const signature=JSON.stringify(next.map(j=>[j.id,j.status,j.outputs]));if(!studio&&signature!==fingerprint.current){fingerprint.current=signature;onRefresh?.();}
   }
   React.useEffect(()=>{
@@ -297,7 +305,8 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       const snapshot=await invoke('get_snapshot');
       if(snapshot?.activeConversationIds?.length)throw Error('Another conversation is generating. Let it finish before starting image generation.');
       if(['running','starting'].includes(snapshot?.runtime?.status)){setStage('Releasing the text model from memory for image generation');await invoke('stop_runtime');}
-      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId,model.hubEntry?.repository),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files,model.hubEntry?.imageDefaults||imageGenerationDefaults(modelId,model.hubEntry?.repository),model.hubEntry?.repository)),...(file?{loraPath:file.localPath,loraStrength:strength}:{})},onAccepted:input?.onAccepted};
+      const preset=imageGenerationPreset(model,adapter);
+      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId,model.hubEntry?.repository),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files,preset,model.hubEntry?.repository)),...(file?{loraPath:file.localPath,loraStrength:preset.loraStrength??strength}:{})},onAccepted:input?.onAccepted};
       request.settings.cpuOffload=generationPreference.cpuOffload===true;
       if(!studio)request.settings=applyImageGenerationOptions(modelId,request.settings);
       if(globalThis.__opencorePromptSettings?.().enabled&&globalThis.__opencorePromptSettings().automaticImages){

@@ -38,12 +38,16 @@ def native_echo_coverage(catalog,research,context_tokens):
                 if not re.search(r'\bECHO\b',model['label']):model['label']+=' · ECHO'
                 changed.append(model['id'])
     read=metadata_reader(Path(research))
+    limits_file=Path(research)/'echo-context-limits.json'
+    limits=json.loads(limits_file.read_text(encoding='utf-8')).get('families',{}) if limits_file.is_file() else {}
     for model in catalog['models']:
         if not text(model):continue
         if not model.get('selectable'):model['memoryMode']='echo'
         if model.get('memoryMode')!='echo':continue
         existing=int(model.get('contextTokens') or 32768)
         target=min(existing,32768)
+        verified=limits.get(model.get('variantOf') or model['id'])
+        if verified:target=min(32768,int(verified['publishedContextTokens']))
         if model.get('backend') in ('gguf','managed-text'):
             source=urlsplit(model.get('sourceUrl') or '').path.strip('/').split('/')
             repository='/'.join(source[:2]) if len(source)>=2 else ''
@@ -54,6 +58,9 @@ def native_echo_coverage(catalog,research,context_tokens):
                     target=context_tokens(metadata,fallback=target)
                     break
             model['contextTokens']=target
+            if target!=existing:
+                for field in ('note','description'):
+                    if isinstance(model.get(field),str):model[field]=re.sub(r'\b(?:8|16)K context\b',str(target//1024)+'K context',model[field])
         model['echoWorkingWindowTokens']=target
     return {'eligibleWeightPackages':len(groups),'promotedModelIds':changed,
             'missingEchoWeightPackages':sum(not any(m.get('memoryMode')=='echo' for m in models) for models in groups.values())}

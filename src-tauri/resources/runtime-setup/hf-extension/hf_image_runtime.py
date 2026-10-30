@@ -41,7 +41,8 @@ def validate_request(request):
     for name in ('outputWidth','outputHeight'):
         if name in settings and (type(settings[name]) is not int or not 128<=settings[name]<=8192 or settings[name]%8):
             raise ValueError(f'{name} must be a multiple of 8 from 128 to 8192')
-    if set(settings)-{'width','height','outputWidth','outputHeight','steps','numImages','seed','guidanceScale','negativePrompt','outputFormat','loraPath','loraStrength','referencePaths','upscaleModelPath','promptRecap','originalPrompt'}:
+    if 'cpuOffload' in settings and type(settings['cpuOffload']) is not bool:raise ValueError('CPU offload must be on or off')
+    if set(settings)-{'width','height','outputWidth','outputHeight','steps','numImages','seed','guidanceScale','negativePrompt','outputFormat','loraPath','loraStrength','referencePaths','upscaleModelPath','promptRecap','originalPrompt','cpuOffload'}:
         raise ValueError('This image request contains unsupported controls')
     for name,limit in [('promptRecap',300),('originalPrompt',16000)]:
         if name in settings and (not isinstance(settings[name],str) or len(settings[name])>limit):raise ValueError('Invalid prompt assistant summary')

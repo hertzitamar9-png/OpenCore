@@ -44,6 +44,7 @@ import urllib.error
 import urllib.request
 from urllib.parse import parse_qs, urlsplit
 import uuid
+from difflib import SequenceMatcher
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -109,6 +110,32 @@ PARAGRAPH = "\n\n"
 # text, and no HTTP client would accept it inline either.
 MAX_INLINE_REPLY_CHARS = 2_000_000
 
+
+class ReasoningLoopGuard:
+    """Detect repeated planning paragraphs, without limiting useful reasoning."""
+    def __init__(self):
+        self.buffer = ''
+        self.recent = []
+        self.repeats = []
+        self.chars = 0
+
+    def feed(self, delta):
+        self.chars += len(delta)
+        self.buffer += delta
+        while '\n\n' in self.buffer:
+            paragraph, self.buffer = self.buffer.split('\n\n', 1)
+            tokens = re.findall(r'[\w./\\:-]+', paragraph.lower())[-256:]
+            if len(tokens) < 12:
+                continue
+            planning = re.search(r"\b(?:let me|i need to|i should|i will|i'll|need to (?:find|search|locate|inspect))\b", paragraph, re.I)
+            repeated = bool(planning) and any(SequenceMatcher(None, old, tokens, autojunk=False).ratio() >= .72 for old in self.recent)
+            self.repeats = (self.repeats + [repeated])[-8:]
+            self.recent = (self.recent + [tokens])[-6:]
+            if self.chars >= 1200 and sum(self.repeats) >= 4:
+                return True
+        self.buffer = self.buffer[-8000:]
+        return False
+
 _EMBEDDED_TOOL = re.compile(
     r"<tool_call>\s*<function=([A-Za-z_][A-Za-z_0-9]*)>\s*(.*?)\s*</function>\s*</tool_call>",
     re.DOTALL,
@@ -164,6 +191,33 @@ def recover_embedded_tool_call(message, declared_tools):
             message[field] = (source[:match.start()] + source[match.end():]).strip()
             return True
     return False
+
+
+def recover_requested_html_file(message, declared_tools, question, live_messages):
+    """Route a requested complete HTML deliverable through the real write tool.
+
+    The normal client approval policy still controls execution. Keep the source
+    in the answer too; a code block never counts as a successful file receipt.
+    """
+    if message.get('tool_calls') or not re.match(r'^\s*(?:please\s+)?(?:make|create|build|generate|write|send|give)\b',question,re.I) or not re.search(r'\bhtml\b|\.html\b',question,re.I):
+        return False
+    tool=next((item.get('function') for item in declared_tools or [] if item.get('function',{}).get('name')=='dev'),None)
+    if not tool or 'write' not in tool.get('parameters',{}).get('properties',{}).get('action',{}).get('enum',[]):
+        return False
+    text=message.get('content') or ''
+    blocks=re.findall(r'```(?:html|htm)\s*\n(.*?)\n```',text,re.I|re.S)
+    if len(blocks)!=1 or not re.search(r'</html>\s*$',blocks[0],re.I):return False
+    source=blocks[0]
+    requested=re.search(r'\b([A-Za-z0-9][A-Za-z0-9_.-]{0,80}\.html)\b',question,re.I)
+    filename=requested[1] if requested else 'index.html'
+    for previous in live_messages:
+        for call in previous.get('tool_calls') or []:
+            try:
+                args=json.loads(call.get('function',{}).get('arguments','{}'))
+                if call.get('function',{}).get('name')=='dev' and args.get('action')=='write' and args.get('path')==filename:return False
+            except (ValueError,TypeError):pass
+    message['tool_calls']=[{'id':'call_'+uuid.uuid4().hex,'type':'function','function':{'name':'dev','arguments':json.dumps({'action':'write','path':filename,'content':source,'explanation':'Save the complete HTML file requested by the user. The visible code is the exact file content.'})}}]
+    return True
 
 
 def tool_call_error(message, declared_tools):
@@ -352,6 +406,25 @@ class ArchiveSet:
 
     def known_conversations(self) -> list[str]:
         return sorted(p.stem for p in self.directory.glob("*.db"))
+
+    def delete(self, conversation_id):
+        """Close this conversation's owned shards and remove their image blobs."""
+        path=self.path_for(conversation_id)
+        paths=[candidate for shard in (path,path.with_name(path.stem+'-cold.db'))
+               for candidate in (shard,Path(str(shard)+'-wal'),Path(str(shard)+'-shm'))]
+        root=self.directory.resolve()
+        if any(candidate.is_symlink() or not candidate.resolve().is_relative_to(root) for candidate in paths):
+            raise ValueError('Conversation archive deletion left its managed directory')
+        with self._lock:
+            archive=self._open.pop(conversation_id,None)
+            if archive:
+                archive.delete_conversation(conversation_id)
+                archive.close()
+            self.page_cache.clear()
+            for candidate in paths:
+                try:candidate.unlink(missing_ok=True)
+                except PermissionError:pass # Another owned ECHO process closes its copy next.
+        return {'deleted':True}
 
     def maintain(self, hibernate_seconds: float, log) -> None:
         """Release idle connections and hibernate finished conversations."""
@@ -1380,9 +1453,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length") or 0)
-        if self.path in ("/echo/config", "/echo/kv/invalidate", "/echo/kv/lease") and (self.headers.get("Origin") or length < 0 or length > 4096):
+        if self.path in ("/echo/config", "/echo/kv/invalidate", "/echo/kv/lease", "/echo/conversation/delete") and (self.headers.get("Origin") or length < 0 or length > 4096):
             return self._send_json(403, {"error": "ECHO configuration is a local app control"})
-        if self.path in ("/echo/kv/invalidate", "/echo/kv/lease") and self.client_address[0] not in ("127.0.0.1", "::1"):
+        if self.path in ("/echo/kv/invalidate", "/echo/kv/lease", "/echo/conversation/delete") and self.client_address[0] not in ("127.0.0.1", "::1"):
             return self._send_json(403, {"error": "ECHO cache ownership is a loopback app control"})
         if self.path == "/echo/import" and (length <= 0 or length > 16 * 1024 * 1024):
             return self._send_json(413, {"error": {"message": "ECHO import batch must be 1-16 MiB"}})
@@ -1397,6 +1470,26 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send_json(200, self.state.configure_memory(payload))
             except ValueError as error:
                 return self._send_json(400, {"error": str(error)})
+
+        if self.path == '/echo/conversation/delete':
+            conversation=payload.get('conversation_id') if isinstance(payload,dict) else None
+            if not isinstance(conversation,str) or not conversation.strip() or len(conversation)>512 or set(payload)!={'conversation_id'}:
+                return self._send_json(400,{'error':'Expected one conversation identity'})
+            if conversation in self.state._context_active:
+                return self._send_json(409,{'error':'Stop this conversation before deleting its archive'})
+            if len(conversation)<=256 and self.state._backend_conversation in (None,conversation):
+                self.state.invalidate_backend_session(conversation)
+            pending=self.state.memory_controller.prefetch
+            if pending:
+                pending.cancel()
+                try:pending.result(timeout=1)
+                except TimeoutError:return self._send_json(409,{'error':'Archive preparation is finishing; retry deletion'})
+                except Exception:pass
+                self.state.memory_controller.prefetch=None
+            with self.state.memory_controller.cache.lock:
+                self.state.memory_controller.cache.entries.clear()
+                self.state.memory_controller.cache.bytes=0
+            return self._send_json(200,self.state.archives.delete(conversation))
 
         if self.path == "/echo/kv/invalidate":
             try:
@@ -1721,6 +1814,7 @@ class Handler(BaseHTTPRequestHandler):
         repeated_controls = 0
         malformed_controls = 0
         malformed_tools = 0
+        loop_recoveries = 0
         last_output = None
         repeated_outputs = 0
         paragraph_break = False
@@ -1772,6 +1866,9 @@ class Handler(BaseHTTPRequestHandler):
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
             body['reasoning_budget_tokens'] = reasoning_budget_for_output(int(body.get('reasoning_budget_tokens') or 0), reserve)
+            if loop_recoveries:
+                body.update(reasoning_budget_tokens=0,reasoning_min_tokens=0,reasoning_format='none',
+                            chat_template_kwargs={**(body.get('chat_template_kwargs') or {}),'enable_thinking':False})
             if total_output_budget is not None:
                 remaining_output = total_output_budget - generated_tokens
                 if remaining_output <= 0:
@@ -1821,6 +1918,16 @@ class Handler(BaseHTTPRequestHandler):
             self.state._backend_needs_reset = False
             live.mark_backend_sent()
             calls += 1
+            if parsed.get('echo_loop_detected'):
+                loop_recoveries += 1
+                if loop_recoveries > 1:
+                    live.save()
+                    raise ValueError('The model repeated its plan without taking an action. The attempt stopped; your chat and files are preserved.')
+                self.state._backend_conversation = None
+                self.state._backend_needs_reset = True
+                live.append({'role':'user','content':'The previous attempt repeated a plan without acting. Use the available evidence and perform one concrete tool call now, or give a final answer. Do not repeat plans or searches already completed.'},count,'echo')
+                ensure_room(reserve)
+                continue
             choice = parsed["choices"][0]
             message = choice.get("message", {})
             usage = parsed.get("usage") or {}
@@ -1835,6 +1942,7 @@ class Handler(BaseHTTPRequestHandler):
                 except (TypeError, ValueError):
                     completion_tokens = None
             recover_embedded_tool_call(message, body.get("tools"))
+            recover_requested_html_file(message,body.get('tools'),question,live.messages)
             if message.get("tool_calls"):
                 error = tool_call_error(message, payload.get('tools'))
                 if choice.get('finish_reason') == 'length':
@@ -1850,6 +1958,7 @@ class Handler(BaseHTTPRequestHandler):
                         ' Retry with one small complete call. For an existing file use dev edit with expectedSha256 and a short oldText/newText replacement. Do not rewrite the whole file. Explain the specific change using the explanation argument.'}, count, 'echo')
                     ensure_room(reserve)
                     continue
+                choice['finish_reason'] = 'tool_calls'
                 live.append_generated({"role": "assistant", "content": message.get("content") or "",
                                        "tool_calls": message["tool_calls"]}, count)
                 live.save()
@@ -2036,9 +2145,12 @@ class Handler(BaseHTTPRequestHandler):
                     "ECHO output record: " + json.dumps(artifact), conversation)
             parsed["choices"][0]["message"]["content"] = head
             parsed["echo"] = {**self._live_status(session, live, window), "backend_calls": calls,
-                              "answer_file": str(spill_path) if spill_path else None,
+                              "answer_file": str(spill_path) if spill_path and ledger and ledger.chars>MAX_INLINE_REPLY_CHARS else None,
                               "live_deltas": bool(payload.get("stream"))}
-            parsed["echo"]["artifact"] = artifact
+            # The ledger is internal recovery evidence. Ordinary answers stay
+            # inline instead of being replaced by an automatic answer.md card.
+            parsed["echo"]["output_record"] = artifact
+            parsed["echo"]["artifact"] = artifact if ledger and ledger.chars>MAX_INLINE_REPLY_CHARS else None
             if review is not None:
                 parsed["echo"]["review"] = review
             if draft_artifact is not None:
@@ -2445,6 +2557,7 @@ class Handler(BaseHTTPRequestHandler):
             calls = {}
             result = {'choices': [{'message': message, 'finish_reason': None}]}
             finished = False
+            loop_guard = ReasoningLoopGuard()
             for line in response:
                 self._retain_stream_chunk(line, phase, generation)
                 if not line.startswith(b'data:'):
@@ -2482,6 +2595,11 @@ class Handler(BaseHTTPRequestHandler):
                                                           'phase': phase, 'delta': delta}})
                     for key in ('content', 'reasoning_content'):
                         message[key] += delta.get(key) or ''
+                    if delta.get('reasoning_content') and loop_guard.feed(delta['reasoning_content']):
+                        result['echo_loop_detected'] = True
+                        result['choices'][0]['finish_reason'] = 'echo_loop'
+                        finished = True
+                        break
                     for call in delta.get('tool_calls') or []:
                         index = call.get('index', 0)
                         target = calls.setdefault(index, {'id': '', 'type': 'function',
@@ -2492,6 +2610,8 @@ class Handler(BaseHTTPRequestHandler):
                             target['function'][key] += (call.get('function') or {}).get(key) or ''
                     if choice.get('finish_reason'):
                         result['choices'][0]['finish_reason'] = choice['finish_reason']
+                if result.get('echo_loop_detected'):
+                    break
             if not finished or not result['choices'][0]['finish_reason']:
                 raise ValueError('Upstream stream ended before completion; partial output is unverified')
             if calls:

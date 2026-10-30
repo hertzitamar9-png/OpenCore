@@ -44,6 +44,7 @@
   "doucode/twincore/runtime.py": "src-tauri/resources/doucode/twincore/runtime.py",
   "doucode/twincore/spec.py": "src-tauri/resources/doucode/twincore/spec.py",
   "echo/echo_import.py": "src-tauri/resources/echo/echo_import.py",
+  "runtime-setup/hf-extension/hf_chat_media.py": "src-tauri/resources/runtime-setup/hf-extension/hf_chat_media.py",
   "echo/echo_salience.py": "src-tauri/resources/echo/echo_salience.py",
   "echo/echo_server.py": "src-tauri/resources/echo/echo_server.py",
   "echo/echo_summarize.py": "src-tauri/resources/echo/echo_summarize.py",

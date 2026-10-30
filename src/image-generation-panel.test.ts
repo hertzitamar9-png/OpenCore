@@ -1,5 +1,5 @@
 import { describe,it,expect } from 'vitest';
-import { imageAdaptersForModel,imageModelChoices,imageGenerationDefaults,imageSizeSettings,IMAGE_SIZE_OPTIONS,imageProgressView,imageErrorMessage } from './image-generation-panel.js';
+import { imageAdaptersForModel,imageModelChoices,imageGenerationDefaults,imageGenerationPreset,imageSizeSettings,IMAGE_SIZE_OPTIONS,imageProgressView,imageErrorMessage } from './image-generation-panel.js';
 
 it('turns native image traces into short actionable errors',()=>{
  expect(imageErrorMessage('Traceback (most recent call last):\nRuntimeError: This MOSS variant needs about 18.2 GB available RAM including load buffers.')).toMatch(/^This model needs 18.2 GB/);
@@ -46,6 +46,12 @@ describe('Image LoRA compatibility',()=>{
     expect(imageGenerationDefaults('flux-2-klein-4b').steps).toBe(4);
     expect(imageGenerationDefaults('qwen-image-21-uc-nvfp4')).toEqual({steps:40,guidance:1});
     expect(imageSizeSettings(2048,'qwen-image-21-uc-nvfp4')).toEqual({width:2048,height:2048,outputWidth:2048,outputHeight:2048});
+  });
+  it('uses the selected adapter preset while preserving the Sakura publisher preset',()=>{
+    expect(imageGenerationPreset({id:'moss-image-sft-int8-convrot'},{repository:'axiomofmind/Moss-image-nsfw-uncensored-lora'})).toMatchObject({steps:30,guidance:3,loraStrength:.8});
+    expect(imageGenerationPreset({id:'moss-image-sft-int8-convrot'},{repository:'axiomofmind/Moss-image-nsfw-uncensored-lora',variantKey:'lora:original-checkpoint-2000/file.safetensors'}).loraStrength).toBe(.7);
+    expect(imageGenerationPreset({id:'qwen-image-21-uc-nvfp4'},{repository:'f23gg/NSFW-LORA-Qwen-Image-2.1'})).toEqual({steps:40,guidance:1,loraStrength:1});
+    expect(imageGenerationPreset({id:'hf-sakura',hubEntry:{imageDefaults:{steps:30,guidance:3}}})).toMatchObject({steps:30,guidance:3});
   });
 });
 

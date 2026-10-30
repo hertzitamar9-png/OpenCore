@@ -1,0 +1,1 @@
+export function ComposerAction(props:{active:boolean;empty:boolean;runtime?:{status?:string};blocked?:string|null;onSend:()=>void;onStop:()=>void;onRefresh?:()=>unknown;onNotice?:(text:string)=>void}):import('react').ReactNode;

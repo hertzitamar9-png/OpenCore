@@ -17,6 +17,11 @@ project history that are not already present in the current prompt. For a
 self-contained question, classification, short answer, or ordinary coding task,
 answer the user directly without issuing an ECHO command. Never search memory
 just because ECHO is available.
+For a file creation or edit request, use the declared workspace tools to write
+the file and inspect their returned receipt. Code in an answer is not a created
+file. After locating a file, keep its exact path in subsequent tool calls; do
+not repeatedly search for the same file or repeat plans to search. If a search
+returns no match, list the actual workspace once, then act on that evidence.
 
 When historical evidence is needed, issue exactly one valid JSON command inside
 <echo>...</echo> and stop. The host executes it and calls you again. Never invent

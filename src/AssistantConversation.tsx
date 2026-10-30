@@ -12,6 +12,8 @@ import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import ReactMarkdown from "react-markdown";
 import { ImageGenerationPanel,selectChatImageModel,submitChatImagePrompt,stopChatImagePrompt,imageGenerationDefaults } from './image-generation-panel.js';
 import {GenerationSettings} from './generation-settings.js';
+import {ComposerAction} from './ComposerAction.js';
+import {StoredAnswer} from './StoredAnswer.js';
 import {profileUsesEcho} from './ModelProfiles';
 import './generation-settings.css';
 import './ImageGenerationPanel.css';
@@ -254,10 +256,10 @@ function MessageAttachments({ value }: { value: unknown }) {
 
 function GeneratedArtifact({ id, name, mime, size }: { id: string; name: string; mime?: string; size?: number }) {
   const actions = useContext(ArtifactActionsContext);
-  return <div className="generated-artifact">
+  return <StoredAnswer id={id} name={name} renderText={content=><ResponseMarkdown content={content}/>} renderFile={()=><div className="generated-artifact">
     {mime?.startsWith("image/") || /\.(png|jpe?g|gif|webp|svg)$/i.test(name) ? <MessageImage src={`artifact://${id}`} alt={name} /> : null}
     <div className="artifact-card"><FileText size={21} /><div><strong>{name}</strong><small>{typeof size === "number" ? `${Math.ceil(size / 1024)} KB` : "File"}</small></div><button type="button" onClick={() => actions?.preview(id)}>Preview</button><button type="button" onClick={() => actions?.download(id)}><FileDown size={14} /> Download</button></div>
-  </div>;
+  </div>}/>;
 }
 
 function MessageLink({ href, children }: { href?: string; children?: React.ReactNode }) {
@@ -494,7 +496,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   initialSettings, embedded = false, inferenceBlocked, sendMessage = api.sendChatMessage,
 }: Props) {
   const [draft, setDraft] = useState(initialDraft?.text || "");
-  const [imageChat,setImageChat]=useState<{active:boolean;busy:boolean;label?:string;modelId?:string;adapterId?:string}>({active:false,busy:false});
+  const [imageChat,setImageChat]=useState<{active:boolean;busy:boolean;label?:string;modelId?:string;adapterId?:string;defaults?:{steps:number;guidance:number}}>({active:false,busy:false});
   const appliedDraftRequest = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (!draftRequest?.text || draftRequest.id === appliedDraftRequest.current) return;
@@ -1027,7 +1029,7 @@ export const AssistantConversation = memo(function AssistantConversation({
         />
         {draggingFiles ? <div className="composer-drop-overlay" role="status" aria-live="polite">Drop files to attach</div> : null}
         <div className="composer-controls">
-          <GenerationSettings modelId={imageChat.active?imageChat.modelId:selectedProfile} conversationId={conversationId} image={imageChat.active} defaults={imageGenerationDefaults(imageChat.modelId||'')} supported={profileUsesEcho(selectedProfile)}/>
+          <GenerationSettings modelId={imageChat.active?imageChat.modelId:selectedProfile} conversationId={conversationId} image={imageChat.active} defaults={imageChat.defaults||imageGenerationDefaults(imageChat.modelId||'')} supported={profileUsesEcho(selectedProfile)}/>
           <button type="button" className={`composer-control-button approval-trigger ${controlOpen === "approval" ? "active" : ""}`} aria-label={`Approval: ${approvalLabel}`} aria-expanded={controlOpen === "approval"} aria-controls={approvalPanelId} onClick={() => setControlOpen((open) => open === "approval" ? null : "approval")}>
             <ShieldCheck size={16} /><span className="control-copy"><small>Approval</small><strong>{approvalShort}</strong></span><ChevronDown size={13} />
           </button>
@@ -1048,9 +1050,7 @@ export const AssistantConversation = memo(function AssistantConversation({
             <div className="approval-bar" role="group" aria-label="Approval mode"><div className="approval-rail"><div className="approval-segments" aria-hidden="true">{APPROVAL_MODES.map((mode, index) => <span key={mode.value} className={index <= shownApprovalIndex ? "lit" : ""} />)}</div><input className="approval-range" type="range" min="0" max="3" step="1" value={shownApprovalIndex} aria-label="Approval level" aria-valuetext={APPROVAL_MODES[shownApprovalIndex].label} onChange={(event) => { const index = Number(event.target.value); approvalPreviewRef.current = index; setApprovalPreviewIndex(index); }} onPointerUp={commitApprovalRange} onKeyUp={commitApprovalRange} onBlur={commitApprovalRange} onPointerCancel={() => { approvalPreviewRef.current = null; setApprovalPreviewIndex(null); }} /></div><div className="approval-labels">{APPROVAL_MODES.map((mode) => <button type="button" key={mode.value} aria-pressed={mode.value === approvalMode} onClick={() => chooseApprovalMode(mode.value)}>{mode.label}</button>)}</div></div>
           </FloatingWindow> : null}
         </div>
-        <button className={`send-button ${generationActive ? "is-stop" : ""}`} onClick={generationActive ? () => {if(!stopChatImagePrompt(draftInput.current?.closest('.chat-composer-wrap')))void stop();} : submit} disabled={!generationActive && ((!imageChat.active&&Boolean(inferenceBlocked)) || (!draft.trim() && files.length === 0))} title={generationActive ? "Stop" : imageChat.active?'Send':inferenceBlocked || "Send"} aria-label={generationActive ? "Stop generation" : "Send message"}>
-          {generationActive ? <Square size={17} fill="currentColor" /> : <Send size={18} />}
-        </button>
+        <ComposerAction active={generationActive} empty={!draft.trim()&&files.length===0} runtime={runtimeSnapshot} blocked={imageChat.active?null:inferenceBlocked} onSend={submit} onStop={()=>{if(!stopChatImagePrompt(draftInput.current?.closest('.chat-composer-wrap')))void stop();}} onRefresh={onRefresh} onNotice={onNotice}/>
       </div>
       <div className="composer-hint"><span>{generationActive ? "OpenCore is working · press Stop to cancel" : inferenceBlocked || "Enter to send · Shift+Enter for a new line · paste or drop files"}</span><span>OpenCore can make mistakes. Check important results.</span><span className="composer-token-speed">{generationActive && promptProgress?.speed ? `${promptProgress.speed.toFixed(1)} input tokens/s` : (liveTokenSpeed ?? telemetry.tokensPerSecond) > 0 ? `${(liveTokenSpeed ?? telemetry.tokensPerSecond).toFixed(1)} output tokens/s` : "Waiting for token metrics"} · {(telemetry.totalCompletionTokens ?? telemetry.completionTokens).toLocaleString()} output tokens</span></div>
     </div>

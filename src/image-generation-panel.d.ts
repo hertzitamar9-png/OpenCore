@@ -14,10 +14,11 @@ export const ChatImageModelOptions: ComponentType<{onSelect:(model:any,event:Mou
 export const IMAGE_SIZE_OPTIONS: {value:number;label:string}[];
 export function imageSizeSettings(size:number,modelId?:string): {width:number;height:number;outputWidth:number;outputHeight:number};
 export function imageAdaptersForModel(model: {id:string;backend?:string;sourceUrl?:string;hubEntry?:any}|undefined, adapters: any[]): any[];
-export function imageGenerationDefaults(id:string): {steps:number;guidance:number};
+export function imageGenerationDefaults(id:string,repository?:string): {steps:number;guidance:number};
+export function imageGenerationPreset(model:any,adapter?:any): {steps:number;guidance:number;loraStrength?:number};
 export function automaticImageSettings(id:string,prompt:string,files?:string[],preset?:{steps:number;guidance:number}):Record<string,unknown>;
 export function submitChatImagePrompt(detail:{scope?:Element|null;prompt:string;files?:string[];onAccepted?:()=>void;onError?:(error:string)=>void}):boolean;
 export function stopChatImagePrompt(scope?:Element|null):boolean;
-export const ImageGenerationPanel: ComponentType<{conversationId?: string|null;onConversationId?:(id:string)=>void;onNotice?:(message:string)=>void;onRefresh?:()=>void;onStateChange?:(state:{active:boolean;busy:boolean;label?:string;modelId?:string;adapterId?:string})=>void;studio?:boolean;embedded?:boolean;initialModelId?:string}>;
+export const ImageGenerationPanel: ComponentType<{conversationId?: string|null;onConversationId?:(id:string)=>void;onNotice?:(message:string)=>void;onRefresh?:()=>void;onStateChange?:(state:{active:boolean;busy:boolean;label?:string;modelId?:string;adapterId?:string;defaults?:{steps:number;guidance:number}})=>void;studio?:boolean;embedded?:boolean;initialModelId?:string}>;
 
 export function imageOutputs(job: {outputs?:string[]}): string[];

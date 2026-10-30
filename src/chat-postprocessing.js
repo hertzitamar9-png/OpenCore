@@ -49,5 +49,5 @@ export function ChatMemoryStatus({conversationId,entries,runtime,active,onRefres
   if(busy)return h('div',{className:'chat-postprocessing',role:'status'},'Reply finished · retrying memory capture locally…');
   if(capture?.metadata?.status==='checking')return h('div',{className:'chat-postprocessing',role:'status'},'Reply finished · saving memory locally…');
   if(!reviewable||!service)return null;
-  return h('div',{className:'chat-postprocessing'},h('span',null,error||(capture?.metadata?.status==='failed'?'Memory capture failed. Your message is still saved.':'A memory candidate was skipped. Checking its exact source avoids saving a paraphrase.')),h('button',{type:'button',disabled:active||runtime?.status!=='running',onClick:()=>void retry()},'Retry saving memory'),runtime?.status!=='running'?h('small',null,'Load a text model to retry.'):null);
+  return h('div',{className:'chat-postprocessing'},h('span',null,'Your reply is saved. Automatic memory needs another attempt.'),h('button',{type:'button',disabled:active||runtime?.status!=='running',onClick:()=>void retry()},'Retry saving memory'),error?h('details',null,h('summary',null,'Memory details'),h('small',null,error)):null,runtime?.status!=='running'?h('small',null,'Load a text model to retry.'):null);
 }

@@ -255,13 +255,13 @@ class MemoryRepair:
             self._discarded_sessions.clear()
         self._discarded_sessions.add(session)
 
-    def _check_standalone_finished(self, backend, authorization, session):
+    def _check_standalone_finished(self, backend, authorization, session, portable=False):
         deadline = time.monotonic() + 3
         while True:
             after = self._slot(backend, authorization)
             empty = type(after.get("n_prompt_tokens")) is int and after["n_prompt_tokens"] == 0 and type(after.get("echo_session_tokens")) is int and after["echo_session_tokens"] == 0
             if not after.get("is_processing"):
-                return after.get("echo_session_id") == session or empty
+                return after.get("echo_session_id") == session or empty or (portable and after.get('is_processing') is False)
             if time.monotonic() >= deadline:
                 return False
             time.sleep(.05)
@@ -388,6 +388,7 @@ class MemoryRepair:
         echo = None
         touched = False
         cold = False
+        portable = False
         error = None
         try:
             if not isinstance(request, dict):
@@ -400,12 +401,16 @@ class MemoryRepair:
                 lease = None
                 raise RepairError("backend_busy", "The active chat runtime could not grant an auxiliary memory lease")
             before = self._slot(backend, authorization)
-            if before.get("is_processing"):
+            if before.get("is_processing") is not False:
                 raise RepairError("backend_busy", "The local text model is processing another request")
             cold = self._resettable_slot(before)
-            diagnostics["cacheMode"] = "cold-start-reset" if cold else "ram-branch"
-            if not cold and before.get("echo_memory_branch_supported") is not True:
-                raise RepairError("cache_preservation_unavailable", "The selected local model cannot preserve its chat cache during recovery")
+            # Stock/architecture-specific runtimes cannot branch a resident KV.
+            # The exclusive ECHO lease permits a standalone extraction instead;
+            # its release invalidates the slot so the exact transcript is read
+            # again on the next turn. No conversation text is discarded.
+            portable = not cold and before.get('echo_memory_branch_supported') is not True
+            cold = cold or portable
+            diagnostics["cacheMode"] = "transcript-reset" if portable else "cold-start-reset" if cold else "ram-branch"
             if not cold and (before.get("echo_session_id") != _sha(state["conversationId"]) or before.get("echo_session_tokens", 0) <= 0):
                 raise RepairError("cache_owner_mismatch", "The resident model cache does not belong to this conversation; retry after its next normal reply")
             memories = None
@@ -435,7 +440,7 @@ class MemoryRepair:
                         all(after.get(k) == before.get(k) for k in ("echo_session_id", "echo_session_tokens", "n_prompt_tokens")))
                     raise request_error
                 if cold:
-                    if not self._check_standalone_finished(backend, authorization, body["echo_session_id"]):
+                    if not self._check_standalone_finished(backend, authorization, body["echo_session_id"],portable=portable):
                         raise RepairError("cache_reset_unverified", "The standalone extractor did not finish in its owned temporary slot")
                 else:
                     diagnostics["cacheRestored"] = self._check_restored(backend, authorization, before, branch)
