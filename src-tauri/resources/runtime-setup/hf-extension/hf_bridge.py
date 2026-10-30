@@ -34,6 +34,7 @@ from hf_memory_repair import MemoryRepair
 from hf_prompt_assistant import PromptAssistant
 from hf_chat_media import ChatMedia
 from hf_connectors import ConnectorProfiles
+from hf_computer_runtime import ComputerManager, supports as supports_computer
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -85,6 +86,7 @@ class BridgeState:
         self.ocr = OCRManager(self.root, self.resources)
         self.images=ImageRuntimeManager(self.root,self.resources)
         self.connectors = ConnectorProfiles(self.root)
+        self.computer = ComputerManager(self.root, self.resources, self.downloader)
         self.owner, self.remote, self.private = None, None, None
         self.memory_repair = None
         self.prompt_assistant = None
@@ -302,6 +304,9 @@ class BridgeState:
         if supports_ocr(entry):
             result['specialist'] = 'ocr'
             result['specialistReady'] = self.ocr.ready(result, entry.get('specialistPreparation'))
+        if supports_computer(entry):
+            result['specialist'] = 'computer'
+            result['specialistReady'] = self.computer.ready(result, entry.get('specialistPreparation'))
         preparation = entry.get("runtimePreparation") or {}
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
         if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
@@ -438,6 +443,7 @@ class BridgeState:
             if self.progress and self.progress.get("status") in ACTIVE:
                 raise Conflict("A model download or runtime preparation is already active")
             if self.images.operation.locked():raise Conflict('Wait for the current image operation before installing another model')
+            if self.computer.operation.locked():raise Conflict('Wait for the current computer-use prediction before installing another model')
             entry = self.entry(model_id, installed=kind == "prepare")
             validate_entry(entry)
             self.pause_event = threading.Event()
@@ -465,11 +471,20 @@ class BridgeState:
                 self.entries[entry['id']]['specialistPreparation'] = result
                 self.persist_catalog()
             return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
+        def prepare_computer():
+            result = self.computer.prepare(self.entry(entry['id'], installed=True), report, pause)
+            if pause.is_set(): raise Paused('Computer-use preparation stopped; downloaded files were retained')
+            with self.lock:
+                self.entries[entry['id']]['specialistPreparation'] = result
+                self.persist_catalog()
+            return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
         try:
             if kind == "download":
                 result = self.downloader.install(entry, pause, report)
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
-                if supports_ocr(entry):
+                if supports_computer(entry):
+                    final = prepare_computer()
+                elif supports_ocr(entry):
                     final = prepare_ocr()
                 elif supports_image(entry):
                     result=self.images.prepare(self.entry(entry['id'],installed=True),report,pause)
@@ -491,6 +506,8 @@ class BridgeState:
                         self.entries[entry['id']]['runtimePreparation']={**result,'receiptRevision':entry['revision']}
                         self.persist_catalog()
                     final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
+            elif supports_computer(entry):
+                final = prepare_computer()
             elif supports_ocr(entry):
                 final = prepare_ocr()
             elif supports_image(entry):
@@ -531,6 +548,7 @@ class BridgeState:
             self.pause_event.set()
             self.progress.update(status="pausing", stage="pausing")
             ocr_job = supports_ocr(self.entries.get(self.progress.get('id'), {}))
+            if supports_computer(self.entries.get(self.progress.get('id'), {})): self.computer.stop()
             if supports_image(self.entries.get(self.progress.get('id'),{})) and self.images.operation.locked():self.images.stop()
             if ocr_job and self.ocr.active():
                 self.ocr.stop()
@@ -554,6 +572,7 @@ class BridgeState:
 
     def stop(self):
         self.pause()
+        self.computer.stop()
         result = self.runtime.stop()
         return result if isinstance(result, dict) else {"stopped": True}
 
@@ -589,6 +608,8 @@ class BridgeState:
                 raise Conflict('Pause or finish the current installation before removing model files')
             if self.ocr.active():
                 raise Conflict('Wait for the current OCR operation to finish before removing model files')
+            if self.computer.operation.locked():
+                raise Conflict('Stop the active computer-use prediction before removing model files')
             if self.images.operation.locked():raise Conflict('Wait for the current image operation before removing model files')
             entry=self.entry(model_id)
             if getattr(self.runtime,'_generation',None) and self.runtime._generation.locked():
@@ -611,6 +632,7 @@ class BridgeState:
         self.pause_event.set()
         self.ocr.stop()
         self.images.stop()
+        self.computer.stop()
         self.runtime.stop()
         if self.worker and self.worker is not threading.current_thread():
             self.worker.join(timeout=2)
@@ -770,6 +792,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.remote.status())
             elif route == '/specialist/ocr/status':
                 self._send(200, state.ocr.status())
+            elif route == '/specialist/computer/status':
+                self._send(200, state.computer.status())
             elif route == '/images/jobs':
                 self._send(200, {'jobs':state.images.list()})
             elif route == '/images/conversations':
@@ -787,7 +811,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.command == "DELETE" and route == "/token":
             self._send(200, state.tokens.clear())
             return
-        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 7 * 1024 * 1024 if route == '/specialist/ocr' else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 256 * 1024)
+        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 256 * 1024)
         if body is None:
             return
         if self.command == "PUT" and route == "/token":
@@ -863,6 +887,14 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(202, state.start(body.get("id"), "download"))
         elif route == "/prepare":
             self._send(202, state.start(body.get("id"), "prepare"))
+        elif route == '/specialist/computer':
+            with state.lock:
+                if state.progress and state.progress.get('status') in ACTIVE:
+                    raise Conflict('Wait for the active installation before requesting a computer-use prediction')
+                entry = state.entry(body.get('id'), installed=True)
+                self._send(202, state.computer.start(entry, body))
+        elif route == '/specialist/computer/stop':
+            self._send(200, state.computer.stop())
         elif route == '/specialist/ocr':
             with state.lock:
                 if state.progress and state.progress.get('status') in ACTIVE:

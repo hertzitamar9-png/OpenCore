@@ -1,0 +1,217 @@
+{
+  "_id": "6ae3931541fef5f1dd0f2569",
+  "id": "VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "velociq8",
+    "q8a64",
+    "cpu",
+    "8-bit",
+    "quantized",
+    "arm64",
+    "aarch64",
+    "x86_64",
+    "liquid",
+    "lfm3",
+    "text-generation",
+    "base-model",
+    "en",
+    "ar",
+    "zh",
+    "fr",
+    "de",
+    "it",
+    "ja",
+    "ko",
+    "pt",
+    "es",
+    "vi",
+    "th",
+    "id",
+    "hi",
+    "ru",
+    "pl",
+    "base_model:LiquidAI/LFM3-1.7B-Base",
+    "base_model:quantized:LiquidAI/LFM3-1.7B-Base",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 37,
+  "likes": 0,
+  "modelId": "VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF",
+  "author": "VelociQ8",
+  "sha": "1592faa342404442e5e1f0e78e174361988df5c2",
+  "lastModified": "2026-10-29T19:55:15.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "lfm1.0",
+    "license_link": "LICENSE",
+    "base_model": "LiquidAI/LFM3-1.7B-Base",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "text-generation",
+    "inference": false,
+    "language": [
+      "en",
+      "ar",
+      "zh",
+      "fr",
+      "de",
+      "it",
+      "ja",
+      "ko",
+      "pt",
+      "es",
+      "vi",
+      "th",
+      "id",
+      "hi",
+      "ru",
+      "pl"
+    ],
+    "tags": [
+      "gguf",
+      "velociq8",
+      "q8a64",
+      "cpu",
+      "8-bit",
+      "quantized",
+      "arm64",
+      "aarch64",
+      "x86_64",
+      "liquid",
+      "lfm3",
+      "text-generation",
+      "base-model"
+    ]
+  },
+  "gguf": {
+    "total": 1792225472,
+    "architecture": "a64b9e07",
+    "totalFileSize": 1792225632
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "708bca548be1146713161a00fa673ad6cf9025a3",
+      "size": 1581
+    },
+    {
+      "rfilename": "LFM3-1.7B-Base-Q8A64.gguf",
+      "blobId": "3105baf104bfc8588b06be0556ba4bc7f4038460",
+      "size": 1792225632,
+      "lfs": {
+        "sha256": "af8930ca697a664bc69eafbb8861d3546d9be9012102c56467fbdd0432be086a",
+        "size": 1792225632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+      "size": 10574
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "029b2575952925043ebe12a53ab75bfffd7c0d6c",
+      "size": 17584
+    },
+    {
+      "rfilename": "runtime/SHA256SUMS",
+      "blobId": "a1dfc80068d2b67c2a07d3ada1be0421621e550c",
+      "size": 727
+    },
+    {
+      "rfilename": "runtime/velociq8-1.5-linux-arm64-multi.tar.gz",
+      "blobId": "ef983167ee10de8e5c015b8d79d0fecdb72347eb",
+      "size": 18701525,
+      "lfs": {
+        "sha256": "b46cefd049a03ad3f4ed03d932d8097e361e75e2cf97724d65cc265e21b4a372",
+        "size": 18701525,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "runtime/velociq8-1.5-linux-arm64.tar.gz",
+      "blobId": "5272707c25682e45040dcb80aa33e2e777267290",
+      "size": 12989569,
+      "lfs": {
+        "sha256": "5ebbea4f6c0e044e8ed28e302cbe096941930940170af14ff4b727d207841630",
+        "size": 12989569,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "runtime/velociq8-1.5-linux-x64.tar.gz",
+      "blobId": "91f8eb33371d55600a42898687b0a66da24b7d50",
+      "size": 31534014,
+      "lfs": {
+        "sha256": "d09ebb5ce2ebf2cd8a30eff3c0263bb0597cd97ccc47154d9e99fe39c4eb2b79",
+        "size": 31534014,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "runtime/velociq8-1.5-ollama-0.40.13-linux-arm64.tar.gz",
+      "blobId": "eae5b1460a7426548715e7b8d67598dd6159483d",
+      "size": 28404775,
+      "lfs": {
+        "sha256": "067d98a8e3fb6ecd7d1a1eed1c54c76a517a4eef3293b7a717162dec63bdd1fc",
+        "size": 28404775,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "runtime/velociq8-1.5-ollama-0.40.13-linux-x64.tar.gz",
+      "blobId": "77b2014fd840a119f53209d82c790a3f98ea34e2",
+      "size": 42672566,
+      "lfs": {
+        "sha256": "4ce21dd3494fd09ed0e3bab8e9e247196c4673785517081308955a76b4dd9e0e",
+        "size": 42672566,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "runtime/velociq8-1.5-ollama-0.40.13-windows-x64.zip",
+      "blobId": "22b7bda869e4088167d8f662a9849aecdc132ac2",
+      "size": 42039639,
+      "lfs": {
+        "sha256": "ebfba8a035da65196c68af39e83dcac5be9eac46118aca9cf230f790b046bb14",
+        "size": 42039639,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "runtime/velociq8-1.5-windows-x64.zip",
+      "blobId": "b50eea17e8e28bc203f54f74d823bcfa8998b4d2",
+      "size": 30314828,
+      "lfs": {
+        "sha256": "b42c9069b51c36b575b679570d034c7568bc205632732e8137e890cbf2cb2134",
+        "size": 30314828,
+        "pointerSize": 133
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-29T18:40:21.000Z",
+  "usedStorage": 1998882548
+}

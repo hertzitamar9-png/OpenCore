@@ -1,0 +1,704 @@
+{
+  "_id": "6adff5d80a1113d337f73184",
+  "id": "LiquidAI/LFM3-Audio-2B-ONNX",
+  "private": false,
+  "pipeline_tag": "any-to-any",
+  "library_name": "onnxruntime",
+  "tags": [
+    "onnxruntime",
+    "onnx",
+    "lfm3_audio",
+    "liquid",
+    "lfm3",
+    "any-to-any",
+    "custom_code",
+    "en",
+    "ar",
+    "da",
+    "de",
+    "el",
+    "fi",
+    "fr",
+    "he",
+    "it",
+    "ja",
+    "ko",
+    "nl",
+    "pl",
+    "pt",
+    "es",
+    "sv",
+    "tr",
+    "zh",
+    "base_model:LiquidAI/LFM3-Audio-2B",
+    "base_model:quantized:LiquidAI/LFM3-Audio-2B",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 288,
+  "likes": 7,
+  "modelId": "LiquidAI/LFM3-Audio-2B-ONNX",
+  "author": "LiquidAI",
+  "sha": "df2b3ed2ea10824030b3ff29ee46705754e72b99",
+  "lastModified": "2026-10-28T02:25:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Lfm3AudioForConditionalGeneration"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_lfm3_audio.Lfm3AudioConfig",
+      "AutoModel": "modeling_lfm3_audio.Lfm3AudioModel",
+      "AutoModelForMultimodalLM": "modeling_lfm3_audio.Lfm3AudioForConditionalGeneration",
+      "AutoModelForSeq2SeqLM": "modeling_lfm3_audio.Lfm3AudioForConditionalGeneration"
+    },
+    "model_type": "lfm3_audio",
+    "tokenizer_config": {
+      "bos_token": "<|startoftext|>",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|pad|>"
+    },
+    "chat_template_jinja": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n\n{%- macro render_value(v) -%}\n    {%- if v is string -%}\n        {{- v -}}\n    {%- elif v is boolean -%}\n        {{- \"true\" if v else \"false\" -}}\n    {%- elif v is none -%}\n        {{- \"null\" -}}\n    {%- elif v is mapping or (v is sequence and v is not string) -%}\n        {{- v | tojson -}}\n    {%- else -%}\n        {{- v -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping -%}\n        {{- content | tojson -}}\n    {%- elif content is iterable -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item is string -%}\n                {%- set _ns.result = _ns.result + item -%}\n            {%- elif item is mapping and item.get(\"type\")\n                in [\"audio\", \"audio_url\", \"input_audio\"] -%}\n                {%- set _ns.result = _ns.result + \"<|audio|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"audio_out\" -%}\n                {%- set _ns.result = _ns.result + \"<|audio_out|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"<|vision_start|><|image|><|vision_end|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"video\" -%}\n                {%- set _ns.result = _ns.result + \"<|vision_start|><|video|><|vision_end|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"text\" -%}\n                {%- set _ns.result = _ns.result + ((item.get(\"text\") or \"\") | string) -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + (item | tojson) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if not loop.first -%}{{- \"\\n\\n\" -}}{%- endif -%}\n        {%- set func = tool_call[\"function\"] if \"function\" in tool_call else tool_call -%}\n        {%- set func_args = func.get(\"arguments\") -%}\n        {%- if func_args is string and (func_args | trim) not in [\"\", \"{}\", \"null\"] -%}\n            {{- raise_exception(\"Tool call arguments must be a mapping, got a JSON-encoded string: parse arguments with json.loads() before applying the chat template\") -}}\n        {%- endif -%}\n        {{- \"<tool_call>\\n<function=\" + func[\"name\"] + \">\\n\" -}}\n        {%- if func_args is mapping -%}\n            {%- for arg_name, arg_value in func_args.items() -%}\n                {{- \"<parameter=\" + arg_name + \">\\n\" + render_value(arg_value) + \"\\n</parameter>\\n\" -}}\n            {%- endfor -%}\n        {%- endif -%}\n        {{- \"</function>\\n</tool_call>\" -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro tool_to_json(tool) -%}\n    {%- set fn = tool.function if tool.function is defined else tool -%}\n    {%- set ns_t = namespace(first=true) -%}\n    {{- \"{\" -}}\n    {%- for k, v in fn.items() -%}\n        {%- if k != \"defer_loading\" -%}\n            {%- if not ns_t.first -%}{{- \", \" -}}{%- endif -%}\n            {%- set ns_t.first = false -%}\n            {{- k | tojson -}}{{- \": \" -}}{{- v | tojson -}}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- \"}\" -}}\n{%- endmacro -%}\n\n{%- macro render_tool_response(content) -%}\n    {#- content that already carries the tag (pre-formatted by the caller) is\n        passed through as-is instead of being wrapped a second time -#}\n    {%- if content is string and \"<tool_response>\" in content -%}\n        {{- content -}}\n    {%- else -%}\n    {{- \"<tool_response>\\n\" -}}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- else -%}\n        {%- for item in content -%}\n            {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n            {%- if item is mapping and item.result is defined and item.result is mapping and item.result.tools is defined -%}\n                {{- \"<additional_tools>\\n\" -}}\n                {%- set _tl = item.result.tools -%}\n                {%- if _tl is string -%}\n                    {{- _tl -}}\n                {%- elif _tl is mapping -%}\n                    {{- tool_to_json(_tl) -}}\n                {%- else -%}\n                    {%- for t in _tl -%}\n                        {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n                        {{- tool_to_json(t) -}}\n                    {%- endfor -%}\n                {%- endif -%}\n                {{- \"\\n</additional_tools>\" -}}\n            {%- else -%}\n                {{- item | tojson -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n    {{- \"\\n</tool_response>\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages and messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set tools_ns = namespace(lines=[]) -%}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {%- set _dyn = (fn.defer_loading is defined and fn.defer_loading) or (tool.defer_loading is defined and tool.defer_loading) -%}\n        {%- if not _dyn -%}\n            {%- set tools_ns.lines = tools_ns.lines + [tool_to_json(fn)] -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if tools_ns.lines -%}\n        {%- set ns.system_prompt = ns.system_prompt + (\"\\n\\n\" if ns.system_prompt else \"\") + \"<tools>\\n\" + (tools_ns.lines | join(\"\\n\")) + \"\\n</tools>\" -%}\n    {%- endif -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"<|im_start|>system\\n\" + ns.system_prompt + \"<|im_end|>\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n    {{- \"<|im_start|>\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}\n        {%- if message.thinking is defined and keep_thinking -%}\n            {{- \"<think>\" + (message.thinking or \"\") + \"</think>\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- set content = \"\" -%}\n        {%- if message.get(\"content\") -%}\n            {%- set content = parse_content(message.content) -%}\n        {%- endif -%}\n        {%- if not keep_thinking -%}\n            {%- if \"</think>\" in content -%}\n                {%- set content = content.split(\"</think>\")[-1] | trim -%}\n            {%- endif -%}\n        {%- endif -%}\n        {%- if content.endswith(_cfm_tag) -%}\n            {%- set _has_cfm = true -%}\n            {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n            {%- set content = content[:_trunc_len] -%}\n        {%- endif -%}\n        {{- content -}}\n        {%- if message.tool_calls -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n        {%- endgeneration -%}\n    {%- elif message.role == \"tool\" -%}\n        {%- if message.get(\"additional_tools\") -%}\n            {%- set _at = message[\"additional_tools\"] -%}\n            {#- definitions may live in additional_tools itself, or in content\n                with additional_tools used as a plain truthy flag -#}\n            {%- if _at is mapping or (_at is sequence and _at is not string) -%}\n                {%- set _src = _at -%}\n            {%- else -%}\n                {%- set _src = message.get(\"content\") -%}\n            {%- endif -%}\n            {#- nothing to reveal: skip the wrapper entirely rather than\n                emitting an empty <additional_tools> block -#}\n            {%- if _src is string and \"<tool_response>\" in _src -%}\n                {{- _src -}}\n            {%- elif _src is string and \"<additional_tools>\" in _src -%}\n                {{- \"<tool_response>\\n\" + _src + \"\\n</tool_response>\" -}}\n            {%- elif _src -%}\n                {{- \"<tool_response>\\n<additional_tools>\\n\" -}}\n                {%- if _src is string -%}\n                    {{- _src -}}\n                {%- elif _src is mapping -%}\n                    {{- tool_to_json(_src) -}}\n                {%- else -%}\n                    {%- for t in _src -%}\n                        {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n                        {{- tool_to_json(t) -}}\n                    {%- endfor -%}\n                {%- endif -%}\n                {{- \"\\n</additional_tools>\\n</tool_response>\" -}}\n            {%- endif -%}\n        {%- elif message.get(\"content\") -%}\n            {{- render_tool_response(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- endif %}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"<|im_start|>assistant\\n\" -}}\n{%- endif -%}\n",
+    "format_version": 1,
+    "codebooks": 12,
+    "audio_vocab_size": 2017,
+    "maskgit_steps": 3,
+    "interleaved_n_text": 6,
+    "interleaved_n_audio": 12,
+    "preprocessor": {
+      "feature_type": "log_mel",
+      "sample_rate": 16000,
+      "waveform_dtype": "float32",
+      "channel_reduction": "mean",
+      "n_mels": 128,
+      "n_fft": 400,
+      "win_length": 400,
+      "hop_length": 160,
+      "window": "hann",
+      "window_periodic": true,
+      "center": false,
+      "normalized": false,
+      "onesided": true,
+      "power": 2.0,
+      "f_min": 0.0,
+      "f_max": 8000.0,
+      "mel_scale": "slaney",
+      "mel_norm": "slaney",
+      "log_base": 10,
+      "logmel_floor": -12.0,
+      "normalization": {
+        "type": "affine",
+        "offset": 4.0,
+        "divisor": 4.0
+      },
+      "padding": {
+        "side": "right",
+        "mode": "constant",
+        "value": 0.0,
+        "minimum_samples": 400,
+        "length_alignment_offset": 400,
+        "length_alignment_multiple": 160
+      }
+    },
+    "tokenizer": {
+      "repo_id": "LiquidAI/liquid7.1_tokenizer",
+      "revision": "39badc470af6cdf6f6a6fbb4d6d1c4d1929b5b96"
+    },
+    "encoder": {
+      "dim_in": 128,
+      "dim_conv": 256,
+      "dim_out": 768,
+      "sliding_window": 32,
+      "lfm": {
+        "transformers_version": "5.19.0.dev0",
+        "architectures": null,
+        "output_hidden_states": false,
+        "return_dict": true,
+        "dtype": "float32",
+        "chunk_size_feed_forward": 0,
+        "is_encoder_decoder": false,
+        "id2label": {
+          "0": "LABEL_0",
+          "1": "LABEL_1"
+        },
+        "label2id": {
+          "LABEL_0": 0,
+          "LABEL_1": 1
+        },
+        "problem_type": null,
+        "vocab_size": 2,
+        "hidden_size": 768,
+        "intermediate_size": 2560,
+        "num_hidden_layers": 17,
+        "num_attention_heads": 8,
+        "num_key_value_heads": 4,
+        "max_position_embeddings": 128000,
+        "initializer_range": 0.02,
+        "norm_eps": 1e-05,
+        "use_cache": true,
+        "pad_token_id": 0,
+        "bos_token_id": 1,
+        "eos_token_id": null,
+        "tie_word_embeddings": true,
+        "rope_parameters": {
+          "rope_theta": 1000000.0,
+          "rope_type": "default"
+        },
+        "conv_bias": false,
+        "conv_L_cache": 3,
+        "block_multiple_of": 256,
+        "block_ffn_dim_multiplier": 1.0,
+        "block_auto_adjust_ff_dim": true,
+        "full_attn_idxs": null,
+        "layer_types": [
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "full_attention",
+          "full_attention"
+        ],
+        "_name_or_path": "",
+        "model_type": "lfm2",
+        "output_attentions": false
+      }
+    },
+    "depthformer": {
+      "transformers_version": "5.19.0.dev0",
+      "architectures": null,
+      "output_hidden_states": false,
+      "return_dict": true,
+      "dtype": null,
+      "chunk_size_feed_forward": 0,
+      "is_encoder_decoder": false,
+      "id2label": {
+        "0": "LABEL_0",
+        "1": "LABEL_1"
+      },
+      "label2id": {
+        "LABEL_0": 0,
+        "LABEL_1": 1
+      },
+      "problem_type": null,
+      "vocab_size": 1,
+      "hidden_size": 1024,
+      "intermediate_size": 2816,
+      "num_hidden_layers": 3,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 8,
+      "max_position_embeddings": 12,
+      "initializer_range": 0.02,
+      "norm_eps": 1e-05,
+      "use_cache": false,
+      "pad_token_id": null,
+      "bos_token_id": null,
+      "eos_token_id": null,
+      "tie_word_embeddings": true,
+      "rope_parameters": {
+        "full_attention": {
+          "rope_type": "default",
+          "rope_theta": 1000000.0,
+          "partial_rotary_factor": 1.0
+        }
+      },
+      "conv_bias": false,
+      "conv_L_cache": 7,
+      "layer_types": [
+        "full_attention",
+        "full_attention",
+        "full_attention"
+      ],
+      "head_dim": 32,
+      "sliding_window": 256,
+      "use_sandwich_norm": false,
+      "_name_or_path": "",
+      "is_causal": false,
+      "model_type": "lfm3",
+      "output_attentions": false
+    },
+    "lfm": {
+      "transformers_version": "5.19.0.dev0",
+      "architectures": [
+        "Lfm3ForCausalLM"
+      ],
+      "output_hidden_states": false,
+      "return_dict": true,
+      "dtype": "float32",
+      "chunk_size_feed_forward": 0,
+      "is_encoder_decoder": false,
+      "id2label": {
+        "0": "LABEL_0",
+        "1": "LABEL_1"
+      },
+      "label2id": {
+        "LABEL_0": 0,
+        "LABEL_1": 1
+      },
+      "problem_type": null,
+      "vocab_size": 128000,
+      "hidden_size": 2048,
+      "intermediate_size": 7680,
+      "num_hidden_layers": 24,
+      "num_attention_heads": 16,
+      "num_key_value_heads": 4,
+      "max_position_embeddings": 128000,
+      "initializer_range": 0.02,
+      "norm_eps": 1e-05,
+      "use_cache": true,
+      "pad_token_id": 124893,
+      "bos_token_id": 124894,
+      "eos_token_id": 124900,
+      "tie_word_embeddings": true,
+      "rope_parameters": {
+        "full_attention": {
+          "partial_rotary_factor": 0.5,
+          "rope_theta": 1000000.0,
+          "rope_type": "default"
+        },
+        "sliding_attention": {
+          "rope_theta": 10000,
+          "rope_type": "default"
+        }
+      },
+      "conv_bias": false,
+      "conv_L_cache": 7,
+      "layer_types": [
+        "conv",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv",
+        "sliding_attention",
+        "conv",
+        "full_attention",
+        "conv"
+      ],
+      "head_dim": 128,
+      "sliding_window": 256,
+      "use_sandwich_norm": true,
+      "model_type": "lfm3",
+      "output_attentions": false
+    }
+  },
+  "cardData": {
+    "library_name": "onnxruntime",
+    "license": "other",
+    "license_name": "lfm1.0",
+    "license_link": "LICENSE",
+    "pipeline_tag": "any-to-any",
+    "tags": [
+      "liquid",
+      "lfm3",
+      "onnx"
+    ],
+    "language": [
+      "en",
+      "ar",
+      "da",
+      "de",
+      "el",
+      "fi",
+      "fr",
+      "he",
+      "it",
+      "ja",
+      "ko",
+      "nl",
+      "pl",
+      "pt",
+      "es",
+      "sv",
+      "tr",
+      "zh"
+    ],
+    "base_model": "LiquidAI/LFM3-Audio-2B",
+    "base_model_relation": "quantized"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6a931d889fa35b93e3f5b2a0619825ff12a8eba3",
+      "size": 2595
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+      "size": 10574
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "77edb27951ea232ffdc4d7560924ac92182f1032",
+      "size": 10466
+    },
+    {
+      "rfilename": "audio_tokenizer/config.json",
+      "blobId": "691025073d47c8e5de98b690c4c60e812eda14d0",
+      "size": 801
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "79806ec0046e91f9f2a7b6757d0c926bbc5c6dd0",
+      "size": 9328
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "22b9c3aaff94eed8b487495fe0b8bb92945f8ffd",
+      "size": 6243
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "74d095d2e6f1914d54ab47fbd152124a1f54fd35",
+      "size": 382
+    },
+    {
+      "rfilename": "onnx/audio_encoder.onnx",
+      "blobId": "f968cf1bd1f9383422f67693f892949b7cd9d57c",
+      "size": 162507,
+      "lfs": {
+        "sha256": "c68ddaf64339aa2bc6c841b0ec0da3be89027849991cbd7e546d3d3156094921",
+        "size": 162507,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/audio_encoder.onnx_data",
+      "blobId": "5ab096652e051e77c32896567eb813e8b0d4746d",
+      "size": 510351360,
+      "lfs": {
+        "sha256": "d5fed72d461d7c052f2e65c79421f955fe02c55b220caeba69b40201cffb0358",
+        "size": 510351360,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "onnx/audio_encoder_fp16.onnx",
+      "blobId": "a4d44dfb6d42a3865f56ce3ad24c51008c4e22df",
+      "size": 163115,
+      "lfs": {
+        "sha256": "7ee182929767ecdb9bfee76e3fd521f6907dc143823f99d143112a1cc0b43f3f",
+        "size": 163115,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/audio_encoder_fp16.onnx_data",
+      "blobId": "9b3b39be40bec5db862839ff7e78c2635c2e45e6",
+      "size": 255173120,
+      "lfs": {
+        "sha256": "cd3aea5d26c9f8ebe5554c7c8ae79534c434ed7aaa95fa6b344faac67bf40ee4",
+        "size": 255173120,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "onnx/codec_decoder.onnx",
+      "blobId": "d3c016f49cecf300ded7b80e0fedd9469c322c73",
+      "size": 94000,
+      "lfs": {
+        "sha256": "5e1d03189d2169ca0e961d1b468b1625bdc57e082bdae7c332178c8aad719878",
+        "size": 94000,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "onnx/codec_decoder.onnx_data",
+      "blobId": "f0e726e4f7bc4822222cef8d13fcf522cc2833ba",
+      "size": 179046408,
+      "lfs": {
+        "sha256": "d0eda417de1c477cc627b730608daa92d43838f3b2865869e74662af7334acfe",
+        "size": 179046408,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "onnx/codec_decoder_fp16.onnx",
+      "blobId": "0302a3e4dc84a04cf326117e6c5264b6b94e1916",
+      "size": 94227,
+      "lfs": {
+        "sha256": "e61c24748065eddcd1aac4bfd189ddc6fb1ad2d205d6bdc19d8fa94e09ff3fd8",
+        "size": 94227,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "onnx/codec_decoder_fp16.onnx_data",
+      "blobId": "acd1de6942f3a59aa2ac61702ab7ae10ec7fb761",
+      "size": 89522692,
+      "lfs": {
+        "sha256": "77a62323ffd84e1d26bd59c0cc44a0ede10e5b182d1dfbbab4f31bd4b2f0a3c1",
+        "size": 89522692,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "onnx/decoder.onnx",
+      "blobId": "5d75d1650bedb539a5eaffd1cb7982cca169cc74",
+      "size": 280541,
+      "lfs": {
+        "sha256": "5a4133dd01674bf5aa8993b85cc0c8c359654795b66237f8e6e19068806e72c0",
+        "size": 280541,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/decoder.onnx_data",
+      "blobId": "35a6ed3051d64881b724bed14de46d262fee2c32",
+      "size": 2120695808,
+      "lfs": {
+        "sha256": "73e232b7cc7004eaa77bbe39046e005c8ff3634790536b51f29df5221f1e7352",
+        "size": 2120695808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder.onnx_data_1",
+      "blobId": "a36b74cde22d568f9623a87a422c12b43e9f6fde",
+      "size": 2135916544,
+      "lfs": {
+        "sha256": "2ca1a68c855152fa60f5d609a34fa2fd291f74410748a7e12e480fdad64be602",
+        "size": 2135916544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder.onnx_data_2",
+      "blobId": "e6bcf8ca7f0faec10ae3a63224839768487f0abf",
+      "size": 2140200960,
+      "lfs": {
+        "sha256": "5cc19b16261297b8b10194f18fa91aa204f2bede1195e3d7a2c93118341bea69",
+        "size": 2140200960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder.onnx_data_3",
+      "blobId": "d34b707f74502d99294a2dd50a257c3aa17e1e2b",
+      "size": 847732736,
+      "lfs": {
+        "sha256": "85a3744727ee7362948cadb842005fc770b9f04a010312b3796d61e3b1cda5ce",
+        "size": 847732736,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_fp16.onnx",
+      "blobId": "39525357a16b7988e11b13c048fc0ae1f9d2cf6e",
+      "size": 276580,
+      "lfs": {
+        "sha256": "a7b52cbfd3dd0415e69a30c0ec904183bffb9b3667351f8566668a9ec120f3d9",
+        "size": 276580,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_fp16.onnx_data",
+      "blobId": "753608673fb561e4f43bba7e039b3c78c8279b11",
+      "size": 2128306176,
+      "lfs": {
+        "sha256": "bba02c1acc2a4b5b8d285e84f13bac3d184c1204b7353d869de6f2466a2ff414",
+        "size": 2128306176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_fp16.onnx_data_1",
+      "blobId": "31fdd576e6d38c07bba98f7eed8309a293d5c491",
+      "size": 1493966848,
+      "lfs": {
+        "sha256": "fa08b8a2429305ee90611bb017d3e69a43a202e6a9a9bfa31d7722af8590d4f2",
+        "size": 1493966848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q4.onnx",
+      "blobId": "cda83e3ca378d65d6a4690eb7555e79f2c57a2c8",
+      "size": 358840,
+      "lfs": {
+        "sha256": "448efb66fb4181f23242d7d54b8e9ddbd7c3b6e247f018f871c3d17cf58a58a8",
+        "size": 358840,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q4.onnx_data",
+      "blobId": "355fb085fe5ef9e263a357531cb332bedc14915d",
+      "size": 1686859776,
+      "lfs": {
+        "sha256": "b069b656f2610fd6c4d1a297596adcb26a53a9dbcef0baa16432b72a4077b773",
+        "size": 1686859776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q4f16.onnx",
+      "blobId": "ad4f2c4c07fa3848ac2641485cd5ebc3ce815e38",
+      "size": 274325,
+      "lfs": {
+        "sha256": "5f207e9d27d0f5ae6ee1a53609e75cca1740ce72df0702496bd4f1b2f20d2e38",
+        "size": 274325,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q4f16.onnx_data",
+      "blobId": "6fd421f991673d2893fee79ce7c38440e31a4420",
+      "size": 1413388288,
+      "lfs": {
+        "sha256": "b296939c604313a69a14829839c7542875792c6b30054986ec1c633dc16ae555",
+        "size": 1413388288,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q8.onnx",
+      "blobId": "88f953e77b3afa0fb299814b7c94eee5a94aacb3",
+      "size": 353613,
+      "lfs": {
+        "sha256": "fca1935375594a73840d6fa2328df068f1aadfede0ddf44e1382471c419e80e3",
+        "size": 353613,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q8.onnx_data",
+      "blobId": "be2f89a562c72d3e7cc9ffc3db8bae4ff844317e",
+      "size": 2026265600,
+      "lfs": {
+        "sha256": "a24ed8c3e6cc321a8ed4a370f2c62f14d1687d014238ccf1c473880974129d62",
+        "size": 2026265600,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q8.onnx_data_1",
+      "blobId": "27300a46213f55bf45df914c807b3c0972fa7dde",
+      "size": 303104000,
+      "lfs": {
+        "sha256": "ae8dee207ffcf9a4a758b3b8146edbafc91d54382cb1a39e7766c14aadff0655",
+        "size": 303104000,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q8f16.onnx",
+      "blobId": "c337f69d7863f144a3b92cf3ba50d2683516f30c",
+      "size": 269173,
+      "lfs": {
+        "sha256": "f6be6fe2fb6f1adf88a22a89fed1ba893f4c0ee60989935a50218f30659fcd11",
+        "size": 269173,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "onnx/decoder_q8f16.onnx_data",
+      "blobId": "f953066be7a81382a9857b8bae4a1a3e2ac8fb89",
+      "size": 2055898112,
+      "lfs": {
+        "sha256": "9ee418f1e3961a55651ced1952c008286cfd33f88afa884ec7a108507fd09ef6",
+        "size": 2055898112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "onnx/depth_decoder.onnx",
+      "blobId": "1c0ab2f7ed13ef939323bb6cf76ecd9594a03059",
+      "size": 34498,
+      "lfs": {
+        "sha256": "cbe5945206042a1b34f74bbb2979135374f594d7e4502405c86d76f2f5f3965a",
+        "size": 34498,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "onnx/depth_decoder.onnx_data",
+      "blobId": "514fcb8585726365e3982a7a87fd7517a8431fea",
+      "size": 335597568,
+      "lfs": {
+        "sha256": "022a87e4eb269c194f723e5d124d9389a9f9d7a993dfcd09dea283699df40c45",
+        "size": 335597568,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "50b5a88b34970aa94c75628bc0079103ada9c90b",
+      "size": 466
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "5478f2b1bb2283f348b555ab0483e414af6ffa87",
+      "size": 773
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "5d871daaacbf26aaa9cb47c2935f30e797ee35a7",
+      "size": 92
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "e1d790a4dafc1b53d7d72b428b3e2be99c989e1f",
+      "size": 17908634,
+      "lfs": {
+        "sha256": "41927bd314d17d7d7fadb44e10cd0919f7b71528d7741596d8cbd15c6945ec44",
+        "size": 17908634,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "a44ee8c5a658a4f7d04bc5605a52840a5e471acb",
+      "size": 674
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-27T00:52:40.000Z",
+  "usedStorage": 19742296049,
+  "generation_config": {
+    "bos_token_id": 124894,
+    "eos_token_id": [
+      124900,
+      125014
+    ],
+    "pad_token_id": 124893,
+    "use_cache": true,
+    "output_attentions": false,
+    "output_hidden_states": false,
+    "do_sample": false,
+    "repetition_penalty": 1.0,
+    "temperature": 0.0,
+    "top_k": 1,
+    "audio_temperature": 1.0,
+    "audio_top_k": 128,
+    "audio_repetition_penalty": 1.1,
+    "audio_repetition_window": 4096
+  }
+}

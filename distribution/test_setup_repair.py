@@ -50,6 +50,24 @@ class FixtureRunner:
 
 
 class ReceiptRepairTests(unittest.TestCase):
+    def test_text_recipes_install_all_torch_components_from_the_pinned_index(self):
+        class RecordingRunner(FixtureRunner):
+            def __init__(self): super().__init__(); self.commands=[]
+            def run(self, args, **kwargs):
+                self.commands.append(list(map(str, args))); return super().run(args, **kwargs)
+        recipe = {**self.recipe, 'kind': 'text', 'cpuOnly': True, 'torchPackages': {'torch': '2.11.0', 'torchvision': '0.26.0'}}
+        runner = RecordingRunner()
+        with patch.object(setup, 'recipe_for', return_value=recipe), \
+             patch.object(setup, 'create_environment', return_value=self.python), \
+             patch.object(setup, 'verify_environment', return_value=self.result), \
+             patch.object(setup, 'download', return_value=self.root/'pinned-transformers.whl'), \
+             patch.object(managed_model_sources, 'shared_torch_source', return_value=None):
+            setup.install(self.root, self.root/'resources', 'edgerock-4b', {}, runner)
+        wheels = next(command for command in runner.commands if '--index-url' in command)
+        self.assertIn('torch==2.11.0', wheels)
+        self.assertIn('torchvision==0.26.0', wheels)
+        self.assertEqual(wheels[wheels.index('--index-url')+1], recipe['torchIndex'])
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory(prefix="edgerock-receipt-test-")
         self.addCleanup(self.directory.cleanup)

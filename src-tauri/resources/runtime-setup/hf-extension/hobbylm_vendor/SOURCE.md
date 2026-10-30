@@ -1,0 +1,1 @@
+HobbyLM config and model definitions from harims95/hobbylm-1B-instruct at 8a90f6eb6a3d7c7eb952fd01b512a406821366ab. Apache-2.0; original LICENSE and NOTICE included. Runtime code is bundled and reviewed, not loaded from a downloaded repository. The OpenCore worker applies the separately pinned safetensors LoRA in memory.

@@ -14,6 +14,54 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_computer_use_entries_keep_adapters_and_complete_policy_as_separate_models(self):
+        hobby = self.family('hobbylm-1b-computer-use')
+        ternary = self.family('ternarypilot-v2')
+        gui = self.family('gui-jepa')
+        for entries, runtime in ((hobby, 'hobbylm-v1'), (ternary, 'ternarypilot-v2'), (gui, 'gui-jepa-v1')):
+            self.assertEqual(len(entries), 1)
+            entry = entries[0]
+            self.assertEqual(entry['category'], 'computer-use')
+            self.assertEqual(entry['computerRuntime'], runtime)
+            self.assertEqual(entry['runtime']['adapter'], 'computer-use')
+            self.assertNotIn('managedEngine', entry)
+            self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+        self.assertEqual(ternary[0]['baseRepository'], 'prism-ml/Ternary-Bonsai-2-9B-gguf')
+        self.assertEqual(ternary[0]['packageKind'], 'adapter')
+        self.assertEqual([pin['filename'] for pin in ternary[0]['files']], ['TernaryPilot-v2-Ternary-Bonsai-2-9B-LoRA-F16.gguf'])
+        names = {pin['filename'] for pin in gui[0]['files']}
+        self.assertTrue({'encoder/encoder_1.pt', 'policy/heads.pt', 'policy/matcher_lm/model.safetensors',
+                         'span_ranker/ranker_head.pt', 'click_reranker/reranker_head.pt', 'gui_jepa_config.json'}.issubset(names))
+        self.assertEqual(sum(pin['role'] == 'model' for pin in gui[0]['files']), 7)
+
+    def test_lfm3_family_keeps_all_five_checkpoints_with_compatible_windows_choices(self):
+        expected = {'lfm3-1-7b': 22, 'lfm3-vl-2b': 21, 'lfm3-audio-2b': 15,
+                    'lfm3-omni-2b': 15, 'lfm3-1-7b-base': 2}
+        for suffix, count in expected.items():
+            entries = self.family(suffix)
+            self.assertEqual(len(entries), count)
+            self.assertTrue(all(entry['memoryMode'] == 'echo' and entry['contextTokens'] == 32768 for entry in entries))
+            self.assertEqual(len({(entry['format'], entry['quantization']) for entry in entries}), count)
+            gguf = [entry for entry in entries if entry['format'] == 'gguf']
+            self.assertTrue(gguf)
+            self.assertTrue(all(entry['runtime']['adapter'] == 'gguf' for entry in gguf))
+            self.assertTrue(all(entry['managedEngine'] == ('velociq8-cpu-v1' if suffix.endswith('-base') else 'lfm3-cpu-v1') for entry in gguf))
+            self.assertTrue(all(entry['runtime']['adapter'] is None for entry in entries if entry['format'] != 'gguf'))
+            for entry in entries:
+                self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+                self.assertFalse(any(pin['filename'].endswith('.py') for pin in entry['files']))
+                if entry['format'] == 'onnx':
+                    names = {pin['filename'] for pin in entry['files']}
+                    graph = next(name for name in names if name.startswith(('onnx/model', 'onnx/decoder')) and name.endswith('.onnx'))
+                    self.assertIn(graph+'_data', names)
+                    self.assertEqual(sum(name.startswith(('onnx/model', 'onnx/decoder')) and name.endswith('.onnx') for name in names), 1)
+        for suffix in ('lfm3-audio-2b', 'lfm3-omni-2b'):
+            for entry in self.family(suffix):
+                if entry['format'] == 'gguf':
+                    self.assertEqual(sum(pin['role'] == 'companion' for pin in entry['files']), 1)
+                elif entry['format'] == 'safetensors' and entry['quantization'] in ('BF16', 'MLX BF16', 'MLX 4-bit', 'MLX 8-bit'):
+                    self.assertIn('audio_tokenizer/model.safetensors', {pin['filename'] for pin in entry['files']})
+
     def test_groot_keeps_the_exact_model_and_all_verified_precision_choices(self):
         entries=self.family('groot-19b-a3b-261023')
         self.assertEqual(len(entries),28)
@@ -77,7 +125,7 @@ class RequestedCatalogTests(unittest.TestCase):
                     self.assertEqual(pin['role'],'companion')
 
     def test_lfm3_and_carbon_packages_keep_real_precisions_and_compatible_runtimes(self):
-        expected = {'lfm3-vl-2b': 8, 'lfm3-1-7b': 8, 'carbon-x': 13}
+        expected = {'lfm3-vl-2b': 21, 'lfm3-1-7b': 22, 'carbon-x': 13}
         for suffix, count in expected.items():
             entries = self.family(suffix)
             self.assertEqual(len(entries), count)
@@ -186,8 +234,9 @@ class RequestedCatalogTests(unittest.TestCase):
         entry = entries[0]
         self.assertEqual(entry['packageKind'], 'adapter')
         self.assertEqual(entry['baseRepository'], 'harims95/hobbylm-1B-instruct')
-        self.assertIsNone(entry['runtime']['adapter'])
-        self.assertIn('macOS', entry['runtime']['reason'])
+        self.assertEqual(entry['runtime']['adapter'], 'computer-use')
+        self.assertEqual(entry['computerRuntime'], 'hobbylm-v1')
+        self.assertIn('macOS', entry['builtInDescription'])
         self.assertEqual({pin['filename'] for pin in entry['files']}, {'adapter_config.json', 'adapter_model.safetensors'})
 
     def test_no_package_is_marked_ready_and_specialized_formats_keep_actual_requirements(self):
@@ -201,7 +250,7 @@ class RequestedCatalogTests(unittest.TestCase):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 15)
+        self.assertEqual(report['withFive'], 17)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):
@@ -255,7 +304,7 @@ class RequestedCatalogTests(unittest.TestCase):
         exl = next(entry for entry in self.entries if entry['quantization'] == 'EXL3 4.0 bpw')
         self.assertIn('quantization_config.json', {pin['filename'] for pin in exl['files']})
         for entry in self.entries:
-            if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw'):
+            if entry['originalRepository'] in ('Mininglamp-2718/Mano-CUA-2.0-4B', 'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B') and entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw'):
                 self.assertIn('video_preprocessor_config.json', {pin['filename'] for pin in entry['files']})
 
     def test_modified_lineage_or_snapshot_identity_cannot_enter_the_catalog(self):

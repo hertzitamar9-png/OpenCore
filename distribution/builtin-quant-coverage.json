@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 554,
-  "withFive": 214,
+  "families": 559,
+  "withFive": 216,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5326,6 +5326,17 @@
       ]
     },
     {
+      "id": "publisher-gui-jepa",
+      "label": "GUI-JEPA",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "LilCC/GUI-JEPA"
+      ]
+    },
+    {
       "id": "publisher-hi3d-v1",
       "label": "Hi3D v1.0",
       "category": "3d",
@@ -5374,24 +5385,84 @@
       "id": "publisher-lfm3-1-7b",
       "label": "LFM3 1.7B",
       "category": "text",
-      "quantizations": 7,
+      "quantizations": 21,
       "readyToInstallChoices": true,
       "source": "bundled packages",
       "repositories": [
         "LiquidAI/LFM3-1.7B",
-        "LiquidAI/LFM3-1.7B-GGUF"
+        "LiquidAI/LFM3-1.7B-FP8",
+        "LiquidAI/LFM3-1.7B-GGUF",
+        "LiquidAI/LFM3-1.7B-MLX-4bit",
+        "LiquidAI/LFM3-1.7B-MLX-5bit",
+        "LiquidAI/LFM3-1.7B-MLX-6bit",
+        "LiquidAI/LFM3-1.7B-MLX-8bit",
+        "LiquidAI/LFM3-1.7B-MLX-bf16",
+        "LiquidAI/LFM3-1.7B-NVFP4",
+        "LiquidAI/LFM3-1.7B-ONNX"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-base",
+      "label": "LFM3 1.7B Base",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "LiquidAI/LFM3-1.7B-Base",
+        "VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-audio-2b",
+      "label": "LFM3 Audio 2B",
+      "category": "text",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "LiquidAI/LFM3-Audio-2B",
+        "LiquidAI/LFM3-Audio-2B-GGUF",
+        "LiquidAI/LFM3-Audio-2B-MLX-4bit",
+        "LiquidAI/LFM3-Audio-2B-MLX-8bit",
+        "LiquidAI/LFM3-Audio-2B-MLX-bf16",
+        "LiquidAI/LFM3-Audio-2B-ONNX"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-omni-2b",
+      "label": "LFM3 Omni 2B",
+      "category": "text",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "LiquidAI/LFM3-Omni-2B",
+        "LiquidAI/LFM3-Omni-2B-GGUF",
+        "LiquidAI/LFM3-Omni-2B-MLX-4bit",
+        "LiquidAI/LFM3-Omni-2B-MLX-8bit",
+        "LiquidAI/LFM3-Omni-2B-MLX-bf16",
+        "LiquidAI/LFM3-Omni-2B-ONNX"
       ]
     },
     {
       "id": "publisher-lfm3-vl-2b",
       "label": "LFM3 VL 2B",
       "category": "text",
-      "quantizations": 7,
+      "quantizations": 20,
       "readyToInstallChoices": true,
       "source": "bundled packages",
       "repositories": [
         "LiquidAI/LFM3-VL-2B",
-        "LiquidAI/LFM3-VL-2B-GGUF"
+        "LiquidAI/LFM3-VL-2B-FP8",
+        "LiquidAI/LFM3-VL-2B-GGUF",
+        "LiquidAI/LFM3-VL-2B-MLX-4bit",
+        "LiquidAI/LFM3-VL-2B-MLX-5bit",
+        "LiquidAI/LFM3-VL-2B-MLX-6bit",
+        "LiquidAI/LFM3-VL-2B-MLX-8bit",
+        "LiquidAI/LFM3-VL-2B-MLX-bf16",
+        "LiquidAI/LFM3-VL-2B-NVFP4",
+        "LiquidAI/LFM3-VL-2B-ONNX"
       ]
     },
     {
@@ -5543,6 +5614,17 @@
         "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF",
         "klcharizardqwq/Terminal-RSI-27B-nvfp4-mlx",
         "mradermacher/Terminal-RSI-27B-i1-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-ternarypilot-v2",
+      "label": "TernaryPilot v2 Computer & Browser Use",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA"
       ]
     },
     {

@@ -115,6 +115,9 @@ def runtime_plan(entry, root, resources):
                         '--batch-size', '64', '--ubatch-size', '16']
             if publisher_engine == 'edgerock-cpu-v1':
                 command += ['--no-context-shift']
+            if publisher_engine == 'velociq8-cpu-v1':
+                # Q8A64 stored tensors require the publisher's repacked buffers.
+                command.remove('--no-repack')
         companions = [folder / f['filename'] for f in entry['files'] if f.get('role') == 'companion' and f['filename'].lower().endswith('.gguf')]
         if companions:
             command += ['--mmproj', str(companions[0])]

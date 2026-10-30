@@ -1,0 +1,211 @@
+{
+  "_id": "6ae15a56df87bc9e013cc3a0",
+  "id": "adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "computer-use",
+    "browser-use",
+    "gui-agent",
+    "web-agent",
+    "gui-grounding",
+    "screen-understanding",
+    "visual-grounding",
+    "agent",
+    "lora",
+    "llama.cpp",
+    "ternary",
+    "1.58-bit",
+    "bonsai",
+    "qwen3.5",
+    "screenspot",
+    "screenspot-pro",
+    "gui-360",
+    "windows",
+    "macos",
+    "local-ai",
+    "image-text-to-text",
+    "en",
+    "dataset:vyokky/GUI-360",
+    "dataset:xlangai/AgentNet",
+    "dataset:osunlp/Multimodal-Mind2Web",
+    "base_model:prism-ml/Ternary-Bonsai-2-9B-gguf",
+    "base_model:adapter:prism-ml/Ternary-Bonsai-2-9B-gguf",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 21,
+  "likes": 1,
+  "modelId": "adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA",
+  "author": "adriandj3",
+  "sha": "a3e7c27213bef00ec36b38429f8ad46a86dbae77",
+  "lastModified": "2026-10-28T05:33:27.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "prism-ml/Ternary-Bonsai-2-9B-gguf",
+    "base_model_relation": "adapter",
+    "library_name": "gguf",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en"
+    ],
+    "datasets": [
+      "vyokky/GUI-360",
+      "xlangai/AgentNet",
+      "osunlp/Multimodal-Mind2Web"
+    ],
+    "tags": [
+      "computer-use",
+      "browser-use",
+      "gui-agent",
+      "web-agent",
+      "gui-grounding",
+      "screen-understanding",
+      "visual-grounding",
+      "agent",
+      "lora",
+      "gguf",
+      "llama.cpp",
+      "ternary",
+      "1.58-bit",
+      "bonsai",
+      "qwen3.5",
+      "screenspot",
+      "screenspot-pro",
+      "gui-360",
+      "windows",
+      "macos",
+      "local-ai"
+    ]
+  },
+  "gguf": {
+    "total": 160432128,
+    "architecture": "qwen35",
+    "totalFileSize": 320891744
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "cd60e7d740c1a6e7a88526a1c4c10071a626611e",
+      "size": 1658
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "fe00ec0c2d989da7736a58f10e557a0856f342e0",
+      "size": 12588
+    },
+    {
+      "rfilename": "TernaryPilot-v2-Ternary-Bonsai-2-9B-LoRA-F16.gguf",
+      "blobId": "7e22cb42d43104d5e55920de57b1ce0ce08ac3e8",
+      "size": 320891744,
+      "lfs": {
+        "sha256": "fedb5f7d7b3803165456558873d37643ce24efaefb0a263ca428092de7adad0b",
+        "size": 320891744,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "assets/bench.png",
+      "blobId": "a725c6f46d8d600f5fce9955f908a4603367e1af",
+      "size": 129584,
+      "lfs": {
+        "sha256": "db33820421edd0e71ecfd6cedb20f35274be34935efec170954d9ec8c1863bee",
+        "size": 129584,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "eval/banco-g360a.jsonl",
+      "blobId": "d4c29ccd35baa29920551d9d3ed36f4e962249d9",
+      "size": 867706
+    },
+    {
+      "rfilename": "eval/banco-g360g.jsonl",
+      "blobId": "681e12e7467fbd19f616304b241248ccdb30e6be",
+      "size": 540794
+    },
+    {
+      "rfilename": "eval/banco-ss2.jsonl",
+      "blobId": "fd94eea82c106cf056e13bab9bcda4d358f51609",
+      "size": 379031
+    },
+    {
+      "rfilename": "eval/banco-sspro.jsonl",
+      "blobId": "e638e2716f1f18d56991ea4855010844cc466960",
+      "size": 125605
+    },
+    {
+      "rfilename": "eval/tables.md",
+      "blobId": "da88ed9046c28be6ebef2e4044700d9bc5022d9b",
+      "size": 3154
+    },
+    {
+      "rfilename": "training/README.md",
+      "blobId": "3babf4f58321e6a4a6806be4859cd4d53ffaedbd",
+      "size": 2353
+    },
+    {
+      "rfilename": "training/banco_pubblico.py",
+      "blobId": "8e2b95b9cf403b28da77364cfd2ff83ee2077fb7",
+      "size": 9055
+    },
+    {
+      "rfilename": "training/bonsai_bw.py",
+      "blobId": "08efb29877cd9254ba9f4f73bb479a8ede0b192c",
+      "size": 2676
+    },
+    {
+      "rfilename": "training/bonsai_hf.py",
+      "blobId": "a6f0e7f84701e31c49208f7dd34b3bb0134dc91d",
+      "size": 15815
+    },
+    {
+      "rfilename": "training/make_data.py",
+      "blobId": "e7941286e0c20b95ed1229feb3a4fb15f01d9cbb",
+      "size": 11297
+    },
+    {
+      "rfilename": "training/make_data_v2.py",
+      "blobId": "1bf7b134ad980288edb9ec8a6dd994765192a74e",
+      "size": 11394
+    },
+    {
+      "rfilename": "training/tern_unpack.py",
+      "blobId": "18d676b16868801e9d030bb8168536f0b8c7e09f",
+      "size": 4285
+    },
+    {
+      "rfilename": "training/train.py",
+      "blobId": "493f7ef37ca2b98047d847a231cf0e4968baa1ca",
+      "size": 10641
+    },
+    {
+      "rfilename": "training/vision_cache.py",
+      "blobId": "dcfd872dd479d2824675e7ac40de08e04d8b80ab",
+      "size": 3730
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-28T02:13:42.000Z",
+  "usedStorage": 321021328
+}

@@ -34,7 +34,7 @@ class ManagedEngineTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
 
-    def install(self, files, cancel=lambda: None):
+    def install(self, files, cancel=lambda: None, prefix=None):
         stream = io.BytesIO()
         with zipfile.ZipFile(stream, 'w') as archive:
             for name, value in files:
@@ -44,6 +44,7 @@ class ManagedEngineTests(unittest.TestCase):
         data = stream.getvalue()
         pin = dict(sha256=hashlib.sha256(data).hexdigest(), bytes=len(data), label='fixture',
                    url='https://example.invalid/pinned.zip', source='fixture', revision='pinned')
+        if prefix: pin['stripPrefix'] = prefix
         with patch.object(engines, 'definition', return_value=pin), patch.object(engines.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
             path = engines.ensure(self.root, 'raon-cpu-v1', cancel=cancel)
             self.assertTrue(engines.cached(self.root, 'raon-cpu-v1'))
@@ -53,6 +54,19 @@ class ManagedEngineTests(unittest.TestCase):
 
     def test_pinned_install_checks_cached_executable_contents(self):
         self.install([('llama-server.exe', b'fixture-server'), ('backend.dll', b'fixture-backend')])
+
+    def test_reviewed_layout_prefix_preserves_server_and_licenses(self):
+        server = self.install([('bundle/llama-server.exe', b'fixture'), ('bundle/licenses/LICENSE', b'notice')], prefix='bundle/')
+        self.assertEqual((server.parent/'licenses/LICENSE').read_bytes(), b'notice')
+
+    def test_reviewed_layout_prefix_rejects_outside_members(self):
+        with self.assertRaisesRegex(ValueError, 'layout prefix'):
+            self.install([('bundle/llama-server.exe', b'fixture'), ('outside.dll', b'bad')], prefix='bundle/')
+
+    def test_ternary_and_q8a64_select_their_actual_publisher_engines(self):
+        for engine in ('prism-cpu-v1', 'velociq8-cpu-v1'):
+            self.assertEqual(engines.engine_for({'format': 'gguf', 'managedEngine': engine}), engine)
+            self.assertIsNone(engines.engine_for({'format': 'safetensors', 'managedEngine': engine}))
 
     def test_archive_cannot_escape_or_collide_on_windows(self):
         for unsafe in ('../outside.dll', '/absolute.dll', 'C:/outside.dll', 'folder\\outside.dll', 'LLAMA-SERVER.EXE'):

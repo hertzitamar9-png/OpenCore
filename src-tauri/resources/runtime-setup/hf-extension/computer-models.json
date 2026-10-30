@@ -1,0 +1,306 @@
+{
+  "schema": 1,
+  "profiles": {
+    "hobbylm-v1": {
+      "id": "hf-de5e149fce74297ac87d954d",
+      "repository": "Hobbylm/hobbylm-1B-computer-use",
+      "revision": "fd23b3824e8fb9a895f581858c2945b0112481ab",
+      "dependencyId": "hf-3e10a0c5b885ebb53480f033",
+      "recipe": "computer-hobbylm-v1",
+      "baseBytes": 4357425394
+    },
+    "ternarypilot-v2": {
+      "id": "hf-26fe9a99e1f5c468b40e726c",
+      "repository": "adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA",
+      "revision": "a3e7c27213bef00ec36b38429f8ad46a86dbae77",
+      "dependencyId": "hf-2df3ddae31f07ee24ea09c0f",
+      "recipe": null,
+      "baseBytes": 3299640384
+    },
+    "gui-jepa-v1": {
+      "id": "hf-423d29d79a8b3e9673477770",
+      "repository": "LilCC/GUI-JEPA",
+      "revision": "a2265ca26dbea66fc59c46240a90d3be5defdb9e",
+      "dependencyId": "hf-a0afd91165d14a21463c53ae",
+      "recipe": "computer-gui-jepa-v1",
+      "baseBytes": 608863580
+    }
+  },
+  "dependencies": [
+    {
+      "id": "hf-3e10a0c5b885ebb53480f033",
+      "repository": "harims95/hobbylm-1B-instruct",
+      "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+      "variantKey": "safetensors:.",
+      "name": "hobbylm-1B-instruct \u00b7 FP32",
+      "quantization": "FP32",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 4357425394,
+      "files": [
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "model.safetensors",
+          "bytes": 4354568656,
+          "sha256": "d0899e0ac88c90a2c01ca481463bc0f96c6d50337f1b3e0dc56e1d3dc2999e89",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "config.json",
+          "bytes": 1280,
+          "sha256": null,
+          "gitBlobSha1": "e6f3ff319f55fc8043558c80e16aae800367e80c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "generation_config.json",
+          "bytes": 160,
+          "sha256": null,
+          "gitBlobSha1": "a73cd64183ebf501f88ac2b07ac1896c9f9e8b9a",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "merges.txt",
+          "bytes": 456318,
+          "sha256": null,
+          "gitBlobSha1": "226b0752cac7789c48f0cb3ec53eda48b7be36cc",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "special_tokens_map.json",
+          "bytes": 137,
+          "sha256": null,
+          "gitBlobSha1": "5f5f7bb01c89b7884cd8d44d87dcf75c35233204",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "tokenizer.json",
+          "bytes": 1355256,
+          "sha256": null,
+          "gitBlobSha1": "4b988bccc9dc5adacd403c00b4704976196548f8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "tokenizer_config.json",
+          "bytes": 1286,
+          "sha256": null,
+          "gitBlobSha1": "90b988037b61ffef57a9c210dd51ddb7441f34c9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "harims95/hobbylm-1B-instruct",
+          "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+          "filename": "vocab.json",
+          "bytes": 1042301,
+          "sha256": null,
+          "gitBlobSha1": "1f1d9aaca301414e7f6c9396df506798ff4eb9a6",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "hobbylm",
+      "architectures": [
+        "HobbyLMForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/harims95/hobbylm-1B-instruct",
+      "status": "not-installed",
+      "contextTokens": 4096,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "max_tokens": 256
+      }
+    },
+    {
+      "id": "hf-2df3ddae31f07ee24ea09c0f",
+      "repository": "prism-ml/Ternary-Bonsai-2-9B-gguf",
+      "revision": "5b2abb02362efbed46bbe204014b02837778b2c2",
+      "variantKey": "gguf:Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf",
+      "name": "Ternary-Bonsai-2-9B-gguf \u00b7 Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3299640384,
+      "files": [
+        {
+          "repository": "prism-ml/Ternary-Bonsai-2-9B-gguf",
+          "revision": "5b2abb02362efbed46bbe204014b02837778b2c2",
+          "filename": "Ternary-Bonsai-2-9B-PQ2_0-MTP-Q8_0.gguf",
+          "bytes": 2675410720,
+          "sha256": "c79fcdfaf6b7bf47089b50dadcfd11f9ce7d3e96adf3bbefde7912e5ef69e22b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prism-ml/Ternary-Bonsai-2-9B-gguf",
+          "revision": "5b2abb02362efbed46bbe204014b02837778b2c2",
+          "filename": "Ternary-Bonsai-2-9B-mmproj-Q8_0.gguf",
+          "bytes": 624229664,
+          "sha256": "e0cb6f6988cea323ef798cd77d019bbb819af75582f034eaab0e7232314953db",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "dflash",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-9B-gguf",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo"
+    },
+    {
+      "id": "hf-a0afd91165d14a21463c53ae",
+      "repository": "openai/clip-vit-base-patch32",
+      "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+      "variantKey": "pytorch:.",
+      "name": "clip-vit-base-patch32 \u00b7 Original",
+      "quantization": "Original",
+      "format": "pytorch",
+      "subdirectory": "",
+      "category": "omni",
+      "bytes": 608863580,
+      "files": [
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "pytorch_model.bin",
+          "bytes": 605247071,
+          "sha256": "a63082132ba4f97a80bea76823f544493bffa8082296d62d71581a4feff1576f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "config.json",
+          "bytes": 4186,
+          "sha256": null,
+          "gitBlobSha1": "a2a88b96561196777ca173b15309ea859f4d2ce0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "merges.txt",
+          "bytes": 524657,
+          "sha256": null,
+          "gitBlobSha1": "bbfec752c9a675946c6dce106def6f35c882dcc2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "preprocessor_config.json",
+          "bytes": 316,
+          "sha256": null,
+          "gitBlobSha1": "5a12a1eb250987a4eee0e3e7d7338c4b22724be1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "special_tokens_map.json",
+          "bytes": 389,
+          "sha256": null,
+          "gitBlobSha1": "9bfb42aa97dcd61e89f279ccaee988bccb4fabae",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "tokenizer.json",
+          "bytes": 2224041,
+          "sha256": null,
+          "gitBlobSha1": "564c0ebd5ce29c4ee4864004aee693deadd3128c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "tokenizer_config.json",
+          "bytes": 592,
+          "sha256": null,
+          "gitBlobSha1": "4fdaf6842dd5a725b940c92b6b692490ce59d548",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openai/clip-vit-base-patch32",
+          "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+          "filename": "vocab.json",
+          "bytes": 862328,
+          "sha256": null,
+          "gitBlobSha1": "182766ce89b439768edadda342519f33802f5364",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "clip",
+      "architectures": [
+        "CLIPModel"
+      ],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "No verified managed runtime adapter supports this format"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/openai/clip-vit-base-patch32",
+      "status": "not-installed"
+    }
+  ]
+}

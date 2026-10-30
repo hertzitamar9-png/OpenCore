@@ -44,8 +44,13 @@ after the last installed variant is uninstalled. Chats and ECHO archives are pre
 Public Hugging Face repositories need no token. For private or gated repositories,
 add a read token in Settings; your Hugging Face account must have access to the model.
 Core Python is bundled, and supported model-specific dependencies prepare automatically.
-Runtime compatibility depends on the model and device. Flint and Raon packages remain
-download-only until their publisher runtimes are integrated.
+Runtime compatibility depends on the model and device. Compatible Flint, Raon and
+LFM3 GGUF packages prepare their pinned Windows engines and verify generation after
+installation. The five LFM3 checkpoints share 75 real package choices; specialized
+publisher formats retain their actual platform requirements. ECHO text generation
+tests do not certify audio or video execution. Computer-use checkpoints have their
+own local next-action prediction interface and real inference checks; see the
+distribution instructions for their scope and verification receipts.
 
 The four new profiles use two complete copies of the same pinned DavidAU LFM model:
 

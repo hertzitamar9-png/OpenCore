@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "scope": "Windows CPU text generation and ECHO verification. These runs do not verify audio input, speech synthesis, video input or other quantizations.",
+  "runs": [
+    {
+      "familyId": "publisher-lfm3-audio-2b",
+      "modelId": "hf-cfe0d93aad7c049959f88798",
+      "repository": "LiquidAI/LFM3-Audio-2B-GGUF",
+      "revision": "02355c1a141e464a064f2ab2c276638dbcb7f38a",
+      "quantization": "QAD Q4_0",
+      "verifiedAt": "2026-10-30T17:37:59Z",
+      "engineId": "lfm3-cpu-v1",
+      "engineArchiveSha256": "73f962f82850d244db47eaacb9d913637027b82399124324298576d58c5f4287",
+      "contextTokens": 32768,
+      "inferenceVerified": true,
+      "echoReady": true,
+      "generatedTokens": 8,
+      "sampleSha256": "474f578084317359f9534bdc03b692d83ba6bd02095731cbfa6988ec7d72230e"
+    },
+    {
+      "familyId": "publisher-lfm3-omni-2b",
+      "modelId": "hf-f0964412b6b8069faaf7cf9f",
+      "repository": "LiquidAI/LFM3-Omni-2B-GGUF",
+      "revision": "3d29af2ad166f8299c2d820937e47dc0add20ffc",
+      "quantization": "QAD Q4_0",
+      "verifiedAt": "2026-10-30T17:39:07Z",
+      "engineId": "lfm3-cpu-v1",
+      "engineArchiveSha256": "73f962f82850d244db47eaacb9d913637027b82399124324298576d58c5f4287",
+      "contextTokens": 32768,
+      "inferenceVerified": true,
+      "echoReady": true,
+      "generatedTokens": 8,
+      "sampleSha256": "0542db8951423dc5d5ebb95c92287524fd6ba1f848c2eada85d94860deb22a57"
+    },
+    {
+      "familyId": "publisher-lfm3-1-7b-base",
+      "modelId": "hf-82a34cde365c031a7a133f94",
+      "repository": "VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF",
+      "revision": "1592faa342404442e5e1f0e78e174361988df5c2",
+      "quantization": "Q8A64",
+      "verifiedAt": "2026-10-30T17:44:39Z",
+      "engineId": "velociq8-cpu-v1",
+      "engineArchiveSha256": "b42c9069b51c36b575b679570d034c7568bc205632732e8137e890cbf2cb2134",
+      "contextTokens": 32768,
+      "inferenceVerified": true,
+      "echoReady": true,
+      "generatedTokens": 8,
+      "sampleSha256": "2ce8d0fa4c0d224058aeafc461be1078f8362cb8e1b3b6ab80579d27c9911888"
+    }
+  ]
+}

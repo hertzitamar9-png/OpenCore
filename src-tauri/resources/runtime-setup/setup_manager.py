@@ -520,7 +520,7 @@ def install(root, resources, target, options, runner, recipe_id=None):
     elif kind == "text":
         from managed_model_sources import shared_torch_source,attach_shared_packages
         shared=None
-        for flavor in ('cpu','cu126'):
+        for flavor in (('cpu',) if recipe.get('cpuOnly') else ('cpu','cu126')):
             candidate=dict(recipe,torchIndex='https://download.pytorch.org/whl/'+flavor)
             shared=shared_torch_source(root,candidate,runner)
             if shared:break
@@ -530,8 +530,10 @@ def install(root, resources, target, options, runner, recipe_id=None):
         if shared:attach_shared_packages(root,Path(python).parent.parent,shared['site'])
         environment=dict(os.environ,PIP_CONFIG_FILE=os.devnull,PIP_INDEX_URL='https://pypi.org/simple',PIP_EXTRA_INDEX_URL='',PYTHONIOENCODING='utf-8')
         runner.reporter('installing-dependencies',detail='Preparing the isolated text generation runtime')
-        if not shared:
-            runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:','--index-url',recipe['torchIndex'],'torch=='+recipe['torchPackages']['torch']],env=environment)
+        torch_packages = recipe['torchPackages'] if not shared else {name: version for name, version in recipe['torchPackages'].items() if name != 'torch'}
+        if torch_packages:
+            runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:','--index-url',recipe['torchIndex'],
+                        *[f'{name}=={version}' for name, version in torch_packages.items()]],env=environment)
         wheel=recipe.get('transformersWheel')
         packages={name:version for name,version in recipe['packages'].items() if not (wheel and name=='transformers')}
         runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:',*[f'{name}=={version}' for name,version in packages.items()]],env=environment)

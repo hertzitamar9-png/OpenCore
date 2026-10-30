@@ -1,0 +1,293 @@
+{
+  "_id": "6ae4b5b054ebffee865093cc",
+  "id": "LilCC/GUI-JEPA",
+  "private": false,
+  "tags": [
+    "safetensors",
+    "gui-agent",
+    "mobile-gui",
+    "jepa",
+    "pytorch",
+    "androidcontrol",
+    "arxiv:2610.36877",
+    "en",
+    "base_model:sentence-transformers/all-MiniLM-L12-v2",
+    "base_model:finetune:sentence-transformers/all-MiniLM-L12-v2",
+    "license:mit",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 0,
+  "modelId": "LilCC/GUI-JEPA",
+  "author": "LilCC",
+  "sha": "a2265ca26dbea66fc59c46240a90d3be5defdb9e",
+  "lastModified": "2026-10-30T15:36:27.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "language": [
+      "en"
+    ],
+    "license": "mit",
+    "base_model": [
+      "timm/vit_large_patch16_224.augreg_in21k_ft_in1k",
+      "sentence-transformers/all-MiniLM-L12-v2",
+      "sentence-transformers/all-MiniLM-L6-v2"
+    ],
+    "tags": [
+      "gui-agent",
+      "mobile-gui",
+      "jepa",
+      "pytorch",
+      "androidcontrol",
+      "arxiv:2610.36877"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "8bd72f1781dabe3693a4d8a8e456532dec16bd1e",
+      "size": 201
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "1be82cb029ded190791a9442a552bf21a6e7b769",
+      "size": 1095
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ab4c9cf394688c7425d46ea7ab87526af5f14104",
+      "size": 8319
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "bcc792c3a47cb25655655feede0993928446768e",
+      "size": 3650
+    },
+    {
+      "rfilename": "THIRD_PARTY_NOTICES.md",
+      "blobId": "134ea233c5a2c30d6e0e9e4f379ad35247ffd76c",
+      "size": 1746
+    },
+    {
+      "rfilename": "assets/overview.png",
+      "blobId": "1d889f6a13b024ab4d036058cde9f928fee23474",
+      "size": 383747,
+      "lfs": {
+        "sha256": "860ea287628b901862990a01ea5f9390d1628bdcf565418775b1d0173e4612ac",
+        "size": 383747,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/teaser.png",
+      "blobId": "ce2262e0a134076f58c3d90470ffcb273496ad47",
+      "size": 117930,
+      "lfs": {
+        "sha256": "882191289b1b41118637815f642149c1de76bf04e6ac2f8e05f9892d74690306",
+        "size": 117930,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "click_reranker/meta.json",
+      "blobId": "a9e1767693d1025f0353811d25fbc47d6b1b6cd9",
+      "size": 118
+    },
+    {
+      "rfilename": "click_reranker/reranker_head.pt",
+      "blobId": "a34391fe7966b62a50521516dc8409ab17c08539",
+      "size": 474717,
+      "lfs": {
+        "sha256": "2d3dd27a2341ad53df29a0be8725a62561f2c2e0925634a8280c0f0eabcbffe4",
+        "size": 474717,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "click_reranker/reranker_lm/NOTICE.txt",
+      "blobId": "1fe6a22b4d15b47fe4ed82b4822b9dfdd290dc7d",
+      "size": 271
+    },
+    {
+      "rfilename": "click_reranker/reranker_lm/config.json",
+      "blobId": "af4eae1be18022bfcfe281bea781171410746cbf",
+      "size": 612
+    },
+    {
+      "rfilename": "click_reranker/reranker_lm/model.safetensors",
+      "blobId": "39d64754f382dac2f6a59718cf7d59f126e810e8",
+      "size": 133462128,
+      "lfs": {
+        "sha256": "5befd0fe9820d89e4895c6616288e4c1dc7809197d816fae3385d0263673442e",
+        "size": 133462128,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "click_reranker/reranker_lm/special_tokens_map.json",
+      "blobId": "9bbecc17cabbcbd3112c14d6982b51403b264bfa",
+      "size": 695
+    },
+    {
+      "rfilename": "click_reranker/reranker_lm/tokenizer.json",
+      "blobId": "c17ed520ed8438736732a54957a69306b8822215",
+      "size": 711661
+    },
+    {
+      "rfilename": "click_reranker/reranker_lm/tokenizer_config.json",
+      "blobId": "6c45fb57d2f0685af994e00f74a0e1e3ef61d718",
+      "size": 1464
+    },
+    {
+      "rfilename": "click_reranker/reranker_lm/vocab.txt",
+      "blobId": "fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "size": 231508
+    },
+    {
+      "rfilename": "encoder/NOTICE.txt",
+      "blobId": "7190267e87c41bfc17336df3e5f8794df56e4aac",
+      "size": 215
+    },
+    {
+      "rfilename": "encoder/encoder_1.pt",
+      "blobId": "5f2f768370db3f2042901e4014a8ae2efb3fedef",
+      "size": 1213321675,
+      "lfs": {
+        "sha256": "b3c7e5688494c88790a52a506b0b1bcd4085157af6339a1a00d288941abe5b7c",
+        "size": 1213321675,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "evaluation/idd.json",
+      "blobId": "2eda860cc481b91e91c0a7761d14e2cfdf7fe3b7",
+      "size": 2351
+    },
+    {
+      "rfilename": "gui_jepa_config.json",
+      "blobId": "b64cd625d159c0879f3835dd80449b3b4a43d549",
+      "size": 2962
+    },
+    {
+      "rfilename": "licenses/Apache-2.0.txt",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "manifest.json",
+      "blobId": "178d21a91bf1f1f48714c1fa8cf73cc536817c38",
+      "size": 6401
+    },
+    {
+      "rfilename": "metadata/app_vocab.json",
+      "blobId": "5bc975b88da09778c05fd6b32cc372414c6211bb",
+      "size": 12336
+    },
+    {
+      "rfilename": "policy/heads.pt",
+      "blobId": "318fad9d97ed6f1e15d5c95e8b15a58298a52d17",
+      "size": 168878527,
+      "lfs": {
+        "sha256": "7d157c93a4db3426f0ad1e254469a9ac345a4d784204523172317c211b90b48e",
+        "size": 168878527,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "policy/matcher_lm/NOTICE.txt",
+      "blobId": "51124ca4037f6144d2f1cfef486c08d7fbd13055",
+      "size": 276
+    },
+    {
+      "rfilename": "policy/matcher_lm/config.json",
+      "blobId": "af4eae1be18022bfcfe281bea781171410746cbf",
+      "size": 612
+    },
+    {
+      "rfilename": "policy/matcher_lm/model.safetensors",
+      "blobId": "da65941ee3f7c1cd0d9829e03953d0d92578bf09",
+      "size": 133462128,
+      "lfs": {
+        "sha256": "e2f7a5fc057d334d5071e3086b53cf25453071fcf689f11dc1438c0ba413887a",
+        "size": 133462128,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "policy/matcher_lm/special_tokens_map.json",
+      "blobId": "9bbecc17cabbcbd3112c14d6982b51403b264bfa",
+      "size": 695
+    },
+    {
+      "rfilename": "policy/matcher_lm/tokenizer.json",
+      "blobId": "c17ed520ed8438736732a54957a69306b8822215",
+      "size": 711661
+    },
+    {
+      "rfilename": "policy/matcher_lm/tokenizer_config.json",
+      "blobId": "6c45fb57d2f0685af994e00f74a0e1e3ef61d718",
+      "size": 1464
+    },
+    {
+      "rfilename": "policy/matcher_lm/vocab.txt",
+      "blobId": "fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "size": 231508
+    },
+    {
+      "rfilename": "span_ranker/ranker_head.pt",
+      "blobId": "7705ae0ff06a6edee8f6ff04094584a71a46eda6",
+      "size": 3461,
+      "lfs": {
+        "sha256": "9543744c6cd9f71c0043bf59764c8232be57cc4757c0dcd5a2517e4aeca9aa0d",
+        "size": 3461,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "span_ranker/ranker_lm/NOTICE.txt",
+      "blobId": "d65360b4bba5782a68105ea5a75ff38f7f3d627b",
+      "size": 279
+    },
+    {
+      "rfilename": "span_ranker/ranker_lm/config.json",
+      "blobId": "dfe4ae2ca2bf10b0db566aa2e40383f889b4aa59",
+      "size": 611
+    },
+    {
+      "rfilename": "span_ranker/ranker_lm/model.safetensors",
+      "blobId": "96541dc51f639bbb2fbca6d983b6e067f99555e3",
+      "size": 90864192,
+      "lfs": {
+        "sha256": "f67825e8fa29bdcb113fc77365a1fde7bc813e3e5c85eb1c9d3777f9774629ec",
+        "size": 90864192,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "span_ranker/ranker_lm/special_tokens_map.json",
+      "blobId": "9bbecc17cabbcbd3112c14d6982b51403b264bfa",
+      "size": 695
+    },
+    {
+      "rfilename": "span_ranker/ranker_lm/tokenizer.json",
+      "blobId": "c17ed520ed8438736732a54957a69306b8822215",
+      "size": 711661
+    },
+    {
+      "rfilename": "span_ranker/ranker_lm/tokenizer_config.json",
+      "blobId": "6c45fb57d2f0685af994e00f74a0e1e3ef61d718",
+      "size": 1464
+    },
+    {
+      "rfilename": "span_ranker/ranker_lm/vocab.txt",
+      "blobId": "fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "size": 231508
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-30T15:20:16.000Z",
+  "usedStorage": 1740968505
+}

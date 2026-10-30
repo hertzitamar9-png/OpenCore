@@ -2,7 +2,7 @@
   "schema": 1,
   "engines": {
     "lfm3-cpu-v1": {
-      "label": "llama.cpp b11960 · LFM3",
+      "label": "llama.cpp b11960 \u00b7 LFM3",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11960/llama-b11960-bin-win-cpu-x64.zip",
       "sha256": "73f962f82850d244db47eaacb9d913637027b82399124324298576d58c5f4287",
       "bytes": 24407745,
@@ -34,6 +34,25 @@
       "bytes": 12920473,
       "source": "https://github.com/krafton-ai/llama.cpp",
       "revision": "fb895662d25868756a19253ca5e0688f99b18994"
+    },
+    "velociq8-cpu-v1": {
+      "label": "VelociQ8 1.5",
+      "url": "https://huggingface.co/VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF/resolve/1592faa342404442e5e1f0e78e174361988df5c2/runtime/velociq8-1.5-windows-x64.zip",
+      "sha256": "b42c9069b51c36b575b679570d034c7568bc205632732e8137e890cbf2cb2134",
+      "bytes": 30314828,
+      "source": "https://github.com/dhaern/VelociQ8/tree/v1.5",
+      "revision": "v1.5",
+      "version": "1.5",
+      "stripPrefix": "velociq8-1.5-windows-x64/"
+    },
+    "prism-cpu-v1": {
+      "label": "PrismML llama.cpp b10831",
+      "url": "https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b10831-9d9efea/llama-prism-b10831-9d9efea-bin-win-cpu-x64.zip",
+      "sha256": "c8d362c774e21eee4c712fdd48877656715fa4fef091a6e845ff8a2793ca35b8",
+      "bytes": 19560280,
+      "source": "https://github.com/PrismML-Eng/llama.cpp/tree/9d9efeadbdd1d77458d98717a96fbfa3a016e159",
+      "revision": "9d9efeadbdd1d77458d98717a96fbfa3a016e159",
+      "version": "prism-b10831"
     }
   }
 }

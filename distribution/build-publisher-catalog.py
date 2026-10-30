@@ -113,8 +113,14 @@ if __name__ == '__main__':
     result = build()
     from bundled_catalog import coverage
     catalog = json.loads((HERE / 'hf-research/expanded-catalog.json').read_text(encoding='utf-8'))
+    from computer_catalog import build_computer_catalog
+    computer_catalog = build_computer_catalog(HERE/'hf-research/requested-models', result['entries'])
+    for entry in result['entries']:
+        if entry.get('computerRuntime'):
+            entry['computerBaseBytes'] = computer_catalog['profiles'][entry['computerRuntime']]['baseBytes']
     outputs = {EXTENSION / 'publisher-models.json': json.dumps(result, ensure_ascii=False, indent=2) + '\n',
                HERE / 'builtin-quant-coverage.json': json.dumps(coverage(catalog, result['entries']), indent=2) + '\n'}
+    outputs[EXTENSION/'computer-models.json'] = json.dumps(computer_catalog, indent=2)+'\n'
     for target, source in outputs.items():
         if args.check:
             if not target.is_file() or target.read_text(encoding='utf-8') != source:

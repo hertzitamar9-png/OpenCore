@@ -47,6 +47,8 @@ def engine_for(entry):
         return None
     model_type = str(entry.get('modelType') or '').lower()
     repository = str(entry.get('repository') or '').lower()
+    if entry.get('managedEngine') in ('velociq8-cpu-v1', 'prism-cpu-v1'):
+        return entry['managedEngine']
     if model_type == 'edgerock' or repository == 'hkust-aaron/edgerock-4b-gguf':
         return 'edgerock-cpu-v1'
     if (model_type in ('lfm3', 'lfm3_vl') or entry.get('managedEngine') == 'lfm3-cpu-v1'
@@ -70,7 +72,7 @@ def definition(engine_id):
 
 
 def folder(root, engine_id):
-    if engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1', 'lfm3-cpu-v1'):
+    if engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1'):
         raise ValueError('Unknown managed publisher runtime')
     base = Path(root).resolve() / 'runtime-setup/engines'
     target = (base / engine_id).resolve()
@@ -162,6 +164,14 @@ def _install(target, pin, engine_id, report, cancel):
                     raise ValueError('Publisher runtime archive contains an unsafe path')
                 if (item.external_attr >> 16) & 0o170000 == 0o120000:
                     raise ValueError('Publisher runtime archive contains a symbolic link')
+                prefix = pin.get('stripPrefix')
+                if prefix:
+                    if not re.fullmatch(r'[A-Za-z0-9_.-]+/', prefix) or '..' in prefix:
+                        raise ValueError('Invalid publisher runtime layout prefix')
+                    if name == prefix and item.is_dir(): continue
+                    if not name.startswith(prefix):
+                        raise ValueError('Publisher runtime archive leaves its reviewed layout prefix')
+                    name = name[len(prefix):]
                 local = (staging / name).resolve()
                 if not local.is_relative_to(staging.resolve()) or name.casefold() in seen:
                     raise ValueError('Publisher runtime archive contains a colliding path')

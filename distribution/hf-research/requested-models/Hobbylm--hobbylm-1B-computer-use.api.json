@@ -23,12 +23,12 @@
     "license:apache-2.0",
     "region:us"
   ],
-  "downloads": 78,
-  "likes": 25,
+  "downloads": 134,
+  "likes": 35,
   "modelId": "Hobbylm/hobbylm-1B-computer-use",
   "author": "Hobbylm",
-  "sha": "4ea1389b68f5a6f7ec72200543fd8374c14d4526",
-  "lastModified": "2026-10-23T10:24:56.000Z",
+  "sha": "fd23b3824e8fb9a895f581858c2945b0112481ab",
+  "lastModified": "2026-10-26T21:17:03.000Z",
   "gated": false,
   "disabled": false,
   "widgetData": [
@@ -48,8 +48,8 @@
   "model-index": null,
   "config": {
     "peft": {
-      "task_type": "CAUSAL_LM",
-      "base_model_name_or_path": "harims95/hobbylm-1B-instruct"
+      "base_model_name_or_path": "harims95/hobbylm-1B-instruct",
+      "task_type": "CAUSAL_LM"
     }
   },
   "cardData": {
@@ -85,13 +85,13 @@
     },
     {
       "rfilename": "README.md",
-      "blobId": "506c8c95f30bc8ce96a7bada2a20b261d0ed0553",
-      "size": 15908
+      "blobId": "a26b70e5fb496c80e6ccb71a4bfc52c741254179",
+      "size": 16799
     },
     {
       "rfilename": "SHA256SUMS.txt",
-      "blobId": "2443d8c564fb56dfc7f112279b9527d760e27ff3",
-      "size": 7125
+      "blobId": "ee5ba9b69f63811872ed8abcd1f3de4157c11544",
+      "size": 7474
     },
     {
       "rfilename": "adapter_config.json",
@@ -117,6 +117,11 @@
         "size": 146202,
         "pointerSize": 131
       }
+    },
+    {
+      "rfilename": "assets/hobby-bar.png",
+      "blobId": "c9d4a7ba2f83d5e5f3b11b72602186b406291d83",
+      "size": 77582
     },
     {
       "rfilename": "assets/how-it-works.png",
@@ -274,6 +279,11 @@
       "size": 9223
     },
     {
+      "rfilename": "hobby/HobbyBar.swift",
+      "blobId": "4b6a6012c9199423d2cd6601dfbbf71ccd5358df",
+      "size": 32810
+    },
+    {
       "rfilename": "hobby/README_experiment_settings.md",
       "blobId": "6be5ea0a0d2ef007a08f66f52820f5e267742df7",
       "size": 4359
@@ -315,13 +325,18 @@
     },
     {
       "rfilename": "hobby/hobby_demo.py",
-      "blobId": "3806d14c733b10dfc91cd178ffaf7ed7259dcbb1",
-      "size": 8580
+      "blobId": "e878940af2483c159eaa7220cc37b4883ce3655d",
+      "size": 9400
     },
     {
       "rfilename": "hobby/hobby_runtime.py",
       "blobId": "cc6f3ab997aacda7c88e020f848addc4bf05eaea",
       "size": 3921
+    },
+    {
+      "rfilename": "hobby/hobby_server.py",
+      "blobId": "b449b91b90120403089cf3c93878306e81c85ea2",
+      "size": 2723
     },
     {
       "rfilename": "hobby/hobbymac_data.py",
@@ -384,6 +399,11 @@
       "size": 2367
     },
     {
+      "rfilename": "hobby/test_server.py",
+      "blobId": "149d53292969dae35f11166a1e0852d6a4db584d",
+      "size": 1851
+    },
+    {
       "rfilename": "hobby/torch_runtime.py",
       "blobId": "ebae3e34b5c911d9f5e7987210101d7f39f9991e",
       "size": 3884
@@ -400,8 +420,8 @@
     },
     {
       "rfilename": "scripts/setup.sh",
-      "blobId": "65cc3f8c289c99f97d35c7651de779b070df8ddd",
-      "size": 1847
+      "blobId": "62a8c1f600b4e9588d4f0ff06884487bd658d588",
+      "size": 1989
     },
     {
       "rfilename": "validation/hobbymac-train-results-r2.json",
@@ -476,26 +496,5 @@
   ],
   "spaces": [],
   "createdAt": "2026-10-23T09:23:45.000Z",
-  "usedStorage": 28518733,
-  "adapterConfig": {
-    "peft_type": "LORA",
-    "task_type": "CAUSAL_LM",
-    "base_model_name_or_path": "harims95/hobbylm-1B-instruct",
-    "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
-    "r": 16,
-    "lora_alpha": 32,
-    "lora_dropout": 0.05,
-    "target_modules": [
-      "q_proj",
-      "k_proj",
-      "v_proj",
-      "o_proj",
-      "gate_proj",
-      "up_proj",
-      "down_proj"
-    ],
-    "bias": "none",
-    "inference_mode": true,
-    "fan_in_fan_out": false
-  }
+  "usedStorage": 28518733
 }

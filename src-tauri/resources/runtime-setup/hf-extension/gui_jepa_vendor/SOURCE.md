@@ -1,0 +1,1 @@
+Inference components from bcwang-sjtu/GUI-JEPA at c03c565065a8b31f9d4ce1be6c29104c8869799f. MIT; LICENSE included. OpenCore loads pinned local files, forces weights-only PyTorch loading, and supplies local text-model paths. No training/evaluation script or remote repository code is executed.

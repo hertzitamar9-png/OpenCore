@@ -61,7 +61,7 @@ def append_requested(entries, manifest, snapshots):
                 variants = []
                 for package in source['packages']:
                     pins = [_pin(repository, metadata['sha'], item,
-                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf')) else 'support')
+                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx')) or re.search(r'\.onnx_data(?:_\d+)?$', item['rfilename']) else 'support')
                             for item in metadata['siblings'] if any(fnmatch.fnmatchcase(item['rfilename'], pattern) for pattern in package['files'])]
                     if not pins or any(not pin['pinned'] for pin in pins):
                         raise ValueError('Incomplete curated package: ' + repository)
@@ -85,6 +85,10 @@ def append_requested(entries, manifest, snapshots):
                     projectors = [_pin(repository, metadata['sha'], candidates[0], 'companion')]
             for value in plan['variants']:
                 entry = copy.deepcopy(value)
+                if source.get('inferenceCategory'):
+                    if source['inferenceCategory'] != 'text' or not repository.startswith('LiquidAI/LFM3-'):
+                        raise ValueError('Unreviewed inference category override')
+                    entry['category'] = 'text'
                 quant = source.get('quantization', source.get('quantizationLabels', {}).get(entry['quantization'], entry['quantization']))
                 identity = (entry['format'], quant.upper().replace('FP16', 'F16').replace('FP32', 'F32'))
                 if identity in known:
@@ -114,9 +118,10 @@ def append_requested(entries, manifest, snapshots):
                     entry['runtime'].update(adapter=None, reason=source['runtimeReason'])
                 elif entry['format'] == 'gguf' and entry['category'] == 'text':
                     engine = source.get('managedEngine', 'flint-cpu-v1')
-                    if engine not in ('flint-cpu-v1', 'lfm3-cpu-v1'):
+                    if engine not in ('flint-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1'):
                         raise ValueError('Unreviewed requested-model runtime: ' + engine)
                     entry['managedEngine'] = engine
+                    entry['runtime']['adapter'] = 'gguf'
                     entry['runtime']['reason'] = 'The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified.'
                 elif entry['runtime'].get('adapter') == 'transformers':
                     entry['runtime']['reason'] = 'The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified.'
@@ -133,6 +138,18 @@ def append_requested(entries, manifest, snapshots):
                     if repository!=REPOSITORY or metadata['sha']!=REVISION:raise ValueError('Sakura runtime package identity differs')
                     entry.update(category='image',imageRuntime='iris-sdcpp-v1',imageDefaults={'width':1024,'height':1024,'steps':30,'guidance':3},catalogOrder=0 if quant=='Q8_0' else 1)
                     entry['runtime'].update(adapter='sdcpp-iris',reason='The pinned Vulkan image engine and text encoder prepare automatically. Actual image generation is required before Ready.')
+                if source.get('computerRuntime'):
+                    reviewed = {'Hobbylm/hobbylm-1B-computer-use': 'hobbylm-v1',
+                                'adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA': 'ternarypilot-v2',
+                                'LilCC/GUI-JEPA': 'gui-jepa-v1'}
+                    if reviewed.get(repository) != source['computerRuntime']:
+                        raise ValueError('Unreviewed computer-use runtime')
+                    entry['computerRuntime'] = source['computerRuntime']
+                    entry['category'] = 'computer-use'
+                    entry['contextTokens'] = {'hobbylm-v1': 1024, 'ternarypilot-v2': 16384, 'gui-jepa-v1': 0}[source['computerRuntime']]
+                    entry.pop('memoryMode', None)
+                    entry['runtime'].update(adapter='computer-use',reason='The pinned base components and isolated Windows prediction runtime prepare automatically. An actual model prediction is required before Ready.')
+                    entry.pop('managedEngine', None)
                 validate_entry(entry)
                 entries.append(entry)
                 existing.add(entry['id'])

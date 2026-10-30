@@ -7,12 +7,12 @@
       "familyId": "publisher-hobbylm-1b-computer-use",
       "label": "HobbyLM 1B Computer Use",
       "category": "computer-use",
-      "description": "LoRA adapter that turns text requests into macOS actions. Requires HobbyLM 1B Instruct; the published workflow uses Apple MLX and a macOS action harness.",
+      "description": "Small action-prediction LoRA for the exact harims95/hobbylm-1B-instruct base. The isolated Windows CPU loader prepares the base and applies the adapter in memory. Its trained action vocabulary targets macOS; OpenCore displays the generated action without silently running platform-specific commands.",
       "baseRepository": "harims95/hobbylm-1B-instruct",
       "sources": [
         {
           "repository": "Hobbylm/hobbylm-1B-computer-use",
-          "runtimeReason": "Adapter package only. Requires harims95/hobbylm-1B-instruct plus the publisher's compatible MLX/macOS runtime and action harness. Base weights are separate; no OpenCore Windows adapter is integrated."
+          "computerRuntime": "hobbylm-v1"
         }
       ]
     },
@@ -495,7 +495,7 @@
       "familyId": "publisher-lfm3-vl-2b",
       "label": "LFM3 VL 2B",
       "category": "text",
-      "description": "Liquid AI vision-language model for image and video understanding with text replies. Official GGUF variants include a pinned vision projector. This is not an image generator.",
+      "description": "Liquid AI vision-language model for image and video understanding with text replies. Official GGUFs include the vision projector and use the Windows LFM3 engine with ECHO. Other publisher formats keep their actual platform requirements.",
       "sources": [
         {
           "repository": "LiquidAI/LFM3-VL-2B-GGUF",
@@ -506,7 +506,277 @@
         },
         {
           "repository": "LiquidAI/LFM3-VL-2B",
-          "runtimeReason": "This original BF16 package requires LFM3 Transformers custom-model support. Choose an official GGUF option for the automatically prepared Windows LFM3 runtime."
+          "runtimeReason": "Original BF16 package with the publisher custom architecture. Choose an official GGUF option for automatic Windows runtime setup; this original checkpoint needs the matching reviewed Transformers loader."
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-FP8",
+          "quantization": "FP8",
+          "runtimeReason": "This FP8 package requires compatible hardware and its specialized quantization runtime. Choose a GGUF option for the automatically prepared Windows LFM3 engine.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "FP8",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ]
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-MLX-4bit",
+          "quantization": "MLX 4-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 4-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-MLX-5bit",
+          "quantization": "MLX 5-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 5-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-MLX-6bit",
+          "quantization": "MLX 6-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 6-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-MLX-8bit",
+          "quantization": "MLX 8-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 8-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-MLX-bf16",
+          "quantization": "MLX BF16",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX BF16",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-NVFP4",
+          "quantization": "NVFP4",
+          "runtimeReason": "This NVFP4 package requires compatible hardware and its specialized quantization runtime. Choose a GGUF option for the automatically prepared Windows LFM3 engine.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "NVFP4",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "hf_quant_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ]
+        },
+        {
+          "repository": "LiquidAI/LFM3-VL-2B-ONNX",
+          "packages": [
+            {
+              "key": "onnx:decoder",
+              "format": "onnx",
+              "quantization": "ONNX FP32",
+              "files": [
+                "onnx/decoder.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/vision_encoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_fp16",
+              "format": "onnx",
+              "quantization": "ONNX FP16",
+              "files": [
+                "onnx/decoder_fp16.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/vision_encoder_fp16.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q4",
+              "format": "onnx",
+              "quantization": "ONNX Q4",
+              "files": [
+                "onnx/decoder_q4.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/vision_encoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q4f16",
+              "format": "onnx",
+              "quantization": "ONNX Q4F16",
+              "files": [
+                "onnx/decoder_q4f16.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/vision_encoder_fp16.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q8",
+              "format": "onnx",
+              "quantization": "ONNX Q8",
+              "files": [
+                "onnx/decoder_q8.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/vision_encoder_q8.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q8f16",
+              "format": "onnx",
+              "quantization": "ONNX Q8F16",
+              "files": [
+                "onnx/decoder_q8f16.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/vision_encoder_fp16.onnx*"
+              ]
+            }
+          ],
+          "runtimeReason": "Complete ONNX graph and external-data bundle. Requires a compatible LFM3 ONNX runtime and its modality-specific session handling. Choose a GGUF option for automatic OpenCore Windows preparation."
         }
       ]
     },
@@ -515,7 +785,7 @@
       "familyId": "publisher-lfm3-1-7b",
       "label": "LFM3 1.7B",
       "category": "text",
-      "description": "Liquid AI 1.73B text and agent model with a convolution, sliding-attention and global-attention architecture. Includes all official GGUF precisions and the original BF16 package.",
+      "description": "Liquid AI 1.73B text and tool-use model. Includes all official published formats and quantizations. GGUF choices prepare the Windows LFM3 engine with ECHO automatically; Apple MLX, ONNX and specialized formats show their separate requirements.",
       "sources": [
         {
           "repository": "LiquidAI/LFM3-1.7B-GGUF",
@@ -526,7 +796,279 @@
         },
         {
           "repository": "LiquidAI/LFM3-1.7B",
-          "runtimeReason": "This original BF16 package requires LFM3 Transformers custom-model support. Choose an official GGUF option for the automatically prepared Windows LFM3 runtime."
+          "runtimeReason": "Original BF16 package with the publisher custom architecture. Choose an official GGUF option for automatic Windows runtime setup; this original checkpoint needs the matching reviewed Transformers loader."
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-FP8",
+          "quantization": "FP8",
+          "runtimeReason": "This FP8 package requires compatible hardware and its specialized quantization runtime. Choose a GGUF option for the automatically prepared Windows LFM3 engine.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "FP8",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ]
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-MLX-4bit",
+          "quantization": "MLX 4-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 4-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-MLX-5bit",
+          "quantization": "MLX 5-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 5-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-MLX-6bit",
+          "quantization": "MLX 6-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 6-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-MLX-8bit",
+          "quantization": "MLX 8-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 8-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-MLX-bf16",
+          "quantization": "MLX BF16",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX BF16",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-NVFP4",
+          "quantization": "NVFP4",
+          "runtimeReason": "This NVFP4 package requires compatible hardware and its specialized quantization runtime. Choose a GGUF option for the automatically prepared Windows LFM3 engine.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "NVFP4",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "hf_quant_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ]
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-ONNX",
+          "packages": [
+            {
+              "key": "onnx:model",
+              "format": "onnx",
+              "quantization": "ONNX FP32",
+              "files": [
+                "onnx/model.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            },
+            {
+              "key": "onnx:model_fp16",
+              "format": "onnx",
+              "quantization": "ONNX FP16",
+              "files": [
+                "onnx/model_fp16.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            },
+            {
+              "key": "onnx:model_q4",
+              "format": "onnx",
+              "quantization": "ONNX Q4",
+              "files": [
+                "onnx/model_q4.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            },
+            {
+              "key": "onnx:model_q4f16",
+              "format": "onnx",
+              "quantization": "ONNX Q4F16",
+              "files": [
+                "onnx/model_q4f16.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            },
+            {
+              "key": "onnx:model_q4f32",
+              "format": "onnx",
+              "quantization": "ONNX Q4F32",
+              "files": [
+                "onnx/model_q4f32.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            },
+            {
+              "key": "onnx:model_q8",
+              "format": "onnx",
+              "quantization": "ONNX Q8",
+              "files": [
+                "onnx/model_q8.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            },
+            {
+              "key": "onnx:model_q8f16",
+              "format": "onnx",
+              "quantization": "ONNX Q8F16",
+              "files": [
+                "onnx/model_q8f16.onnx*",
+                "LICENSE",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Complete ONNX graph and external-data bundle. Requires a compatible LFM3 ONNX runtime and its modality-specific session handling. Choose a GGUF option for automatic OpenCore Windows preparation."
         }
       ]
     },
@@ -607,6 +1149,586 @@
         {
           "repository": "prithivMLmods/Groot-19B-A3B-261023-NVFP4-GGUF",
           "runtimeReason": "Published NVFP4 GGUF conversion. Requires an NVFP4-capable llama.cpp engine and compatible hardware; this format has not been verified with OpenCore's pinned Windows runtime. Other GGUF precisions prepare the managed ECHO runtime automatically."
+        }
+      ]
+    },
+    {
+      "repository": "LiquidAI/LFM3-Audio-2B",
+      "familyId": "publisher-lfm3-audio-2b",
+      "label": "LFM3 Audio 2B",
+      "category": "text",
+      "description": "Liquid AI text and speech model for spoken interaction and audio understanding. Official GGUF choices include the audio projector and prepare the Windows LFM3 engine with ECHO. Publisher formats remain distinct; audio features depend on the calling interface.",
+      "sources": [
+        {
+          "repository": "LiquidAI/LFM3-Audio-2B-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "quantizationLabels": {
+            "Q4_0": "QAD Q4_0"
+          },
+          "inferenceCategory": "text"
+        },
+        {
+          "repository": "LiquidAI/LFM3-Audio-2B",
+          "runtimeReason": "Original BF16 package with the publisher custom architecture. Choose an official GGUF option for automatic Windows runtime setup; this original checkpoint needs the matching reviewed Transformers loader.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "BF16",
+              "files": [
+                "model.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ]
+        },
+        {
+          "repository": "LiquidAI/LFM3-Audio-2B-MLX-4bit",
+          "quantization": "MLX 4-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 4-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-Audio-2B-MLX-8bit",
+          "quantization": "MLX 8-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 8-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-Audio-2B-MLX-bf16",
+          "quantization": "MLX BF16",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX BF16",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-Audio-2B-ONNX",
+          "packages": [
+            {
+              "key": "onnx:decoder",
+              "format": "onnx",
+              "quantization": "ONNX FP32",
+              "files": [
+                "onnx/decoder.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/audio_encoder.onnx*",
+                "onnx/codec_decoder.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_fp16",
+              "format": "onnx",
+              "quantization": "ONNX FP16",
+              "files": [
+                "onnx/decoder_fp16.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/audio_encoder_fp16.onnx*",
+                "onnx/codec_decoder_fp16.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q4",
+              "format": "onnx",
+              "quantization": "ONNX Q4",
+              "files": [
+                "onnx/decoder_q4.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/audio_encoder.onnx*",
+                "onnx/codec_decoder.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q4f16",
+              "format": "onnx",
+              "quantization": "ONNX Q4F16",
+              "files": [
+                "onnx/decoder_q4f16.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/audio_encoder_fp16.onnx*",
+                "onnx/codec_decoder_fp16.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q8",
+              "format": "onnx",
+              "quantization": "ONNX Q8",
+              "files": [
+                "onnx/decoder_q8.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/audio_encoder.onnx*",
+                "onnx/codec_decoder.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q8f16",
+              "format": "onnx",
+              "quantization": "ONNX Q8F16",
+              "files": [
+                "onnx/decoder_q8f16.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "onnx/audio_encoder_fp16.onnx*",
+                "onnx/codec_decoder_fp16.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            }
+          ],
+          "runtimeReason": "Complete ONNX graph and external-data bundle. Requires a compatible LFM3 ONNX runtime and its modality-specific session handling. Choose a GGUF option for automatic OpenCore Windows preparation."
+        }
+      ]
+    },
+    {
+      "repository": "LiquidAI/LFM3-Omni-2B",
+      "familyId": "publisher-lfm3-omni-2b",
+      "label": "LFM3 Omni 2B",
+      "category": "text",
+      "description": "Liquid AI multimodal model for text, images, video and audio, with text and speech output. Official GGUF choices include the combined projector and prepare the Windows LFM3 engine with ECHO. Audio and video features depend on the calling interface.",
+      "sources": [
+        {
+          "repository": "LiquidAI/LFM3-Omni-2B-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "quantizationLabels": {
+            "Q4_0": "QAD Q4_0"
+          },
+          "inferenceCategory": "text"
+        },
+        {
+          "repository": "LiquidAI/LFM3-Omni-2B",
+          "runtimeReason": "Original BF16 package with the publisher custom architecture. Choose an official GGUF option for automatic Windows runtime setup; this original checkpoint needs the matching reviewed Transformers loader.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "BF16",
+              "files": [
+                "model.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json"
+              ]
+            }
+          ]
+        },
+        {
+          "repository": "LiquidAI/LFM3-Omni-2B-MLX-4bit",
+          "quantization": "MLX 4-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 4-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-Omni-2B-MLX-8bit",
+          "quantization": "MLX 8-bit",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX 8-bit",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-Omni-2B-MLX-bf16",
+          "quantization": "MLX BF16",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "MLX BF16",
+              "files": [
+                "model*.safetensors",
+                "audio_tokenizer/model.safetensors",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Apple Silicon MLX package. It requires the matching Apple MLX runtime; choose a GGUF option for the automatically prepared Windows LFM3 engine."
+        },
+        {
+          "repository": "LiquidAI/LFM3-Omni-2B-ONNX",
+          "packages": [
+            {
+              "key": "onnx:decoder",
+              "format": "onnx",
+              "quantization": "ONNX FP32",
+              "files": [
+                "onnx/decoder.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json",
+                "onnx/vision_encoder.onnx*",
+                "onnx/audio_encoder.onnx*",
+                "onnx/codec_decoder.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_fp16",
+              "format": "onnx",
+              "quantization": "ONNX FP16",
+              "files": [
+                "onnx/decoder_fp16.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json",
+                "onnx/vision_encoder_fp16.onnx*",
+                "onnx/audio_encoder_fp16.onnx*",
+                "onnx/codec_decoder_fp16.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q4",
+              "format": "onnx",
+              "quantization": "ONNX Q4",
+              "files": [
+                "onnx/decoder_q4.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json",
+                "onnx/vision_encoder.onnx*",
+                "onnx/audio_encoder.onnx*",
+                "onnx/codec_decoder.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q4f16",
+              "format": "onnx",
+              "quantization": "ONNX Q4F16",
+              "files": [
+                "onnx/decoder_q4f16.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json",
+                "onnx/vision_encoder_fp16.onnx*",
+                "onnx/audio_encoder_fp16.onnx*",
+                "onnx/codec_decoder_fp16.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q8",
+              "format": "onnx",
+              "quantization": "ONNX Q8",
+              "files": [
+                "onnx/decoder_q8.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json",
+                "onnx/vision_encoder_q8.onnx*",
+                "onnx/audio_encoder.onnx*",
+                "onnx/codec_decoder.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            },
+            {
+              "key": "onnx:decoder_q8f16",
+              "format": "onnx",
+              "quantization": "ONNX Q8F16",
+              "files": [
+                "onnx/decoder_q8f16.onnx*",
+                "LICENSE",
+                "audio_tokenizer/config.json",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "video_preprocessor_config.json",
+                "onnx/vision_encoder_fp16.onnx*",
+                "onnx/audio_encoder_fp16.onnx*",
+                "onnx/codec_decoder_fp16.onnx*",
+                "onnx/depth_decoder.onnx*"
+              ]
+            }
+          ],
+          "runtimeReason": "Complete ONNX graph and external-data bundle. Requires a compatible LFM3 ONNX runtime and its modality-specific session handling. Choose a GGUF option for automatic OpenCore Windows preparation."
+        }
+      ]
+    },
+    {
+      "repository": "LiquidAI/LFM3-1.7B-Base",
+      "familyId": "publisher-lfm3-1-7b-base",
+      "label": "LFM3 1.7B Base",
+      "category": "text",
+      "description": "Untuned pre-training base for LFM3 1.7B. Intended for continued training and text completion, rather than instruction-following chat. The reviewed Q8A64 conversion uses its own Windows VelociQ8 engine with ECHO; it cannot load in standard llama.cpp.",
+      "sources": [
+        {
+          "repository": "VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF",
+          "managedEngine": "velociq8-cpu-v1",
+          "quantization": "Q8A64"
+        },
+        {
+          "repository": "LiquidAI/LFM3-1.7B-Base",
+          "runtimeReason": "Original BF16 package with the publisher custom architecture. Choose an included GGUF option for automatic Windows runtime setup; this original checkpoint needs the matching reviewed Transformers loader."
+        }
+      ]
+    },
+    {
+      "repository": "adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA",
+      "familyId": "publisher-ternarypilot-v2",
+      "label": "TernaryPilot v2 Computer & Browser Use",
+      "category": "computer-use",
+      "description": "Visual GUI grounding and next-action LoRA for the exact Ternary-Bonsai-2 9B base. Downloads its pinned base and Q8 vision projector, and prepares the PrismML Windows engine automatically. Predictions are suggestions to review, rather than proof that a desktop task has completed.",
+      "baseRepository": "prism-ml/Ternary-Bonsai-2-9B-gguf",
+      "sources": [
+        {
+          "repository": "adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA",
+          "quantization": "F16 LoRA",
+          "computerRuntime": "ternarypilot-v2"
+        }
+      ]
+    },
+    {
+      "repository": "LilCC/GUI-JEPA",
+      "familyId": "publisher-gui-jepa",
+      "label": "GUI-JEPA",
+      "category": "computer-use",
+      "description": "Candidate-based Android GUI action policy. Includes the full JEPA visual encoder, learned policy, text matcher, span ranker and click reranker. Uses screenshot plus accessibility candidates and task context; it is a specialized policy rather than a chat language model.",
+      "sources": [
+        {
+          "repository": "LilCC/GUI-JEPA",
+          "computerRuntime": "gui-jepa-v1",
+          "packages": [
+            {
+              "key": "computer-use:complete",
+              "format": "pytorch",
+              "quantization": "FP32 complete bundle",
+              "files": [
+                "encoder/*.pt",
+                "policy/*.pt",
+                "policy/matcher_lm/*",
+                "span_ranker/*.pt",
+                "span_ranker/ranker_lm/*",
+                "click_reranker/*.pt",
+                "click_reranker/meta.json",
+                "click_reranker/reranker_lm/*",
+                "gui_jepa_config.json",
+                "metadata/app_vocab.json",
+                "LICENSE",
+                "THIRD_PARTY_NOTICES.md",
+                "licenses/*"
+              ]
+            }
+          ]
         }
       ]
     }

@@ -1,0 +1,82 @@
+HobbyLM-1B (base) and HobbyLM-1B Broad-Instruct SFT step 3450
+Copyright 2026 the HobbyLM authors (Harish, Hariharan, Prabhurajhan)
+
+Licensed under the Apache License, Version 2.0 (the "License"); see the
+LICENSE file. Unless required by applicable law or agreed to in writing,
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
+
+------------------------------------------------------------------------
+What the Apache-2.0 licence covers
+------------------------------------------------------------------------
+- The model weights of HobbyLM-1B (base) and HobbyLM-1B Broad-Instruct SFT
+  step 3450, including their GGUF conversions (hobbylm-1b-base-F32.gguf,
+  hobbylm-1b-sft-3450-F32.gguf, -Q8_0.gguf and -Q4_K_M.gguf).
+- The HobbyLM architecture and original model code by Harish
+  (https://github.com/harishsg993010/HobbyLM), released under Apache-2.0
+  with its author's permission, and derivatives of that code, including the
+  Hugging Face port files configuration_hobbylm.py and modeling_hobbylm.py.
+
+What it does not cover
+- The third-party materials listed below, which keep their own terms.
+- Third-party runtime software used to run the GGUF files (for example
+  llama.cpp, Ollama and their dependencies), which keeps its own licences.
+  This notice does not set a licence for any runtime patches.
+- Choosing Apache-2.0 for the weights does not change the terms of the
+  training data. Open questions about some sources are listed in the model
+  cards under "Training-data licence notes".
+
+This file lists third-party materials and the attributions their licenses require.
+
+------------------------------------------------------------------------
+Tokenizer
+------------------------------------------------------------------------
+vocab.json, merges.txt and tokenizer.json are the GPT-2 byte-level BPE files
+from openai-community/gpt2 (revision 607a30d783dfa663caf39e06633721c8d4cfcd7e),
+released by OpenAI under the MIT License. Copyright (c) 2019 OpenAI.
+
+------------------------------------------------------------------------
+Pretraining data (both models)
+------------------------------------------------------------------------
+- FineWeb-Edu (HuggingFaceFW/fineweb-edu): ODC-By 1.0.
+- DCLM-baseline-1.0 (mlfoundations/dclm-baseline-1.0): CC BY 4.0.
+- FineMath, finemath-4plus (HuggingFaceTB/finemath): ODC-By 1.0.
+- Cosmopedia v2 (HuggingFaceTB/smollm-corpus): ODC-By 1.0.
+- codeparrot-clean (codeparrot/codeparrot-clean): no dataset license declared;
+  source files carry their original repository licenses. See the model card.
+
+------------------------------------------------------------------------
+Context-extension data (SFT model lineage only)
+------------------------------------------------------------------------
+The 2K extension trained on replay data plus long documents from
+harims95/hobbylm-longctx-2p5b, built from:
+- PG-19 (emozilla/pg19 mirror of deepmind/pg19): public-domain books.
+- arXiv subset of togethercomputer/RedPajama-Data-1T: per-paper licenses.
+- Wikipedia (wikimedia/wikipedia, 20231101.en): CC BY-SA 3.0 / GFDL.
+- Stack v3 Python (HuggingFaceCode/stack-v3-train): ODC-By, with per-file
+  source licenses.
+- FineWeb-Edu (sample-10BT, length-filtered): ODC-By 1.0.
+The 2K and 4K extensions also used retrieval-forcing data:
+- HotpotQA (hotpotqa/hotpot_qa): CC BY-SA 4.0.
+- Qasper (allenai/qasper): CC BY 4.0.
+- Glaive function-calling rows (glaiveai/glaive-function-calling-v2): Apache License 2.0.
+- Synthetic needle facts and the synthetic function-calling pilot corpus (HobbyLM authors).
+See "Training-data licence notes" in the model card for open questions on these sources.
+
+------------------------------------------------------------------------
+Supervised fine-tuning data (SFT model only)
+------------------------------------------------------------------------
+- SmolTalk (HuggingFaceTB/smoltalk, revision 5feaf2fd3ffca7c237fc38d1861bc30365d48ffa),
+  subsets smol-magpie-ultra, smol-rewrite, smol-constraints and
+  smol-summarize: Apache License 2.0. Cite SmolLM2 / SmolTalk (Allal et al., 2025).
+- Nemotron-SFT-Agentic-v2 (nvidia/Nemotron-SFT-Agentic-v2): CC BY 4.0,
+  with additional Apache-2.0 / MIT components. NVIDIA Corporation.
+- Glaive function-calling v2 (glaiveai/glaive-function-calling-v2): Apache License 2.0.
+- ToolACE (Team-ACE/ToolACE): Apache License 2.0.
+- xLAM function-calling 60k (Salesforce/xlam-function-calling-60k): CC BY 4.0,
+  gated dataset. Cite APIGen (Liu et al., 2024).
+- Internally generated task data (math, Python execution, structured output,
+  instruction following, grounded synthesis, tool trajectories): created by
+  the HobbyLM authors with no external text.
+
+The function-calling pilot corpus is fully synthetic (HobbyLM authors).
+The recovery/continuation SFT stages used the dataset families listed above.

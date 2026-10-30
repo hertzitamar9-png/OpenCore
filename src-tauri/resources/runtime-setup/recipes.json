@@ -766,6 +766,88 @@
         "https://github.com/ggml-org/llama.cpp/pull/30306"
       ],
       "limitations": "Bundled Dory engine built from pinned NVIDIA contributor source. CPU execution, two recurrent loops and an 8K ECHO working context. No CUDA or native unlimited rolling-cache claim. All selected weights are checked; installation verifies actual token generation."
+    },
+    {
+      "id": "computer-hobbylm-v1",
+      "label": "Computer-use model predictions",
+      "kind": "text",
+      "modelIds": [
+        "hf-de5e149fce74297ac87d954d"
+      ],
+      "packages": {
+        "transformers": "4.46.3",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "Pillow": "11.3.0",
+        "numpy": "2.2.6"
+      },
+      "torchPackages": {
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cpu",
+      "shareManagedTorch": true,
+      "imports": {
+        "torch": [],
+        "transformers": [
+          "AutoTokenizer",
+          "AutoModel"
+        ],
+        "safetensors": [],
+        "PIL": [],
+        "torchvision": []
+      },
+      "minimumDiskBytes": 500000000,
+      "fallbackDiskBytes": 2500000000,
+      "minimumRamBytes": 4000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://huggingface.co/Hobbylm/hobbylm-1B-computer-use"
+      ],
+      "limitations": "Bounded local model predictions. Platform-specific action execution is separate; downloaded repository Python is never executed.",
+      "cpuOnly": true
+    },
+    {
+      "id": "computer-gui-jepa-v1",
+      "label": "Computer-use model predictions",
+      "kind": "text",
+      "modelIds": [
+        "hf-423d29d79a8b3e9673477770"
+      ],
+      "packages": {
+        "transformers": "4.57.3",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "Pillow": "11.3.0",
+        "numpy": "2.2.6",
+        "timm": "1.0.22"
+      },
+      "torchPackages": {
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cpu",
+      "shareManagedTorch": true,
+      "imports": {
+        "torch": [],
+        "transformers": [
+          "AutoTokenizer",
+          "AutoModel"
+        ],
+        "safetensors": [],
+        "PIL": [],
+        "timm": [],
+        "torchvision": []
+      },
+      "minimumDiskBytes": 500000000,
+      "fallbackDiskBytes": 2500000000,
+      "minimumRamBytes": 4000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://huggingface.co/LilCC/GUI-JEPA"
+      ],
+      "limitations": "Bounded local model predictions. Platform-specific action execution is separate; downloaded repository Python is never executed.",
+      "cpuOnly": true
     }
   ],
   "pythonBootstrap": {
