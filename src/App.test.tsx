@@ -102,6 +102,7 @@ describe("OpenCore", () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
       expect(await screen.findByRole('button', { name: 'Updating…' })).toBeDisabled();
       expect(install).toHaveBeenCalledOnce();
+      expect(screen.queryByRole('button', { name: 'Unload model' })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
       const menu = await screen.findByRole('group', { name: 'Choose model profile' });
       expect(await within(menu).findByRole('button', { name: /^Swift 1\.5/ })).toBeDisabled();
