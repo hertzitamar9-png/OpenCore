@@ -19,7 +19,7 @@ export function generationOptions(modelId,kind='text'){
     {temperature:[0,2],top_p:[.01,1],top_k:[0,1000,true],repeat_penalty:[.5,2],max_tokens:[16,32768,true]};
   limits.seed=[0,4294967295,true];const result={};
   for(const [key,[low,high,integer]] of Object.entries(limits)){
-    const raw=setting.values?.[key];if(raw===undefined||raw==='')continue;
+    const raw=(setting.manualValues||setting.values)?.[key];if(raw===undefined||raw==='')continue;
     const value=Number(raw);if(!Number.isFinite(value)||value<low||value>high||integer&&!Number.isInteger(value))throw Error('Check the '+key.replaceAll('_',' ')+' value in Generation settings.');
     result[key]=value;
   }
@@ -39,10 +39,10 @@ export function GenerationSettings({modelId='echo',conversationId,image=false,de
   const saved=useGenerationSettings(modelId);
   const base=image?{steps:defaults.steps||30,guidanceScale:defaults.guidance??4.5,width:modelId.startsWith('qwen-image-21')?2048:1024,height:modelId.startsWith('qwen-image-21')?2048:1024,seed:''}:
     {temperature:.8,top_p:.95,top_k:40,repeat_penalty:1.1,max_tokens:'',seed:''};
-  const values={...base,...saved.values},manual=saved.mode==='manual';
+  const manualValues={...base,...(saved.manualValues||saved.values)},manual=saved.mode==='manual',values=manual?manualValues:base;
   React.useEffect(()=>{const element=dialog.current;if(!element)return;if(open){element.showModal?element.showModal():element.setAttribute('open','');}else element.close?.();},[open]);
   React.useEffect(()=>{if(!image)captureGenerationProfile(modelId,conversationId);},[modelId,conversationId,image]);
-  function save(mode,next=values){saveGenerationSettings(modelId,{mode,values:next});}
+  function save(mode,next=manualValues){saveGenerationSettings(modelId,{mode,manualValues:next});}
   const fields=image?[['steps','Sampling steps',1,100,1],['guidanceScale','Guidance (CFG)',0,30,.1],['width','Output width',128,8192,16],['height','Output height',128,8192,16]]:
     [['temperature','Temperature',0,2,.05],['top_p','Top P',.01,1,.01],['top_k','Top K',0,1000,1],['repeat_penalty','Repetition penalty',.5,2,.05],['max_tokens','Maximum output tokens',16,32768,1]];
   fields.push(['seed','Seed (blank = random)',0,4294967295,1]);
@@ -54,7 +54,7 @@ export function GenerationSettings({modelId='echo',conversationId,image=false,de
       h('div',{className:'generation-mode'},...['automatic','manual'].map(mode=>h('button',{key:mode,type:'button','aria-pressed':(manual?'manual':'automatic')===mode,disabled:mode==='manual'&&!image&&!supported,onClick:()=>save(mode)},mode==='automatic'?'Automatic':'Manual'))),
       h('p',{className:'generation-default-note'},manual?'Your values override the automatic preset.':image?'Uses the model’s published preset: '+(defaults.steps||30)+' steps'+(defaults.guidance!==undefined?' · CFG '+defaults.guidance:'')+'.':'Uses the model’s published generation configuration when provided, otherwise its runtime defaults.'),
       !image&&!supported?h('p',{role:'status'},'Manual sampling requires a local ECHO profile for this model.'):null,
-      h('fieldset',{disabled:!manual||!image&&!supported},...fields.map(([key,label,min,max,step])=>h('label',{key},h('span',null,label),h('input',{type:'number',min,max,step,value:values[key]??'',required:key!=='seed'&&key!=='max_tokens','aria-label':label,onChange:event=>save('manual',{...values,[key]:event.target.value})})))),
+      h('fieldset',{disabled:!manual||!image&&!supported},...fields.map(([key,label,min,max,step])=>h('label',{key},h('span',null,label),h('input',{type:'number',min,max,step,value:values[key]??'',required:key!=='seed'&&key!=='max_tokens','aria-label':label,onChange:event=>save('manual',{...manualValues,[key]:event.target.value})})))),
       image?h('small',null,'Larger exports use the installed AI upscaler. Available RAM and VRAM still limit generation.'):null,
       h('footer',null,h('button',{type:'submit'},'Done')))));
 }
