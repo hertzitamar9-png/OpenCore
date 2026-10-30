@@ -45,9 +45,9 @@ export function FileChangesReceipt({ conversationId, active, onOpen }: { convers
     const unsubscribe = subscribeWorkspaceFiles(() => void refresh());
     return () => { alive = false; unsubscribe(); };
   }, [conversationId, active]);
-  if (active) return null;
+  if (active || previous.current.conversationId !== conversationId) return null;
   if (error) return <p className="workspace-inline-error" role="alert">File history: {error}</p>;
-  if (!receipt?.files.length) return receipt?.coverage.length ? <CaptureCoverage coverage={receipt.coverage} /> : null;
+  if (!receipt?.turnId || !receipt.files.length) return null;
   const partial = ['failed', 'cancelled', 'interrupted', 'error'].includes(receipt.status || '');
   const hasLines = receipt.files.some(file => file.added !== null || file.removed !== null);
   return <section className="file-changes-receipt" aria-label="Task file changes">
@@ -56,6 +56,6 @@ export function FileChangesReceipt({ conversationId, active, onOpen }: { convers
       <FileCode2 size={15} /><span className="file-change-path">{file.path}</span><small>{file.change}</small>
       {file.added === null && file.removed === null ? <span className="file-binary-label">{/^(text\/|application\/(json|javascript|xml))/.test(file.mime) ? 'Line count unavailable' : 'Binary output'}</span> : <FileLineCounts added={file.added} removed={file.removed} />}
     </button>)}</div>}
-    <CaptureCoverage coverage={receipt.coverage} />
+    {expanded && <CaptureCoverage key={`${conversationId}:${receipt.turnId}`} coverage={receipt.coverage} />}
   </section>;
 }

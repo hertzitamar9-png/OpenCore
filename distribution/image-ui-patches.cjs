@@ -5,9 +5,11 @@ module.exports=function applyImageUi(app,{editFunction,replaceOnce}){
   app=editFunction(app,'Xv',text=>{
     text=replaceOnce(text,'const[r,a]=p.useState(null)','const[$filesExpanded,$setFilesExpanded]=p.useState(()=>{try{return localStorage.getItem("opencore.ui.v1.file-changes")==="expanded"}catch{return false}});const $toggleFiles=()=>{$setFilesExpanded(value=>{try{localStorage.setItem("opencore.ui.v1.file-changes",value?"collapsed":"expanded")}catch{}return !value})};const[r,a]=p.useState(null)');
     text=replaceOnce(text,'labelled:!0})]}),g(m)]})','labelled:!0}),i.jsx("button",{type:"button",className:"file-changes-toggle","aria-expanded":$filesExpanded,"aria-label":$filesExpanded?"Collapse file changes":"Show all file changes",onClick:$toggleFiles,children:$filesExpanded?"Collapse":"Show all"})]}),$filesExpanded?g(m):null]})');
+    text=replaceOnce(text,'if(!(r!=null&&r.files.length))return r!=null&&r.coverage.length?i.jsx(mo,{coverage:r.coverage}):null;','if(c.current.conversationId!==t||!r?.turnId||!r.files.length)return null;');
+    text=replaceOnce(text,'i.jsx(mo,{coverage:r.coverage})','$filesExpanded?i.jsx(mo,{coverage:r.coverage},t+":"+r.turnId):null');
     return text;
   });
-  app+='\nconst $fileChangesStyle=document.createElement("style");$fileChangesStyle.textContent=".file-changes-toggle{min-height:36px;padding:4px 8px;white-space:nowrap;font-size:12px}.file-changes-receipt .file-change-list{max-height:min(42vh,360px);overflow:auto;overscroll-behavior:contain}.file-changes-receipt>header{flex-wrap:wrap}@media(max-width:600px){.file-changes-toggle{min-height:40px}.file-changes-receipt .file-change-list{max-height:32vh}}";document.head.appendChild($fileChangesStyle);\n';
+  app+='\nconst $fileChangesStyle=document.createElement("style");$fileChangesStyle.textContent=".file-changes-toggle{min-height:36px;padding:4px 8px;white-space:nowrap;font-size:12px}.file-changes-receipt .file-change-list{max-height:min(42vh,360px);overflow:auto;overscroll-behavior:contain}.file-changes-receipt>header{flex-wrap:wrap}.workspace-coverage ul{max-height:min(25vh,200px);overflow-y:auto;overscroll-behavior:contain}@media(max-width:600px){.file-changes-toggle{min-height:40px}.file-changes-receipt .file-change-list{max-height:32vh}}";document.head.appendChild($fileChangesStyle);\n';
   app=editFunction(app,'Ul',text=>replaceOnce(text,'img:({src:t,alt:e})=>i.jsx(Iu,{src:t,alt:e})','img:Iu'));
   app=editFunction(app,'pf',text=>replaceOnce(text,'img:({src:e,alt:n})=>i.jsx(Iu,{src:e,alt:n})','img:Iu'));
   app=editFunction(app,'Iu',text=>{
@@ -19,6 +21,8 @@ module.exports=function applyImageUi(app,{editFunction,replaceOnce}){
   const conversation=acorn.parse(app,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='VariableDeclaration'&&n.declarations[0]?.id.name==='Fu');
   if(!conversation)throw Error('Missing original conversation composer');
   let composer=app.slice(conversation.start,conversation.end);
+  composer=replaceOnce(composer,'e&&X&&!l.some(A=>A.kind==="message"&&A.role==="user"','e&&X&&l.some(A=>A.kind==="message"&&A.role==="user")&&!l.some(A=>A.kind==="message"&&A.role==="user"');
+  composer=replaceOnce(composer,'i.jsx(Xv,{conversationId:e,active:wt,onOpen:X})','i.jsx(Xv,{conversationId:e,active:wt,onOpen:X},e)');
   composer=replaceOnce(composer,'className:"composer-controls",children:[','className:"composer-controls",children:[i.jsx(globalThis.__opencoreGenerationSettings,{modelId:$imageChat.active?$imageChat.modelId:b,conversationId:e,image:$imageChat.active,defaults:$imageChat.defaults||globalThis.__opencoreImageDefaults($imageChat.modelId||""),supported:Kp(b)}),');
   composer=replaceOnce(composer,'var ir,sr,L,ne,ve,Fe;','var ir,sr,L,ne,ve,Fe;const $postReply=globalThis.__opencoreChatPostprocessing(l);const[$imageChat,$setImageChat]=p.useState({active:false,busy:false});');
   composer=replaceOnce(composer,'wt=Ge||g,bt=wt||(d==null?void 0:d.status)==="starting"','wt=(Ge||g)&&!$postReply,bt=$imageChat.active?$imageChat.busy:wt||(d==null?void 0:d.status)==="starting"');

@@ -51,9 +51,26 @@ it('keeps failed partial files and reports binary output without fake line count
 });
 
 it('does not restore changes from a prior task when the latest task changed no files', async () => {
-  vi.spyOn(files, 'workspaceFiles').mockResolvedValue({ ...result, turnId: 'empty', files: [], added: 0, removed: 0 });
+  vi.spyOn(files, 'workspaceFiles').mockResolvedValue({ ...result, turnId: 'empty', files: [], added: 0, removed: 0, coverage: ['Capture byte limit reached in an internal runtime folder'] });
   const view = render(<FileChangesReceipt conversationId="chat" active={false} onOpen={vi.fn()} />);
   await waitFor(() => expect(files.workspaceFiles).toHaveBeenCalled());
+  expect(view.container).toBeEmptyDOMElement();
+});
+
+it('keeps capture diagnostics hidden until file changes are expanded and resets them for another chat',async()=>{
+  const coverage=['Capture byte limit reached in an internal runtime folder'];
+  const fetch=vi.spyOn(files,'workspaceFiles').mockResolvedValue({...result,coverage});
+  const props={active:false,onOpen:vi.fn()};
+  const view=render(<FileChangesReceipt {...props} conversationId="chat"/>);
+  await screen.findByRole('button',{name:'Show all file changes'});
+  expect(screen.queryByText(coverage[0])).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Show all file changes'}));
+  const diagnostics=screen.getByText('Capture coverage · 1 note').closest('details');
+  expect(diagnostics).not.toHaveAttribute('open');
+  fireEvent.click(screen.getByText('Capture coverage · 1 note'));
+  fetch.mockResolvedValue({...result,turnId:null,files:[],coverage});
+  view.rerender(<FileChangesReceipt {...props} conversationId="new-chat"/>);
+  await waitFor(()=>expect(fetch).toHaveBeenCalledWith({action:'changes',conversationId:'new-chat'}));
   expect(view.container).toBeEmptyDOMElement();
 });
 

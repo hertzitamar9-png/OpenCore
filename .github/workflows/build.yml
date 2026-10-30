@@ -148,6 +148,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-chat-deliverables.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-capture-coverage.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-cached-views.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node test-mobile-render.cjs
