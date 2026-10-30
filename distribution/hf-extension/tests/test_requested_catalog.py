@@ -14,6 +14,46 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_groot_keeps_the_exact_model_and_all_verified_precision_choices(self):
+        entries=self.family('groot-19b-a3b-261023')
+        self.assertEqual(len(entries),28)
+        self.assertTrue(all(e['originalRepository']=='GrootTeam/Groot-19B-A3B-261023' for e in entries))
+        self.assertTrue(all(e['category']=='text' and e['memoryMode']=='echo' and e['contextTokens']==32768 for e in entries))
+        self.assertTrue(all(e['generationDefaults']=={'temperature':1.0,'top_p':.95,'top_k':20} for e in entries))
+        self.assertEqual(len({(e['format'],e['quantization']) for e in entries}),28)
+        gguf=[e for e in entries if e['format']=='gguf']
+        self.assertEqual(len(gguf),25)
+        self.assertTrue({'Q4_K_M','Q5_K_M','Q6_K','Q8_0','IQ2_S','IQ3_S','IQ4_XS','NVFP4'}.issubset({e['quantization'] for e in gguf}))
+        self.assertEqual(sum(e['runtime']['adapter']=='gguf' and e['managedEngine']=='flint-cpu-v1' for e in gguf),24)
+        original=next(e for e in entries if e['format']=='safetensors' and e['quantization']=='BF16')
+        self.assertEqual(sum(pin['role']=='model' for pin in original['files']),6)
+        self.assertEqual(original['revision'],'d089dadfe280289b2f3cd2ae9ef9796c2495529a')
+        official=next(e for e in gguf if e['quantization']=='Q4_K_M')
+        self.assertEqual(official['repository'],'GrootTeam/Groot-19B-A3B-261023-GGUF')
+        self.assertEqual(sum(pin['role']=='companion' for pin in official['files']),1)
+        self.assertEqual({e['quantization'] for e in entries if e['format']=='safetensors'},{'BF16','FP8','NVFP4'})
+        self.assertTrue(all(pin['pinned'] for entry in entries for pin in entry['files']))
+        self.assertTrue(all(e['runtime']['adapter'] is None for e in entries if e['format']=='safetensors' or e['quantization']=='NVFP4'))
+
+    def test_publisher_precision_table_requires_exact_edition_and_immutable_evidence(self):
+        row=copy.deepcopy(next(row for row in self.rows if row['familyId']=='publisher-groot-19b-a3b-261023'))
+        row['sources']=row['sources'][:1]
+        with tempfile.TemporaryDirectory() as temporary:
+            manifest=Path(temporary)/'manifest.json'
+            for key,value in [('publisherEvidence','0'*40),('publisherEdition','FP8')]:
+                broken=copy.deepcopy(row);broken['sources'][0][key]=value
+                manifest.write_text(json.dumps({'models':[broken]}),encoding='utf-8')
+                with self.assertRaisesRegex(ValueError,'exact checkpoint'):
+                    append_requested([],manifest,self.snapshots)
+            snapshots=Path(temporary)/'snapshots';snapshots.mkdir()
+            for repository in (row['repository'],row['sources'][0]['repository']):
+                filename=repository.replace('/','--')+'.api.json'
+                (snapshots/filename).write_bytes((self.snapshots/filename).read_bytes())
+            (snapshots/(row['repository'].replace('/','--')+'.README.md')).write_text('No publisher precision table here.',encoding='utf-8')
+            manifest.write_text(json.dumps({'models':[row]}),encoding='utf-8')
+            with self.assertRaisesRegex(ValueError,'exact checkpoint'):
+                append_requested([],manifest,snapshots)
+
     def test_apex_keeps_the_exact_finetune_and_complete_published_packages(self):
         entries=self.family('apex-35b-v1')
         self.assertEqual(len(entries),26)
@@ -161,7 +201,7 @@ class RequestedCatalogTests(unittest.TestCase):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 13)
+        self.assertEqual(report['withFive'], 14)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

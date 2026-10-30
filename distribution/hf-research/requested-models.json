@@ -565,6 +565,50 @@
           "repository": "Apexintelligence-AI/Apex-35B-V1.0"
         }
       ]
+    },
+    {
+      "repository": "GrootTeam/Groot-19B-A3B-261023",
+      "familyId": "publisher-groot-19b-a3b-261023",
+      "label": "Groot 19B A3B 261023",
+      "category": "text",
+      "description": "GrootTeam's 19B mixture-of-experts reasoning and tool-use model, with about 3B active parameters per token. Includes the publisher BF16, FP8, NVFP4 and GGUF releases plus verified community quantizations. ECHO uses a 32K working window with archived history; vision and MTP acceleration require separate validation.",
+      "sources": [
+        {
+          "repository": "GrootTeam/Groot-19B-A3B-261023-GGUF",
+          "publisherEvidence": "d089dadfe280289b2f3cd2ae9ef9796c2495529a",
+          "publisherEdition": "GGUF"
+        },
+        {
+          "repository": "mradermacher/Groot-19B-A3B-261023-GGUF"
+        },
+        {
+          "repository": "bartowski/GrootTeam_Groot-19B-A3B-261023-GGUF"
+        },
+        {
+          "repository": "mradermacher/Groot-19B-A3B-261023-i1-GGUF"
+        },
+        {
+          "repository": "GrootTeam/Groot-19B-A3B-261023",
+          "runtimeReason": "The original BF16 checkpoint requires a compatible Qwen3.5-MoE runtime, such as Transformers 5.8.1 or newer, and sufficient memory. Choose a GGUF option for the automatically prepared Windows ECHO runtime. Original BF16 execution, vision and MTP acceleration have not been verified in OpenCore."
+        },
+        {
+          "repository": "GrootTeam/Groot-19B-A3B-261023-FP8",
+          "publisherEvidence": "d089dadfe280289b2f3cd2ae9ef9796c2495529a",
+          "publisherEdition": "FP8",
+          "runtimeReason": "Publisher FP8 package. Requires a compatible FP8 inference runtime and hardware; an OpenCore Windows FP8 adapter has not been integrated or verified. Choose a GGUF option for the managed Windows ECHO runtime."
+        },
+        {
+          "repository": "GrootTeam/Groot-19B-A3B-261023-NVFP4",
+          "publisherEvidence": "d089dadfe280289b2f3cd2ae9ef9796c2495529a",
+          "publisherEdition": "NVFP4",
+          "quantization": "NVFP4",
+          "runtimeReason": "Publisher compressed-tensors package with NVFP4 experts and FP8 attention. Requires compatible NVFP4 hardware and runtime; no matching OpenCore Windows adapter is integrated. Choose a supported GGUF option for the managed ECHO runtime."
+        },
+        {
+          "repository": "prithivMLmods/Groot-19B-A3B-261023-NVFP4-GGUF",
+          "runtimeReason": "Published NVFP4 GGUF conversion. Requires an NVFP4-capable llama.cpp engine and compatible hardware; this format has not been verified with OpenCore's pinned Windows runtime. Other GGUF precisions prepare the managed ECHO runtime automatically."
+        }
+      ]
     }
   ]
 }

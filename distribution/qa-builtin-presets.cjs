@@ -28,7 +28,7 @@ for(const id of ['llama32-1b','sage-a15-q4-k-m','holo4-27b']){
  record(id+' offers direct installation',await card.getByRole('button',{name:'Install',exact:true}).isEnabled());
  await card.screenshot({path:path.join(__dirname,'.output/builtin-'+id+'.png')});
 }
-const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29],['publisher-tiel-coder-apex-miniplus-v2-1',1],['publisher-tals-coder-flash-02',1],['publisher-kestrel-4b-coder',2],['publisher-hi3d-v1',1],['publisher-qwen35-4b-3d-coder',3],['publisher-lfm3-vl-2b',8],['publisher-lfm3-1-7b',8],['publisher-carbon-x',13],['publisher-apex-35b-v1',26]];
+const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29],['publisher-tiel-coder-apex-miniplus-v2-1',1],['publisher-tals-coder-flash-02',1],['publisher-kestrel-4b-coder',2],['publisher-hi3d-v1',1],['publisher-qwen35-4b-3d-coder',3],['publisher-lfm3-vl-2b',8],['publisher-lfm3-1-7b',8],['publisher-carbon-x',13],['publisher-apex-35b-v1',26],['publisher-groot-19b-a3b-261023',28]];
 const screenshotDirectory=process.env.OPENCORE_MODEL_QA_DIR||path.join(require('os').tmpdir(),'opencore-requested-models-qa');fs.mkdirSync(screenshotDirectory,{recursive:true});
 for(const [family,count] of requested){
  const entries=presetCatalog.entries.filter(entry=>entry.familyId===family),entry=entries[0];
@@ -47,6 +47,11 @@ for(const [family,count] of requested){
   record(entry.familyLabel+' keeps the publisher custom quantization label',await card.locator('select').inputValue()===entry.id&&await card.locator('select option').first().innerText().then(text=>text.includes(entry.quantization)));
   if(family==='publisher-tals-coder-flash-02')record('Tals shows its required Hadamard runtime without claiming readiness',await card.innerText().then(text=>text.includes('Hadamard')&&text.includes('Compatible adapter required')&&!text.includes('Ready to use')));
  }
+ if(family==='publisher-groot-19b-a3b-261023'){
+  record('Groot preserves its exact publisher identity and ECHO working window',await card.innerText().then(text=>text.includes('GrootTeam/Groot-19B-A3B-261023')&&text.includes('32K working window')));
+  const fp4=entries.find(value=>value.format==='safetensors'&&value.quantization==='NVFP4');await card.locator('select').selectOption(fp4.id);
+  record('Groot NVFP4 shows its actual runtime requirement',await card.innerText().then(text=>text.includes('compatible NVFP4 hardware')&&text.includes('Compatible adapter required')&&!text.includes('Ready to use')));
+ }
  await card.screenshot({path:path.join(screenshotDirectory,family+'.png')});
 }
 record('opening and browsing built-in cards never inspects or adds a Hugging Face repository',await page.evaluate(()=>!fixture.calls.some(call=>call.route==='/plan'||call.route==='/catalog/add')));
@@ -61,6 +66,12 @@ await page.locator('.model-install-progress progress').waitFor();
 record('requested model installation appears in the shared progress panel',await page.locator('.model-install-progress progress').getAttribute('value')==='30');
 await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();await manoCard.getByRole('button',{name:'Install',exact:true}).waitFor();
 record('pausing the requested download releases its Install button',await manoCard.getByRole('button',{name:'Install',exact:true}).isEnabled());
+const groot=presetCatalog.entries.find(entry=>entry.familyId==='publisher-groot-19b-a3b-261023'&&entry.repository==='GrootTeam/Groot-19B-A3B-261023-GGUF');
+await searches.fill(groot.familyLabel);const grootCard=page.getByRole('article',{name:groot.familyLabel,exact:true});
+await grootCard.locator('select').selectOption(groot.id);await grootCard.getByRole('button',{name:'Install',exact:true}).click();
+await grootCard.getByRole('button',{name:'Installing…',exact:true}).waitFor();
+record('Groot installs the exact publisher Q4 package and prevents duplicate installation',await grootCard.getByRole('button',{name:'Installing…',exact:true}).isDisabled()&&await page.evaluate(id=>fixture.calls.some(call=>call.route==='/install'&&call.body.id===id),groot.id));
+await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();await grootCard.getByRole('button',{name:'Install',exact:true}).waitFor();
 record('no framework error overlay or browser console errors',await page.locator('vite-error-overlay,nextjs-portal').count()===0&&consoleErrors.length===0);
 record('no browser runtime errors',errors.length===0);
 }finally{

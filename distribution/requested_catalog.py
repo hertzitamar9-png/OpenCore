@@ -2,9 +2,10 @@
 import copy
 import fnmatch
 import json
+import re
 from pathlib import PurePosixPath
 
-from hf_catalog import build_plan, _pin, stable_id, echo_context_tokens
+from hf_catalog import build_plan, _pin, stable_id, echo_context_tokens, generation_defaults
 from hf_download import validate_entry
 from hf_lineage import same_checkpoint, bases, quantized_relation, checkpoint_name
 
@@ -38,7 +39,14 @@ def append_requested(entries, manifest, snapshots):
                             and (same_checkpoint(metadata, {alias.lower()}) or
                                  quantized_relation(metadata) and bases(metadata) == {alias.lower()}
                                  and checkpoint_name(repository) == checkpoint_name(alias.removesuffix('-BF16'))))
-                if not alias_ok and not (evidence == original['sha'] and repository.split('/')[0] == row['repository'].split('/')[0]
+                # Some publishers list their precision editions as literal
+                # repository names in a table rather than full Hub links.
+                # Accept only an explicitly reviewed, exact same-owner edition.
+                edition=source.get('publisherEdition')
+                edition_ok=(evidence==original['sha'] and edition in ('GGUF','FP8','NVFP4')
+                            and repository==row['repository']+'-'+edition and readme.is_file()
+                            and re.search(r'^\|\s*`'+re.escape(repository.split('/')[1])+r'`\s*\|',readme.read_text(encoding='utf-8'),re.M))
+                if not alias_ok and not edition_ok and not (evidence == original['sha'] and repository.split('/')[0] == row['repository'].split('/')[0]
                         and repository.startswith(row['repository'] + '-') and readme.is_file()
                         and 'https://huggingface.co/' + repository in readme.read_text(encoding='utf-8')):
                     raise ValueError('Requested package does not declare the exact checkpoint: ' + repository)
@@ -100,6 +108,8 @@ def append_requested(entries, manifest, snapshots):
                 entry['name'] = row['label'] + ' · ' + quant
                 if entry['category']=='text':
                     entry['memoryMode']='echo'
+                    defaults=generation_defaults(original)
+                    if defaults:entry['generationDefaults']={**defaults,**entry.get('generationDefaults',{})}
                 if source.get('runtimeReason'):
                     entry['runtime'].update(adapter=None, reason=source['runtimeReason'])
                 elif entry['format'] == 'gguf' and entry['category'] == 'text':

@@ -22,6 +22,9 @@ def fetch(repository):
     if any(item['rfilename'] == 'config.json' for item in metadata['siblings']):
         try: metadata['config'] = {**metadata.get('config', {}), **json.loads(read(prefix + 'config.json'))}
         except Exception: pass
+    if any(item['rfilename'] == 'generation_config.json' for item in metadata['siblings']):
+        try: metadata['generation_config'] = json.loads(read(prefix + 'generation_config.json'))
+        except Exception: pass
     OUTPUT.mkdir(parents=True, exist_ok=True)
     target = OUTPUT / (repository.replace('/', '--'))
     target.with_suffix(target.suffix + '.api.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')

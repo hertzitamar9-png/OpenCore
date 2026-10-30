@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 553,
-  "withFive": 212,
+  "families": 554,
+  "withFive": 213,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5305,6 +5305,24 @@
       "repositories": [
         "black-forest-labs/flux-3-image-klein",
         "unsloth/flux-3-image-klein-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-groot-19b-a3b-261023",
+      "label": "Groot 19B A3B 261023",
+      "category": "text",
+      "quantizations": 26,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "GrootTeam/Groot-19B-A3B-261023",
+        "GrootTeam/Groot-19B-A3B-261023-FP8",
+        "GrootTeam/Groot-19B-A3B-261023-GGUF",
+        "GrootTeam/Groot-19B-A3B-261023-NVFP4",
+        "bartowski/GrootTeam_Groot-19B-A3B-261023-GGUF",
+        "mradermacher/Groot-19B-A3B-261023-GGUF",
+        "mradermacher/Groot-19B-A3B-261023-i1-GGUF",
+        "prithivMLmods/Groot-19B-A3B-261023-NVFP4-GGUF"
       ]
     },
     {

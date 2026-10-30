@@ -1,0 +1,527 @@
+{
+  "_id": "6add9cc526d7d158c78652b1",
+  "id": "bartowski/GrootTeam_Groot-19B-A3B-261023-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "base_model:GrootTeam/Groot-19B-A3B-261023",
+    "base_model:quantized:GrootTeam/Groot-19B-A3B-261023",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 5945,
+  "likes": 6,
+  "modelId": "bartowski/GrootTeam_Groot-19B-A3B-261023-GGUF",
+  "author": "bartowski",
+  "sha": "0025df0d03fb385344394f4e5afd73ce47da0680",
+  "lastModified": "2026-10-25T06:53:53.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "license_link": "LICENSE",
+    "license": "apache-2.0",
+    "base_model_relation": "quantized",
+    "base_model": "GrootTeam/Groot-19B-A3B-261023"
+  },
+  "gguf": {
+    "total": 18985723008,
+    "architecture": "qwen35moe",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if (preserve_thinking is defined and preserve_thinking is true) or (loop.index0 > ns.last_query_index) %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 38006441856
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "fe8bb253c54f05f95a1da44277463906e35abb73",
+      "size": 3569
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-IQ2_M.gguf",
+      "blobId": "972d43ff23c47f1d85f5b74809fa3c8995925989",
+      "size": 7278307200,
+      "lfs": {
+        "sha256": "d73d0584247bf789707355b5ec5b9ae39c83cc7c56aed42fd8e91241af5b1755",
+        "size": 7278307200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-IQ2_S.gguf",
+      "blobId": "03c20b698bb05a787df64bb9e7d85bfe9e72c89b",
+      "size": 6710667136,
+      "lfs": {
+        "sha256": "61236abd2a05750914583c85a25c876e450e7a17596500841367c9251d325242",
+        "size": 6710667136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-IQ3_M.gguf",
+      "blobId": "61639ad88d1c85f523bcbd38f6df4b55b92abadc",
+      "size": 10670393216,
+      "lfs": {
+        "sha256": "336450e03c6af5ca718754a8f5e4d678f8fcb24991d43906bdc45e3473bcc8b0",
+        "size": 10670393216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-IQ3_XS.gguf",
+      "blobId": "b6b087a1f7e1ccad5087b4cf8a25f1baae260c19",
+      "size": 9042732928,
+      "lfs": {
+        "sha256": "395adeaf51c4a3e99a344e3a6abbebebf1f4a73099c86bf786ef0123de4095c0",
+        "size": 9042732928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-IQ3_XXS.gguf",
+      "blobId": "25f3f34458c84a5ba8a3f8d86a6ef36505aa82b4",
+      "size": 8845805440,
+      "lfs": {
+        "sha256": "cf0441c90e511a7410755b1cc7196797531531c336eb2a2192e764e2837cc1c4",
+        "size": 8845805440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-IQ4_NL.gguf",
+      "blobId": "935d2a3b42cb76d1fc26242097e257b512792f55",
+      "size": 12484339584,
+      "lfs": {
+        "sha256": "fe64d2bd8a23240198152a614dbc1734cb4146a5030de180c24a31161a869356",
+        "size": 12484339584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-IQ4_XS.gguf",
+      "blobId": "ca7422f1faa97e61918f72608a8d2f515e86a55c",
+      "size": 10939524992,
+      "lfs": {
+        "sha256": "0d3615a017c880643656bb44b1b2696981a0604dbc47d049aa7a8e27447a9302",
+        "size": 10939524992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q2_K.gguf",
+      "blobId": "0a33f338256294102accfad37c6f3490c0f9f056",
+      "size": 7881901952,
+      "lfs": {
+        "sha256": "db696ba2bb10c21fcbf67672a2eece50117bdfdc4bfa5bd23a26584720426d88",
+        "size": 7881901952,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q3_K_L.gguf",
+      "blobId": "2bff6af8f70ca8073baa9f95c7c72b8d0ad0317b",
+      "size": 10094397312,
+      "lfs": {
+        "sha256": "07c173079c0a8f71e7ffac101adfff5b8e8887b3d78991aca1355fc436f5706a",
+        "size": 10094397312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q3_K_M.gguf",
+      "blobId": "0f34f6521a5ce47fac1f2eac8212557cbfbaeac2",
+      "size": 9616312192,
+      "lfs": {
+        "sha256": "28536558c516c67ce0045d8f6b9a3aa60358e3b4d33bb79106b614c480d41fe9",
+        "size": 9616312192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q3_K_S.gguf",
+      "blobId": "2e7991ba6ca31d98050416856cd370da8e8b5989",
+      "size": 9018566528,
+      "lfs": {
+        "sha256": "60ffbcb8e9398971ea3ebc5ece18bcd963b5545c412b43af652230fd8590978e",
+        "size": 9018566528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q4_0.gguf",
+      "blobId": "782e0f4d847d82ff7950e0889f7351bce3c08ed1",
+      "size": 11044120448,
+      "lfs": {
+        "sha256": "fab69a1c5655ce08a13dc7fb0d9518881d99ed14d5eef86d6f9d789ecedbd2fa",
+        "size": 11044120448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q4_1.gguf",
+      "blobId": "72d5429bf31d50e65af7b29cdeb65aab492519e8",
+      "size": 12111636352,
+      "lfs": {
+        "sha256": "e03c814b1b7de69115388da14a35585a23bd00c1a5d55331f278aa461f32d205",
+        "size": 12111636352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q4_K_L.gguf",
+      "blobId": "0fabd24142119329454444f98740c7fa8ccf3cff",
+      "size": 13347317632,
+      "lfs": {
+        "sha256": "4118a3bd6e533edc84e3602cdcbb5c23a6e534bb408d90d0173d510bb631e0fe",
+        "size": 13347317632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q4_K_M.gguf",
+      "blobId": "699b5bd595cd1737e6051afebd6b21851d747449",
+      "size": 12484339584,
+      "lfs": {
+        "sha256": "c941e12a231b40b8fb9f6ad7f6601878d72db39c2c62aefb185fbe5c7d0c2e29",
+        "size": 12484339584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q4_K_S.gguf",
+      "blobId": "510066263fe6b8fa2640fed625febe15608ca8c4",
+      "size": 11534591872,
+      "lfs": {
+        "sha256": "e0503d9815a889250d4f74d0a620b6bab05f76e2270c83cd0fb4f4d582c47075",
+        "size": 11534591872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q5_K_M.gguf",
+      "blobId": "42682e8faedfd06c554858d9947bfdd7e091c959",
+      "size": 14719903616,
+      "lfs": {
+        "sha256": "31a31651f73f5e80435b18da2c18cc28f818a0e106ed09b4f6332b9e180b75cc",
+        "size": 14719903616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q5_K_S.gguf",
+      "blobId": "e57103e89cf1eea58380bc23698b3317b25705e0",
+      "size": 13758359424,
+      "lfs": {
+        "sha256": "29a1ec6195a199e15192cd1e3957d2a102f4078506b18b79e953039cbdd45047",
+        "size": 13758359424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q6_K.gguf",
+      "blobId": "8546a9848fdf293297a3e0736f05b997b4c603e5",
+      "size": 16791324544,
+      "lfs": {
+        "sha256": "f784a74600c6a2986006909330aed5eeb1b931893c84505077f2595ad8e861fc",
+        "size": 16791324544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q6_K_L.gguf",
+      "blobId": "5b8d54ff6aa7293a9cc90f415ef9a39c932b9cb5",
+      "size": 17603970944,
+      "lfs": {
+        "sha256": "911e6ce705530f50702e72342f56d5b39b070035ab900a179640e14c48072e2f",
+        "size": 17603970944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q6_K_S.gguf",
+      "blobId": "a08fcbec8b47f2b8607db9566f74e9b3576c06cb",
+      "size": 16102606720,
+      "lfs": {
+        "sha256": "f3134ba5e29a067887d6091ab4d2e89299925c8f255b7d91c28816453b105be9",
+        "size": 16102606720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-Q8_0.gguf",
+      "blobId": "56b5c4531a93b414fc6888746658dd18495bf169",
+      "size": 20230129536,
+      "lfs": {
+        "sha256": "7e414a5e4dbb5aa3074a69b36104b2c8cdc188432527956a6ed9c916906a1882",
+        "size": 20230129536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-bf16.gguf",
+      "blobId": "cb41c756a80d5998e54b2ae8895561e3d8d1d418",
+      "size": 38006441856,
+      "lfs": {
+        "sha256": "69a7ba28a00721af42ad3073f9428fbe1b04fdce993f65b45fe6532bbb270c41",
+        "size": 38006441856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-calibration-v6.txt",
+      "blobId": "ca482e713b55bc8608acc2c7a4fe5fc95a9faf29",
+      "size": 1231503
+    },
+    {
+      "rfilename": "GrootTeam_Groot-19B-A3B-261023-imatrix.gguf",
+      "blobId": "f9ca366e4e220715a0f31ef70bb39b4892b3ab62",
+      "size": 195538048,
+      "lfs": {
+        "sha256": "97b2add71f323296d8d07eadfd3d13758b162f0074adee0d89635004d7a2174d",
+        "size": 195538048,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "bee06fa01abc3ba4b51767d48c78c824500a80d8",
+      "size": 20593
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ2_M.layout.json",
+      "blobId": "30a2d00ebebeba9d6ecae0b25c9060741d2d6aa1",
+      "size": 9147
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ2_M.tensor-types.txt",
+      "blobId": "c9d868137a21b2447fbf507bb6ef946f88470f92",
+      "size": 15409
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ2_S.layout.json",
+      "blobId": "9155f77ae2fbbdf66272237122ef32ca68f79e2a",
+      "size": 9121
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ2_S.tensor-types.txt",
+      "blobId": "e0f1877390a251b1748c6a90e1294d3dbe608165",
+      "size": 15609
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ3_M.layout.json",
+      "blobId": "f2f1648df96274b4c1705ad767dd412544ba7b0b",
+      "size": 9006
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ3_M.tensor-types.txt",
+      "blobId": "6fc8a356f98d728a8327968293c2df8dddfa0ff4",
+      "size": 15328
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ3_XS.layout.json",
+      "blobId": "a2b7df2e53d86bd58e01cc8d58b3fda39a182506",
+      "size": 9040
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ3_XS.tensor-types.txt",
+      "blobId": "711e91a328daa6dbc726a80a9dcfa4ebd7f18fbc",
+      "size": 15391
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ3_XXS.layout.json",
+      "blobId": "207f7ddf43a8a170d2d23b66212b0759f3057f5e",
+      "size": 9054
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ3_XXS.tensor-types.txt",
+      "blobId": "f01e12868337a6c6c84dd151eb679f43b9250b25",
+      "size": 15584
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ4_NL.layout.json",
+      "blobId": "54dd6bf3398d64f42d06082196db6895eae6e043",
+      "size": 8963
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ4_NL.tensor-types.txt",
+      "blobId": "16c4ddeacc919a1d5f0d8870727e93344665adfc",
+      "size": 15454
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ4_XS.layout.json",
+      "blobId": "72618245bfe1f04410f67a4315933dc447a3065c",
+      "size": 9051
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-IQ4_XS.tensor-types.txt",
+      "blobId": "ace750ad211eb6485a5f668ba104d4a3af1604c3",
+      "size": 15532
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q2_K.layout.json",
+      "blobId": "c49f20fdc7e2c47ef1fe0198b8268b4e8d01663a",
+      "size": 9026
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q2_K.tensor-types.txt",
+      "blobId": "85eb91dfed181c04fb8c6ecb30a523197dc0b22a",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q3_K_L.layout.json",
+      "blobId": "e7e51bccd408f5721bf7b6aa9ae9cf33df9b3acd",
+      "size": 9070
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q3_K_L.tensor-types.txt",
+      "blobId": "b6fe61f25f5deb722dc045591b87b0a5986502fc",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q3_K_M.layout.json",
+      "blobId": "f2183ba50c1ddd3d539c491d76c4689bde253471",
+      "size": 9034
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q3_K_M.tensor-types.txt",
+      "blobId": "08027cd7331af24d0c1520177a86b6812d11622f",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q3_K_S.layout.json",
+      "blobId": "5cf01b373dc7baa2860d656ec821abbdc9ce87f5",
+      "size": 9015
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q3_K_S.tensor-types.txt",
+      "blobId": "a8c1f04ef1bedf119075711864531fcd4fdc40ff",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q4_K_L.layout.json",
+      "blobId": "bd5248f2fa871067fbd67f474e42a5516b9a9e98",
+      "size": 8955
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q4_K_L.tensor-types.txt",
+      "blobId": "c80e039dce10f39ec3c1ef0501bab9690f6cb7fc",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q4_K_M.layout.json",
+      "blobId": "0ac797706169646584a7c35070a6e8b8102decb1",
+      "size": 8955
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q4_K_M.tensor-types.txt",
+      "blobId": "ba750144dc8476f53823c1f6c5ce453b7fc11be7",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q4_K_S.layout.json",
+      "blobId": "6c77696420142ef1de5c55da8917188111e2fb88",
+      "size": 8985
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q4_K_S.tensor-types.txt",
+      "blobId": "ebf3ec9d6cd1a69badd700bfc76acef8b9a91170",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q5_K_M.layout.json",
+      "blobId": "ccfb94438fee9b2016e771b76b101382109271fb",
+      "size": 8935
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q5_K_M.tensor-types.txt",
+      "blobId": "cf345d9761099752fb372001db71f2331ce3e6a7",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q5_K_S.layout.json",
+      "blobId": "c401520056881a48809f6889a7a9bd22457ed033",
+      "size": 8900
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q5_K_S.tensor-types.txt",
+      "blobId": "d547a69397fa43331795f30fb09ee5bbeabcc557",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q6_K.layout.json",
+      "blobId": "2338f8a486e977f43a8b78493d60596f3d9fe09e",
+      "size": 8914
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q6_K.tensor-types.txt",
+      "blobId": "e7d9b8e248e78ecc6e6587adaab632eb6ed25e3b",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q6_K_L.layout.json",
+      "blobId": "59fb67c0efcd04edb194fc6bb1e23f5b6de0de18",
+      "size": 8920
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q6_K_L.tensor-types.txt",
+      "blobId": "1c5faab6fd7d8192a742d2b4bab9691e0b0c8eba",
+      "size": 15246
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q6_K_S.layout.json",
+      "blobId": "dd5584fa5a72cf848682c64b51f4ac9b5ffec596",
+      "size": 8882
+    },
+    {
+      "rfilename": "layouts/GrootTeam_Groot-19B-A3B-261023-Q6_K_S.tensor-types.txt",
+      "blobId": "6262fd56f4d492c53bd6262bb9e4ddcde9370465",
+      "size": 15246
+    },
+    {
+      "rfilename": "mmproj-GrootTeam_Groot-19B-A3B-261023-bf16.gguf",
+      "blobId": "a4b97f5e6f27dfd13670c0d5575a186eab03389b",
+      "size": 902822208,
+      "lfs": {
+        "sha256": "0140cef0473d63595a030c68b75b2c8d110bb623bb12ae5993c0cfdfb2d2b0a7",
+        "size": 902822208,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-GrootTeam_Groot-19B-A3B-261023-f16.gguf",
+      "blobId": "8b66870962b2224ffd40f3818c716888be02dfb0",
+      "size": 899283264,
+      "lfs": {
+        "sha256": "1d1d089d44419ae337fd7356f35b8c8c3f8ffde1eaac953e76a26c66fb821263",
+        "size": 899283264,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-25T06:08:05.000Z",
+  "usedStorage": 302315334528
+}
