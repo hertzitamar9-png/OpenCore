@@ -119,7 +119,7 @@
       "familyId": "publisher-kestrel-4b-coder",
       "label": "Kestrel 4B Coder",
       "category": "text",
-      "description": "Qwen3.5 4B fine-tune for coding, reasoning and tool-use output. Offers the publisher's BF16 checkpoint and Q8_0 GGUF with the vision projector. Automatic tool execution, vision and MTP acceleration are unverified.",
+      "description": "Qwen3.5 4B fine-tune for coding, reasoning and tool-use output. Offers the publisher's Q4_K_M, Q5_K_M, Q6_K and Q8_0 GGUF packages with the vision projector, plus the original BF16 checkpoint. GGUF packages prepare the managed Windows runtime and ECHO's 32K working window automatically. Vision and MTP acceleration are unverified.",
       "sources": [
         {
           "repository": "Jackrong/Kestrel-4B-Coder-GGUF",

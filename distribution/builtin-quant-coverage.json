@@ -3,7 +3,7 @@
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
   "families": 554,
-  "withFive": 213,
+  "withFive": 214,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5362,8 +5362,8 @@
       "id": "publisher-kestrel-4b-coder",
       "label": "Kestrel 4B Coder",
       "category": "text",
-      "quantizations": 2,
-      "readyToInstallChoices": false,
+      "quantizations": 5,
+      "readyToInstallChoices": true,
       "source": "bundled packages",
       "repositories": [
         "Jackrong/Kestrel-4B-Coder",

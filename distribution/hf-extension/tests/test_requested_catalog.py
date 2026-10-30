@@ -201,7 +201,7 @@ class RequestedCatalogTests(unittest.TestCase):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 14)
+        self.assertEqual(report['withFive'], 15)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):
@@ -210,7 +210,7 @@ class RequestedCatalogTests(unittest.TestCase):
         kestrel = self.family('kestrel-4b-coder')
         self.assertEqual([entry['quantization'] for entry in tiel], ['APEX-I-MiniPlus V2.1'])
         self.assertEqual([entry['quantization'] for entry in tals], ['Custom ternary'])
-        self.assertEqual({entry['quantization'] for entry in kestrel}, {'BF16', 'Q8_0'})
+        self.assertEqual({entry['quantization'] for entry in kestrel}, {'BF16', 'Q4_K_M', 'Q5_K_M', 'Q6_K', 'Q8_0'})
         self.assertIsNone(tals[0]['runtime']['adapter'])
         self.assertIn('Hadamard', tals[0]['runtime']['reason'])
         self.assertNotIn('managedEngine', tals[0])
@@ -220,6 +220,36 @@ class RequestedCatalogTests(unittest.TestCase):
         self.assertTrue(all(entry['originalRepository'].startswith('IsValorum/Tiel-Coder-') for entry in tiel))
         self.assertEqual(tals[0]['originalRepository'], 'talxcc/Tals-coder-flash-02')
         self.assertTrue(all(entry['originalRepository'] == 'Jackrong/Kestrel-4B-Coder' for entry in kestrel))
+
+    def test_kestrel_publisher_ggufs_keep_their_exact_files_echo_and_existing_q8_identity(self):
+        entries = self.family('kestrel-4b-coder')
+        gguf = [entry for entry in entries if entry['format'] == 'gguf']
+        self.assertEqual(len(entries), 5)
+        self.assertEqual(len(gguf), 4)
+        expected = {
+            'Q4_K_M': (2783446976, '6b28611d122f53826b9b46bfa85980c042908a576523b70b7f229a76ba65c6d2'),
+            'Q5_K_M': (3161425856, 'cc25a1f3602bce0d7c0753b70c9761f23646ad57868f087cb5fc260309f4177b'),
+            'Q6_K': (3563028416, '1d6afb59bcf625a882fae8be7598e59bb73aaa76866f4fa315880c9f242da3ab'),
+            'Q8_0': (4610580448, 'f42efa1c790c6c663df5937dd82e728204295d4c4c1ce98081f0bcd5d4cecad4'),
+        }
+        self.assertEqual({entry['quantization'] for entry in gguf}, set(expected))
+        for entry in gguf:
+            self.assertEqual(entry['repository'], 'Jackrong/Kestrel-4B-Coder-GGUF')
+            self.assertEqual(entry['revision'], 'ceff287601886c543341fa99d16938e60d0687e0')
+            model = next(pin for pin in entry['files'] if pin['role'] == 'model')
+            self.assertEqual(model['filename'], 'Kestrel-4B-Coder-' + entry['quantization'] + '.gguf')
+            self.assertEqual((model['bytes'], model['sha256']), expected[entry['quantization']])
+            projector = next(pin for pin in entry['files'] if pin['role'] == 'companion')
+            self.assertEqual(projector['filename'], 'mmproj-F16.gguf')
+            self.assertEqual(projector['sha256'], 'f8367586a5ee075e5d905d0a42405ee843ff271a921921eff2b874935e7cc070')
+            self.assertEqual(entry['bytes'], model['bytes'] + projector['bytes'])
+            self.assertEqual(entry['managedEngine'], 'flint-cpu-v1')
+            self.assertEqual(entry['runtime']['adapter'], 'gguf')
+            self.assertFalse(entry['runtime']['inferenceVerified'])
+            self.assertEqual(entry['contextTokens'], 32768)
+            self.assertEqual(entry['memoryMode'], 'echo')
+        q8 = next(entry for entry in gguf if entry['quantization'] == 'Q8_0')
+        self.assertEqual(q8['id'], 'hf-cd31756375f9ad1a2d8db899')
 
     def test_specialized_packages_keep_their_quantization_and_processor_configurations(self):
         exl = next(entry for entry in self.entries if entry['quantization'] == 'EXL3 4.0 bpw')
