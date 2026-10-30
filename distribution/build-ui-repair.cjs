@@ -55,6 +55,7 @@ index=editFunction(index,'bp',text=>replaceOnce(text,
 index=editFunction(index,'Xv',()=>fs.readFileSync(path.join(root,'startup-entry.js'),'utf8'));
 index+='\nconst $viewCacheVersion='+JSON.stringify(releaseVersion)+';\n'+fs.readFileSync(path.join(root,'model-view-cache.js'),'utf8');
 index+='\n'+fs.readFileSync(path.join(root,'conversation-deletion.js'),'utf8');
+index+='\nconst $sectionHighlights=document.createElement("style");$sectionHighlights.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/section-highlights.css'),'utf8'))+';document.head.appendChild($sectionHighlights);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 app=editFunction(app,'Kp',text=>replaceOnce(text,'function Kp(t){','function Kp(t){if(globalThis.__opencoreHubEchoProfiles?.has(t))return true;'));
 app=editFunction(app,'pk',text=>{
