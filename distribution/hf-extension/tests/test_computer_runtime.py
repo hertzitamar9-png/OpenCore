@@ -55,7 +55,7 @@ class ComputerRuntimeTests(unittest.TestCase):
     def test_dependency_source_is_the_exact_pinned_base_in_managed_storage(self):
         for profile in CONFIG['profiles'].values():
             dependency = self.manager.dependency(profile)
-            self.assertTrue(Path(dependency['localDirectory']).is_relative_to(self.root/'models/hub'))
+            self.assertTrue(Path(dependency['localDirectory']).resolve().is_relative_to((self.root/'models/hub').resolve()))
             self.assertEqual(dependency['id'], profile['dependencyId'])
             self.assertTrue(all(pin['pinned'] for pin in dependency['files']))
             self.assertFalse(any(pin['filename'].endswith('.py') for pin in dependency['files']))
