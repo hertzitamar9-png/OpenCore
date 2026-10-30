@@ -7,15 +7,16 @@ function fixture(){
     state.calls.push({command,args});
     if(command==='get_snapshot')return {activeConversationIds:state.active};
     if(command==='list_operations')return state.operations;
-    if(command==='list_conversations')return state.native.slice(0,500).map(row=>({...row}));
+    if(command==='list_conversations')return [...state.native.slice(0,500),...(state.bridgeReady?state.imageOnly||[]:[])].map(row=>({...row}));
     if(command==='list_saved_conversations'){
+      state.bridgeReady=true;
       const all=state.native.filter(row=>row.id>(args.after||'')).sort((a,b)=>a.id.localeCompare(b.id));
       return {conversations:all.slice(0,args.limit).map(row=>({...row})),nextCursor:all.length>args.limit?all[args.limit-1].id:null};
     }
     if(command==='list_imported_conversations')return state.badPage?null:{conversations:state.imported.slice(args.offset,args.offset+args.limit).map(row=>({...row})),total:state.imported.length,offset:args.offset,limit:args.limit};
     if(command==='delete_conversation'){
       if(args.id===state.fail)throw Error('Deletion blocked by active image generation');
-      state.removed.push(args.id);state.native=state.native.filter(row=>row.id!==args.id);state.imported=state.imported.filter(row=>row.id!==args.id);return;
+      state.removed.push(args.id);state.native=state.native.filter(row=>row.id!==args.id);state.imported=state.imported.filter(row=>row.id!==args.id);state.imageOnly=state.imageOnly?.filter(row=>row.id!==args.id);return;
     }
     throw Error('Unexpected command '+command);
   }};
@@ -49,4 +50,9 @@ test('a failed deletion stops the batch and reports exactly how many chats were 
 test('a new plan is required for unknown source names and malformed imported paging results',async()=>{
   const {api,state}=fixture();await assert.rejects(api.plan('something-else'),/source/i);
   state.badPage=true;await assert.rejects(api.plan('all'),/completely/);assert.deepEqual(state.removed,[]);
+});
+test('the first deletion plan connects storage before listing image-only chats',async()=>{
+  const {api,state}=fixture();state.imageOnly=[{id:'image-only',client:'OpenCore'}];
+  const plan=await api.plan('all');assert.ok(plan.items.some(row=>row.id==='image-only'));
+  await api.execute(plan);assert.ok(state.removed.includes('image-only'));
 });

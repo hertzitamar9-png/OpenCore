@@ -11,15 +11,18 @@ function $chatMatches(row,source){
   return client.startsWith('imported ')&&!['claude','codex','hermes','opencode'].some(key=>client.includes(key));
 }
 async function $chatDeletionPlan(value){
-  const source=$chatSource(value),native=await p('list_conversations',{query:null});
-  if(!Array.isArray(native))throw Error('The saved chat list could not be read. Nothing was deleted.');
-  const rows=new Map(native.map(row=>[row.id,row]));let offset=0,after=null;
+  const source=$chatSource(value),rows=new Map();let offset=0,after=null;
   do{
     const page=await p('list_saved_conversations',{after,limit:200});
     if(!page||!Array.isArray(page.conversations)||(page.nextCursor!==null&&(typeof page.nextCursor!=='string'||page.nextCursor<=String(after||''))))throw Error('The saved chat list could not be read completely. Nothing was deleted.');
     for(const row of page.conversations)rows.set(row.id,row);
     after=page.nextCursor;
   }while(after!==null);
+  // The saved-page request also connects managed storage. Read the merged
+  // native/image list afterward so a cold first open includes image-only chats.
+  const native=await p('list_conversations',{query:null});
+  if(!Array.isArray(native))throw Error('The saved chat list could not be read. Nothing was deleted.');
+  for(const row of native)rows.set(row.id,row);
   while(true){
     const page=await p('list_imported_conversations',{query:'',offset,limit:100,source:'all'});
     if(!page||!Array.isArray(page.conversations)||!Number.isSafeInteger(page.total)||page.total<0||!Number.isSafeInteger(page.limit)||page.limit<1||page.offset!==offset)throw Error('The imported chat list could not be read completely. Nothing was deleted.');
