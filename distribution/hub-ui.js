@@ -5,6 +5,7 @@ let $hubState = {catalog: [], progress: null, available: false, loaded: false, e
 let $hubTimer = null;
 const $hubProviderSync=new Set();
 function $hubPublish(value) {
+  if(value.connectorProfiles&&typeof $publishConnectorProfiles==='function'&&JSON.stringify(value.connectorProfiles.disconnected)!==JSON.stringify($connectorProfiles.disconnected))$publishConnectorProfiles(value.connectorProfiles);
   if(value.catalog)globalThis.__opencoreHubEchoProfiles=new Set(value.catalog.filter(entry=>entry.profileId&&(entry.libraryCategory||entry.category||'text')==='text').map(entry=>entry.profileId));
   if (Object.entries(value).some(([key,item])=>item!==$hubState[key]&&JSON.stringify(item)!==JSON.stringify($hubState[key]))) {
     $hubState = {...$hubState,...value}; $hubListeners.forEach(fn => fn());
@@ -123,6 +124,11 @@ async function $hubRegister(entry) {
   await $hubRefresh(true);return profile.profileId;
 }
 async function $hubInvoke(command,args,run) {
+  if(command==='get_snapshot'){
+    const snapshot=globalThis.__opencoreImageConversationInvoke?await globalThis.__opencoreImageConversationInvoke(command,args,run):await run();
+    if(snapshot?.connectors&&typeof $connectorView==='function')return {...snapshot,connectors:snapshot.connectors.map(row=>$connectorView(row,$connectorProfiles))};
+    return snapshot;
+  }
   if(command==='send_chat_message'&&args.request?.generationSettings){
     const {generationSettings,...request}=args.request;args.request=request;
     await $hubRequest('/generation/settings',{conversationId:request.conversationId,modelId:generationSettings.modelId,parameters:generationSettings.parameters});

@@ -15,13 +15,20 @@ if (!mount) throw new Error('Application mount not found');
 entry = entry.slice(0, mount.start) + entry.slice(mount.end) + '\nexport {ev as TestDOM};';
 let app = fs.readFileSync(path.join(directory, 'assets', appName), 'utf8');
 if (patched) app = require('./connector-patches.cjs').applyConnectorPatches(app);
-app += '\nexport {l8 as TestSidebar,h8 as TestConnectors,$l as TestImported};';
+app += '\nconst $hubRequest=(...args)=>window.fixture.connectorRequest(...args);\nexport {l8 as TestSidebar,h8 as TestConnectors,$l as TestImported};';
 
 const fixture = `
 window.fixture={calls:[],revision:0,mode:'sidebar',mount:0,holdClear:false,holdRefresh:false,clearReject:false,imported:{claude:[],codex:[],hermes:[],opencode:[],other:[]},operations:[],notices:[]};
 fixture.chat=(id,client,title='Fixture conversation')=>({id,client,title,profile:'history',status:'imported',pinned:false,project:'',projectId:null,createdAt:'2026-10-23T09:00:00Z',updatedAt:'2026-10-23T09:00:00Z'});
 fixture.imported.hermes=[fixture.chat('import:hermes:one','Imported Hermes','Hermes fixture')];
 fixture.native=[fixture.chat('codex:one','Codex','Codex fixture')];
+fixture.disconnected={};
+fixture.connectorRequest=async(route,body)=>{fixture.calls.push({route,body});
+ if(route==='/connectors/disconnect'){fixture.disconnected[body.id]=true;return {disconnected:structuredClone(fixture.disconnected),message:'Disconnected'};}
+ if(route==='/connectors/reconnect')delete fixture.disconnected[body.id];
+ return {disconnected:structuredClone(fixture.disconnected)};
+};
+
 fixture.connectors=['claude-code','codex','opencode','hermes'].map(id=>({id,name:({'claude-code':'Claude Code',codex:'Codex',opencode:'OpenCode',hermes:'Hermes Agent'})[id],kind:'history',status:'configured',endpoint:'local://'+id,observable:false,details:'Local connector fixture',custom:false}));
 window.__TAURI_INTERNALS__={invoke:async(command,args={})=>{fixture.calls.push({command,args});switch(command){
  case 'list_imported_conversations':{const all=args.source==='all'?Object.values(fixture.imported).flat():fixture.imported[args.source]||[];const rows=all.filter(r=>!args.query||r.title.toLowerCase().includes(args.query.toLowerCase()));return {conversations:structuredClone(rows.slice(args.offset,args.offset+args.limit)),total:rows.length,offset:args.offset,limit:args.limit};}
@@ -93,23 +100,35 @@ const server = http.createServer((request,response)=>{
   const hermesText=await card('Hermes Agent').innerText();
   record('missing Hermes local files are not described as network offline',/local files missing/i.test(hermesText)&&!/offline/i.test(hermesText),hermesText);
   await page.evaluate(()=>{fixture.holdClear=true;fixture.holdRefresh=true;});
-  const clear=card('Claude Code').getByRole('button',{name:/^Clear imported/});await clear.click();await page.waitForTimeout(150);
+  const clear=card('Claude Code').getByRole('button',{name:/^Delete all imported/});await clear.click();await page.waitForTimeout(150);
   await page.evaluate(()=>{fixture.holdClear=false;fixture.releaseClear();});await page.waitForTimeout(200);
-  record('same mounted Clearing control ends before a held snapshot refresh',await card('Claude Code').getByRole('button',{name:'Clear imported history',exact:true}).isEnabled());
+  record('same mounted Clearing control ends before a held snapshot refresh',await card('Claude Code').getByRole('button',{name:'Delete all imported conversations',exact:true}).isEnabled());
   await page.evaluate(()=>{fixture.holdRefresh=false;fixture.releaseRefresh?.();fixture.holdClear=true;});await page.waitForTimeout(100);
-  await card('Claude Code').getByRole('button',{name:/^Clear imported/}).click();await page.waitForTimeout(100);
+  await card('Claude Code').getByRole('button',{name:/^Delete all imported/}).click();await page.waitForTimeout(100);
   await page.evaluate(()=>{fixture.holdRefresh=true;});
   await page.evaluate(()=>{fixture.mount++;renderFixture();});await page.waitForTimeout(150);
-  const remountedClear=card('Claude Code').getByRole('button',{name:/Clearing|Clear imported/});
+  const remountedClear=card('Claude Code').getByRole('button',{name:/Deleting|Delete all imported/});
   record('native cleanup stays guarded through connector page remount',await remountedClear.isDisabled()&&(await page.evaluate(()=>fixture.calls.filter(c=>c.command==='clear_imported_history').length))===2);
   await page.evaluate(()=>{fixture.holdClear=false;fixture.releaseClear();});await page.waitForTimeout(250);
-  record('Clearing ends when native cleanup resolves even while snapshot refresh waits',await card('Claude Code').getByRole('button',{name:'Clear imported history',exact:true}).isEnabled());
+  record('Clearing ends when native cleanup resolves even while snapshot refresh waits',await card('Claude Code').getByRole('button',{name:'Delete all imported conversations',exact:true}).isEnabled());
   record('native success remains visible while snapshot refresh waits',(await card('Claude Code').innerText()).includes('Cleared imported fixture history'));
   await page.waitForTimeout(8250);
   record('slow snapshot refresh has bounded truthful feedback',(await card('Claude Code').innerText()).includes('refresh is still pending'));
   await page.evaluate(()=>{fixture.holdRefresh=false;fixture.releaseRefresh?.();fixture.clearReject=true;});await page.waitForTimeout(150);
-  await card('Claude Code').getByRole('button',{name:/^Clear imported/}).click();await page.waitForTimeout(200);
-  record('native cleanup failure resets controls and displays the real error',await card('Claude Code').getByRole('button',{name:'Clear imported history',exact:true}).isEnabled()&&(await card('Claude Code').innerText()).includes('Synthetic cleanup failure'));
+  await card('Claude Code').getByRole('button',{name:/^Delete all imported/}).click();await page.waitForTimeout(200);
+  record('native cleanup failure resets controls and displays the real error',await card('Claude Code').getByRole('button',{name:'Delete all imported conversations',exact:true}).isEnabled()&&(await card('Claude Code').innerText()).includes('Synthetic cleanup failure'));
+  const priorClears=await page.evaluate(()=>fixture.calls.filter(call=>call.command==='clear_imported_history').length);
+  record('configured connectors offer a separate Disconnect control',await card('Claude Code').getByRole('button',{name:'Disconnect',exact:true}).isVisible());
+  await card('Claude Code').getByRole('button',{name:'Disconnect',exact:true}).click();
+  await card('Claude Code').getByRole('button',{name:'Reconnect',exact:true}).waitFor();
+  record('disconnect immediately reports Disconnected and disables syncing',await card('Claude Code').innerText().then(text=>text.includes('Disconnected')&&!text.includes('Requests observed'))&&await card('Claude Code').getByRole('button',{name:'Sync history',exact:true}).isDisabled());
+  record('disconnect does not clear imported conversations',await page.evaluate(count=>fixture.calls.filter(call=>call.command==='clear_imported_history').length===count,priorClears));
+  await page.evaluate(()=>{fixture.mount++;renderFixture();});
+  await card('Claude Code').getByRole('button',{name:'Reconnect',exact:true}).waitFor();
+  record('disconnect persists when the connector page is reopened',await card('Claude Code').getByRole('button',{name:'Disconnect',exact:true}).count()===0);
+  await card('Claude Code').getByRole('button',{name:'Reconnect',exact:true}).click();
+  await card('Claude Code').getByRole('button',{name:'Disconnect',exact:true}).waitFor();
+  record('reconnect writes the native profile before clearing its disconnected state',await page.evaluate(()=>{const c=fixture.calls;return c.findLastIndex(call=>call.command==='configure_agent_connector')<c.findLastIndex(call=>call.route==='/connectors/reconnect');}));
   record('no browser runtime errors',errors.length===0,errors);
   await page.screenshot({path:path.join(__dirname,patched?'connectors-patched.png':'connectors-baseline.png'),fullPage:true});
  }catch(error){record('fixture completed',false,error.stack);if(errors.length)record('browser runtime errors',false,errors);}

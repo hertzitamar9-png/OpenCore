@@ -33,6 +33,7 @@ from hf_image_runtime import ImageRuntimeManager, supports as supports_image
 from hf_memory_repair import MemoryRepair
 from hf_prompt_assistant import PromptAssistant
 from hf_chat_media import ChatMedia
+from hf_connectors import ConnectorProfiles
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -83,6 +84,7 @@ class BridgeState:
         self.progress, self.worker = None, None
         self.ocr = OCRManager(self.root, self.resources)
         self.images=ImageRuntimeManager(self.root,self.resources)
+        self.connectors = ConnectorProfiles(self.root)
         self.owner, self.remote, self.private = None, None, None
         self.memory_repair = None
         self.prompt_assistant = None
@@ -337,7 +339,8 @@ class BridgeState:
                 self.catalog_revision = hashlib.sha256(json.dumps(self.catalog_snapshot, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
                 self.catalog_fingerprint, self.catalog_snapshot_at = fingerprint, now
             result = {"schema": 1, "healthy": True, "catalogRevision": self.catalog_revision, "progress": copy.deepcopy(self.progress),
-                      "tokenConfigured": self.tokens.status()["configured"], "runtimeAdapterAvailable": not isinstance(self.runtime, RuntimeUnavailable)}
+                      "tokenConfigured": self.tokens.status()["configured"], "runtimeAdapterAvailable": not isinstance(self.runtime, RuntimeUnavailable),
+                      "connectorProfiles": self.connectors.status()}
             if catalog_revision != self.catalog_revision:
                 result['catalog'] = copy.deepcopy(self.catalog_snapshot)
             return result
@@ -761,6 +764,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, {"catalog": state.catalog()})
             elif route == "/token":
                 self._send(200, state.tokens.status())
+            elif route == '/connectors/status':
+                self._send(200, state.connectors.status())
             elif route == '/remote/status':
                 self._send(200, state.remote.status())
             elif route == '/specialist/ocr/status':
@@ -846,6 +851,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self.close_connection = True
                 for chunk in raw: self.wfile.write(chunk); self.wfile.flush()
             finally: raw.close()
+        elif route == '/connectors/disconnect':
+            self._send(200, state.connectors.disconnect(body.get('id')))
+        elif route == '/connectors/reconnect':
+            self._send(200, state.connectors.reconnect(body.get('id')))
         elif route == "/catalog/add":
             self._send(200, state.add(body.get("planId"), body.get("variantIds")))
         elif route == "/catalog/profile":

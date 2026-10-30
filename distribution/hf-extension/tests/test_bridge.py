@@ -42,6 +42,19 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_connector_changes_require_authentication_and_route_to_owned_manager(self):
+        with patch.object(self.state, 'connectors') as profiles:
+            profiles.status.return_value = {'disconnected': {}}
+            profiles.disconnect.return_value = {'disconnected': {'codex': True}, 'message': 'Disconnected'}
+            profiles.reconnect.return_value = {'disconnected': {}}
+            self.assertEqual(self.request('POST', '/api/connectors/disconnect', {'id': 'codex'}, secret=None)[0], 401)
+            profiles.disconnect.assert_not_called()
+            self.assertEqual(self.request('GET', '/api/connectors/status')[2], {'disconnected': {}})
+            self.assertEqual(self.request('POST', '/api/connectors/disconnect', {'id': 'codex'})[2]['disconnected'], {'codex': True})
+            profiles.disconnect.assert_called_once_with('codex')
+            self.assertEqual(self.request('POST', '/api/connectors/reconnect', {'id': 'codex'})[2], {'disconnected': {}})
+            profiles.reconnect.assert_called_once_with('codex')
+
     def test_health_probe_does_not_scan_or_return_the_model_catalog(self):
         with patch.object(self.state, 'catalog', side_effect=AssertionError('Health must not scan model files')):
             status, _, value = self.request('GET', '/health')

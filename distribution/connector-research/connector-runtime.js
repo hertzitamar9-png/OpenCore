@@ -4,6 +4,43 @@ const $connectorClearEvent = "opencore-connector-clear-changed";
 const $connectorClearJobs = new Map();
 const $connectorClearFeedback = new Map();
 const $connectorSyncWatches = new Map();
+let $connectorProfiles = {loaded:false, disconnected:{}};
+const $connectorProfileListeners = new Set();
+const $connectorDisconnectJobs = new Map();
+
+function $publishConnectorProfiles(value) {
+    $connectorProfiles = {...value, loaded:true};
+    $connectorProfileListeners.forEach(listener => listener($connectorProfiles));
+}
+
+function $useConnectorProfiles() {
+    const [value, setValue] = p.useState($connectorProfiles);
+    p.useEffect(() => {
+        let current = true;
+        $connectorProfileListeners.add(setValue);
+        $hubRequest('/connectors/status').then(result => {if(current)$publishConnectorProfiles(result);}).catch(() => {});
+        return () => {current=false;$connectorProfileListeners.delete(setValue);};
+    }, []);
+    return value;
+}
+
+function $connectorView(row, state) {
+    return state.disconnected[row.id] ? {...row, status:'disconnected', observable:false,
+        details:'OpenCore profile disconnected. Restart this client if it is already running. Reconnect to add the profile again; delete imported conversations separately.'} : row;
+}
+
+function $disconnectConnectorProfile(id) {
+    if($connectorDisconnectJobs.has(id))return $connectorDisconnectJobs.get(id);
+    const operation=$hubRequest('/connectors/disconnect',{id}).then(result=>{
+        $publishConnectorProfiles(result);return result.message;
+    }).finally(()=>$connectorDisconnectJobs.delete(id));
+    $connectorDisconnectJobs.set(id,operation);return operation;
+}
+
+async function $reconnectConnectorProfile(id) {
+    const result=await $hubRequest('/connectors/reconnect',{id});
+    $publishConnectorProfiles(result);
+}
 
 function $notifyConnectorHistory() {
     window.dispatchEvent(new CustomEvent($connectorHistoryEvent));
@@ -141,7 +178,7 @@ function $refreshConnectorView(refresh, id, message) {
 }
 
 function $connectorProfileLabel(status) {
-    return {configured: "Profile saved", observed: "Requests observed", detected: "Local files found", offline: "Local files missing"}[status] || status;
+    return {configured: "Profile saved", observed: "Requests observed", detected: "Local files found", offline: "Local files missing", disconnected: "Disconnected"}[status] || status;
 }
 
 const $connectorTabStyle = document.createElement("style");
