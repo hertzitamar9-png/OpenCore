@@ -1,0 +1,240 @@
+{
+  "_id": "6accf47dee348862579c3d12",
+  "id": "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "text-to-image",
+    "image-to-image",
+    "qwen-image",
+    "qwen-image-2.1",
+    "lora",
+    "adult-anatomy",
+    "nsfw",
+    "not-for-all-audiences",
+    "en",
+    "fr",
+    "es",
+    "base_model:Qwen/Qwen-Image-2.1",
+    "base_model:adapter:Qwen/Qwen-Image-2.1",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 5939,
+  "likes": 20,
+  "modelId": "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1",
+  "author": "perpetual3x",
+  "sha": "e5ae1a51766dc868a1b085694064e925ee22186a",
+  "lastModified": "2026-10-12T15:39:43.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "language": [
+      "en",
+      "fr",
+      "es"
+    ],
+    "license": "other",
+    "license_name": "non-commercial",
+    "license_link": "LICENSE",
+    "tags": [
+      "text-to-image",
+      "image-to-image",
+      "diffusers",
+      "qwen-image",
+      "qwen-image-2.1",
+      "lora",
+      "adult-anatomy",
+      "nsfw",
+      "not-for-all-audiences"
+    ],
+    "base_model": "Qwen/Qwen-Image-2.1",
+    "pipeline_tag": "text-to-image"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "5234fe62c3857fa49409e406e44c79c5f6383ad7",
+      "size": 2370
+    },
+    {
+      "rfilename": "Genitalia-Anatomy-2.1-v1.safetensors",
+      "blobId": "261753e70ed48215069222fc80b4f70dfbdcd47e",
+      "size": 318819888,
+      "lfs": {
+        "sha256": "02fa9cd2ddd145b4348e90d360f3749507f4c52306166e35365f84ea08b44f67",
+        "size": 318819888,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "05dfd7f0fb123349feea26d97337219a88b52749",
+      "size": 2451
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "89ab4981a1e49864b23670c8392b24fcb09625bd",
+      "size": 27070
+    },
+    {
+      "rfilename": "assets/cover.png",
+      "blobId": "b6fcead40d961d441a6ee1088dfac46b7aab37f7",
+      "size": 3071045,
+      "lfs": {
+        "sha256": "e681395ef09e7e4d6510fd267913055b7acdc861b8818c0b3bdfc7b4afc27b7c",
+        "size": 3071045,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example01.png",
+      "blobId": "e9747ab75e4d264e90c6b2b3aa9d5980bb5bbcb1",
+      "size": 2957257,
+      "lfs": {
+        "sha256": "deb15f333ebb33e765093cf3ede354b7a382fa61204a85c53f8b67265c6ce7ff",
+        "size": 2957257,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example02.png",
+      "blobId": "76bae2e29214460e5aacc469ee9667cb67903162",
+      "size": 2774978,
+      "lfs": {
+        "sha256": "8576783d1d90139e9708948bdcbed62b6d9c5d5507e655daba49b032f7fb4269",
+        "size": 2774978,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example03.png",
+      "blobId": "2c621f45ef2508a586d7e4910b59c604c1025339",
+      "size": 2866490,
+      "lfs": {
+        "sha256": "2858afcb932ce4616966a64aec992c74d64323036ecce41346d20379cdce55af",
+        "size": 2866490,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example04.png",
+      "blobId": "a87fb5070b308df7c6fda0af5f782124aa1bce60",
+      "size": 2273160,
+      "lfs": {
+        "sha256": "f80111685ca6bd6e93637b430720c9f69e27d428def73a76012f151772323cfe",
+        "size": 2273160,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example05.png",
+      "blobId": "7d659678290d8db63488caa2e04b885ba32ed22c",
+      "size": 2455932,
+      "lfs": {
+        "sha256": "755f6ecd79d62e2d53235ad92eb4ce26f0d7d82733c0fa1d3eb79d2c3ce795da",
+        "size": 2455932,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example06.png",
+      "blobId": "bcd771405afadd5b7ed8cb1e33771d2d37d95037",
+      "size": 2653508,
+      "lfs": {
+        "sha256": "5571666330b8b7f132712b451c0dde42a72f5cf1d555f5f5916c2e4c0fd437ce",
+        "size": 2653508,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example07.png",
+      "blobId": "bdf6906ec4d44fe2a2b256c643ae5c2a6da25767",
+      "size": 2660295,
+      "lfs": {
+        "sha256": "1f1a0cfb7cd75cc98b87f98e0c4bcc32c12ca1787a75a38fa04eafd9f0e437d9",
+        "size": 2660295,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example08.png",
+      "blobId": "6584b26e648ca3bdae52bb518ec0985e5f5fb8a8",
+      "size": 2907923,
+      "lfs": {
+        "sha256": "dc120d549ee03741d50c5b21f17c333fd97fc0e601a1feee9e5a63baa02cff81",
+        "size": 2907923,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example09.png",
+      "blobId": "8cc515b00def48652ef2dc17e7cb1b7ee03f2a43",
+      "size": 2990646,
+      "lfs": {
+        "sha256": "2f9db72ecee7692ecd9a7e4190fc5de902a1e4a2168501019441ddd5ea3f40bb",
+        "size": 2990646,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example10.png",
+      "blobId": "1491591d488695be1054fa075c67a9999d2a310a",
+      "size": 2695179,
+      "lfs": {
+        "sha256": "4d418fcabc57e44918d15bf3b0d909cad81556d92fa2712089956d4a9c052b46",
+        "size": 2695179,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example11.png",
+      "blobId": "54e904d59b329223cfd0937347dcf84b9c489d85",
+      "size": 2888690,
+      "lfs": {
+        "sha256": "056f0b3537cc219e9915985a8d0991c3ad56903939b3702d7bf6e956e4183a1d",
+        "size": 2888690,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example12.png",
+      "blobId": "cff419ee7dc99d35477b58ec4b0b369ed4c582f7",
+      "size": 2250711,
+      "lfs": {
+        "sha256": "b9a48abb52eb275e01ebf2fc9fe9198f4b5204a4daa83dac800664d1fd91b8db",
+        "size": 2250711,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/example13.png",
+      "blobId": "956bd156215c28a03acd6797621c3e7cf47e17d1",
+      "size": 2257071,
+      "lfs": {
+        "sha256": "9aa492832437fb35eb459f4e46af56d272333fc8e1612fb9447d9d9078d62e81",
+        "size": 2257071,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "reference_21_viggle.py",
+      "blobId": "4903701a5b33db9e25b047960520f03c7fe6d233",
+      "size": 7823
+    },
+    {
+      "rfilename": "reference_21_viggle_low_vram.py",
+      "blobId": "80ff391fa426e22c34a6381277b99e0bb0d4b178",
+      "size": 2604
+    }
+  ],
+  "spaces": [
+    "M3st3rJ4k3l/qwen-image-2.1-multi-Loras"
+  ],
+  "createdAt": "2026-10-12T14:53:49.000Z",
+  "usedStorage": 359165156
+}

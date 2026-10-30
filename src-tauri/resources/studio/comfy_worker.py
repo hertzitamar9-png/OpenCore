@@ -272,7 +272,11 @@ def managed_image_lora(root,settings,base_repository):
     catalog=json.loads(catalog_path.read_text(encoding='utf-8'))
     entry=next((e for e in catalog.get('entries',[]) if e.get('id')==receipt.get('id') and e.get('repository')==receipt.get('repository') and e.get('revision')==receipt.get('revision')),None)
     bases=([entry.get('baseRepository')] + entry.get('baseRepositories',[])) if entry else []
-    if not entry or base_repository.lower() not in [base.lower() for base in bases if isinstance(base,str)]:
+    normalized=[base.lower() for base in bases if isinstance(base,str)]
+    # Qwen Image 2.1 Turbo is the publisher's accelerated derivative of the
+    # Qwen Image 2.1 base; allow its declared Qwen 2.1 LoRAs on that pipeline.
+    qwen_turbo_compatible=(base_repository.lower()=='qwen/qwen-image-2.1-turbo' and 'qwen/qwen-image-2.1' in normalized)
+    if not entry or base_repository.lower() not in normalized and not qwen_turbo_compatible:
         raise ValueError('This LoRA does not declare the selected image model as its base')
     if entry.get('packageKind')!='adapter' and entry.get('format')!='lora':
         raise ValueError('The selected package is not an image adapter')

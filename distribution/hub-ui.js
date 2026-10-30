@@ -279,7 +279,8 @@ function $hubBuiltInAdapter(model) {
     runtime:{adapter:null,reason:'This is a LoRA add-on, not a standalone base generator. Select an installed compatible Qwen checkpoint.'}};
 }
 function $hubBaseModels(entry) {
-  const repository=String(entry?.baseRepository||'').toLowerCase();
+  const baseRepositories=[entry?.baseRepository,...(entry?.baseRepositories||[])].filter(value=>typeof value==='string').map(value=>value.toLowerCase());
+  const repository=baseRepositories[0]||'';
   if(!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/.test(repository))return [];
   const native=$hubNativeLibrary?.models||[];
   const catalog=$hubState.catalog||[];
@@ -291,11 +292,12 @@ function $hubBaseModels(entry) {
     seen.add(model.id);
     return model.variantOf&&byId.has(model.variantOf)?family(byId.get(model.variantOf),seen):model.id;
   }
-  const knownArchitecture=repository==='qwen/qwen-image-2.1'?'qwen21':repository==='openmoss-team/moss-image-sft'?'moss-sft':entry.repository?.startsWith('Muapi/ltx-2-2.3-')?'ltx23':'';
+  const knownArchitecture=baseRepositories.includes('qwen/qwen-image-2.1')?'qwen21':repository==='openmoss-team/moss-image-sft'?'moss-sft':entry.repository?.startsWith('Muapi/ltx-2-2.3-')?'ltx23':'';
   function matches(model) {
     if(!model||model.category!==entry.category||$hubIsAdapterCheckpoint(model))return null;
     if(model.id===entry.id)return null;
     if(!model.native) {
+      if(knownArchitecture==='qwen21'&&model.repository?.toLowerCase()==='qwen/qwen-image-2.1-turbo')return 'related';
       if(knownArchitecture==='ltx23'&&model.repository?.toLowerCase()==='lightricks/ltx-2.3')return 'family';
       if(knownArchitecture==='ltx23'&&model.repository?.toLowerCase()==='lightricks/ltx-2.5')return 'related';
       if(model.repository?.toLowerCase()===repository&&model.packageKind!=='adapter')return 'exact';
@@ -311,6 +313,7 @@ function $hubBaseModels(entry) {
       if(model.id==='ltx-video'||model.id.startsWith('ltx-video-'))return 'related';
     }
     if(knownArchitecture==='qwen21') {
+      if(model.id==='qwen-image-21-turbo'||fromSource==='qwen/qwen-image-2.1-turbo'||lineage==='qwen/qwen-image-2.1-turbo')return 'related';
       if(model.id==='qwen-image-21'||model.id.startsWith('qwen-image-21-gguf'))return 'family';
       // Publisher labels these as Qwen Image 2.1 derived/quantized checkpoints, not identical weights.
       if(model.id==='qwen-image-21-uc'||model.id.startsWith('qwen-image-21-uc-'))return 'related';

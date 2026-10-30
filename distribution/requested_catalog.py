@@ -115,6 +115,8 @@ def append_requested(entries, manifest, snapshots):
                 if row.get('baseRepository'):
                     entry['baseRepository'] = row['baseRepository']
                     entry['packageKind'] = 'adapter'
+                if row.get('baseRepositories'):
+                    entry['baseRepositories'] = list(row['baseRepositories'])
                 entry['catalogOrder'] = 0 if entry['runtime'].get('adapter') else 1
                 if source.get('imageRuntime')=='iris-sdcpp-v1':
                     from hf_sdcpp import REPOSITORY,REVISION

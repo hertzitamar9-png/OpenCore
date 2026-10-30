@@ -331,7 +331,58 @@
           "runtimeReason": "Image LoRA adapter. Requires Qwen/Qwen-Image-2.1 and a compatible image LoRA workflow. Adapter weights are not a standalone image generator."
         }
       ],
-      "baseRepository": "Qwen/Qwen-Image-2.1"
+      "baseRepository": "Qwen/Qwen-Image-2.1",
+      "baseRepositories": [
+        "Qwen/Qwen-Image-2.1-Turbo"
+      ]
+    },
+    {
+      "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+      "familyId": "publisher-moss-image-nsfw-lora-gguf",
+      "label": "MOSS Image NSFW LoRA GGUF",
+      "category": "image",
+      "description": "Two F16 GGUF LoRA checkpoints for MOSS-Image-SFT GGUF. This is an adapter, not a standalone image model; install a compatible MOSS GGUF base to generate.",
+      "sources": [
+        {
+          "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+          "runtimeReason": "GGUF adapter package. Requires axiomofmind/Moss-Image-SFT-GGUF and a MOSS-capable stable-diffusion.cpp runtime; these GGUF adapters do not run on the Qwen or Diffusers MOSS base.",
+          "packages": [
+            {
+              "key": "lora:MOSS-Image-NSFW-Uncensored-LoRA-Alternative-1750-F16.gguf",
+              "format": "gguf",
+              "quantization": "F16 · Alternative 1750-step",
+              "files": [
+                "MOSS-Image-NSFW-Uncensored-LoRA-Alternative-1750-F16.gguf"
+              ]
+            },
+            {
+              "key": "lora:MOSS-Image-NSFW-Uncensored-LoRA-F16.gguf",
+              "format": "gguf",
+              "quantization": "F16 · Original 2000-step",
+              "files": [
+                "MOSS-Image-NSFW-Uncensored-LoRA-F16.gguf"
+              ]
+            }
+          ]
+        }
+      ],
+      "baseRepository": "axiomofmind/Moss-Image-SFT-GGUF"
+    },
+    {
+      "repository": "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1",
+      "familyId": "publisher-qwen-image-21-genitalia-anatomy-fix-lora-v1",
+      "label": "Qwen Image 2.1 Anatomy Fix LoRA",
+      "category": "image",
+      "description": "Qwen Image 2.1 image-to-image and text-to-image LoRA from perpetual3x. Connect it to the Qwen Image 2.1 base before generating.",
+      "sources": [
+        {
+          "repository": "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1"
+        }
+      ],
+      "baseRepository": "Qwen/Qwen-Image-2.1",
+      "baseRepositories": [
+        "Qwen/Qwen-Image-2.1-Turbo"
+      ]
     },
     {
       "repository": "hi3d-official/Hi3Dv1.0",

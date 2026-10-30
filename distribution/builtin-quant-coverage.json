@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 551,
+  "families": 553,
   "withFive": 212,
   "models": [
     {
@@ -5401,6 +5401,17 @@
       ]
     },
     {
+      "id": "publisher-moss-image-nsfw-lora-gguf",
+      "label": "MOSS Image NSFW LoRA GGUF",
+      "category": "image",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF"
+      ]
+    },
+    {
       "id": "publisher-nemotron-3-5-bolt-e4b",
       "label": "NVIDIA Nemotron 3.5 Bolt E4B",
       "category": "text",
@@ -5432,6 +5443,17 @@
       "source": "bundled packages",
       "repositories": [
         "f23gg/NSFW-LORA-Qwen-Image-2.1"
+      ]
+    },
+    {
+      "id": "publisher-qwen-image-21-genitalia-anatomy-fix-lora-v1",
+      "label": "Qwen Image 2.1 Anatomy Fix LoRA",
+      "category": "image",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1"
       ]
     },
     {

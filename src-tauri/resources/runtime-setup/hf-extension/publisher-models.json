@@ -72212,6 +72212,98 @@
       "catalogOrder": 1
     },
     {
+      "id": "hf-2735a5cbd50b65b39585ac04",
+      "variantKey": "lora:MOSS-Image-NSFW-Uncensored-LoRA-Alternative-1750-F16.gguf",
+      "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+      "revision": "a21e2465ff6a3ba099439fa9b8c4af708ed19761",
+      "format": "gguf",
+      "quantization": "F16 · Alternative 1750-step",
+      "subdirectory": "",
+      "category": "image",
+      "files": [
+        {
+          "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+          "revision": "a21e2465ff6a3ba099439fa9b8c4af708ed19761",
+          "filename": "MOSS-Image-NSFW-Uncensored-LoRA-Alternative-1750-F16.gguf",
+          "bytes": 74365536,
+          "sha256": "6366d060b9653c5b72c0694238a09b01787f3ca610e7f27af051a5aed8fff7d8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 74365536,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "GGUF adapter package. Requires axiomofmind/Moss-Image-SFT-GGUF and a MOSS-capable stable-diffusion.cpp runtime; these GGUF adapters do not run on the Qwen or Diffusers MOSS base."
+      },
+      "familyId": "publisher-moss-image-nsfw-lora-gguf",
+      "familyLabel": "MOSS Image NSFW LoRA GGUF",
+      "originalRepository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "image",
+      "builtInDescription": "Two F16 GGUF LoRA checkpoints for MOSS-Image-SFT GGUF. This is an adapter, not a standalone image model; install a compatible MOSS GGUF base to generate.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "MOSS Image NSFW LoRA GGUF · F16 · Alternative 1750-step",
+      "baseRepository": "axiomofmind/Moss-Image-SFT-GGUF",
+      "packageKind": "adapter",
+      "catalogOrder": 1
+    },
+    {
+      "id": "hf-f0eafebf72f245cb2198c77c",
+      "variantKey": "lora:MOSS-Image-NSFW-Uncensored-LoRA-F16.gguf",
+      "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+      "revision": "a21e2465ff6a3ba099439fa9b8c4af708ed19761",
+      "format": "gguf",
+      "quantization": "F16 · Original 2000-step",
+      "subdirectory": "",
+      "category": "image",
+      "files": [
+        {
+          "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+          "revision": "a21e2465ff6a3ba099439fa9b8c4af708ed19761",
+          "filename": "MOSS-Image-NSFW-Uncensored-LoRA-F16.gguf",
+          "bytes": 74365536,
+          "sha256": "2c3e044a3331a94416ed91610ccd5135df0f79f0cb3d5db5983de0fb5dfa5603",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 74365536,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "GGUF adapter package. Requires axiomofmind/Moss-Image-SFT-GGUF and a MOSS-capable stable-diffusion.cpp runtime; these GGUF adapters do not run on the Qwen or Diffusers MOSS base."
+      },
+      "familyId": "publisher-moss-image-nsfw-lora-gguf",
+      "familyLabel": "MOSS Image NSFW LoRA GGUF",
+      "originalRepository": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "image",
+      "builtInDescription": "Two F16 GGUF LoRA checkpoints for MOSS-Image-SFT GGUF. This is an adapter, not a standalone image model; install a compatible MOSS GGUF base to generate.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "MOSS Image NSFW LoRA GGUF · F16 · Original 2000-step",
+      "baseRepository": "axiomofmind/Moss-Image-SFT-GGUF",
+      "packageKind": "adapter",
+      "catalogOrder": 1
+    },
+    {
       "id": "hf-5c05380355dd76c39503f231",
       "repository": "unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF",
       "revision": "b738967d6da3441a7d1c71fcec15e49e32e16ecd",
@@ -72917,6 +73009,62 @@
       "builtInDescription": "Image LoRA adapter for Qwen/Qwen-Image-2.1. Requires the matching base checkpoint and a compatible image-adapter runtime.",
       "contextTokens": 8192,
       "license": "Publisher terms",
+      "baseRepositories": [
+        "Qwen/Qwen-Image-2.1-Turbo"
+      ],
+      "catalogOrder": 1
+    },
+    {
+      "id": "hf-478fa06390a64deb694561d7",
+      "repository": "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1",
+      "revision": "e5ae1a51766dc868a1b085694064e925ee22186a",
+      "variantKey": "lora:Genitalia-Anatomy-2.1-v1.safetensors",
+      "name": "Qwen Image 2.1 Anatomy Fix LoRA · LoRA · Diffusers",
+      "quantization": "LoRA · Diffusers",
+      "format": "lora",
+      "subdirectory": "",
+      "category": "image",
+      "bytes": 318819888,
+      "files": [
+        {
+          "repository": "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1",
+          "revision": "e5ae1a51766dc868a1b085694064e925ee22186a",
+          "filename": "Genitalia-Anatomy-2.1-v1.safetensors",
+          "bytes": 318819888,
+          "sha256": "02fa9cd2ddd145b4348e90d360f3749507f4c52306166e35365f84ea08b44f67",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": null,
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Adapter package only; the base model and a compatible adapter runtime are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1",
+      "status": "not-installed",
+      "packageKind": "adapter",
+      "baseRepository": "Qwen/Qwen-Image-2.1",
+      "familyId": "publisher-qwen-image-21-genitalia-anatomy-fix-lora-v1",
+      "familyLabel": "Qwen Image 2.1 Anatomy Fix LoRA",
+      "originalRepository": "perpetual3x/Qwen-Image-Genitalia-Anatomy-Fix-NSFW-LoRA-v1",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "image",
+      "builtInDescription": "Qwen Image 2.1 image-to-image and text-to-image LoRA from perpetual3x. Connect it to the Qwen Image 2.1 base before generating.",
+      "contextTokens": 8192,
+      "license": "other",
+      "baseRepositories": [
+        "Qwen/Qwen-Image-2.1-Turbo"
+      ],
       "catalogOrder": 1
     },
     {

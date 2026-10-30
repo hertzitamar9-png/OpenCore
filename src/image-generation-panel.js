@@ -88,9 +88,9 @@ export function ChatImageModelOptions({onSelect,disabled=false,loadModels=readIm
 
 export const IMAGE_SIZE_OPTIONS = [256,512,768,1024,2048,4096,8192].map(value=>({value,label:(value>=2048?(value/1024)+'K · ':'')+value+' × '+value}));
 
-export function imageSizeSettings(size,modelId='') {
+export function imageSizeSettings(size,modelId='',repository='') {
   if(!IMAGE_SIZE_OPTIONS.some(option=>option.value===size))throw Error('Choose an available image output size.');
-  const native=modelId.startsWith('qwen-image-21')?2048:1024;
+  const native=modelId.startsWith('qwen-image-21')||repository.toLowerCase()==='qwen/qwen-image-2.1-turbo'?2048:1024;
   return {width:Math.min(size,native),height:Math.min(size,native),outputWidth:size,outputHeight:size};
 }
 
@@ -99,18 +99,22 @@ export function imageAdaptersForModel(model, adapters) {
   let base=id.startsWith('moss-')?'OpenMOSS-Team/MOSS-Image-SFT':id.startsWith('qwen-image-21')?'Qwen/Qwen-Image-2.1':model?.hubEntry?.repository;
   if(!base&&model?.sourceUrl){try{base=new URL(model.sourceUrl).pathname.split('/').filter(Boolean).slice(0,2).join('/');}catch{}}
   if(!base)return [];
+  const related={
+    'qwen/qwen-image-2.1-turbo':'qwen/qwen-image-2.1',
+  };
   const legacy={'axiomofmind/Moss-image-nsfw-uncensored-lora':'OpenMOSS-Team/MOSS-Image-SFT','f23gg/NSFW-LORA-Qwen-Image-2.1':'Qwen/Qwen-Image-2.1'};
   return adapters.filter(a=>{
     const bases=[a.baseRepository,...(a.baseRepositories||[]),legacy[a.repository]].filter(Boolean);
-    const matched=bases.some(value=>value.toLowerCase()===base.toLowerCase());
+    const normalized=base.toLowerCase(),matched=bases.some(value=>value.toLowerCase()===normalized||related[normalized]===value.toLowerCase());
     const quantizedMoss=id.startsWith('moss-')&&(model.backend==='comfyui'||id.includes('convrot'));
     const format=!(quantizedMoss)||/comfy/i.test(a.variantKey||'');
     return matched&&format&&a.status==='installed'&&(a.packageKind==='adapter'||a.format==='lora')&&a.installReceipt?.files?.some(f=>f.role==='model'&&f.localPath);
   });
 }
 
-export function imageGenerationDefaults(id) {
+export function imageGenerationDefaults(id,repository='') {
   if(id.startsWith('moss-')||id==='kromoss')return {steps:50,guidance:3};
+  if(id==='qwen-image-21-turbo'||repository.toLowerCase()==='qwen/qwen-image-2.1-turbo')return {steps:8,guidance:1};
   if(id.startsWith('qwen-image-21'))return {steps:40,guidance:1};
   if(id==='z-image-turbo')return {steps:9,guidance:0};
   if(id==='flux-2-klein-4b')return {steps:4,guidance:1};
@@ -119,9 +123,10 @@ export function imageGenerationDefaults(id) {
   return {steps:30,guidance:id.startsWith('moss-')?3:id.startsWith('qwen-image-21')?4:4.5};
 }
 
-export function automaticImageSettings(id,prompt,files=[],preset) {
+export function automaticImageSettings(id,prompt,files=[],preset,repository='') {
   if(files.length>4||files.some(path=>typeof path!=='string'||!/^([A-Za-z]:[\\/]|\/)/.test(path)||! /\.(png|jpe?g|webp)$/i.test(path)))throw Error('Attach up to four PNG, JPEG or WebP reference images.');
-  const defaults=preset||imageGenerationDefaults(id),portrait=/\b(portrait|vertical|phone wallpaper|9:16)\b/i.test(prompt),wide=/\b(landscape|wide|panorama|wallpaper|16:9)\b/i.test(prompt),scale=id.startsWith('qwen-image-21')?2:1;
+  const qwen=id.startsWith('qwen-image-21')||repository.toLowerCase()==='qwen/qwen-image-2.1-turbo';
+  const defaults=preset||imageGenerationDefaults(id,repository),portrait=/\b(portrait|vertical|phone wallpaper|9:16)\b/i.test(prompt),wide=/\b(landscape|wide|panorama|wallpaper|16:9)\b/i.test(prompt),scale=qwen?2:1;
   return {width:(portrait?576:1024)*scale,height:(portrait?1024:wide?576:1024)*scale,steps:defaults.steps,guidanceScale:defaults.guidance,numImages:1,outputFormat:'png',seed:crypto.getRandomValues(new Uint32Array(1))[0],...(files.length?{referencePaths:[...files]}:{})};
 }
 
@@ -184,8 +189,8 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     window.addEventListener('opencore-chat-image-prompt',send);window.addEventListener('opencore-chat-image-stop',stop);window.addEventListener('opencore-chat-image-retry',retry);
     return()=>{window.removeEventListener('opencore-chat-image-prompt',send);window.removeEventListener('opencore-chat-image-stop',stop);window.removeEventListener('opencore-chat-image-retry',retry);};
   });
-  const imagePreset=models.find(model=>model.id===modelId)?.hubEntry?.imageDefaults;
-  React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')?2048:1024);},[modelId,imagePreset?.steps,imagePreset?.guidance]);
+  const selectedImageModel=models.find(model=>model.id===modelId),imagePreset=selectedImageModel?.hubEntry?.imageDefaults;
+  React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId,selectedImageModel?.hubEntry?.repository);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')||selectedImageModel?.hubEntry?.repository?.toLowerCase()==='qwen/qwen-image-2.1-turbo'?2048:1024);},[modelId,imagePreset?.steps,imagePreset?.guidance,selectedImageModel?.hubEntry?.repository]);
   const model=models.find(m=>m.id===modelId),choices=imageAdaptersForModel(model,adapters);
   const activeAdapter=choices.find(adapter=>adapter.id===adapterId),adapterLabel=activeAdapter?.familyLabel||activeAdapter?.name||activeAdapter?.repository||initialSelection?.adapterLabel;
   React.useLayoutEffect(()=>{onStateChange?.({active:open,busy:busy||!!activeJob,modelId,adapterId,label:model?imageSelectionLabel({...model,adapterId,adapterLabel}):undefined});},[open,busy,!!activeJob,modelId,adapterId,model,adapterLabel,onStateChange]);
@@ -292,7 +297,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       const snapshot=await invoke('get_snapshot');
       if(snapshot?.activeConversationIds?.length)throw Error('Another conversation is generating. Let it finish before starting image generation.');
       if(['running','starting'].includes(snapshot?.runtime?.status)){setStage('Releasing the text model from memory for image generation');await invoke('stop_runtime');}
-      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files,model.hubEntry?.imageDefaults)),...(file?{loraPath:file.localPath,loraStrength:strength}:{})},onAccepted:input?.onAccepted};
+      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId,model.hubEntry?.repository),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files,model.hubEntry?.imageDefaults||imageGenerationDefaults(modelId,model.hubEntry?.repository),model.hubEntry?.repository)),...(file?{loraPath:file.localPath,loraStrength:strength}:{})},onAccepted:input?.onAccepted};
       if(!studio)request.settings=applyImageGenerationOptions(modelId,request.settings);
       if(globalThis.__opencorePromptSettings?.().enabled&&globalThis.__opencorePromptSettings().automaticImages){
         try{const better=await globalThis.__opencoreImproveLocalPrompt(request.prompt,conversation.current,'image',setStage);request.settings.originalPrompt=text.trim();request.settings.promptRecap=better.recap;request.prompt=better.prompt;}
@@ -323,7 +328,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       choices.length?h('div',{className:'image-panel-fields'},h('label',null,'LoRA',h('select',{'aria-label':'Image LoRA',value:choices.some(a=>a.id===adapterId)?adapterId:'',disabled:busy,onChange:e=>setAdapterId(e.target.value)},h('option',{value:''},'None'),...choices.map(a=>h('option',{key:a.id,value:a.id},a.familyLabel||a.name||a.repository)))),adapterId?h('label',null,'LoRA strength',h('input',{'aria-label':'Image LoRA strength',type:'number',min:0,max:2,step:0.1,value:strength,disabled:busy,onChange:e=>setStrength(Number(e.target.value))})):null):null,
       h('label',null,'Image prompt',h('textarea',{'aria-label':'Image generation prompt',placeholder:'Describe the image you want…',rows:3,value:prompt,disabled:busy,onChange:e=>setPrompt(e.target.value)})),
       h('div',{className:'image-panel-fields'},h('label',null,'Output size',h('select',{'aria-label':'Image size',value:size,disabled:busy,onChange:e=>setSize(Number(e.target.value))},...IMAGE_SIZE_OPTIONS.map(option=>h('option',{key:option.value,value:option.value},option.label)))),h('label',null,'Steps',h('input',{'aria-label':'Image steps',type:'number',min:1,max:100,value:steps,disabled:busy,onChange:e=>setSteps(Number(e.target.value))})),h('label',null,'Guidance',h('input',{'aria-label':'Image guidance',type:'number',min:0,max:30,step:0.5,value:guidance,disabled:busy,onChange:e=>setGuidance(Number(e.target.value))}))),
-      size>imageSizeSettings(size,modelId).width?h('small',{className:'image-output-size-note'},'Output: '+size+' × '+size+'. Generated at '+imageSizeSettings(size,modelId).width+' × '+imageSizeSettings(size,modelId).height+', then enhanced locally with the Real-ESRGAN AI upscaler.'):null,
+      size>imageSizeSettings(size,modelId,model?.hubEntry?.repository).width?h('small',{className:'image-output-size-note'},'Output: '+size+' × '+size+'. Generated at '+imageSizeSettings(size,modelId,model?.hubEntry?.repository).width+' × '+imageSizeSettings(size,modelId,model?.hubEntry?.repository).height+', then enhanced locally with the Real-ESRGAN AI upscaler.'):null,
       h('button',{type:'button',className:'image-generate-button',disabled:busy||!model||!prompt.trim()||!Number.isInteger(steps)||steps<1||steps>100||!Number.isFinite(strength)||strength<0||strength>2||!Number.isFinite(guidance)||guidance<0||guidance>30,onClick:()=>void generate()},busy?'Preparing…':'Generate image'),
       stage?h('div',{role:'status'},h('progress',{'aria-label':'Image runtime preparation'}),h('span',null,stage)):null,
       error?h(ImageError,{error}):null,

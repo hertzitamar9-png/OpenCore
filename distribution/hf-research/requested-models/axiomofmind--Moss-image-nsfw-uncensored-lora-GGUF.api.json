@@ -1,0 +1,326 @@
+{
+  "_id": "6ad6379a9d300685a62e1533",
+  "id": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "tags": [
+    "gguf",
+    "moss-image",
+    "lora",
+    "stable-diffusion.cpp",
+    "text-to-image",
+    "image-generation",
+    "nsfw",
+    "adult-content",
+    "adapter",
+    "base_model:axiomofmind/Moss-Image-SFT-GGUF",
+    "base_model:adapter:axiomofmind/Moss-Image-SFT-GGUF",
+    "license:apache-2.0",
+    "region:us",
+    "not-for-all-audiences"
+  ],
+  "downloads": 6497,
+  "likes": 50,
+  "modelId": "axiomofmind/Moss-image-nsfw-uncensored-lora-GGUF",
+  "author": "axiomofmind",
+  "sha": "a21e2465ff6a3ba099439fa9b8c4af708ed19761",
+  "lastModified": "2026-10-25T04:15:06.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "axiomofmind/Moss-Image-SFT-GGUF",
+    "base_model_relation": "adapter",
+    "pipeline_tag": "text-to-image",
+    "instance_prompt": "moss_xvstyle",
+    "tags": [
+      "moss-image",
+      "gguf",
+      "lora",
+      "stable-diffusion.cpp",
+      "text-to-image",
+      "image-generation",
+      "nsfw",
+      "adult-content",
+      "adapter"
+    ]
+  },
+  "gguf": {
+    "total": 37158912,
+    "totalFileSize": 74365536
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "33ed18d963437bef2278bd6b5392b8ed06fdeec2",
+      "size": 1754
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "MOSS-Image-NSFW-Uncensored-LoRA-Alternative-1750-F16.gguf",
+      "blobId": "233a079a6282374cf852907b64a8e8ee3fab320f",
+      "size": 74365536,
+      "lfs": {
+        "sha256": "6366d060b9653c5b72c0694238a09b01787f3ca610e7f27af051a5aed8fff7d8",
+        "size": 74365536,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "MOSS-Image-NSFW-Uncensored-LoRA-F16.gguf",
+      "blobId": "855be9e428575ac9af53bfe1b6a560537f16428b",
+      "size": 74365536,
+      "lfs": {
+        "sha256": "2c3e044a3331a94416ed91610ccd5135df0f79f0cb3d5db5983de0fb5dfa5603",
+        "size": 74365536,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c8fe3fb11374fab704e74397f9525f5b03e64c8d",
+      "size": 15140
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "069cc42f935b64c3e5b7cb505981486cc7cb9799",
+      "size": 2572
+    },
+    {
+      "rfilename": "conversion.json",
+      "blobId": "9a5ccf3cbddfcafeb6fc0bd628a8223fc02a36f3",
+      "size": 6034
+    },
+    {
+      "rfilename": "examples/generate.ps1",
+      "blobId": "dd6358410f58c52bca75a70f887bf2195148d1a1",
+      "size": 2087
+    },
+    {
+      "rfilename": "examples/generate.sh",
+      "blobId": "db15266a9d24e9243f9c6bef51587e74366de4ce",
+      "size": 1489
+    },
+    {
+      "rfilename": "images/01-crouching-smiley-socks-alt-lora-s0p8-seed42.png",
+      "blobId": "eea80faa5d5460f82640a30d97a793ec7a7944b4",
+      "size": 1778395,
+      "lfs": {
+        "sha256": "a14ab5e5f08b4da21eb32da96f12a259b49afb778183353f5e8d5bbbfc0bc553",
+        "size": 1778395,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/01-crouching-smiley-socks-lora-seed42.png",
+      "blobId": "29662458246b8f3ee9556b1cb5f64d55bb8f1782",
+      "size": 1742513,
+      "lfs": {
+        "sha256": "36649d5368c59cbce56b139d1e4dca023b95187dc48621fc2c22f0da363c96a5",
+        "size": 1742513,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/01-crouching-smiley-socks-stock-seed42.png",
+      "blobId": "3377d62b44b52da53e1629e1e4e409fc29c7a778",
+      "size": 1628005,
+      "lfs": {
+        "sha256": "df5b3af0667ab1239f15c34970f2da298256664315e74aeb419e7ac3372a569b",
+        "size": 1628005,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/02-rear-wooden-surface-alt-lora-s0p8-seed42.png",
+      "blobId": "6640384028cbc7ab245c5584778786aeb93ae7d3",
+      "size": 1910348,
+      "lfs": {
+        "sha256": "39411479999592ba6081f5a2a030f0685669c2f76bb2b703d572c91daf05c5a1",
+        "size": 1910348,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/02-rear-wooden-surface-lora-seed42.png",
+      "blobId": "e5eea48d2c238a1891fced39d309175aab1fd18c",
+      "size": 1647045,
+      "lfs": {
+        "sha256": "98aa0b2bd5cdc3c97ba7e59e60da167b8413d301d26a2c0f70e8bdd56bca95bf",
+        "size": 1647045,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/02-rear-wooden-surface-stock-seed42.png",
+      "blobId": "99c9f71deeedcc1a9c89be7f577b937889522836",
+      "size": 1592675,
+      "lfs": {
+        "sha256": "eb103c9fead727defecdde114a97ed368c1d5a7780e463dd249dd2789dbb43c8",
+        "size": 1592675,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/03-kneeling-mirror-alt-lora-s0p8-seed42.png",
+      "blobId": "940b96d15accf12475dc9f39248052b5a93925a6",
+      "size": 1754532,
+      "lfs": {
+        "sha256": "8df2093b68022b575823aeff24d155f165fe8837ebf4d04d1b74afc4cce84d3c",
+        "size": 1754532,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/03-kneeling-mirror-lora-seed42.png",
+      "blobId": "9db99296cc0eca0349c5aef3b6c138e681ce2e25",
+      "size": 1778006,
+      "lfs": {
+        "sha256": "c9453fc16af0842f16522cde313c191495c1cdc4f403b4fbb97fd345a143c762",
+        "size": 1778006,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/03-kneeling-mirror-stock-seed42.png",
+      "blobId": "7a0ec698c0b19ad88b51dcbf1e3932b167846840",
+      "size": 1759468,
+      "lfs": {
+        "sha256": "3f9a02a65d750773866626cfab662ad4cbf9c74822304dc10d9370b093f99df4",
+        "size": 1759468,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/04-blue-fabric-alt-lora-s0p8-seed42.png",
+      "blobId": "b8599e3960989497b3f7f8e1c76113e1f3fd364c",
+      "size": 1732255,
+      "lfs": {
+        "sha256": "7f0da4b2cc1d6df94ad15b037a0baf7888d7e7be9e21ba0ba756a91d32a64a4b",
+        "size": 1732255,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/04-blue-fabric-lora-seed42.png",
+      "blobId": "533e0f287745058be04e0f160d04456c82afeac0",
+      "size": 1780739,
+      "lfs": {
+        "sha256": "8d463f3f0b2828b12d41cb370bdee2bcbcefc4fbb737b32fb0288c6d2f0d8464",
+        "size": 1780739,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/04-blue-fabric-stock-seed42.png",
+      "blobId": "9d5294081be73e021f0980317f915ce9f90f77cd",
+      "size": 1771613,
+      "lfs": {
+        "sha256": "420c795d9acab0593384fe262c5f17e5d4a7cb4dd66e24a92a9455be19c4af53",
+        "size": 1771613,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/05-pov-halter-alt-lora-s0p8-seed42.png",
+      "blobId": "8fd9170b073902d09a74686013d6ef0fee85daba",
+      "size": 1826037,
+      "lfs": {
+        "sha256": "20998991b59242dc7c18f12c5e011da8974b1596b8265e190dcd7cc0e0777354",
+        "size": 1826037,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/05-pov-halter-lora-seed42.png",
+      "blobId": "3c9639dde5624ac50b4b7c95fc34692209320191",
+      "size": 1788644,
+      "lfs": {
+        "sha256": "5e452748a71564ff6b0b0389ef07ab4ed8457bdbec5804a6d5f05b717590e33b",
+        "size": 1788644,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/05-pov-halter-stock-seed42.png",
+      "blobId": "d0a6c374a8e88187535644604fa20eee867c0483",
+      "size": 1716978,
+      "lfs": {
+        "sha256": "e0621fe4ba2cb46526f9632dce0e0db6bbec1cd559e2a3cade127982533b0b1c",
+        "size": 1716978,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/06-white-thong-rear-alt-lora-s0p8-seed42.png",
+      "blobId": "5e346043269ee1c140ffec8fe025fdf37d3af580",
+      "size": 1749007,
+      "lfs": {
+        "sha256": "2501da6dd8719dce44413507027d2581a8e17f058fe4aa7963d85aa2f33d8118",
+        "size": 1749007,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/06-white-thong-rear-lora-seed42.png",
+      "blobId": "9080d2b07494dedcd79e77a8b8fd0bfc70fa9135",
+      "size": 1576422,
+      "lfs": {
+        "sha256": "72b6f44ff36c81cf8b9dc66e43963759f8f6263ba6abd5fbe1e4af3c4f673e9e",
+        "size": 1576422,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/06-white-thong-rear-stock-seed42.png",
+      "blobId": "e8b4f9a90201e8d40b7cb0a23418803b898f6f21",
+      "size": 1523414,
+      "lfs": {
+        "sha256": "2e71896245a153952cb39b69ca699e6dae6fac83a48fd37a6e2ccb98b1834243",
+        "size": 1523414,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/07-mirror-selfie-alt-lora-s0p8-seed42.png",
+      "blobId": "f97292d319267b6bc55379712c2f915154205f1a",
+      "size": 1806350,
+      "lfs": {
+        "sha256": "caa4bb44035d5169e143ac58eac8dd3059b2c7de95e7f4d8118dcd221f870518",
+        "size": 1806350,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/07-mirror-selfie-lora-seed42.png",
+      "blobId": "feb3e4e95fe9e093aa7ac15692e7232fee7a4ddd",
+      "size": 1563155,
+      "lfs": {
+        "sha256": "d6d44e9b890df5930252ee84c5cd3b312e354d77b38ad624a0e6827d8400a1b0",
+        "size": 1563155,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/07-mirror-selfie-stock-seed42.png",
+      "blobId": "9ba236a61145023767eaa91adf50958f7882035f",
+      "size": 1438800,
+      "lfs": {
+        "sha256": "983306b990a81708585a082a4dbdaaf3c3b3f43a6073591fb4cd19b2b1d47a71",
+        "size": 1438800,
+        "pointerSize": 132
+      }
+    }
+  ],
+  "spaces": [
+    "sandy-677/moss-nsfw-lora-demo"
+  ],
+  "createdAt": "2026-10-19T15:30:34.000Z",
+  "usedStorage": 184595473
+}
