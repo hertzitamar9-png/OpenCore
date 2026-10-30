@@ -3,20 +3,27 @@
 }
 
 .conversation-app-rail nav {
-  grid-auto-rows: minmax(min-content, 1fr);
+  display: flex;
+  flex-direction: column;
+}
+
+.conversation-app-rail nav > div {
+  flex: 1 0 28px;
+  min-height: 28px;
 }
 
 .conversation-app-rail nav > .nav-group-start {
   position: relative;
   border-top: 0;
-  padding-top: 12px;
+  margin-top: 12px;
+  padding-top: 0;
 }
 
 .conversation-app-rail nav > .nav-group-start::before {
   content: "";
   position: absolute;
   inset-inline: 0;
-  top: 4px;
+  top: -8px;
   height: 2px;
   background: var(--theme-accent-ink, #8ec4ff);
   pointer-events: none;
