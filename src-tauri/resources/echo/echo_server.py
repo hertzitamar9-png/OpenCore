@@ -730,13 +730,34 @@ class EchoState:
             request = urllib.request.Request(self.upstream + "/slots", headers=self.upstream_headers())
             with urllib.request.urlopen(request, timeout=1.0) as response:
                 slots = json.loads(response.read())
+            if not isinstance(slots, list) or self._backend_conversation != conversation:
+                return {}
             slot = next((item for item in slots if isinstance(item, dict)
                          and item.get("echo_session_id") == session_id), None)
-            value = ({"modelSessionTokens": int(slot.get("echo_session_tokens", 0)),
-                      "modelActiveTokens": int(slot.get("n_prompt_tokens", 0)),
-                      "modelContextTokens": int(slot.get("n_ctx", self.context_size())),
-                      "modelSessionActive": bool(slot.get("is_processing", False))}
-                     if slot else {})
+            persistent = slot is not None
+            if slot is None:
+                # Every request owned by the autonomous ECHO loop explicitly
+                # targets slot zero. Stock backends do not expose echo_session_id;
+                # their occupancy is still useful, but cannot prove append/KV
+                # reuse. Never attribute another explicit session to this chat.
+                slot = next((item for item in slots if isinstance(item, dict)
+                             and item.get('id') == 0 and not item.get('echo_session_id')), None)
+            value = {}
+            if slot is not None:
+                capacity = slot.get('n_ctx')
+                if not isinstance(capacity, int) or isinstance(capacity, bool) or capacity <= 0:
+                    capacity = self.context_size()
+                value = {'modelContextTokens': capacity,
+                         'modelSessionActive': bool(slot.get('is_processing', False))}
+                for field in ('n_prompt_tokens',) if persistent else ('n_past', 'n_prompt_tokens'):
+                    occupied = slot.get(field)
+                    if isinstance(occupied, int) and not isinstance(occupied, bool) and occupied >= 0:
+                        value['modelActiveTokens'] = min(capacity, occupied)
+                        value['modelUsageKind'] = 'prompt' if not persistent and field == 'n_prompt_tokens' else 'live'
+                        break
+                lifetime = slot.get('echo_session_tokens')
+                if persistent and isinstance(lifetime, int) and not isinstance(lifetime, bool) and lifetime >= 0:
+                    value['modelSessionTokens'] = lifetime
         except (OSError, ValueError, TypeError, urllib.error.URLError):
             value = {}
         with self._backend_metrics_lock:

@@ -458,7 +458,7 @@
   "compactBytes": 4488189,
   "embeddedSlotBytes": 5256247,
   "remainingSlotBytes": 768058,
-  "catalogSha256": "ed8e4cd4be62f8dd7609abe7254651da69794d53eca09a62383f51a108c3dec4",
+  "catalogSha256": "68f328c9f33314073d5993cbd52674970092763535fa989391db5f2182f6e63c",
   "runtimeReadiness": "Existing native-text/managed-transformers adapter patterns only; no requested weights downloaded or executed.",
   "accessObservation": {
     "KRAFTON/Raon-1-mini-preview-gguf": {

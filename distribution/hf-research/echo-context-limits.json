@@ -168,6 +168,13 @@
       "revision": "7681ef608624e7532d8164128bcffdbdbaf1b1af",
       "publishedContextTokens": 262144,
       "source": "https://huggingface.co/ornith-ai/Ornith-1.5-122B/resolve/7681ef608624e7532d8164128bcffdbdbaf1b1af/config.json"
+    },
+    "ornith-1-5-9b-mtp": {
+      "repository": "ornith-ai/Ornith-1.5-9B",
+      "revision": "489cb97981b8654bcfcf30ce1f94ed1b62e07b53",
+      "publishedContextTokens": 262144,
+      "source": "https://huggingface.co/ornith-ai/Ornith-1.5-9B/resolve/489cb97981b8654bcfcf30ce1f94ed1b62e07b53/config.json",
+      "configSha256": "1f1b3751c38f16a63340df90a55e870bef0f0b2968d833825a605b7cf930a313"
     }
   }
 }

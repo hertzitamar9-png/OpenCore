@@ -75,7 +75,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-mobile-host.cjs test-hub-reconnect.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs test-echo-profiles.cjs
+          node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs test-echo-profiles.cjs context-activity.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install --disable-pip-version-check Pillow==11.3.0 aiohttp==3.11.8
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -157,6 +157,8 @@ jobs:
           node test-mobile-render.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-first-run.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-context-activity.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-branding.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

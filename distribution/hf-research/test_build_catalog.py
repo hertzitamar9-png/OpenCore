@@ -48,6 +48,14 @@ class CatalogBuildTests(unittest.TestCase):
         for identifier,artifact in original.items():
             self.assertEqual(self.artifacts[identifier],artifact)
 
+    def test_ornith_mtp_launches_each_quant_with_the_supported_32k_window(self):
+        rows=[model for model in self.family('ornith-1-5-9b-mtp') if model.get('memoryMode')=='echo']
+        self.assertGreater(len(rows),1)
+        for model in rows:
+            self.assertEqual(model['contextTokens'],32768,model['id'])
+            self.assertEqual(model['echoWorkingWindowTokens'],32768,model['id'])
+            self.assertNotIn('16K context',model.get('description','')+model.get('note',''))
+
     def test_added_artifacts_match_primary_repository_metadata(self):
         original = {a['id'] for a in self.original['artifacts']}
         support = json.loads((ROOT / 'support-pins.json').read_text(encoding='utf-8'))
