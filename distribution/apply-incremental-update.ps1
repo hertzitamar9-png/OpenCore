@@ -1,14 +1,20 @@
-param([Parameter(Mandatory=$true)][string]$AppRoot,[Parameter(Mandatory=$true)][string]$PythonRoot,[Parameter(Mandatory=$true)][string]$IndexPath,[Int64]$WindowHandle=0,[switch]$FunctionsOnly)
+param([Parameter(Mandatory=$true)][string]$AppRoot,[Parameter(Mandatory=$true)][string]$PythonRoot,[Parameter(Mandatory=$true)][string]$IndexPath,[Int64]$WindowHandle=0,[switch]$FunctionsOnly,[switch]$VerifyInstalledFiles)
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression
 
-function Get-UpdateTarget([string]$Relative){
+function Get-UpdatePath([string]$Relative){
   if($Relative -notmatch '^(app|python)/[^:]+$' -or $Relative.Contains('\') -or $Relative -match '(^|/)(\.\.?|secrets|models|logs|backups)(/|$)'){throw 'Invalid packaged update path'}
   $parts=$Relative.Split('/',2)
   $root=if($parts[0] -eq 'app'){$AppRoot}else{$PythonRoot}
   $root=[IO.Path]::GetFullPath($root).TrimEnd('\')
-  $target=[IO.Path]::GetFullPath((Join-Path $root $parts[1]))
+  $target=[IO.Path]::GetFullPath([IO.Path]::Combine($root,$parts[1].Replace('/','\')))
   if(-not $target.StartsWith($root+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Update target escaped its root'}
+  return $target
+}
+function Get-UpdateTarget([string]$Relative){
+  $target=Get-UpdatePath $Relative
+  $parts=$Relative.Split('/',2)
+  $root=[IO.Path]::GetFullPath($(if($parts[0] -eq 'app'){$AppRoot}else{$PythonRoot})).TrimEnd('\')
   $cursor=$target
   while($cursor -and $cursor.Length -ge $root.Length){
     if((Test-Path -LiteralPath $cursor) -and ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)){throw 'Update target contains a junction or symbolic link'}
@@ -24,10 +30,62 @@ function Test-UpdateFile($Entry,[string]$Path){
   return (Test-Path -LiteralPath $Path -PathType Leaf) -and (Get-Item -LiteralPath $Path).Length -eq $Entry.bytes -and (Get-UpdateHash $Path) -eq $Entry.sha256
 }
 function Write-UpdateProgress([string]$Message,[int]$Percent){
-  Write-Output $Message
+  Write-Host $Message
   if($WindowHandle -and ('OpenCoreUpdateWindows' -as [type])){
     [OpenCoreUpdateWindows]::Report([IntPtr]$WindowHandle,$Message,[Math]::Min(100,[Math]::Max(0,$Percent)))
   }
+}
+function Get-InstalledUpdateEntries {
+  try {
+    $receipt=Get-UpdateTarget 'app/installed-file-manifest.json'
+    if(-not(Test-Path -LiteralPath $receipt -PathType Leaf) -or (Get-Item -LiteralPath $receipt).Length -gt 32MB){return $null}
+    $previous=[IO.File]::ReadAllText($receipt) | ConvertFrom-Json
+    if($previous.schema -ne 1 -or $previous.version -notmatch '^\d+\.\d+\.\d+$' -or $previous.commit -notmatch '^[a-f0-9]{40}$'){return $null}
+    $entries=New-Object 'Collections.Generic.Dictionary[string,object]' ([StringComparer]::OrdinalIgnoreCase)
+    foreach($entry in $previous.files){
+      $null=Get-UpdatePath $entry.path
+      if($entry.sha256 -notmatch '^[a-f0-9]{64}$' -or $null -eq $entry.bytes -or $entry.bytes -lt 0 -or $entries.ContainsKey($entry.path)){return $null}
+      $entries.Add($entry.path,$entry)
+    }
+    if(-not $entries.ContainsKey('app/OpenCore.exe') -or -not $entries.ContainsKey('app/build-info.json')){return $null}
+    # Confirm the record belongs to this completed installation. Only these two
+    # small-in-number identity files are read; unchanged libraries are not opened.
+    foreach($path in @('app/OpenCore.exe','app/build-info.json')){
+      if(-not(Test-UpdateFile $entries[$path] (Get-UpdateTarget $path))){return $null}
+    }
+    $info=[IO.File]::ReadAllText((Get-UpdateTarget 'app/build-info.json')) | ConvertFrom-Json
+    if($info.build -ne $previous.version -or $info.commit -ne $previous.commit -or $info.appExeSha256 -ne $entries['app/OpenCore.exe'].sha256){return $null}
+    return ,$entries
+  }catch{return $null}
+}
+function New-UpdatePlan($Index,[string]$Stage,[switch]$VerifyInstalledFiles){
+  $previous=if(-not $VerifyInstalledFiles){Get-InstalledUpdateEntries}else{$null}
+  $mode=if($null -ne $previous){'release-difference'}else{'full-verification'}
+  $changes=New-Object Collections.Generic.List[object]
+  $seen=New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+  $compared=0;$skipped=0;$inspected=0
+  if($mode -eq 'release-difference'){Write-UpdateProgress 'Comparing releases; unchanged files will be skipped.' 2}
+  else{Write-UpdateProgress 'Verifying the installation to establish its file record.' 2}
+  foreach($entry in $Index.files){
+    if($entry.sha256 -notmatch '^[a-f0-9]{64}$' -or $null -eq $entry.bytes -or $entry.bytes -lt 0 -or $entry.offset -lt 0 -or $entry.compressedBytes -lt 1 -or -not $seen.Add($entry.path)){throw 'Invalid or duplicate update entry'}
+    $null=Get-UpdatePath $entry.path
+    $compared++
+    if($null -ne $previous -and $previous.ContainsKey($entry.path) -and $previous[$entry.path].sha256 -eq $entry.sha256 -and $previous[$entry.path].bytes -eq $entry.bytes){
+      $skipped++
+      continue
+    }
+    $target=Get-UpdateTarget $entry.path
+    $inspected++
+    if(-not(Test-UpdateFile $entry $target)){$changes.Add(@{entry=$entry;staged=(Join-Path $Stage ('file-'+$changes.Count))})}
+    if($inspected%20 -eq 0){Write-UpdateProgress ('Checking '+$inspected+' changed or unrecorded files') ([int](15*$compared/[Math]::Max(1,$Index.files.Count)))}
+  }
+  return @{changes=$changes;mode=$mode;unchangedFilesSkipped=$skipped;filesInspected=$inspected;filesCompared=$compared}
+}
+function Save-InstalledUpdateManifest($Index,[string]$Stage){
+  $target=Get-UpdateTarget 'app/installed-file-manifest.json'
+  $pending=Join-Path $Stage 'installed-file-manifest.json'
+  [IO.File]::WriteAllText($pending,($Index | ConvertTo-Json -Depth 8 -Compress),(New-Object Text.UTF8Encoding($false)))
+  if(Test-Path -LiteralPath $target){[IO.File]::Replace($pending,$target,(Join-Path $Stage 'previous-file-manifest.json'))}else{[IO.File]::Move($pending,$target)}
 }
 function Receive-UpdateFile($Entry,[string]$Url,[string]$Destination,[scriptblock]$OnProgress){
   $request=[Net.HttpWebRequest]::Create($Url)
@@ -109,15 +167,11 @@ public static class OpenCoreUpdateWindows {
   if(-not(Test-Path -LiteralPath (Join-Path $AppRoot 'OpenCore.exe'))){throw 'OpenCore is not installed. Run the permanent OpenCore Setup first.'}
   $stage=Join-Path $AppRoot ('.update-'+[Guid]::NewGuid().ToString('N'))
   $null=New-Item -ItemType Directory -Path $stage
-  $changes=New-Object Collections.Generic.List[object];$seen=New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
-  $checked=0
-  foreach($entry in $index.files){
-    if($entry.sha256 -notmatch '^[a-f0-9]{64}$' -or $entry.bytes -lt 0 -or $entry.offset -lt 0 -or $entry.compressedBytes -lt 1 -or -not $seen.Add($entry.path)){throw 'Invalid or duplicate update entry'}
-    $target=Get-UpdateTarget $entry.path
-    $checked++
-    if(-not(Test-UpdateFile $entry $target)){$changes.Add(@{entry=$entry;staged=(Join-Path $stage ('file-'+$changes.Count))})}
-    if($checked%20 -eq 0){Write-UpdateProgress ('Checking installed files '+$checked+' of '+$index.files.Count) ([int](15*$checked/$index.files.Count))}
-  }
+  $planningTimer=[Diagnostics.Stopwatch]::StartNew()
+  $plan=New-UpdatePlan $index $stage -VerifyInstalledFiles:$VerifyInstalledFiles
+  $planningTimer.Stop()
+  $changes=$plan.changes
+  Write-UpdateProgress ('Update plan: '+$plan.mode+'; '+$plan.unchangedFilesSkipped+' unchanged files skipped; '+$plan.filesInspected+' changed or unrecorded files checked.') 15
   $total=[Int64](($changes | ForEach-Object {$_.entry.compressedBytes} | Measure-Object -Sum).Sum);$done=0L
   Write-UpdateProgress ('Downloading '+$changes.Count+' changed files; '+[Math]::Round($total/1MB,1)+' MB. Unchanged files will be kept.') 15
   foreach($item in $changes){
@@ -127,7 +181,8 @@ public static class OpenCoreUpdateWindows {
   }
   Write-UpdateProgress 'Applying verified changed files; downloaded models and chats stay in place.' 85
   Apply-VerifiedUpdate $changes $stage
-  $index | ConvertTo-Json -Depth 8 -Compress | Set-Content -LiteralPath (Join-Path $AppRoot 'installed-file-manifest.json') -Encoding UTF8
+  Save-InstalledUpdateManifest $index $stage
+  [IO.File]::WriteAllText((Join-Path $logRoot 'incremental-update-summary.json'),(@{version=$index.version;mode=$plan.mode;unchangedFilesSkipped=$plan.unchangedFilesSkipped;filesInspected=$plan.filesInspected;planningSeconds=[Math]::Round($planningTimer.Elapsed.TotalSeconds,3);downloadedFiles=$changes.Count;downloadedBytes=$total} | ConvertTo-Json -Compress))
   $resolvedStage=[IO.Path]::GetFullPath($stage)
   if(-not $resolvedStage.StartsWith([IO.Path]::GetFullPath($AppRoot).TrimEnd('\')+'\.update-',[StringComparison]::OrdinalIgnoreCase)){throw 'Invalid update staging directory'}
   Remove-Item -LiteralPath $resolvedStage -Recurse

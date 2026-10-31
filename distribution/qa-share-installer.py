@@ -51,6 +51,14 @@ def main():
     expected.add(repair_path)
     if repair["build"] != manifest["build"] or repair["appExeSha256"] != manifest["appExeSha256"]:
         failures.append({"path": "build-repair.json", "error": "build mismatch"})
+    receipt_path = root / 'installed-file-manifest.json'
+    expected.add(receipt_path)
+    try:
+        receipt = json.loads(receipt_path.read_text(encoding='utf-8-sig'))
+        if (receipt['schema'], receipt['version'], receipt['commit'], receipt['files']) != (1, manifest['build'], manifest['commit'], manifest['files']):
+            failures.append({'path': 'installed-file-manifest.json', 'error': 'install record mismatch'})
+    except (OSError, ValueError, KeyError):
+        failures.append({'path': 'installed-file-manifest.json', 'error': 'missing or invalid install record'})
     extras = sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() and p.resolve() not in expected)
     if extras:
         failures.append({"error": "unexpected extracted files", "files": extras})

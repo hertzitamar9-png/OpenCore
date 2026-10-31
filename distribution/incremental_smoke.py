@@ -1,5 +1,5 @@
 """Execute the generated updater on disposable files; never touch the user's app."""
-import ast,ctypes,json,os,re,struct,subprocess,tempfile,threading,time,uuid
+import ast,ctypes,hashlib,json,os,re,struct,subprocess,tempfile,threading,time,uuid
 from ctypes import wintypes
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
@@ -14,6 +14,10 @@ def run(nsis):
         (source/'runtime.dll').write_bytes(b'unchanged shared runtime'*10000)
         (target/'OpenCore.exe').write_bytes(b'old executable')
         (target/'runtime.dll').write_bytes((source/'runtime.dll').read_bytes())
+        (source/'build-info.json').write_text(json.dumps({'build':'0.3.204','commit':'a'*40,'appExeSha256':hashlib.sha256((source/'OpenCore.exe').read_bytes()).hexdigest()}))
+        (target/'build-info.json').write_text(json.dumps({'build':'0.3.203','commit':'b'*40,'appExeSha256':hashlib.sha256((target/'OpenCore.exe').read_bytes()).hexdigest()}))
+        old_files=[{'path':'app/'+file.name,'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()} for file in target.iterdir()]
+        (target/'installed-file-manifest.json').write_text(json.dumps({'schema':1,'version':'0.3.203','commit':'b'*40,'files':old_files}))
         unchanged=(target/'runtime.dll').stat().st_mtime_ns
         index=build_payload(source,python,output,'0.3.204','a'*40)
         assert all(entry['path'].startswith('app/') for entry in index['files'])
@@ -70,6 +74,14 @@ def run(nsis):
             name='OpenCoreIncremental_'+uuid.uuid4().hex;desktop=user.CreateDesktopW(name,None,None,0,0x10000000,None)
             assert desktop,'Could not create the isolated updater test desktop'
             observed={'downloadText':False,'movingProgress':False,'texts':[]}
+            kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+            kernel.CreateFileW.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,ctypes.c_void_p,wintypes.DWORD,wintypes.DWORD,wintypes.HANDLE]
+            kernel.CreateFileW.restype=wintypes.HANDLE
+            kernel.CloseHandle.argtypes=[wintypes.HANDLE]
+            # A normal full scan cannot open this DLL for hashing. Both actual
+            # updater runs must succeed using the saved release comparison.
+            locked=kernel.CreateFileW(str(target/'runtime.dll'),0x80000000,0x2|0x4,None,3,0,None)
+            assert locked not in (None,ctypes.c_void_p(-1).value),'Could not lock the unchanged runtime fixture'
             try:
                 for attempt in range(2):
                     applied=scope['DesktopProcess'](exe,['/S','/TEST','/D='+str(target)],name)
@@ -96,9 +108,13 @@ def run(nsis):
                     finally:applied.close()
                     assert (target/'OpenCore.exe').read_bytes()==(source/'OpenCore.exe').read_bytes()
                     assert (target/'runtime.dll').stat().st_mtime_ns==unchanged
-                    assert len(ranges)==1,'An unchanged file was downloaded again'
+                    assert len(ranges)==2,'An unchanged file was downloaded again'
+                    summary=json.loads((target/'logs/incremental-update-summary.json').read_text())
+                    assert summary['mode']=='release-difference',summary
+                    assert summary['filesInspected']==(2 if attempt==0 else 0),summary
+                    assert summary['unchangedFilesSkipped']==(1 if attempt==0 else 3),summary
                     assert not list(target.glob('.update-*')),'Successful update left staging directories'
                 assert observed['downloadText'] and observed['movingProgress'],observed
-            finally:user.CloseDesktop(desktop)
-            return {'actualNsisApplyPassed':True,'repeatUpdateDownloadedNoFiles':True,'unchangedLibraryUntouched':True,'downloadedRanges':len(ranges),'visibleDownloadProgressVerified':True}
+            finally:kernel.CloseHandle(locked);user.CloseDesktop(desktop)
+            return {'actualNsisApplyPassed':True,'repeatUpdateDownloadedNoFiles':True,'unchangedLibraryUntouched':True,'unchangedFilesNotReadVerified':True,'releaseDifferenceVerified':True,'downloadedRanges':len(ranges),'visibleDownloadProgressVerified':True}
         finally:server.shutdown();server.server_close();thread.join()

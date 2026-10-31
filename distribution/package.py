@@ -25,6 +25,8 @@ def collect(root):
         if not path.is_file():
             continue
         relative = path.relative_to(root)
+        if relative.as_posix() == 'installed-file-manifest.json':
+            continue
         if {part.lower() for part in relative.parts} & FORBIDDEN_PARTS or path.suffix.lower() in {'.pyc', '.pyo'}:
             continue
         if path.suffix.lower() in FORBIDDEN_SUFFIXES:
@@ -53,7 +55,7 @@ def file_commands(files, destination):
     return '\n'.join(lines)
 
 
-def installer_script(*, app, python, output, version, icon, branding, webview):
+def installer_script(*, app, python, output, version, icon, branding, webview, installed_manifest=None):
     if not re.fullmatch(r'\d+\.\d+\.\d+', version) or any(int(part) > 65535 for part in version.split('.')):
         raise ValueError('The installer version must be a Windows-compatible release version')
     lines = [f'''Unicode true
@@ -209,7 +211,7 @@ Section "OpenCore"
 ''', file_commands(python, '$INSTDIR\\test-python'), '''
     Goto installed
   ${EndIf}
-  SetOverwrite ifnewer
+  SetOverwrite on
 ''', file_commands(python, '$PROFILE\\OpenCore\\runtime-setup\\python-3.12.10'), f'''
   SetOverwrite on
   SetOutPath "$INSTDIR"
@@ -224,6 +226,7 @@ Section "OpenCore"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "DisplayIcon" "$INSTDIR\\OpenCore.exe"
   StrCpy $UpdateInstallSucceeded "1"
   installed:
+''', file_commands([(Path('installed-file-manifest.json'), installed_manifest)], '$INSTDIR') if installed_manifest else '', f'''
 SectionEnd
 Function .onInstSuccess
   ${{If}} $TestInstall == "1"
@@ -266,7 +269,7 @@ Section "Uninstall"
     directories = {parent for relative, _ in app for parent in relative.parents if str(parent) != '.'}
     for directory in sorted(directories, key=lambda value: (len(value.parts), str(value)), reverse=True):
         lines.append(f'  RMDir "$INSTDIR\\{nsis_literal(str(directory).replace(chr(47), chr(92)))}"')
-    lines.append('  Delete "$INSTDIR\\uninstall.exe"\n  RMDir "$INSTDIR"\nSectionEnd\n')
+    lines.append('  Delete "$INSTDIR\\installed-file-manifest.json"\n  Delete "$INSTDIR\\uninstall.exe"\n  RMDir "$INSTDIR"\nSectionEnd\n')
     return '\n'.join(lines)
 
 
@@ -294,12 +297,16 @@ def main():
              for group, label in [(app, 'app'), (python, 'python')] for relative, path in group]
     manifest = {**info, 'files': files, 'bytes': sum(file['bytes'] for file in files)}
     (args.output / 'package-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    installed_manifest = args.output / 'installed-file-manifest.json'
+    installed_manifest.write_text(json.dumps({'schema': 1, 'version': args.version,
+                                             'commit': args.commit, 'files': files}, separators=(',', ':')), encoding='utf-8')
     branding = args.output / 'branding'
     subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
                     str(Path(__file__).with_name('brand-assets.ps1')), '-Logo', str(args.logo.resolve()),
                     '-Output', str(branding)], check=True)
     script = installer_script(app=app, python=python, output=args.output, version=args.version,
-                              icon=args.icon.resolve(), branding=branding, webview=args.webview.resolve())
+                              icon=args.icon.resolve(), branding=branding, webview=args.webview.resolve(),
+                              installed_manifest=installed_manifest)
     source = args.output / 'OpenCore Setup.nsi'
     source.write_text(script, encoding='utf-8-sig')
     if args.nsis:

@@ -30,7 +30,7 @@ def update_script(output,version,icon,branding,webview):
   InitPluginsDir
   SetOutPath "$PLUGINSDIR"
 {files}
-  DetailPrint "Checking installed files; unchanged runtimes will be kept."
+  DetailPrint "Comparing releases; unchanged runtimes will be kept."
   SetDetailsView show
   ; Keep the NSIS message loop responsive while the hidden worker downloads.
   ; A blocking nsExec call deadlocks synchronous progress updates from PowerShell.
@@ -39,7 +39,14 @@ def update_script(output,version,icon,branding,webview):
   System::Call '*$0(i 68)'
   System::Alloc 16
   Pop $1
-  StrCpy $7 '"$WINDIR\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\apply-incremental-update.ps1" -AppRoot "$INSTDIR" -PythonRoot "$PROFILE\\OpenCore\\runtime-setup\\python-3.12.10" -IndexPath "$PLUGINSDIR\\incremental-index.json" -WindowHandle $HWNDPARENT'
+  StrCpy $8 ""
+  ${{GetParameters}} $9
+  ClearErrors
+  ${{GetOptions}} $9 "/VERIFY" $R0
+  ${{IfNot}} ${{Errors}}
+    StrCpy $8 " -VerifyInstalledFiles"
+  ${{EndIf}}
+  StrCpy $7 '"$WINDIR\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\apply-incremental-update.ps1" -AppRoot "$INSTDIR" -PythonRoot "$PROFILE\\OpenCore\\runtime-setup\\python-3.12.10" -IndexPath "$PLUGINSDIR\\incremental-index.json" -WindowHandle $HWNDPARENT$8'
   System::Call 'kernel32::CreateProcessW(p 0, w r7, p 0, p 0, i 0, i 0x08000000, p 0, p 0, p r0, p r1) i.r2'
   ${{If}} $2 == 0
     System::Free $0
