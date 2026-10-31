@@ -1,0 +1,266 @@
+{
+  "_id": "6953eedee7c8dde6a7930e1a",
+  "id": "IQuestLab/IQuest-Coder-V1-7B-Instruct",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "iquestcoder",
+    "text-generation",
+    "conversational",
+    "custom_code",
+    "en",
+    "arxiv:2512.13472",
+    "arxiv:2512.23611",
+    "arxiv:2512.22087",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 380,
+  "likes": 21,
+  "modelId": "IQuestLab/IQuest-Coder-V1-7B-Instruct",
+  "author": "IQuestLab",
+  "sha": "4b9526e2a61b234d3182d0a0909659d668d3b233",
+  "lastModified": "2026-03-04T12:42:49.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "IQuestCoderForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_iquestcoder.IQuestCoderConfig",
+      "AutoModel": "modeling_iquestcoder.IQuestCoderModel",
+      "AutoModelForCausalLM": "modeling_iquestcoder.IQuestCoderForCausalLM",
+      "AutoModelForSequenceClassification": "modeling_iquestcoder.IQuestCoderForSequenceClassification",
+      "AutoModelForTokenClassification": "modeling_iquestcoder.IQuestCoderForTokenClassification",
+      "AutoModelForQuestionAnswering": "modeling_iquestcoder.IQuestCoderForQuestionAnswering"
+    },
+    "model_type": "iquestcoder",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "eos_token": "<|im_end|>",
+      "unk_token": "<unk>",
+      "pad_token": "<|endoftext|>",
+      "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are IQuest-Coder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.type == 'function' and tool.function %}\n            {%- set func = tool.function %}\n        {%- else %}\n            {%- set func = tool %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" + func.name + \"</name>\" }}\n        {%- if func.description %}\n            {{- \"\\n<description>\" + func.description + \"</description>\" }}\n        {%- endif %}\n        {{- \"\\n<parameters>\" }}\n        {%- if func.parameters and func.parameters.properties %}\n            {%- for param_name, param_fields in func.parameters.properties.items() %}\n                {{- \"\\n<parameter>\" }}\n                {{- \"\\n<name>\" + param_name + \"</name>\" }}\n                {%- if param_fields.type %}\n                    {{- \"\\n<type>\" + param_fields.type + \"</type>\" }}\n                {%- endif %}\n                {%- if param_fields.description %}\n                    {{- \"\\n<description>\" + param_fields.description + \"</description>\" }}\n                {%- endif %}\n                {{- \"\\n</parameter>\" }}\n            {%- endfor %}\n        {%- endif %}\n        {{- \"\\n</parameters>\\n</function>\" }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nIf you choose to call a function ONLY reply in the following format:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n</function>\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are IQuest-Coder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tc = tool_call.function %}\n                {%- else %}\n                    {%- set tc = tool_call %}\n                {%- endif %}\n                {{- '<tool_call>\\n<function=' + tc.name + '>\\n' }}\n                {%- if tc.arguments is string %}\n                    {%- set args = tc.arguments | fromjson %}\n                {%- else %}\n                    {%- set args = tc.arguments %}\n                {%- endif %}\n                {%- for arg_name, arg_value in args.items() %}\n                    {{- '<parameter=' + arg_name + '>\\n' }}\n                    {%- if arg_value is string %}\n                        {{- arg_value }}\n                    {%- else %}\n                        {{- arg_value | tojson }}\n                    {%- endif %}\n                    {{- '\\n</parameter>\\n' }}\n                {%- endfor %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}"
+    },
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 5120,
+    "initializer_range": 0.02,
+    "intermediate_size": 27648,
+    "max_position_embeddings": 131072,
+    "mlp_bias": false,
+    "num_attention_heads": 40,
+    "num_hidden_layers": 14,
+    "num_key_value_heads": 8,
+    "pretraining_tp": 1,
+    "rms_norm_eps": 1e-05,
+    "rope_scaling": null,
+    "rope_theta": 500000.0,
+    "tie_word_embeddings": false,
+    "torch_dtype": "bfloat16",
+    "transformers_version": "4.55.4",
+    "use_cache": true,
+    "vocab_size": 76800,
+    "clip_qkv": null,
+    "use_sliding_window": false,
+    "sliding_window": null,
+    "max_window_layers": 0
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "iquestcoder",
+    "license_link": "https://huggingface.co/IQuestLab/IQuest-Coder-V1-7B-Instruct/blob/main/LICENSE",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_iquestcoder.IQuestCoderForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "41b3ccd057f518904f90610cc9189f5a5ce5e1ce",
+      "size": 1706
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "67ab50597a147f4b5bacf0bc71fb1ef1a42fce32",
+      "size": 1324
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4d70ed0481a0546629b747e3b1c42fae8564ee0b",
+      "size": 14395
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "7601c78479822d159a16b7c08ae03727453b7697",
+      "size": 1322
+    },
+    {
+      "rfilename": "configuration_iquestcoder.py",
+      "blobId": "8aac9f49f4bf87982714781f44c99a04c2532b0a",
+      "size": 8227
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "45ee99831e84b4cdb7a926290dd94f7b887cf994",
+      "size": 127
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "89bad4be87ecc7da1adf2df14746c25e46abe031",
+      "size": 4813050528,
+      "lfs": {
+        "sha256": "80095313ca07c71322c6497f49b861ff53ad6f15de0bc0a70ecf92b3980f004f",
+        "size": 4813050528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "f23636003b96952b4b5cea518d06079036614ecc",
+      "size": 4875986024,
+      "lfs": {
+        "sha256": "0267cb164c04f1e256fed554ffccce6f3c655bcb207147416b0e9bd196e05676",
+        "size": 4875986024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "4d3c17e5609c992afe42b48f7ff1c460e0825bcf",
+      "size": 4750166792,
+      "lfs": {
+        "sha256": "e7cc6b970fff2dd35f1bc3cef841bf48404bbb74101055e2a4dd7b7b9a772c35",
+        "size": 4750166792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "ca11230d559c0fbf7f350613df0ba07fb0bb94ef",
+      "size": 786432128,
+      "lfs": {
+        "sha256": "aa35f3b6c7175aed500c88760a0f99de959d3fa5837070d81280c2bea71e0571",
+        "size": 786432128,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "f7e89397995a2e3b9d9b09ce722ab6839b4fad3f",
+      "size": 10612
+    },
+    {
+      "rfilename": "modeling_iquestcoder.py",
+      "blobId": "800a462113fd89f5a5769bcc39fb77a5e8ec56e0",
+      "size": 44080
+    },
+    {
+      "rfilename": "papers/iquest-coder-v1-logo.png",
+      "blobId": "db8b265d824aa758048b67b57bc3b6aea5db1436",
+      "size": 122764,
+      "lfs": {
+        "sha256": "2fad84bb195ec8628191705c8c3f21ec21dc6dee27b72884e5342b3ffa0a0c0f",
+        "size": 122764,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "papers/results-20260302.png",
+      "blobId": "f95b84c5a6180d4721c6dfaca659a4567e9df777",
+      "size": 1238195,
+      "lfs": {
+        "sha256": "ca6bc03abac8e7633a0fe0755350bc5dac448b705303f33408efde5fb03bc146",
+        "size": 1238195,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "papers/results.png",
+      "blobId": "9e346b90296bc83b96a89f057deec415591fc588",
+      "size": 453412,
+      "lfs": {
+        "sha256": "b4b14ddc9c3fdfa2eed779e393a4ed67754255863b5d7f62641a4a04fcf2d462",
+        "size": 453412,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenization_iquestcoder.py",
+      "blobId": "9863d290f98a8db1ec5ce895006b23c1484d4973",
+      "size": 21762
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "b78ff6a8cfa5337f2b457e9e15097a24648e0ca8",
+      "size": 8125131
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "c5da580a272417e860fb920c677fbf4d52d80f68",
+      "size": 1345108,
+      "lfs": {
+        "sha256": "7d3be68e090a927f31e0e378d7599b15c206dd47e4a73933775a746cc9c1cd91",
+        "size": 1345108,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "6c4b16a719ecab059a5cf259554b6531b2b53aaf",
+      "size": 10025
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-30T15:25:18.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 7612810240
+    },
+    "total": 7612810240
+  },
+  "usedStorage": 30454430423,
+  "generation_config": {
+    "_from_model_config": true,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "transformers_version": "4.55.4"
+  }
+}

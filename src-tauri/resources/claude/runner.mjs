@@ -3,10 +3,16 @@
 import { query, tool, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
 import { createInterface } from 'node:readline';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { contextBudgetEnvironment, deriveContextBudget } from './context-budget.mjs';
 import { CodingVerification, codingBoundaryGuidance, toolFailed } from './coding-verification.mjs';
 const write = value => process.stdout.write(JSON.stringify(value) + '\n');
+function privateAgentExecutable() {
+  if (process.platform !== 'win32') return undefined;
+  const path = fileURLToPath(new URL('./node_modules/@anthropic-ai/claude-agent-sdk-win32-x64/opencore-agent.exe', import.meta.url));
+  return existsSync(path) ? path : undefined;
+}
 const input = createInterface({ input: process.stdin });
 const pending = new Map();
 let sequence = 0, agent, started = false;
@@ -77,6 +83,7 @@ async function run(config) {
     CLAUDE_CODE_ATTRIBUTION_HEADER: '0',
   });
   const options = {
+    pathToClaudeCodeExecutable: privateAgentExecutable(),
     cwd: config.cwd, env, abortController, model: `opencore:${config.effort}`, resume: config.resume || undefined,
     // The SDK bounds its active working set; OpenCore separately archives the
     // exact timeline in ECHO and makes it searchable after each compact boundary.

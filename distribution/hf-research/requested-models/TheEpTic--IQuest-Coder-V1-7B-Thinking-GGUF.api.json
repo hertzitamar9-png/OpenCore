@@ -1,0 +1,122 @@
+{
+  "_id": "69a8481f11ea00d42e3e3ca8",
+  "id": "TheEpTic/IQuest-Coder-V1-7B-Thinking-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "text-generation",
+    "iquestcoder",
+    "en",
+    "base_model:IQuestLab/IQuest-Coder-V1-7B-Thinking",
+    "base_model:quantized:IQuestLab/IQuest-Coder-V1-7B-Thinking",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 59,
+  "likes": 1,
+  "modelId": "TheEpTic/IQuest-Coder-V1-7B-Thinking-GGUF",
+  "author": "TheEpTic",
+  "sha": "4e9163209c1a69d88ece13c4516bd3f1112872aa",
+  "lastModified": "2026-03-04T16:40:34.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "language": [
+      "en"
+    ],
+    "license": "other",
+    "base_model": [
+      "IQuestLab/IQuest-Coder-V1-7B-Thinking"
+    ],
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "text-generation",
+      "iquestcoder"
+    ]
+  },
+  "gguf": {
+    "total": 7612810240,
+    "architecture": "llama",
+    "context_length": 131072,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are IQuest-Coder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.type == 'function' and tool.function %}\n            {%- set func = tool.function %}\n        {%- else %}\n            {%- set func = tool %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" + func.name + \"</name>\" }}\n        {%- if func.description %}\n            {{- \"\\n<description>\" + func.description + \"</description>\" }}\n        {%- endif %}\n        {{- \"\\n<parameters>\" }}\n        {%- if func.parameters and func.parameters.properties %}\n            {%- for param_name, param_fields in func.parameters.properties.items() %}\n                {{- \"\\n<parameter>\" }}\n                {{- \"\\n<name>\" + param_name + \"</name>\" }}\n                {%- if param_fields.type %}\n                    {{- \"\\n<type>\" + param_fields.type + \"</type>\" }}\n                {%- endif %}\n                {%- if param_fields.description %}\n                    {{- \"\\n<description>\" + param_fields.description + \"</description>\" }}\n                {%- endif %}\n                {{- \"\\n</parameter>\" }}\n            {%- endfor %}\n        {%- endif %}\n        {{- \"\\n</parameters>\\n</function>\" }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nIf you choose to call a function ONLY reply in the following format:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n</function>\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are IQuest-Coder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {%- set reasoning_content = '' %}\n        {%- set has_think = false %}\n        {%- if message.reasoning_content is defined and message.reasoning_content is not none %}\n            {%- set reasoning_content = message.reasoning_content %}\n            {%- set has_think = true %}\n        {%- else %}\n            {%- if '</think>' in message.content %}\n                {%- set content = message.content.split('</think>')[-1].lstrip('\\n') %}\n                {%- set reasoning_content = message.content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set has_think = true %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and has_think) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {%- if has_think %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tc = tool_call.function %}\n                {%- else %}\n                    {%- set tc = tool_call %}\n                {%- endif %}\n                {{- '<tool_call>\\n<function=' + tc.name + '>\\n' }}\n                {%- if tc.arguments is string %}\n                    {%- set args = tc.arguments | fromjson %}\n                {%- else %}\n                    {%- set args = tc.arguments %}\n                {%- endif %}\n                {%- for arg_name, arg_value in args.items() %}\n                    {{- '<parameter=' + arg_name + '>\\n' }}\n                    {%- if arg_value is string %}\n                        {{- arg_value }}\n                    {%- else %}\n                        {{- arg_value | tojson }}\n                    {%- endif %}\n                    {{- '\\n</parameter>\\n' }}\n                {%- endfor %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<s>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 4612936544
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "dace27f7f753acf0cf6a3df6eae1e3d23224ab4c",
+      "size": 1743
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Thinking-Q4_K_M.gguf",
+      "blobId": "b8fe3338d9bf396b8d4044bd01a4cfeb24e2f329",
+      "size": 4612936544,
+      "lfs": {
+        "sha256": "4a7f9a129a27b5bedcf2946453375c51cf8d3ed09b76868cfe524832d0ac8738",
+        "size": 4612936544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Thinking-Q6_K.gguf",
+      "blobId": "5bb473017f857245efb3c86695b3bc171e8484e3",
+      "size": 6247117664,
+      "lfs": {
+        "sha256": "8caab18bb8526afe5180f6bcb99ce903d92ae0da173d5443d019374ad6215ab0",
+        "size": 6247117664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Thinking-Q8_0.gguf",
+      "blobId": "1ac2504e4b07bab9acfeed87f6e1c1aba67acec7",
+      "size": 8090809184,
+      "lfs": {
+        "sha256": "c9a16029ef9d8b7ac3d2ad26691456cedb45eafcce8f5d0c738438cc51f4dd13",
+        "size": 8090809184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "67ab50597a147f4b5bacf0bc71fb1ef1a42fce32",
+      "size": 1324
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "226ee420b1e77a3e455a4725fe32352036a085bd",
+      "size": 1313
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "2e929dd0b569adbae0b890cd1133d885a0c09bf6",
+      "size": 314
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-03-04T14:56:31.000Z",
+  "usedStorage": 18950863392
+}

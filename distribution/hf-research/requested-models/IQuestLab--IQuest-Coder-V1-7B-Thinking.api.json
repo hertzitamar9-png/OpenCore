@@ -1,0 +1,266 @@
+{
+  "_id": "6953efe43fb8b32b2b3c4dbe",
+  "id": "IQuestLab/IQuest-Coder-V1-7B-Thinking",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "iquestcoder",
+    "text-generation",
+    "conversational",
+    "custom_code",
+    "en",
+    "arxiv:2512.13472",
+    "arxiv:2512.23611",
+    "arxiv:2512.22087",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 115,
+  "likes": 13,
+  "modelId": "IQuestLab/IQuest-Coder-V1-7B-Thinking",
+  "author": "IQuestLab",
+  "sha": "3771ada6cd85bf8d76c7c0515167d146c8433ac6",
+  "lastModified": "2026-03-04T12:43:29.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "IQuestCoderForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_iquestcoder.IQuestCoderConfig",
+      "AutoModel": "modeling_iquestcoder.IQuestCoderModel",
+      "AutoModelForCausalLM": "modeling_iquestcoder.IQuestCoderForCausalLM",
+      "AutoModelForSequenceClassification": "modeling_iquestcoder.IQuestCoderForSequenceClassification",
+      "AutoModelForTokenClassification": "modeling_iquestcoder.IQuestCoderForTokenClassification",
+      "AutoModelForQuestionAnswering": "modeling_iquestcoder.IQuestCoderForQuestionAnswering"
+    },
+    "model_type": "iquestcoder",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "eos_token": "<|im_end|>",
+      "unk_token": "<unk>",
+      "pad_token": "<|endoftext|>",
+      "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are IQuest-Coder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.type == 'function' and tool.function %}\n            {%- set func = tool.function %}\n        {%- else %}\n            {%- set func = tool %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" + func.name + \"</name>\" }}\n        {%- if func.description %}\n            {{- \"\\n<description>\" + func.description + \"</description>\" }}\n        {%- endif %}\n        {{- \"\\n<parameters>\" }}\n        {%- if func.parameters and func.parameters.properties %}\n            {%- for param_name, param_fields in func.parameters.properties.items() %}\n                {{- \"\\n<parameter>\" }}\n                {{- \"\\n<name>\" + param_name + \"</name>\" }}\n                {%- if param_fields.type %}\n                    {{- \"\\n<type>\" + param_fields.type + \"</type>\" }}\n                {%- endif %}\n                {%- if param_fields.description %}\n                    {{- \"\\n<description>\" + param_fields.description + \"</description>\" }}\n                {%- endif %}\n                {{- \"\\n</parameter>\" }}\n            {%- endfor %}\n        {%- endif %}\n        {{- \"\\n</parameters>\\n</function>\" }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nIf you choose to call a function ONLY reply in the following format:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n</function>\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are IQuest-Coder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {%- set reasoning_content = '' %}\n        {%- set has_think = false %}\n        {%- if message.reasoning_content is defined and message.reasoning_content is not none %}\n            {%- set reasoning_content = message.reasoning_content %}\n            {%- set has_think = true %}\n        {%- else %}\n            {%- if '</think>' in message.content %}\n                {%- set content = message.content.split('</think>')[-1].lstrip('\\n') %}\n                {%- set reasoning_content = message.content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set has_think = true %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and has_think) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {%- if has_think %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tc = tool_call.function %}\n                {%- else %}\n                    {%- set tc = tool_call %}\n                {%- endif %}\n                {{- '<tool_call>\\n<function=' + tc.name + '>\\n' }}\n                {%- if tc.arguments is string %}\n                    {%- set args = tc.arguments | fromjson %}\n                {%- else %}\n                    {%- set args = tc.arguments %}\n                {%- endif %}\n                {%- for arg_name, arg_value in args.items() %}\n                    {{- '<parameter=' + arg_name + '>\\n' }}\n                    {%- if arg_value is string %}\n                        {{- arg_value }}\n                    {%- else %}\n                        {{- arg_value | tojson }}\n                    {%- endif %}\n                    {{- '\\n</parameter>\\n' }}\n                {%- endfor %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}"
+    },
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 5120,
+    "initializer_range": 0.02,
+    "intermediate_size": 27648,
+    "max_position_embeddings": 131072,
+    "mlp_bias": false,
+    "num_attention_heads": 40,
+    "num_hidden_layers": 14,
+    "num_key_value_heads": 8,
+    "pretraining_tp": 1,
+    "rms_norm_eps": 1e-05,
+    "rope_scaling": null,
+    "rope_theta": 500000.0,
+    "tie_word_embeddings": false,
+    "torch_dtype": "bfloat16",
+    "transformers_version": "4.55.4",
+    "use_cache": true,
+    "vocab_size": 76800,
+    "clip_qkv": null,
+    "use_sliding_window": false,
+    "sliding_window": null,
+    "max_window_layers": 0
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "iquestcoder",
+    "license_link": "https://huggingface.co/IQuestLab/IQuest-Coder-V1-7B-Thinking/blob/main/LICENSE",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_iquestcoder.IQuestCoderForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "d8e3a8690ffad02e430204b8a54e3d8b89a7a9c5",
+      "size": 1699
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "67ab50597a147f4b5bacf0bc71fb1ef1a42fce32",
+      "size": 1324
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "3e294735185977f05d0dc9fb6d261c3eef74a899",
+      "size": 14395
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "7601c78479822d159a16b7c08ae03727453b7697",
+      "size": 1322
+    },
+    {
+      "rfilename": "configuration_iquestcoder.py",
+      "blobId": "8aac9f49f4bf87982714781f44c99a04c2532b0a",
+      "size": 8227
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "45ee99831e84b4cdb7a926290dd94f7b887cf994",
+      "size": 127
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "f88b7da1ab2e5eadb2de8bc62991d2718f9138a7",
+      "size": 4813050528,
+      "lfs": {
+        "sha256": "baa27262f53db7aa353b822419aab70168bccfb52beef1e3a2f85f5af72a12e6",
+        "size": 4813050528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "87780b76db2106356b382436252a492e93a8818f",
+      "size": 4875986024,
+      "lfs": {
+        "sha256": "9a29c2bc71ba9407f9f140a35bffcfb992d0a6623284a2f67931fccfe7c64388",
+        "size": 4875986024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "1d804ba7384cea6e78ec7d377a30e022b6425c63",
+      "size": 4750166792,
+      "lfs": {
+        "sha256": "4e66447ea4cbfa5e1339cf024c76959d0f3254cd808740456a7b62f509d8b500",
+        "size": 4750166792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "e1e46edd0770ab5dd8e07c369fe60542cc8a5e5d",
+      "size": 786432128,
+      "lfs": {
+        "sha256": "d131407558970c11c8d52b5d87be924166b97fb2a44c020db845a05f65a9593f",
+        "size": 786432128,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "f7e89397995a2e3b9d9b09ce722ab6839b4fad3f",
+      "size": 10612
+    },
+    {
+      "rfilename": "modeling_iquestcoder.py",
+      "blobId": "800a462113fd89f5a5769bcc39fb77a5e8ec56e0",
+      "size": 44080
+    },
+    {
+      "rfilename": "papers/iquest-coder-v1-logo.png",
+      "blobId": "db8b265d824aa758048b67b57bc3b6aea5db1436",
+      "size": 122764,
+      "lfs": {
+        "sha256": "2fad84bb195ec8628191705c8c3f21ec21dc6dee27b72884e5342b3ffa0a0c0f",
+        "size": 122764,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "papers/results.png",
+      "blobId": "9e346b90296bc83b96a89f057deec415591fc588",
+      "size": 453412,
+      "lfs": {
+        "sha256": "b4b14ddc9c3fdfa2eed779e393a4ed67754255863b5d7f62641a4a04fcf2d462",
+        "size": 453412,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "results-20260302.png",
+      "blobId": "f95b84c5a6180d4721c6dfaca659a4567e9df777",
+      "size": 1238195,
+      "lfs": {
+        "sha256": "ca6bc03abac8e7633a0fe0755350bc5dac448b705303f33408efde5fb03bc146",
+        "size": 1238195,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenization_iquestcoder.py",
+      "blobId": "9863d290f98a8db1ec5ce895006b23c1484d4973",
+      "size": 21762
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "b78ff6a8cfa5337f2b457e9e15097a24648e0ca8",
+      "size": 8125131
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "c5da580a272417e860fb920c677fbf4d52d80f68",
+      "size": 1345108,
+      "lfs": {
+        "sha256": "7d3be68e090a927f31e0e378d7599b15c206dd47e4a73933775a746cc9c1cd91",
+        "size": 1345108,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "e922743867d1580310baf9f2cae4aec6e2a41a2d",
+      "size": 11521
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-30T15:29:40.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 7612810240
+    },
+    "total": 7612810240
+  },
+  "usedStorage": 30454430423,
+  "generation_config": {
+    "_from_model_config": true,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "transformers_version": "4.55.4"
+  }
+}

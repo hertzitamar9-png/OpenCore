@@ -4,6 +4,17 @@ from echo_server import ReasoningLoopGuard,recover_requested_html_file
 
 
 class LoopGuardTests(unittest.TestCase):
+    def test_short_paraphrased_plans_with_single_newlines_do_not_run_forever(self):
+        guard=ReasoningLoopGuard()
+        plans=["Empty workspace. I'll build a polished, feature-rich snake game.",
+               "Empty workspace, so I'll create a complete snake HTML game from scratch.",
+               "I'll build a polished single-file snake game with controls and a high score.",
+               "Empty workspace. Let me build a complete, polished snake game."]
+        detected=False
+        for line in plans*4:
+            detected=guard.feed(line+'\n') or detected
+        self.assertTrue(detected)
+
     def test_repeated_planning_is_detected_across_stream_chunks(self):
         guard=ReasoningLoopGuard()
         block='The user wants me to find the snake game file and fix movement. I need to search the workspace for the snake game before editing it. I should locate the current snake HTML file and then inspect its actual contents.\n\n'

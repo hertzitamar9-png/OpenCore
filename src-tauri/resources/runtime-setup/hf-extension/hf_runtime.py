@@ -156,6 +156,19 @@ def _available_memory():
 
 class RuntimeManager:
     automatic_preparation=True
+    def telemetry_source(self, model_id, conversation):
+        with self._state_lock:
+            active=self._active
+            if not active or active['id']!=model_id:return None
+            url,key=active['url'],active['key']
+        from urllib.parse import quote,urlsplit
+        def read():
+            with self._request(url+'/echo/context?conversation='+quote(conversation,safe=''),key=key,timeout=.8) as response:
+                raw=response.read(256*1024+1)
+            if len(raw)>256*1024:raise ValueError('Context sample too large')
+            return json.loads(raw)
+        return {'status':'running','profile':model_id,'echoPort':urlsplit(url).port},read
+
     def private_backend(self, native=None):
         with self._state_lock:
             if self._active:

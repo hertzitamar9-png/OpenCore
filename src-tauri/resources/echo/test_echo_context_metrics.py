@@ -42,6 +42,22 @@ class SlotMetricsTests(unittest.TestCase):
         self.assertEqual(metrics.get('modelUsageKind'),'prompt')
         self.assertNotIn('modelSessionTokens',metrics)
 
+    def test_decoding_updates_rolling_context_and_output_metrics(self):
+        self.slots=[{'id':0,'n_ctx':32768,'n_prompt_tokens':12080,'next_token':[{'n_decoded':81}],'is_processing':True}]
+        metrics=self.state.backend_session_metrics('chat')
+        self.assertEqual(metrics.get('modelActiveTokens'),12080)
+        self.assertEqual(metrics.get('modelUsageKind'),'live')
+        self.assertEqual(metrics.get('modelOutputTokens'),81)
+        self.slots[0]['next_token'][0]['n_decoded']=121
+        self.slots[0]['n_prompt_tokens']=12120
+        self.state._backend_metrics_time=0
+        metrics=self.state.backend_session_metrics('chat')
+        self.assertEqual(metrics.get('modelActiveTokens'),12120)
+
+    def test_explicit_kv_occupancy_is_not_double_counted_with_decode_tokens(self):
+        self.slots=[{'id':0,'n_ctx':32768,'n_past':13000,'n_prompt_tokens':12000,'next_token':{'n_decoded':81},'is_processing':True}]
+        self.assertEqual(self.state.backend_session_metrics('chat').get('modelActiveTokens'),13000)
+
     def test_missing_occupancy_is_not_fabricated_from_generated_token_count(self):
         self.slots=[{'id':0,'n_ctx':32768,'next_token':{'n_decoded':80},'is_processing':True}]
         metrics=self.state.backend_session_metrics('chat')

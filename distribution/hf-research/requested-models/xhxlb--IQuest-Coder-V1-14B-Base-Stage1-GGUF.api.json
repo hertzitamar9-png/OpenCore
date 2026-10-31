@@ -1,0 +1,184 @@
+{
+  "_id": "69b23ea677b57099ee51afce",
+  "id": "xhxlb/IQuest-Coder-V1-14B-Base-Stage1-GGUF",
+  "private": false,
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "base_model:IQuestLab/IQuest-Coder-V1-14B-Base-Stage1",
+    "base_model:quantized:IQuestLab/IQuest-Coder-V1-14B-Base-Stage1",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 86,
+  "likes": 0,
+  "modelId": "xhxlb/IQuest-Coder-V1-14B-Base-Stage1-GGUF",
+  "author": "xhxlb",
+  "sha": "59e865e00b4ccef5d91c846ad044b85cc6487570",
+  "lastModified": "2026-03-13T12:53:02.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "IQuestLab/IQuest-Coder-V1-14B-Base-Stage1"
+    ],
+    "library_name": "gguf"
+  },
+  "gguf": {
+    "total": 14433940480,
+    "architecture": "qwen2",
+    "context_length": 16384,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are IQuest-Coder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.type == 'function' and tool.function %}\n            {%- set func = tool.function %}\n        {%- else %}\n            {%- set func = tool %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" + func.name + \"</name>\" }}\n        {%- if func.description %}\n            {{- \"\\n<description>\" + func.description + \"</description>\" }}\n        {%- endif %}\n        {{- \"\\n<parameters>\" }}\n        {%- if func.parameters and func.parameters.properties %}\n            {%- for param_name, param_fields in func.parameters.properties.items() %}\n                {{- \"\\n<parameter>\" }}\n                {{- \"\\n<name>\" + param_name + \"</name>\" }}\n                {%- if param_fields.type %}\n                    {{- \"\\n<type>\" + param_fields.type + \"</type>\" }}\n                {%- endif %}\n                {%- if param_fields.description %}\n                    {{- \"\\n<description>\" + param_fields.description + \"</description>\" }}\n                {%- endif %}\n                {{- \"\\n</parameter>\" }}\n            {%- endfor %}\n        {%- endif %}\n        {{- \"\\n</parameters>\\n</function>\" }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nIf you choose to call a function ONLY reply in the following format:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n</function>\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are IQuest-Coder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tc = tool_call.function %}\n                {%- else %}\n                    {%- set tc = tool_call %}\n                {%- endif %}\n                {{- '<tool_call>\\n<function=' + tc.name + '>\\n' }}\n                {%- if tc.arguments is string %}\n                    {%- set args = tc.arguments | fromjson %}\n                {%- else %}\n                    {%- set args = tc.arguments %}\n                {%- endif %}\n                {%- for arg_name, arg_value in args.items() %}\n                    {{- '<parameter=' + arg_name + '>\\n' }}\n                    {%- if arg_value is string %}\n                        {{- arg_value }}\n                    {%- else %}\n                        {{- arg_value | tojson }}\n                    {%- endif %}\n                    {{- '\\n</parameter>\\n' }}\n                {%- endfor %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}",
+    "bos_token": "<s>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 28870219296
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a1c38d6d8d9cf981e979c36a2b45748edb57427c",
+      "size": 2546
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-F16.gguf",
+      "blobId": "8104eae646b8fc8f75645afe2fc79823bcb3b64a",
+      "size": 28870219296,
+      "lfs": {
+        "sha256": "922aa01910b6d7e6ec1a606892dbb8dfc66cc26f3a4f405552335ebfa781d982",
+        "size": 28870219296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q2_K.gguf",
+      "blobId": "f0891df704e6894931fa8d8d755de1bc8ea87539",
+      "size": 5442717216,
+      "lfs": {
+        "sha256": "77437da6707220da54be8c17f535203843250d17019bd27f703bc4b8d8b46f32",
+        "size": 5442717216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q3_K_L.gguf",
+      "blobId": "af508127b6e8ed9f40ede7ba12d420aa3cde378f",
+      "size": 7606408736,
+      "lfs": {
+        "sha256": "d8d1c3eb1c12460070bde613537492f5189716b94b2c25f733ba6080cd8c1620",
+        "size": 7606408736,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q3_K_M.gguf",
+      "blobId": "177860397efd73c91a01c29f5994528fd193792f",
+      "size": 7019861536,
+      "lfs": {
+        "sha256": "802716f3e7b8d88c89a8b541be69c8ada1119acf7cf1e5584feab57f9506c23b",
+        "size": 7019861536,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q3_K_S.gguf",
+      "blobId": "bdb1427eac7d68b10fb3dd47777e251161e2004e",
+      "size": 6357456416,
+      "lfs": {
+        "sha256": "27ac01270554ac17f31cea5fcc151a8ebf333ed793a6b4abc83163bb36daeb6b",
+        "size": 6357456416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q4_0.gguf",
+      "blobId": "a444c78b871dacd1908c201a7f654cae206529d2",
+      "size": 8222549536,
+      "lfs": {
+        "sha256": "679ed1f9eedf50d7fa3b18122efd2d928bdeda20dc9225e72a617519b6ebd1be",
+        "size": 8222549536,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q4_K_M.gguf",
+      "blobId": "8f6dcb00b36630d6b9c72a409a97e656345c9c1d",
+      "size": 8752408096,
+      "lfs": {
+        "sha256": "c155b5cf377a62e193713d9dfd732223fa23a410c99d2903bed88a6997b9155c",
+        "size": 8752408096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q4_K_S.gguf",
+      "blobId": "de10a2382d3429105ea7546f1584a1e7426bd469",
+      "size": 8278255136,
+      "lfs": {
+        "sha256": "60f0ccbb750c663bbc3a58f261a5f4c9342aec62a6679be4fae1f78b23352b2e",
+        "size": 8278255136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q5_0.gguf",
+      "blobId": "e79aa0ba7d0bb31652a75869228fe243474966a0",
+      "size": 9977931296,
+      "lfs": {
+        "sha256": "0c9ec68fc49a54ecc48e321d0257c9c0dc2a67695021de0f83e8a58d2168a8d4",
+        "size": 9977931296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q5_K_M.gguf",
+      "blobId": "4e29927eee2a36057b0384fe6a01c14e4c6acb02",
+      "size": 10250888736,
+      "lfs": {
+        "sha256": "37590b9384d8f57274be119e965aafa23b7629fafdd228e88b94f3a098c27d4d",
+        "size": 10250888736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q5_K_S.gguf",
+      "blobId": "68888b3befc35b1254edb8d15da876a8adb57923",
+      "size": 9977931296,
+      "lfs": {
+        "sha256": "7a63cb9034ad82f854f82a5e4be7a380d68449e23b93c7016b1e112496dea3e3",
+        "size": 9977931296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q6_K.gguf",
+      "blobId": "3b0715ab6b3fa381c2f7977edd16441f5dd168b4",
+      "size": 11843024416,
+      "lfs": {
+        "sha256": "79aa4dd4465291006231cd9d147e94841a4818a5adc1bd7bee781608b88426c7",
+        "size": 11843024416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-14B-Base-Stage1-Q8_0.gguf",
+      "blobId": "4011953e6d4625faf79d786120031fd7510c1723",
+      "size": 15338673696,
+      "lfs": {
+        "sha256": "4c3adac181e26e4ac868fd0055f7ad8d1266719520a19750436413d606023945",
+        "size": 15338673696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6068ec1c29283400f05013af11c0ba431d55bc7d",
+      "size": 576
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-03-12T04:18:46.000Z",
+  "usedStorage": 137938325408
+}

@@ -59,7 +59,7 @@ test('the meter reflects a smaller actual runtime allocation instead of inventin
 });
 test('an unloaded model uses its catalog window rather than the stopped runtimes generic limit',()=>{
  const telemetry={available:false,windowTokens:65536},jsx=(type,props)=>({type,...props});
- const meter=evaluate('g8',{an:[{id:'ornith-1-5-9b-mtp',contextTokens:32768,echoWorkingWindowTokens:32768}],p:{useState:()=>[telemetry,()=>{}],useEffect:()=>{}},i:{jsx,jsxs:jsx},hr:n=>String(n),Kp:()=>true});
+ const meter=evaluate('g8',{fd:()=>({configuredContextTokens:32768}),p:{useState:()=>[telemetry,()=>{}],useEffect:()=>{}},i:{jsx,jsxs:jsx},hr:n=>String(n),Kp:()=>true});
  let bar;walk(meter({conversationId:'chat',profile:'ornith-1-5-9b-mtp',runtime:{status:'stopped',profile:'stopped',contextSize:65536}}),x=>{if(x.type==='progress')bar=x});
  assert.equal(bar.max,32768);assert.equal(bar.value,undefined,'Unknown usage must not be shown as zero');
 });

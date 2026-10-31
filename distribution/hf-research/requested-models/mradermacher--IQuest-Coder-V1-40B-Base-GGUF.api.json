@@ -1,0 +1,177 @@
+{
+  "_id": "69571087871e3a888d6af732",
+  "id": "mradermacher/IQuest-Coder-V1-40B-Base-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "en",
+    "base_model:IQuestLab/IQuest-Coder-V1-40B-Base",
+    "base_model:quantized:IQuestLab/IQuest-Coder-V1-40B-Base",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 515,
+  "likes": 0,
+  "modelId": "mradermacher/IQuest-Coder-V1-40B-Base-GGUF",
+  "author": "mradermacher",
+  "sha": "f10520ac6c9a351c38e72429c020fb25eda1a5b1",
+  "lastModified": "2026-01-02T06:19:27.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "IQuestLab/IQuest-Coder-V1-40B-Base",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "other",
+    "license_link": "https://huggingface.co/IQuestLab/IQuest-Coder-V1-40B-Instruct/blob/main/LICENSE",
+    "license_name": "iquestcoder",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 39794283520,
+    "architecture": "llama",
+    "context_length": 131072,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are LoopCoder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are LoopCoder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}",
+    "bos_token": "<s>",
+    "totalFileSize": 21545751424
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "789b624b7c5fcb02938091598e8a8b8e1c74d3ad",
+      "size": 2316
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.IQ4_XS.gguf",
+      "blobId": "d77ae2f312d1a53ae6b2115ba60534779aa86c97",
+      "size": 21545751424,
+      "lfs": {
+        "sha256": "bbb726f6fb6320d19de50dccffa4496627e1f483bfec3b9b554ca43b3c27b357",
+        "size": 21545751424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q2_K.gguf",
+      "blobId": "194861ad500dab2edcc4565079eb43b9e8fa77d5",
+      "size": 14769738624,
+      "lfs": {
+        "sha256": "833e0e6dee52b88f72262d14cd88785ba8cd2f3b8391e64aa3eae346aec8153a",
+        "size": 14769738624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q3_K_L.gguf",
+      "blobId": "c1fcd33436092c21b6207601ba28884d06fb5863",
+      "size": 20825879424,
+      "lfs": {
+        "sha256": "5f1451ef483fbe4d1de7fb1e2c2d2568d675cb8f0ca6d0c3a9a0c8fd304a1189",
+        "size": 20825879424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q3_K_M.gguf",
+      "blobId": "76515e0839d74048b926af87a9c3eba8ae0a861e",
+      "size": 19236631424,
+      "lfs": {
+        "sha256": "d1831c7d331207c327ab3616f26a0ca05b9064f847bd5f0e01cfb298eee4d482",
+        "size": 19236631424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q3_K_S.gguf",
+      "blobId": "1cac597962d68c6d3c09a861886e1d38f8ce0620",
+      "size": 17365578624,
+      "lfs": {
+        "sha256": "c2f0634cad1cff1a2d1520a93ca8ea843d9f2d84e96811fc9ca7ba11a7468fdf",
+        "size": 17365578624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q4_K_M.gguf",
+      "blobId": "0f7ba6682d05742690867d8f269b76c946ef0092",
+      "size": 24030385024,
+      "lfs": {
+        "sha256": "56b96262e8c713a5e69eff88d234a0549257e147d19e9dc8ff02083188c766e7",
+        "size": 24030385024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q4_K_S.gguf",
+      "blobId": "d9fc3e8060d9753dfe9a35fcec262939bd95f34e",
+      "size": 22719665024,
+      "lfs": {
+        "sha256": "035bd5e9da65b7846aff6a0effb2c741bd181afac46b2e7b6ea2774ee0e96500",
+        "size": 22719665024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q5_K_M.gguf",
+      "blobId": "8cfc4114a8d6b8554d5af78446658c140bcbba41",
+      "size": 28195197824,
+      "lfs": {
+        "sha256": "af7739b01375d7d784070f790423b3e27b0bcdcc4d3cfe77be2b7f9fdc2d6f43",
+        "size": 28195197824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q5_K_S.gguf",
+      "blobId": "c5d6aad024268e65a2cd6123be379f3b3da33d32",
+      "size": 27415319424,
+      "lfs": {
+        "sha256": "cd7429249ab537b9e858a8bc87c3d9a6e4592fde31446ed53c6b86c26a391997",
+        "size": 27415319424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q6_K.gguf",
+      "blobId": "29a65e4be2d60881b662cbd43d5f6e120f20f7c6",
+      "size": 32648164224,
+      "lfs": {
+        "sha256": "1d7acec613655203e7753ab4ff4544732fb13b99314d7c94586a6113f8f478cb",
+        "size": 32648164224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-40B-Base.Q8_0.gguf",
+      "blobId": "93ee76afc65d7342df3087212a531862ffc1a24a",
+      "size": 42285642624,
+      "lfs": {
+        "sha256": "0d9828c96760f2f8e488997ec06a8385844b48ac9bd823456158da997fe3061d",
+        "size": 42285642624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a149f67d7f94ec00af422793067b448870eeab03",
+      "size": 3715
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-01-02T00:25:43.000Z",
+  "usedStorage": 271037953664
+}

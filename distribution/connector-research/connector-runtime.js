@@ -1,4 +1,12 @@
 const $connectorSources = ["claude", "codex", "hermes", "opencode"];
+function $uniqueSidebarSections(groups) {
+    const seen=new Set(),result={};
+    for(const [key,items] of Object.entries(groups))result[key]=items.filter(row=>{
+        if(seen.has(row.id))return false;
+        seen.add(row.id);return true;
+    });
+    return {...result,$shown:seen};
+}
 const $connectorHistoryEvent = "opencore-connector-history-changed";
 const $connectorClearEvent = "opencore-connector-clear-changed";
 const $connectorClearJobs = new Map();

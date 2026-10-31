@@ -117,6 +117,8 @@
   "resources/echo/test_echo_reasoning_visibility.py": "src-tauri/resources/echo/test_echo_reasoning_visibility.py",
   "resources/echo/test_echo_virtual.py": "src-tauri/resources/echo/test_echo_virtual.py",
   "runtime-setup/hf-extension/hf_bridge.py": "src-tauri/resources/runtime-setup/hf-extension/hf_bridge.py",
+  "runtime-setup/hf-extension/hf_telemetry.py": "src-tauri/resources/runtime-setup/hf-extension/hf_telemetry.py",
+  "runtime-setup/hf-extension/hf_bridge_policy.py": "src-tauri/resources/runtime-setup/hf-extension/hf_bridge_policy.py",
   "runtime-setup/hf-extension/hf_catalog.py": "src-tauri/resources/runtime-setup/hf-extension/hf_catalog.py",
   "runtime-setup/hf-extension/hf_download.py": "src-tauri/resources/runtime-setup/hf-extension/hf_download.py",
   "runtime-setup/hf-extension/hf_image_runtime.py": "src-tauri/resources/runtime-setup/hf-extension/hf_image_runtime.py",

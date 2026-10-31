@@ -1,23 +1,48 @@
-.conversation-list-focus {
-  --section-highlight-fill: linear-gradient(145deg, var(--theme-raised, #4a5059), var(--theme-panel, #21252b));
-  --section-highlight-border: var(--theme-muted, #a7b2bd);
+:root {
+  --section-highlight-fill: color-mix(in srgb, var(--theme-accent, #6dacf5) 22%, var(--theme-panel, #10283d));
+  --section-highlight-border: var(--theme-accent, #6dacf5);
   --section-highlight-ink: var(--theme-ink, #f0f3f6);
 }
 
-.conversation-list-focus button:not(:disabled):is(:hover, :focus-visible, [aria-selected="true"], [aria-pressed="true"], .active),
-.conversation-list-focus .conversation-row-shell:is(:hover, :focus-within, .selected) {
+.opencore-shell button:not(:disabled):not(.conversation-row):is(:hover, :focus-visible, [aria-selected="true"], [aria-pressed="true"], .active, .selected),
+.opencore-shell .nav-item:is(:hover, :focus-visible, .active, [aria-current="page"]),
+.opencore-shell [role="tab"]:is(:hover, [aria-selected="true"]) {
   background: var(--section-highlight-fill) !important;
   border-color: var(--section-highlight-border) !important;
   color: var(--section-highlight-ink) !important;
   box-shadow: inset 0 0 0 1px var(--section-highlight-border) !important;
 }
 
-.conversation-list-focus button:focus-visible {
+.opencore-shell :is(button, select):focus-visible {
   outline: 2px solid var(--section-highlight-border) !important;
   outline-offset: 2px;
 }
 
-.conversation-list-focus .conversation-row-shell:is(:hover, :focus-within, .selected) > .conversation-row {
+.conversation-list-focus button:not(:disabled):not(.conversation-row):is(:hover, :focus-visible, [aria-selected="true"], [aria-pressed="true"], .active),
+.conversation-list-focus .conversation-row-shell.selected {
+  background: var(--section-highlight-fill) !important;
+  border-color: var(--section-highlight-border) !important;
+  color: var(--section-highlight-ink) !important;
+  box-shadow: inset 0 0 0 1px var(--section-highlight-border) !important;
+}
+
+.conversation-list-focus button:not(.conversation-row):focus-visible {
+  outline: 2px solid var(--section-highlight-border) !important;
+  outline-offset: 2px;
+}
+
+.conversation-list-focus .conversation-row-shell > .conversation-row {
   background: transparent !important;
+  box-shadow: none !important;
+}
+
+.conversation-list-focus .conversation-row-shell:not(.selected):is(:hover, :focus-within) {
+  background: var(--theme-panel, #10151c) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.opencore-shell textarea[aria-label^="Message "]:focus {
+  outline: none !important;
   box-shadow: none !important;
 }

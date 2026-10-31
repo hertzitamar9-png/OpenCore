@@ -14,6 +14,44 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_iquest_family_keeps_all_fourteen_editions_with_their_actual_runtimes(self):
+        families={row['familyId'] for row in self.rows if row['repository'].startswith('IQuestLab/IQuest-Coder-V1-')}
+        self.assertEqual(len(families),14)
+        for family in families:
+            entries=[entry for entry in self.entries if entry['familyId']==family]
+            self.assertTrue(entries)
+            self.assertTrue(all(e['originalRepository'].startswith('IQuestLab/IQuest-Coder-V1-') for e in entries))
+            original=next(e for e in entries if e['repository']==e['originalRepository'])
+            self.assertEqual(original['runtime']['adapter'],None)
+            self.assertFalse(any(p['filename'].endswith('.py') for p in original['files']))
+            if '-Loop-' in original['repository']:
+                self.assertTrue(all(e['runtime']['adapter'] is None for e in entries))
+            else:
+                self.assertGreaterEqual(len({e['quantization'] for e in entries if e['format']=='gguf'}),5)
+                self.assertTrue(all(e['managedEngine']=='flint-cpu-v1' for e in entries if e['format']=='gguf'))
+            expected=16384 if 'Stage1' in original['repository'] else 32768
+            self.assertTrue(all(e['contextTokens']==expected for e in entries))
+
+    def test_lucet_editions_do_not_pad_each_others_quantization_menu(self):
+        for suffix,prefix in [('lucet-coder-4b-omega','lucet-coder-4b-omega-'),('lucet-spark-4b-uncensored','lucet-spark-4b-uncensored-gsq-rco-')]:
+            entries=self.family(suffix)
+            self.assertEqual(len(entries),3)
+            self.assertEqual({e['quantization'] for e in entries},{'Q4_K_M','Q4_K_S','Q8_0'})
+            self.assertTrue(all(next(p for p in e['files'] if p['role']=='model')['filename'].startswith(prefix) for e in entries))
+
+    def test_tenro_keeps_the_adapter_and_complete_merged_packages_without_training_checkpoints(self):
+        entries=self.family('tenro-computer-use-v2')
+        self.assertEqual(len(entries),3)
+        adapter=next(e for e in entries if e.get('packageKind')=='adapter')
+        self.assertEqual(adapter['baseRepository'],'Qwen/Qwen2.5-VL-3B-Instruct')
+        self.assertIn('adapter_model.safetensors',{p['filename'] for p in adapter['files']})
+        gguf=next(e for e in entries if e['format']=='gguf')
+        self.assertTrue(any(p['role']=='companion' and 'mmproj' in p['filename'] for p in gguf['files']))
+        for entry in entries:
+            self.assertEqual(entry['runtime']['adapter'],'gguf' if entry['format']=='gguf' else None)
+            self.assertFalse(any('checkpoint-' in p['filename'] or p['filename'].endswith('.bin') for p in entry['files']))
+            self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+
     def test_velvet2_keeps_the_complete_gated_bf16_text_checkpoint(self):
         entries=self.family('velvet2-3b')
         self.assertEqual(len(entries),1)
@@ -335,7 +373,7 @@ class RequestedCatalogTests(unittest.TestCase):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 19)
+        self.assertEqual(report['withFive'], 31)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

@@ -1,0 +1,728 @@
+{
+  "_id": "6ad6056b9d300685a62668cf",
+  "id": "kvn420/tenro-computer-use-v2-lora",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "peft",
+  "tags": [
+    "peft",
+    "safetensors",
+    "gguf",
+    "qwen2_5_vl",
+    "image-text-to-text",
+    "base_model:adapter:Qwen/Qwen2.5-VL-3B-Instruct",
+    "lora",
+    "transformers",
+    "text-generation",
+    "conversational",
+    "arxiv:1910.09700",
+    "base_model:Qwen/Qwen2.5-VL-3B-Instruct",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "4-bit",
+    "bitsandbytes",
+    "region:us"
+  ],
+  "downloads": 125,
+  "likes": 1,
+  "modelId": "kvn420/tenro-computer-use-v2-lora",
+  "author": "kvn420",
+  "sha": "f64970bc18f93f215ac3f6344f5db6f165c2aa95",
+  "lastModified": "2026-10-26T18:29:35.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "model_type": "qwen2_5_vl",
+    "quantization_config": {
+      "_load_in_4bit": true,
+      "_load_in_8bit": false,
+      "bnb_4bit_compute_dtype": "bfloat16",
+      "bnb_4bit_quant_storage": "uint8",
+      "bnb_4bit_quant_type": "nf4",
+      "bnb_4bit_use_double_quant": true,
+      "llm_int8_enable_fp32_cpu_offload": false,
+      "llm_int8_has_fp16_weight": false,
+      "llm_int8_skip_modules": null,
+      "llm_int8_threshold": 6.0,
+      "load_in_4bit": true,
+      "load_in_8bit": false,
+      "quant_method": "bitsandbytes"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "unk_token": null,
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "peft": {
+      "base_model_name_or_path": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "task_type": "CAUSAL_LM"
+    },
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "float32",
+    "eos_token_id": 151645,
+    "hidden_act": "silu",
+    "hidden_size": 2048,
+    "image_token_id": 151655,
+    "initializer_range": 0.02,
+    "intermediate_size": 11008,
+    "max_position_embeddings": 128000,
+    "max_window_layers": 70,
+    "num_attention_heads": 16,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 2,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_section": [
+        16,
+        24,
+        24
+      ],
+      "rope_type": "default",
+      "type": "default"
+    },
+    "rope_theta": 1000000.0,
+    "sliding_window": 32768,
+    "text_config": {
+      "architectures": [
+        "Qwen2_5_VLForConditionalGeneration"
+      ],
+      "attention_dropout": 0.0,
+      "bos_token_id": 151643,
+      "dtype": "bfloat16",
+      "eos_token_id": 151645,
+      "hidden_act": "silu",
+      "hidden_size": 2048,
+      "initializer_range": 0.02,
+      "intermediate_size": 11008,
+      "layer_types": [
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention"
+      ],
+      "max_position_embeddings": 128000,
+      "max_window_layers": 70,
+      "model_type": "qwen2_5_vl_text",
+      "num_attention_heads": 16,
+      "num_hidden_layers": 36,
+      "num_key_value_heads": 2,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": {
+        "mrope_section": [
+          16,
+          24,
+          24
+        ],
+        "rope_type": "default",
+        "type": "default"
+      },
+      "rope_theta": 1000000.0,
+      "sliding_window": null,
+      "tie_word_embeddings": true,
+      "use_cache": true,
+      "use_sliding_window": false,
+      "vision_token_id": 151654,
+      "vocab_size": 151936
+    },
+    "transformers_version": "4.57.6",
+    "use_cache": true,
+    "use_sliding_window": false,
+    "video_token_id": 151656,
+    "vision_config": {
+      "depth": 32,
+      "dtype": "bfloat16",
+      "fullatt_block_indexes": [
+        7,
+        15,
+        23,
+        31
+      ],
+      "hidden_act": "silu",
+      "hidden_size": 1280,
+      "in_channels": 3,
+      "in_chans": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 3420,
+      "model_type": "qwen2_5_vl",
+      "num_heads": 16,
+      "out_hidden_size": 2048,
+      "patch_size": 14,
+      "spatial_merge_size": 2,
+      "spatial_patch_size": 14,
+      "temporal_patch_size": 2,
+      "tokens_per_second": 2,
+      "window_size": 112
+    },
+    "vision_end_token_id": 151653,
+    "vision_start_token_id": 151652,
+    "vision_token_id": 151654,
+    "vocab_size": 151936
+  },
+  "cardData": {
+    "base_model": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "library_name": "peft",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "base_model:adapter:Qwen/Qwen2.5-VL-3B-Instruct",
+      "lora",
+      "transformers"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 15237851808
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "e4bc9e9f61f71df27453026c313407eb7d5ed95b",
+      "size": 1918
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "9a8710c5bad1248305ba41a87ca6bd2a40f2f990",
+      "size": 5208
+    },
+    {
+      "rfilename": "adapter_config.json",
+      "blobId": "ae0bbee8a76d136ac4e89534c70a2ad64d34f8d2",
+      "size": 1160
+    },
+    {
+      "rfilename": "adapter_model.safetensors",
+      "blobId": "f21b346534eac7fd2fc7ef22dab4ebbf2c043f51",
+      "size": 148712776,
+      "lfs": {
+        "sha256": "b575af200aa93b5d7be093355cd7db1c4dda48002deab9b4de3d0f554608c22d",
+        "size": 148712776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "482ced4679301bf287ebb310bdd1790eb4514232",
+      "size": 605
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "6c226632394ae7474b0d4b13e15793eac2e21ee9",
+      "size": 1017
+    },
+    {
+      "rfilename": "checkpoint-100/README.md",
+      "blobId": "9a8710c5bad1248305ba41a87ca6bd2a40f2f990",
+      "size": 5208
+    },
+    {
+      "rfilename": "checkpoint-100/adapter_config.json",
+      "blobId": "3bbb23af346e4739310ea1e3e01523b8b13e20df",
+      "size": 1160
+    },
+    {
+      "rfilename": "checkpoint-100/adapter_model.safetensors",
+      "blobId": "50a06987865432085c92b2e944df30ad96d9a728",
+      "size": 148712776,
+      "lfs": {
+        "sha256": "a535eb400d4f32eb75547e7fcce259b6703c3bc5162eee75aa8b6bc3d42cdae9",
+        "size": 148712776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoint-100/trainer_state.json",
+      "blobId": "0ba7a6ba8bf747ee8d190bc062576e4d7939c3ab",
+      "size": 4174
+    },
+    {
+      "rfilename": "checkpoint-100/training_args.bin",
+      "blobId": "18eda17ebfe78d20b1dff394febbe5611e19b6c6",
+      "size": 5841,
+      "lfs": {
+        "sha256": "a56dcfafae2d28b2df258763a84660ca4f41eae09c6e79e7868c1ccd80a8a8da",
+        "size": 5841,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "checkpoint-150/README.md",
+      "blobId": "9a8710c5bad1248305ba41a87ca6bd2a40f2f990",
+      "size": 5208
+    },
+    {
+      "rfilename": "checkpoint-150/adapter_config.json",
+      "blobId": "3bbb23af346e4739310ea1e3e01523b8b13e20df",
+      "size": 1160
+    },
+    {
+      "rfilename": "checkpoint-150/adapter_model.safetensors",
+      "blobId": "82a009730c376d7ffe932e218576becabbf12af9",
+      "size": 148712776,
+      "lfs": {
+        "sha256": "cfdf7a50033df89e368be9ed6873a35aa0ec422ad8ef6b36f487349408bbdcc8",
+        "size": 148712776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoint-150/trainer_state.json",
+      "blobId": "9512629cd35f4b2b9d276242abcdc8299f62e73c",
+      "size": 5898
+    },
+    {
+      "rfilename": "checkpoint-150/training_args.bin",
+      "blobId": "18eda17ebfe78d20b1dff394febbe5611e19b6c6",
+      "size": 5841,
+      "lfs": {
+        "sha256": "a56dcfafae2d28b2df258763a84660ca4f41eae09c6e79e7868c1ccd80a8a8da",
+        "size": 5841,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "checkpoint-200/README.md",
+      "blobId": "9a8710c5bad1248305ba41a87ca6bd2a40f2f990",
+      "size": 5208
+    },
+    {
+      "rfilename": "checkpoint-200/adapter_config.json",
+      "blobId": "ae0bbee8a76d136ac4e89534c70a2ad64d34f8d2",
+      "size": 1160
+    },
+    {
+      "rfilename": "checkpoint-200/adapter_model.safetensors",
+      "blobId": "78198efe4c3e81df695573f1ab144c8150c41a14",
+      "size": 148712776,
+      "lfs": {
+        "sha256": "515ba76dfdb5e4b1f240467bf595f23bfd92943dc1c44a35d433f073da03322e",
+        "size": 148712776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoint-200/trainer_state.json",
+      "blobId": "e89a3227acdec90a9b409e72af77cae2680d6026",
+      "size": 7559
+    },
+    {
+      "rfilename": "checkpoint-200/training_args.bin",
+      "blobId": "165b6a71eff9dd0b7c27b8f0b676815c5e8194f3",
+      "size": 5841,
+      "lfs": {
+        "sha256": "d0bf83995b0830dee41b82d4b511687cf476cf1f9ba324bae2929d541fd01178",
+        "size": 5841,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "checkpoint-400/README.md",
+      "blobId": "9a8710c5bad1248305ba41a87ca6bd2a40f2f990",
+      "size": 5208
+    },
+    {
+      "rfilename": "checkpoint-400/adapter_config.json",
+      "blobId": "ae0bbee8a76d136ac4e89534c70a2ad64d34f8d2",
+      "size": 1160
+    },
+    {
+      "rfilename": "checkpoint-400/adapter_model.safetensors",
+      "blobId": "fdaf79e8be89cc5ac84bf1d0773a97bd47ce6b01",
+      "size": 148712776,
+      "lfs": {
+        "sha256": "89a851543896cbb2253246573e855ba29c573e9997da0b09115ca2959c24b417",
+        "size": 148712776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoint-400/trainer_state.json",
+      "blobId": "314940ce7df2ddb380b52a6e8bd9ff7496e473c4",
+      "size": 14445
+    },
+    {
+      "rfilename": "checkpoint-400/training_args.bin",
+      "blobId": "165b6a71eff9dd0b7c27b8f0b676815c5e8194f3",
+      "size": 5841,
+      "lfs": {
+        "sha256": "d0bf83995b0830dee41b82d4b511687cf476cf1f9ba324bae2929d541fd01178",
+        "size": 5841,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "checkpoint-50/README.md",
+      "blobId": "9a8710c5bad1248305ba41a87ca6bd2a40f2f990",
+      "size": 5208
+    },
+    {
+      "rfilename": "checkpoint-50/adapter_config.json",
+      "blobId": "3bbb23af346e4739310ea1e3e01523b8b13e20df",
+      "size": 1160
+    },
+    {
+      "rfilename": "checkpoint-50/adapter_model.safetensors",
+      "blobId": "15eec6707d35f7cc4a313b2b8ba7b92105d3652a",
+      "size": 148712776,
+      "lfs": {
+        "sha256": "ae193d9c0a09d9f47451f8591da63c3c2dbcca816c84a01d62e89b9ae7d1edfd",
+        "size": 148712776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoint-50/trainer_state.json",
+      "blobId": "b9e6e51e669721e077186427a7377a9aa69a1c0d",
+      "size": 2458
+    },
+    {
+      "rfilename": "checkpoint-50/training_args.bin",
+      "blobId": "18eda17ebfe78d20b1dff394febbe5611e19b6c6",
+      "size": 5841,
+      "lfs": {
+        "sha256": "a56dcfafae2d28b2df258763a84660ca4f41eae09c6e79e7868c1ccd80a8a8da",
+        "size": 5841,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "checkpoint-600/README.md",
+      "blobId": "9a8710c5bad1248305ba41a87ca6bd2a40f2f990",
+      "size": 5208
+    },
+    {
+      "rfilename": "checkpoint-600/adapter_config.json",
+      "blobId": "ae0bbee8a76d136ac4e89534c70a2ad64d34f8d2",
+      "size": 1160
+    },
+    {
+      "rfilename": "checkpoint-600/adapter_model.safetensors",
+      "blobId": "f21b346534eac7fd2fc7ef22dab4ebbf2c043f51",
+      "size": 148712776,
+      "lfs": {
+        "sha256": "b575af200aa93b5d7be093355cd7db1c4dda48002deab9b4de3d0f554608c22d",
+        "size": 148712776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoint-600/trainer_state.json",
+      "blobId": "032cc3e73cf9c7340f11aa4b24e1e9b8a9d2e578",
+      "size": 21321
+    },
+    {
+      "rfilename": "checkpoint-600/training_args.bin",
+      "blobId": "165b6a71eff9dd0b7c27b8f0b676815c5e8194f3",
+      "size": 5841,
+      "lfs": {
+        "sha256": "d0bf83995b0830dee41b82d4b511687cf476cf1f9ba324bae2929d541fd01178",
+        "size": 5841,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "cbe6db554e8b590c38ac5b97c1b15a87c2707095",
+      "size": 3746
+    },
+    {
+      "rfilename": "fused/chat_template.jinja",
+      "blobId": "6c226632394ae7474b0d4b13e15793eac2e21ee9",
+      "size": 1017
+    },
+    {
+      "rfilename": "fused/config.json",
+      "blobId": "cea61c6faa92cdc8fe738e10479f2cbd3b16336a",
+      "size": 2470
+    },
+    {
+      "rfilename": "fused/generation_config.json",
+      "blobId": "10198d20de575d2e40670be841faa0189f3c31f8",
+      "size": 214
+    },
+    {
+      "rfilename": "fused/model.safetensors",
+      "blobId": "9441f297e61fa4da8373db5f2661432755b07af8",
+      "size": 16584415608,
+      "lfs": {
+        "sha256": "d20e1d41ea4f3856800fecdada4eff7834dbf6e4923ca73ed753ef82c8996c91",
+        "size": 16584415608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "fused/preprocessor_config.json",
+      "blobId": "7f3b746825e5eef53ed8ed57a91df9e86ee62c0a",
+      "size": 350
+    },
+    {
+      "rfilename": "fused/processor_config.json",
+      "blobId": "508473f6bfb2daccedff348441211463c4954a7e",
+      "size": 1294
+    },
+    {
+      "rfilename": "fused/tokenizer.json",
+      "blobId": "34510ff0037cd50428af467a17ead5a96140a32c",
+      "size": 11421892,
+      "lfs": {
+        "sha256": "3fd169731d2cbde95e10bf356d66d5997fd885dd8dbb6fb4684da3f23b2585d8",
+        "size": 11421892,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "fused/tokenizer_config.json",
+      "blobId": "b8e5aac5657e60acbd5546d4f7872ee1d7adcda0",
+      "size": 738
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "eafd39770ab560d0f85d01c2f31663ebe9eff98e",
+      "size": 214
+    },
+    {
+      "rfilename": "gguf/mmproj-tenro-computer-use-v2-f16.gguf",
+      "blobId": "0385ba84000233e6fdfd030e86de7afedae1d666",
+      "size": 1354162880,
+      "lfs": {
+        "sha256": "a1e4ea774d5f8c48a13a2161704987a37b299bbf9b306edc8f8a2faf97935eb3",
+        "size": 1354162880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "gguf/tenro-computer-use-v2-f16.gguf",
+      "blobId": "cc364d9bdd7911683cdb810022622709727cdc15",
+      "size": 15237851808,
+      "lfs": {
+        "sha256": "2a25e876995ae029dc6ee0442dcf777d08cce042c415d54d263f559db518a77e",
+        "size": 15237851808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "8245797e99c0cc55f16f8197dc8f5f4852f64581",
+      "size": 3028733521,
+      "lfs": {
+        "sha256": "b321c9619c9028600a1ea14024501a29b6177f9c34fcf8bb6f1d32fb16b3a1c6",
+        "size": 3028733521,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "6a5af953ad64fb0f256420ebeb1f035d60bd9485",
+      "size": 830
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "91a2ffd199e6cd34591a4dc7b5b4b3204b1f51f0",
+      "size": 1296
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "tenro_base/.gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "tenro_base/chat_template.jinja",
+      "blobId": "bdf7919a96cfe43d50914a007b9c0877bd0ec27e",
+      "size": 2507
+    },
+    {
+      "rfilename": "tenro_base/config.json",
+      "blobId": "296060afd0d8e77b6b0e9c8f3e839c6ef4637700",
+      "size": 1413
+    },
+    {
+      "rfilename": "tenro_base/generation_config.json",
+      "blobId": "0b1ce0d8ec2bb04d07986e86aa0114006bc51db3",
+      "size": 243
+    },
+    {
+      "rfilename": "tenro_base/tokenizer.json",
+      "blobId": "34510ff0037cd50428af467a17ead5a96140a32c",
+      "size": 11421892,
+      "lfs": {
+        "sha256": "3fd169731d2cbde95e10bf356d66d5997fd885dd8dbb6fb4684da3f23b2585d8",
+        "size": 11421892,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tenro_base/tokenizer_config.json",
+      "blobId": "5668a4a01433b0648bb972458de616f22f3e728e",
+      "size": 693
+    },
+    {
+      "rfilename": "tenro_base/training_report.json",
+      "blobId": "e0a56e5679cebe8f2c4ace96225efa8d18811325",
+      "size": 113
+    },
+    {
+      "rfilename": "tenro_computer_use_v2_lora/README.md",
+      "blobId": "f11ceaad46d8bfa1a4b6ecb027ef3732612d9337",
+      "size": 5208
+    },
+    {
+      "rfilename": "tenro_computer_use_v2_lora/adapter_config.json",
+      "blobId": "d5fcd806fb04e8080a59c355efcb7e1fdf464766",
+      "size": 1183
+    },
+    {
+      "rfilename": "tenro_computer_use_v2_lora/adapter_model.safetensors",
+      "blobId": "f3fc8f538314974d89279f4af7d7aa917ef3b313",
+      "size": 190442760,
+      "lfs": {
+        "sha256": "a85c97cb8174cf822b1af288bc7453f491236bd156a5db8051813dfc48199404",
+        "size": 190442760,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "tenro_computer_use_v2_lora/chat_template.jinja",
+      "blobId": "6c226632394ae7474b0d4b13e15793eac2e21ee9",
+      "size": 1017
+    },
+    {
+      "rfilename": "tenro_computer_use_v2_lora/processor_config.json",
+      "blobId": "91a2ffd199e6cd34591a4dc7b5b4b3204b1f51f0",
+      "size": 1296
+    },
+    {
+      "rfilename": "tenro_computer_use_v2_lora/tokenizer.json",
+      "blobId": "34510ff0037cd50428af467a17ead5a96140a32c",
+      "size": 11421892,
+      "lfs": {
+        "sha256": "3fd169731d2cbde95e10bf356d66d5997fd885dd8dbb6fb4684da3f23b2585d8",
+        "size": 11421892,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tenro_computer_use_v2_lora/tokenizer_config.json",
+      "blobId": "678314d612dce8cf7b15675d9586315a89f50919",
+      "size": 787
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "51ebb3ba93988c73bbd83a3c163a14343fbc5b06",
+      "size": 11421896,
+      "lfs": {
+        "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+        "size": 11421896,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "c7c83c2e6119ae48ec6445bf68172f3909125b99",
+      "size": 4779
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "5b0c33aa044dbc707d34577c172e1fbcd0a44cfe",
+      "size": 914
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-19T11:56:27.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 312902912,
+      "BF16": 523008,
+      "U8": 3441197056
+    },
+    "total": 3754622976
+  },
+  "usedStorage": 69349507364,
+  "generation_config": {
+    "bos_token_id": 151643,
+    "do_sample": true,
+    "eos_token_id": [
+      151645,
+      151643
+    ],
+    "pad_token_id": 151643,
+    "repetition_penalty": 1.05,
+    "temperature": 1e-06,
+    "transformers_version": "4.57.6"
+  }
+}

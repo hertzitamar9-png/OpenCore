@@ -98,6 +98,7 @@ const server = http.createServer((request,response)=>{
   record('overlapping native and imported pages show one row',await page.locator('[data-chat-id="import:codex:one"]').count()===1);
   record('overlapping native and imported pages count one chat',(await page.locator('.imported-chat-count').innerText())==='1 Codex chats');
   await page.evaluate(()=>{fixture.mode='connectors';renderFixture();});await page.waitForTimeout(350);
+  record('opening the connector page never installs plugins or writes profiles',await page.evaluate(()=>!fixture.calls.some(call=>call.command==='configure_agent_connector'||call.command==='install_claude_bridge')));
   record('all four configured connectors use Refresh profile',await page.getByRole('button',{name:'Refresh profile',exact:true}).count()===4);
   record('all four connectors use the same profile control style',await page.locator('.connector-profile-button.primary').count()===4);
   record('only Hermes and OpenCode offer history folder selection',await page.getByRole('button',{name:'Choose history folder',exact:true}).count()===2);
@@ -126,7 +127,7 @@ const server = http.createServer((request,response)=>{
   record('configured connectors offer a separate Disconnect control',await card('Claude Code').getByRole('button',{name:'Disconnect',exact:true}).isVisible());
   await card('Claude Code').getByRole('button',{name:'Disconnect',exact:true}).click();
   await card('Claude Code').getByRole('button',{name:'Reconnect',exact:true}).waitFor();
-  record('disconnect immediately reports Disconnected and disables syncing',await card('Claude Code').innerText().then(text=>text.includes('Disconnected')&&!text.includes('Requests observed'))&&await card('Claude Code').getByRole('button',{name:'Sync history',exact:true}).isDisabled());
+  record('disconnect reports Disconnected while transcript import stays independent',await card('Claude Code').innerText().then(text=>text.includes('Disconnected')&&!text.includes('Requests observed'))&&await card('Claude Code').getByRole('button',{name:'Sync history',exact:true}).isEnabled());
   record('disconnect does not clear imported conversations',await page.evaluate(count=>fixture.calls.filter(call=>call.command==='delete_conversation').length===count,priorClears));
   await page.evaluate(()=>{fixture.mount++;renderFixture();});
   await card('Claude Code').getByRole('button',{name:'Reconnect',exact:true}).waitFor();

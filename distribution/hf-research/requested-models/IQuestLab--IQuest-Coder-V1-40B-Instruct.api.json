@@ -1,0 +1,236 @@
+{
+  "_id": "6953f002c22e4280600abb72",
+  "id": "IQuestLab/IQuest-Coder-V1-40B-Instruct",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "iquestcoder",
+    "text-generation",
+    "conversational",
+    "custom_code",
+    "en",
+    "arxiv:2512.13472",
+    "arxiv:2512.23611",
+    "arxiv:2512.22087",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 1415,
+  "likes": 300,
+  "modelId": "IQuestLab/IQuest-Coder-V1-40B-Instruct",
+  "author": "IQuestLab",
+  "sha": "265a7cba7dc0a9cec7a9e8f3f1f7dc873acee206",
+  "lastModified": "2026-03-04T12:15:39.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "IQuestCoderForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_iquestcoder.IQuestCoderConfig",
+      "AutoModel": "modeling_iquestcoder.IQuestCoderModel",
+      "AutoModelForCausalLM": "modeling_iquestcoder.IQuestCoderForCausalLM",
+      "AutoModelForSequenceClassification": "modeling_iquestcoder.IQuestCoderForSequenceClassification",
+      "AutoModelForTokenClassification": "modeling_iquestcoder.IQuestCoderForTokenClassification",
+      "AutoModelForQuestionAnswering": "modeling_iquestcoder.IQuestCoderForQuestionAnswering"
+    },
+    "model_type": "iquestcoder",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "eos_token": "<|im_end|>",
+      "unk_token": "<unk>",
+      "pad_token": "<|endoftext|>",
+      "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are LoopCoder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are LoopCoder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}"
+    },
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 5120,
+    "initializer_range": 0.02,
+    "intermediate_size": 27648,
+    "max_position_embeddings": 131072,
+    "mlp_bias": false,
+    "num_attention_heads": 40,
+    "num_hidden_layers": 80,
+    "num_key_value_heads": 8,
+    "pretraining_tp": 1,
+    "rms_norm_eps": 1e-05,
+    "rope_scaling": null,
+    "rope_theta": 500000.0,
+    "tie_word_embeddings": false,
+    "torch_dtype": "bfloat16",
+    "transformers_version": "4.55.4",
+    "use_cache": true,
+    "vocab_size": 76800,
+    "clip_qkv": null,
+    "use_sliding_window": false,
+    "sliding_window": null,
+    "max_window_layers": 0
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "iquestcoder",
+    "license_link": "https://huggingface.co/IQuestLab/IQuest-Coder-V1-40B-Instruct/blob/main/LICENSE",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_iquestcoder.IQuestCoderForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "3dc3552cc3e61a5c8157a268b77c0339aec0eea5",
+      "size": 1642
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "67ab50597a147f4b5bacf0bc71fb1ef1a42fce32",
+      "size": 1324
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "08c5d3df7c951e6538772c4e9fbe46c6a12ae1f9",
+      "size": 7917
+    },
+    {
+      "rfilename": "__init__.py",
+      "blobId": "0072076029996a5156977d53be5d0799b8bdd8a7",
+      "size": 830
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "b417febe5d81e4b19f4c43e6c22e8d5f7a445e4d",
+      "size": 1322
+    },
+    {
+      "rfilename": "configuration_iquestcoder.py",
+      "blobId": "8aac9f49f4bf87982714781f44c99a04c2532b0a",
+      "size": 8227
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "45ee99831e84b4cdb7a926290dd94f7b887cf994",
+      "size": 127
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "1bc1cc4b17119dceb7cfa4166e4cbe99203b5246",
+      "size": 42845763008,
+      "lfs": {
+        "sha256": "b1f30e024054516b1edd92d87d045e72fd7a0cfa53649bac57338c831e1503f4",
+        "size": 42845763008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "4e77dd420cc32805721cf7c09359f61e6539fa62",
+      "size": 36742889432,
+      "lfs": {
+        "sha256": "8dc75e3c2a7f534af0a704f65f6f56c8095f5db1662b4474bd6ee6cdd789a20f",
+        "size": 36742889432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "cf15b796f4c44849f8e3f2c53a05c18c1b741a01",
+      "size": 59613
+    },
+    {
+      "rfilename": "modeling_iquestcoder.py",
+      "blobId": "800a462113fd89f5a5769bcc39fb77a5e8ec56e0",
+      "size": 44080
+    },
+    {
+      "rfilename": "papers/iquest-coder-v1-logo.png",
+      "blobId": "db8b265d824aa758048b67b57bc3b6aea5db1436",
+      "size": 122764,
+      "lfs": {
+        "sha256": "2fad84bb195ec8628191705c8c3f21ec21dc6dee27b72884e5342b3ffa0a0c0f",
+        "size": 122764,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "papers/results.png",
+      "blobId": "9e346b90296bc83b96a89f057deec415591fc588",
+      "size": 453412,
+      "lfs": {
+        "sha256": "b4b14ddc9c3fdfa2eed779e393a4ed67754255863b5d7f62641a4a04fcf2d462",
+        "size": 453412,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenization_iquestcoder.py",
+      "blobId": "9863d290f98a8db1ec5ce895006b23c1484d4973",
+      "size": 21762
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "c5da580a272417e860fb920c677fbf4d52d80f68",
+      "size": 1345108,
+      "lfs": {
+        "sha256": "7d3be68e090a927f31e0e378d7599b15c206dd47e4a73933775a746cc9c1cd91",
+        "size": 1345108,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "0163e2538593d5cdae23c240acc2e82a6f4d1429",
+      "size": 8592
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-30T15:30:10.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 39794283520
+    },
+    "total": 39794283520
+  },
+  "usedStorage": 79591136373,
+  "generation_config": {
+    "_from_model_config": true,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "transformers_version": "4.55.4"
+  }
+}

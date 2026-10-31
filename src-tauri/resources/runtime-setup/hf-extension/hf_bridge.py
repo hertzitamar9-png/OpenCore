@@ -34,6 +34,7 @@ from hf_memory_repair import MemoryRepair
 from hf_prompt_assistant import PromptAssistant
 from hf_chat_media import ChatMedia, saved_conversations_page
 from hf_connectors import ConnectorProfiles
+from hf_telemetry import LiveTelemetry
 from hf_computer_runtime import ComputerManager, supports as supports_computer
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
@@ -79,6 +80,7 @@ class BridgeState:
         self.client = client or HubClient(self.tokens.get)
         self.downloader = Downloader(self.root, self.client)
         self.entries, self.plans, self.receipt_cache = {}, {}, {}
+        self.live_telemetry = LiveTelemetry()
         self.removal_plans = {}
         self.catalog_epoch, self.catalog_snapshot = 0, None
         self.catalog_snapshot_at, self.catalog_fingerprint, self.catalog_revision = 0, None, None
@@ -875,6 +877,20 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self.close_connection = True
                 for chunk in raw: self.wfile.write(chunk); self.wfile.flush()
             finally: raw.close()
+        elif route == '/telemetry':
+            runtime = body.get('runtime') or {}
+            if not isinstance(runtime,dict): raise ValueError('A valid runtime is required')
+            conversation=body.get('conversationId')
+            if conversation is not None and (not isinstance(conversation,str) or len(conversation)>500):
+                raise ValueError('A valid conversation is required')
+            entry=next((e for e in state.entries.values() if e.get('profileId')==body.get('profile') and body.get('profile')),None)
+            source=getattr(state.runtime,'telemetry_source',lambda *args:None)(entry['id'],conversation) if entry and conversation else None
+            if source:
+                value=state.live_telemetry.read(source[0],conversation,source[1])
+                value['runtime']={'status':'running','profile':body['profile'],'contextSize':value.get('context',{}).get('modelContextTokens') or entry['contextTokens']}
+                return self._send(200,value)
+            if runtime.get('status') == 'running': runtime = state._memory_runtime(runtime)
+            self._send(200, state.live_telemetry.read(runtime, conversation))
         elif route == '/connectors/disconnect':
             self._send(200, state.connectors.disconnect(body.get('id')))
         elif route == '/connectors/reconnect':
@@ -1172,6 +1188,7 @@ def ensure_service(root, resources):
 def serve(root, resources, owner):
     if not owner_alive(owner):
         return 1
+    from hf_bridge_policy import retire_automatic_plugin
     state = BridgeState(root, resources)
     state.owner = owner
     remote_config = managed_path(Path(root).resolve(), 'runtime-setup', 'remote-access.json')
@@ -1187,6 +1204,11 @@ def serve(root, resources, owner):
     atomic_json(descriptor, {"schema": 1, "root": str(Path(root).resolve()), "resources": str(Path(resources).resolve()),
         "owner": owner, "process": {k: current[k] for k in ("pid", "path", "created")}, "secret": secret,
         "url": "http://127.0.0.1:" + str(server.server_port), "instanceId": server.instance_id})
+    def retire_legacy_plugin():
+        try: retire_automatic_plugin(resources=resources)
+        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired):
+            print('Legacy Claude plugin removal could not finish; it will be retried on the next launch',file=sys.stderr)
+    threading.Thread(target=retire_legacy_plugin,daemon=True).start()
     finished = threading.Event()
     def watch_owner():
         while not finished.wait(2):

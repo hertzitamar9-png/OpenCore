@@ -44,6 +44,33 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_telemetry_rejects_a_non_object_runtime(self):
+        self.assertEqual(self.request('POST','/api/telemetry',{'runtime':['running']})[0],400)
+
+    def test_managed_model_telemetry_uses_the_owned_model_not_a_caller_port(self):
+        from hf_telemetry import LiveTelemetry
+        entry=self.seed();entry['profileId']='managed-profile';entry['contextTokens']=32768
+        self.state.live_telemetry=LiveTelemetry(lambda:{'gpuUtilization':63})
+        def source(model,conversation):
+            self.assertEqual((model,conversation),(entry['id'],'chat-managed'))
+            return {'status':'running','profile':entry['id'],'echoPort':34567},lambda:{'modelContextTokens':32768,'modelActiveTokens':12345,'modelOutputTokens':140,'modelSessionActive':True}
+        self.runtime.telemetry_source=source
+        value=self.request('POST','/api/telemetry',{'profile':'managed-profile','runtime':{'status':'running','echoPort':1},'conversationId':'chat-managed'})
+        self.assertEqual(value[0],200)
+        self.assertEqual(value[2]['runtime'],{'status':'running','profile':'managed-profile','contextSize':32768})
+        self.assertEqual(value[2]['context']['modelActiveTokens'],12345)
+        self.assertEqual(value[2]['telemetry']['completionTokens'],140)
+        self.assertEqual(value[2]['telemetry']['gpuUtilization'],63)
+
+    def test_live_telemetry_requires_authentication_and_never_reads_the_catalog(self):
+        with patch.object(self.state,'live_telemetry') as telemetry, patch.object(self.state,'catalog',side_effect=AssertionError('No catalog scan during telemetry')):
+            telemetry.read.return_value={'telemetry':{'gpuUtilization':80,'tokensPerSecond':35},'sampledAt':10}
+            self.assertEqual(self.request('POST','/api/telemetry',{'runtime':{'status':'stopped'}},secret=None)[0],401)
+            telemetry.read.assert_not_called()
+            value=self.request('POST','/api/telemetry',{'runtime':{'status':'stopped'}})
+            self.assertEqual(value[0],200)
+            self.assertEqual(value[2]['telemetry']['gpuUtilization'],80)
+
     def test_complete_chat_listing_requires_authentication_and_reads_only_local_saved_rows(self):
         appdata=self.root/'appdata';directory=appdata/'ai.opencore.control-center';directory.mkdir(parents=True)
         database=directory/'control-center.sqlite3'

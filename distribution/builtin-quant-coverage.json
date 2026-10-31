@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 563,
-  "withFive": 218,
+  "families": 580,
+  "withFive": 230,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5370,6 +5370,173 @@
       ]
     },
     {
+      "id": "publisher-iquest-coder-v1-14b-base",
+      "label": "IQuest Coder V1 14B Base",
+      "category": "text",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-14B-Base",
+        "xhxlb/IQuest-Coder-V1-14B-Base-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-14b-base-stage1",
+      "label": "IQuest Coder V1 14B Base Stage1",
+      "category": "text",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-14B-Base-Stage1",
+        "xhxlb/IQuest-Coder-V1-14B-Base-Stage1-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-14b-instruct",
+      "label": "IQuest Coder V1 14B Instruct",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/IQuestLab.IQuest-Coder-V1-14B-Instruct-GGUF",
+        "IQuestLab/IQuest-Coder-V1-14B-Instruct"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-14b-thinking",
+      "label": "IQuest Coder V1 14B Thinking",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/IQuestLab.IQuest-Coder-V1-14B-Thinking-GGUF",
+        "IQuestLab/IQuest-Coder-V1-14B-Thinking"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-40b-base",
+      "label": "IQuest Coder V1 40B Base",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-40B-Base",
+        "mradermacher/IQuest-Coder-V1-40B-Base-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-40b-base-stage1",
+      "label": "IQuest Coder V1 40B Base Stage1",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-40B-Base-Stage1",
+        "mradermacher/IQuest-Coder-V1-40B-Base-Stage1-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-40b-instruct",
+      "label": "IQuest Coder V1 40B Instruct",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-40B-Instruct",
+        "mradermacher/IQuest-Coder-V1-40B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-40b-loop-instruct",
+      "label": "IQuest Coder V1 40B Loop Instruct",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-40B-Loop-Instruct"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-40b-loop-thinking",
+      "label": "IQuest Coder V1 40B Loop Thinking",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-40B-Loop-Thinking"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-40b-thinking",
+      "label": "IQuest Coder V1 40B Thinking",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-40B-Thinking",
+        "mradermacher/IQuest-Coder-V1-40B-Thinking-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-7b-base",
+      "label": "IQuest Coder V1 7B Base",
+      "category": "text",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-7B-Base",
+        "xhxlb/IQuest-Coder-V1-7B-Base-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-7b-base-stage1",
+      "label": "IQuest Coder V1 7B Base Stage1",
+      "category": "text",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-7B-Base-Stage1",
+        "xhxlb/IQuest-Coder-V1-7B-Base-Stage1-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-7b-instruct",
+      "label": "IQuest Coder V1 7B Instruct",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/IQuestLab.IQuest-Coder-V1-7B-Instruct-GGUF",
+        "IQuestLab/IQuest-Coder-V1-7B-Instruct"
+      ]
+    },
+    {
+      "id": "publisher-iquest-coder-v1-7b-thinking",
+      "label": "IQuest Coder V1 7B Thinking",
+      "category": "text",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "IQuestLab/IQuest-Coder-V1-7B-Thinking",
+        "TheEpTic/IQuest-Coder-V1-7B-Thinking-GGUF",
+        "xhxlb/IQuest-Coder-V1-7B-Thinking-GGUF"
+      ]
+    },
+    {
       "id": "publisher-kat-coder-apex-miniplus-v2-1",
       "label": "KAT-Coder V2.5 Dev APEX-I-MiniPlus V2.1",
       "category": "text",
@@ -5474,6 +5641,28 @@
         "LiquidAI/LFM3-VL-2B-MLX-bf16",
         "LiquidAI/LFM3-VL-2B-NVFP4",
         "LiquidAI/LFM3-VL-2B-ONNX"
+      ]
+    },
+    {
+      "id": "publisher-lucet-coder-4b-omega",
+      "label": "Lucet Coder 4B Omega",
+      "category": "text",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "mohommed/Lucet-Coder-4B-Omega-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lucet-spark-4b-uncensored",
+      "label": "Lucet Spark 4B Uncensored GSQ RCO",
+      "category": "text",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "mohommed/Lucet-Coder-4B-Omega-GGUF"
       ]
     },
     {
@@ -5638,6 +5827,17 @@
       "source": "bundled packages",
       "repositories": [
         "talxcc/Tals-coder-flash-02"
+      ]
+    },
+    {
+      "id": "publisher-tenro-computer-use-v2",
+      "label": "Tenro Computer Use v2",
+      "category": "text",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "kvn420/tenro-computer-use-v2-lora"
       ]
     },
     {

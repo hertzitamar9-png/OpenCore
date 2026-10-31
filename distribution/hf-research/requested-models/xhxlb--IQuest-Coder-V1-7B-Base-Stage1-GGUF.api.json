@@ -1,0 +1,194 @@
+{
+  "_id": "69ae1dab6862e1872f022875",
+  "id": "xhxlb/IQuest-Coder-V1-7B-Base-Stage1-GGUF",
+  "private": false,
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "base_model:IQuestLab/IQuest-Coder-V1-7B-Base-Stage1",
+    "base_model:quantized:IQuestLab/IQuest-Coder-V1-7B-Base-Stage1",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 384,
+  "likes": 0,
+  "modelId": "xhxlb/IQuest-Coder-V1-7B-Base-Stage1-GGUF",
+  "author": "xhxlb",
+  "sha": "e07392dac6d0f04d707a05c9e5889bd776571758",
+  "lastModified": "2026-03-12T04:35:25.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "IQuestLab/IQuest-Coder-V1-7B-Base-Stage1"
+    ],
+    "library_name": "gguf"
+  },
+  "gguf": {
+    "total": 7604945920,
+    "architecture": "qwen2",
+    "context_length": 16384,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are IQuest-Coder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.type == 'function' and tool.function %}\n            {%- set func = tool.function %}\n        {%- else %}\n            {%- set func = tool %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" + func.name + \"</name>\" }}\n        {%- if func.description %}\n            {{- \"\\n<description>\" + func.description + \"</description>\" }}\n        {%- endif %}\n        {{- \"\\n<parameters>\" }}\n        {%- if func.parameters and func.parameters.properties %}\n            {%- for param_name, param_fields in func.parameters.properties.items() %}\n                {{- \"\\n<parameter>\" }}\n                {{- \"\\n<name>\" + param_name + \"</name>\" }}\n                {%- if param_fields.type %}\n                    {{- \"\\n<type>\" + param_fields.type + \"</type>\" }}\n                {%- endif %}\n                {%- if param_fields.description %}\n                    {{- \"\\n<description>\" + param_fields.description + \"</description>\" }}\n                {%- endif %}\n                {{- \"\\n</parameter>\" }}\n            {%- endfor %}\n        {%- endif %}\n        {{- \"\\n</parameters>\\n</function>\" }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nIf you choose to call a function ONLY reply in the following format:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n</function>\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are IQuest-Coder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tc = tool_call.function %}\n                {%- else %}\n                    {%- set tc = tool_call %}\n                {%- endif %}\n                {{- '<tool_call>\\n<function=' + tc.name + '>\\n' }}\n                {%- if tc.arguments is string %}\n                    {%- set args = tc.arguments | fromjson %}\n                {%- else %}\n                    {%- set args = tc.arguments %}\n                {%- endif %}\n                {%- for arg_name, arg_value in args.items() %}\n                    {{- '<parameter=' + arg_name + '>\\n' }}\n                    {%- if arg_value is string %}\n                        {{- arg_value }}\n                    {%- else %}\n                        {{- arg_value | tojson }}\n                    {%- endif %}\n                    {{- '\\n</parameter>\\n' }}\n                {%- endfor %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}",
+    "bos_token": "<s>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 15211929280
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "197118fc27abfbb4b01f36578aa13ac176f22572",
+      "size": 2610
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-BF16.gguf",
+      "blobId": "697d9f1c7c9ea638b281da9f819b94809c667662",
+      "size": 15211929280,
+      "lfs": {
+        "sha256": "37b608b93cc75edfdc59f940e550aae37502dca374b05fc91cf16a9ebfc52719",
+        "size": 15211929280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-F16.gguf",
+      "blobId": "4f9ad9ef673940f9ac55825a784a5330cc17fb3a",
+      "size": 15211929280,
+      "lfs": {
+        "sha256": "61e1eb2ae0b0c8e8a54e9797dfa70a992b3c0b5e52c670d1ed317e7bc9e4b63d",
+        "size": 15211929280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q2_K.gguf",
+      "blobId": "8a63fe3fa27f67796a65e7ef9b0c9710bfd2c412",
+      "size": 2945013440,
+      "lfs": {
+        "sha256": "dbbc1b72412ea4a0406b493a62455756386d672c6ca5f4c4c0e42c81bc617e5c",
+        "size": 2945013440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q3_K_L.gguf",
+      "blobId": "eac2e8c688a89261c0a21ee73a7045208785c324",
+      "size": 4046560960,
+      "lfs": {
+        "sha256": "7751561283f1168ba4c0ac9e11fcca3572fd9b97a03c6018e55febbec71e7a78",
+        "size": 4046560960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q3_K_M.gguf",
+      "blobId": "f267a83b54941dc5f7df4a26e8871cc7d2fe0655",
+      "size": 3745095360,
+      "lfs": {
+        "sha256": "6af24c6542f82195a5cc1286a3af8cafd0625dbc8c6355d51884456f62b4b2a4",
+        "size": 3745095360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q3_K_S.gguf",
+      "blobId": "feaa009450ad1666e433639ec6c86a1dc3a33e7b",
+      "size": 3422084800,
+      "lfs": {
+        "sha256": "f0e94fcd90c3f46cb23547f117358a5f4405399e41ad551cfdb49d0b8164b106",
+        "size": 3422084800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q4_0.gguf",
+      "blobId": "de9ec862892d0db3239a425203dc8428cba88546",
+      "size": 4380395200,
+      "lfs": {
+        "sha256": "618278043136a805431da70d05e0e9abd67cd3d5ee034d08ecb6c00569ed859a",
+        "size": 4380395200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q4_K_M.gguf",
+      "blobId": "23dce10c1ef9d0b31f70b82b5b36a372bce75285",
+      "size": 2298377920,
+      "lfs": {
+        "sha256": "b18bcf4473cb8efde727b836f8602a23fdf0a252044fc8d5a038d2d66c5fb600",
+        "size": 2298377920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q4_K_S.gguf",
+      "blobId": "34a132883dc401ea0fb79083f0fcc214df493ecc",
+      "size": 4400711360,
+      "lfs": {
+        "sha256": "d71c320b61aaa42f993f122279a16fc8bfb1cede294780f3018ec9ecffbff4c7",
+        "size": 4400711360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q5_0.gguf",
+      "blobId": "80181d589df6efa6175e2232afb700f6de2dae52",
+      "size": 5282334400,
+      "lfs": {
+        "sha256": "1839d59928a3af4bfd5bc6e7130d3a02e44b9b8db5544772f799a62527861861",
+        "size": 5282334400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q5_K_M.gguf",
+      "blobId": "c6e7d90c06f742682d7e3785480f65910cbd52e8",
+      "size": 5399316160,
+      "lfs": {
+        "sha256": "3ce604ee8de278f726eb358fd9ff2b592390cf3c313fdfcdfc9b086085361a81",
+        "size": 5399316160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q5_K_S.gguf",
+      "blobId": "83c82ab7c386ecf089589887e2efd147a3891912",
+      "size": 5282334400,
+      "lfs": {
+        "sha256": "5e33741d199042b4a454c816b3247eddfb21b24d51f7776b1ec98f2278947104",
+        "size": 5282334400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q6_K.gguf",
+      "blobId": "bea029ce7c7b801d468863d3e75fe14ab00c2fea",
+      "size": 6240644800,
+      "lfs": {
+        "sha256": "dfbe6625399ede83274dc0b93f7b9f1f138b429312afdf9e380688b78cf6c7f2",
+        "size": 6240644800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQuest-Coder-V1-7B-Base-Stage1-Q8_0.gguf",
+      "blobId": "ac3ca0fcba39d4f2728cbe2061c4d8a4a4d95dd8",
+      "size": 8082431680,
+      "lfs": {
+        "sha256": "c42a53708f16dd5c493205360115d8df0d3e69d6315500b09111428f3a319d53",
+        "size": 8082431680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "9c68d489e0f26109a60a47d15fff0676ada2d1b0",
+      "size": 570
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-03-09T01:08:59.000Z",
+  "usedStorage": 85949159040
+}

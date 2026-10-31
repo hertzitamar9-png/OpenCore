@@ -122,16 +122,16 @@ class ReasoningLoopGuard:
     def feed(self, delta):
         self.chars += len(delta)
         self.buffer += delta
-        while '\n\n' in self.buffer:
-            paragraph, self.buffer = self.buffer.split('\n\n', 1)
+        while '\n' in self.buffer:
+            paragraph, self.buffer = self.buffer.split('\n', 1)
             tokens = re.findall(r'[\w./\\:-]+', paragraph.lower())[-256:]
-            if len(tokens) < 12:
+            if len(tokens) < 6:
                 continue
             planning = re.search(r"\b(?:let me|i need to|i should|i will|i'll|need to (?:find|search|locate|inspect))\b", paragraph, re.I)
-            repeated = bool(planning) and any(SequenceMatcher(None, old, tokens, autojunk=False).ratio() >= .72 for old in self.recent)
+            repeated = bool(planning) and any(SequenceMatcher(None, old, tokens, autojunk=False).ratio() >= .60 for old in self.recent)
             self.repeats = (self.repeats + [repeated])[-8:]
             self.recent = (self.recent + [tokens])[-6:]
-            if self.chars >= 1200 and sum(self.repeats) >= 4:
+            if self.chars >= 500 and sum(self.repeats) >= 4:
                 return True
         self.buffer = self.buffer[-8000:]
         return False
@@ -234,6 +234,13 @@ def tool_call_error(message, declared_tools):
             return 'Incomplete or invalid JSON arguments for %s. No action was executed.' % name
         if not isinstance(args, dict):
             return 'Tool arguments must be a JSON object.'
+        if name == 'dev' and args.get('action') == 'write':
+            content = args.get('content')
+            if isinstance(content, str) and len(content) > TOOL_CALL_MAX_CHARS:
+                return ('dev write content is too large for one response and risks being cut '
+                        'off before it is saved. Write a compact skeleton under 3,000 characters '
+                        'first, then extend it with dev edit calls of at most 60 lines each. '
+                        'No action was executed.')
         if name == 'dev' and args.get('action') in ('edit', 'patch', 'apply_patch'):
             if (not isinstance(args.get('path'), str) or not args['path'] or
                     not isinstance(args.get('expectedSha256'), str) or not args['expectedSha256'] or
@@ -266,6 +273,17 @@ REASONING_ALIASES = {
     "subagents": "ultra", "opencore": "ultra",
 }
 DEFAULT_REASONING = "high"
+
+# Codex abandons a turn after 300 s without a response. A single oversized
+# `dev write` used to spend that whole window, get cut mid-JSON, and be retried
+# for half an hour. Bound every tool-producing generation to a share of that
+# window so it finishes with a real finish_reason. Large files are built from a
+# compact skeleton and small edits instead of one enormous call.
+TOOL_CALL_SECONDS = 200
+TOOL_CALL_MIN_TOKENS = 800
+TOOL_CALL_MAX_TOKENS = 3000
+TOOL_CALL_INITIAL_TOKENS = 1200
+TOOL_CALL_MAX_CHARS = 6000
 
 
 def load_reasoning_policy(path=None):
@@ -569,6 +587,10 @@ class EchoState:
         self._backend_metrics_key = None
         self._backend_metrics_time = 0.0
         self._backend_metrics_value = {}
+        # Adaptive tool-call budget: measured decode speed, and recent cut-off
+        # writes per conversation so a retry cannot restart the same storm.
+        self._model_tokens_per_second = None
+        self._truncated_tool_calls = {}
         # Live transcript compaction: past live_high of the window, the oldest
         # whole turns move to the archive until live_low remains.
         self.live_high = 0.85
@@ -582,6 +604,26 @@ class EchoState:
                 # The desktop app can be restarted while this server is still
                 # listening. A closed log pipe must not break HTTP responses.
                 pass
+
+    def tool_call_budget(self) -> int:
+        """Tokens that fit in one tool-producing generation on this machine."""
+        speed = self._model_tokens_per_second
+        if not isinstance(speed, (int, float)) or isinstance(speed, bool) or speed <= 0:
+            return TOOL_CALL_INITIAL_TOKENS
+        return max(TOOL_CALL_MIN_TOKENS,
+                   min(TOOL_CALL_MAX_TOKENS, int(speed * TOOL_CALL_SECONDS)))
+
+    def note_truncated_tool_call(self, conversation: str) -> int:
+        now = time.monotonic()
+        count, last = self._truncated_tool_calls.get(conversation, (0, 0.0))
+        if now - last > 900:
+            count = 0
+        count += 1
+        self._truncated_tool_calls[conversation] = (count, now)
+        return count
+
+    def clear_truncated_tool_calls(self, conversation: str) -> None:
+        self._truncated_tool_calls.pop(conversation, None)
 
     def memory_configuration(self):
         return {"memoryTokens": self.memory_controller.memory_tokens,
@@ -749,11 +791,26 @@ class EchoState:
                     capacity = self.context_size()
                 value = {'modelContextTokens': capacity,
                          'modelSessionActive': bool(slot.get('is_processing', False))}
+                next_token = slot.get('next_token') or {}
+                if isinstance(next_token, list):
+                    next_token = next_token[0] if len(next_token) == 1 else {}
+                decoded = next_token.get('n_decoded') if isinstance(next_token, dict) else None
+                if not isinstance(decoded, int) or isinstance(decoded, bool) or decoded < 0:
+                    decoded = slot.get('n_decoded')
+                if isinstance(decoded, int) and not isinstance(decoded, bool) and decoded >= 0:
+                    value['modelOutputTokens'] = decoded
+                if type(slot.get('id_task')) is int:
+                    value['modelTaskId'] = slot['id_task']
                 for field in ('n_prompt_tokens',) if persistent else ('n_past', 'n_prompt_tokens'):
                     occupied = slot.get(field)
                     if isinstance(occupied, int) and not isinstance(occupied, bool) and occupied >= 0:
                         value['modelActiveTokens'] = min(capacity, occupied)
                         value['modelUsageKind'] = 'prompt' if not persistent and field == 'n_prompt_tokens' else 'live'
+                        if not persistent and field == 'n_prompt_tokens' and value.get('modelOutputTokens', 0) > 0:
+                            # /slots reports prompt.tokens.size(), which already
+                            # grows as decoded tokens enter the rolling KV state.
+                            # Do not add n_decoded and count generated text twice.
+                            value['modelUsageKind'] = 'live'
                         break
                 lifetime = slot.get('echo_session_tokens')
                 if persistent and isinstance(lifetime, int) and not isinstance(lifetime, bool) and lifetime >= 0:
@@ -1301,6 +1358,14 @@ def _inject(messages: list, context: str) -> list:
 
 
 class Handler(BaseHTTPRequestHandler):
+    def finish(self):
+        stop=getattr(self,'_heartbeat_stop',None)
+        if stop: stop.set()
+        lock=getattr(self,'_live_lock',None)
+        if lock:
+            with lock: super().finish()
+        else: super().finish()
+
     protocol_version = "HTTP/1.1"
     state: EchoState = None                       # set in main()
 
@@ -1379,9 +1444,11 @@ class Handler(BaseHTTPRequestHandler):
         if getattr(self, "_raw_generation_file", None) is not None:
             obj["echo"] = {**(obj.get("echo") or {}), **self._generation_log_status()}
         if getattr(self, '_live_stream', False):
+            self._heartbeat_stop.set()
             self._live_event(obj)
-            self.wfile.write(b'data: [DONE]\n\n')
-            self.wfile.flush()
+            with self._live_lock:
+                self.wfile.write(b'data: [DONE]\n\n')
+                self.wfile.flush()
             return
         body = json.dumps(obj).encode()
         self.send_response(code)
@@ -1830,6 +1897,7 @@ class Handler(BaseHTTPRequestHandler):
         target_words = int(payload.get("echo_target_words", word_target(question)))
         if target_words < 0:
             raise ValueError("echo_target_words must be nonnegative")
+        tool_request = bool(payload.get("tools"))
         backend_session_id = hashlib.sha256(conversation.encode("utf-8")).hexdigest()
         empty_calls = 0
         repeated_controls = 0
@@ -2547,6 +2615,13 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _live_event(self, value):
+        if not hasattr(self,'_live_lock'):
+            self._live_lock=threading.RLock()
+            self._heartbeat_stop=threading.Event()
+        with self._live_lock:
+            self._write_live_event(value)
+
+    def _write_live_event(self, value):
         if not getattr(self, '_live_stream', False):
             self.send_response(200)
             self.send_header('Content-Type', 'text/event-stream')
@@ -2555,6 +2630,20 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.close_connection = True
             self._live_stream = True
+            def heartbeat():
+                while not self._heartbeat_stop.wait(getattr(self,'_heartbeat_interval',10)):
+                    try:
+                        with self._live_lock:
+                            if self._heartbeat_stop.is_set():return
+                            self.wfile.write(b': OpenCore working\n\n')
+                            self._write_live_event({'id':'echo-heartbeat','object':'chat.completion.chunk',
+                                'created':int(time.time()),'model':'opencore',
+                                'choices':[{'index':0,'delta':{},'finish_reason':None}]})
+                            self.wfile.flush()
+                    except (OSError,ValueError):
+                        self._heartbeat_stop.set()
+                        return
+            threading.Thread(target=heartbeat,daemon=True).start()
         self.wfile.write(('data: ' + json.dumps(value, ensure_ascii=False) + '\n\n').encode())
         self.wfile.flush()
 
@@ -2616,7 +2705,7 @@ class Handler(BaseHTTPRequestHandler):
                                                           'phase': phase, 'delta': delta}})
                     for key in ('content', 'reasoning_content'):
                         message[key] += delta.get(key) or ''
-                    if delta.get('reasoning_content') and loop_guard.feed(delta['reasoning_content']):
+                    if not calls and loop_guard.feed((delta.get('reasoning_content') or '')+(delta.get('content') or '')):
                         result['echo_loop_detected'] = True
                         result['choices'][0]['finish_reason'] = 'echo_loop'
                         finished = True
@@ -2640,14 +2729,16 @@ class Handler(BaseHTTPRequestHandler):
             return self._retain_generation(result, body, phase)
 
     def _finish_live(self, parsed):
+        if hasattr(self,'_heartbeat_stop'):self._heartbeat_stop.set()
         parsed["echo"] = {**(parsed.get("echo") or {}), **self._generation_log_status()}
         choice = parsed['choices'][0]
         self._live_event({'id': parsed.get('id', 'echo'), 'object': 'chat.completion.chunk',
                          'choices': [{'index': 0, 'delta': choice['message'],
                                       'finish_reason': choice.get('finish_reason') or 'stop'}],
                          **{key: parsed[key] for key in ('echo', 'usage', 'timings', 'reasoning_budget') if key in parsed}})
-        self.wfile.write(b'data: [DONE]\n\n')
-        self.wfile.flush()
+        with self._live_lock:
+            self.wfile.write(b'data: [DONE]\n\n')
+            self.wfile.flush()
 
     def _stream(self, payload: dict, question: str, conversation: str):
         # An SSE body has no Content-Length and this handler does not chunk, so

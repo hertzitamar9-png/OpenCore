@@ -1892,6 +1892,518 @@
           "quantization": "BF16"
         }
       ]
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-40B-Loop-Thinking",
+      "familyId": "publisher-iquest-coder-v1-40b-loop-thinking",
+      "label": "IQuest Coder V1 40B Loop Thinking",
+      "category": "text",
+      "description": "IQuestLab/IQuest-Coder-V1-40B-Loop-Thinking: exact 40B Loop Thinking coding checkpoint. ECHO uses a 32K working window. The looped decoder requires its own custom runtime; no compatible Windows loader is integrated.",
+      "sources": [
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-40B-Loop-Thinking",
+          "runtimeReason": "Original custom IQuestLoopCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ]
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-7B-Thinking",
+      "familyId": "publisher-iquest-coder-v1-7b-thinking",
+      "label": "IQuest Coder V1 7B Thinking",
+      "category": "text",
+      "description": "IQuestLab/IQuest-Coder-V1-7B-Thinking: exact 7B Thinking coding checkpoint. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready.",
+      "sources": [
+        {
+          "repository": "TheEpTic/IQuest-Coder-V1-7B-Thinking-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "xhxlb/IQuest-Coder-V1-7B-Thinking-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-7B-Thinking-F16.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q4_0.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q5_0.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-7B-Thinking-Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-7B-Thinking",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ]
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-14B-Instruct",
+      "familyId": "publisher-iquest-coder-v1-14b-instruct",
+      "label": "IQuest Coder V1 14B Instruct",
+      "category": "text",
+      "description": "IQuestLab/IQuest-Coder-V1-14B-Instruct: exact 14B Instruct coding checkpoint. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready.",
+      "sources": [
+        {
+          "repository": "DevQuasar/IQuestLab.IQuest-Coder-V1-14B-Instruct-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q2_K.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q3_K_L.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q3_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q3_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q4_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q4_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q5_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q5_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q6_K.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.Q8_0.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Instruct.f16.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-14B-Instruct",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ]
+    },
+    {
+      "repository": "mohommed/Lucet-Coder-4B-Omega-GGUF",
+      "familyId": "publisher-lucet-coder-4b-omega",
+      "label": "Lucet Coder 4B Omega",
+      "category": "text",
+      "description": "Community Spark-X2.6-4B fine-tune focused on coding, agentic tool use and long context. The three Lucet-Coder-4B-Omega GGUF precisions are listed; they use the managed Windows GGUF engine and a real generation test runs before Ready.",
+      "sources": [
+        {
+          "repository": "mohommed/Lucet-Coder-4B-Omega-GGUF",
+          "onlyVariantKeys": [
+            "gguf:lucet-coder-4b-omega-q4_k_m.gguf",
+            "gguf:lucet-coder-4b-omega-q4_k_s.gguf",
+            "gguf:lucet-coder-4b-omega-q8_0.gguf"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "kvn420/tenro-computer-use-v2-lora",
+      "familyId": "publisher-tenro-computer-use-v2",
+      "label": "Tenro Computer Use v2",
+      "category": "text",
+      "description": "kvn420/tenro-computer-use-v2-lora: computer-use adapter plus publisher merged checkpoints. The merged F16 GGUF includes its vision projector and has a managed text-runtime path; screenshot grounding and autonomous action execution are unverified. LoRA needs its exact Qwen2.5-VL-3B base and a compatible PEFT vision runtime.",
+      "sources": [
+        {
+          "repository": "kvn420/tenro-computer-use-v2-lora",
+          "onlyVariantKeys": [
+            "gguf:gguf/tenro-computer-use-v2-f16.gguf"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-14B-Base-Stage1",
+      "familyId": "publisher-iquest-coder-v1-14b-base-stage1",
+      "label": "IQuest Coder V1 14B Base Stage1",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "xhxlb/IQuest-Coder-V1-14B-Base-Stage1-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-F16.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q4_0.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q5_0.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Stage1-Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-14B-Base-Stage1",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-14B-Base-Stage1: exact 14B Base Stage1 coding checkpoint. Base/Stage1 editions are pretraining checkpoints, not instruction-tuned assistants. Published live context is 16K; ECHO keeps exact archived history. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-14B-Base",
+      "familyId": "publisher-iquest-coder-v1-14b-base",
+      "label": "IQuest Coder V1 14B Base",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "xhxlb/IQuest-Coder-V1-14B-Base-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-14B-Base-F16.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q4_0.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q5_0.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-14B-Base-Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-14B-Base",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-14B-Base: exact 14B Base coding checkpoint. Base/Stage1 editions are pretraining checkpoints, not instruction-tuned assistants. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-14B-Thinking",
+      "familyId": "publisher-iquest-coder-v1-14b-thinking",
+      "label": "IQuest Coder V1 14B Thinking",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "DevQuasar/IQuestLab.IQuest-Coder-V1-14B-Thinking-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q2_K.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q3_K_L.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q3_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q3_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q4_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q4_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q5_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q5_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q6_K.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.Q8_0.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-14B-Thinking.f16.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-14B-Thinking",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-14B-Thinking: exact 14B Thinking coding checkpoint. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-40B-Base-Stage1",
+      "familyId": "publisher-iquest-coder-v1-40b-base-stage1",
+      "label": "IQuest Coder V1 40B Base Stage1",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "mradermacher/IQuest-Coder-V1-40B-Base-Stage1-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.IQ4_XS.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base-Stage1.Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-40B-Base-Stage1",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-40B-Base-Stage1: exact 40B Base Stage1 coding checkpoint. Base/Stage1 editions are pretraining checkpoints, not instruction-tuned assistants. Published live context is 16K; ECHO keeps exact archived history. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-40B-Base",
+      "familyId": "publisher-iquest-coder-v1-40b-base",
+      "label": "IQuest Coder V1 40B Base",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "mradermacher/IQuest-Coder-V1-40B-Base-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-40B-Base.IQ4_XS.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Base.Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-40B-Base",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-40B-Base: exact 40B Base coding checkpoint. Base/Stage1 editions are pretraining checkpoints, not instruction-tuned assistants. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-40B-Instruct",
+      "familyId": "publisher-iquest-coder-v1-40b-instruct",
+      "label": "IQuest Coder V1 40B Instruct",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "mradermacher/IQuest-Coder-V1-40B-Instruct-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-40B-Instruct.IQ4_XS.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Instruct.Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-40B-Instruct",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-40B-Instruct: exact 40B Instruct coding checkpoint. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-40B-Loop-Instruct",
+      "familyId": "publisher-iquest-coder-v1-40b-loop-instruct",
+      "label": "IQuest Coder V1 40B Loop Instruct",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-40B-Loop-Instruct",
+          "runtimeReason": "Original custom IQuestLoopCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-40B-Loop-Instruct: exact 40B Loop Instruct coding checkpoint. ECHO uses a 32K working window. The looped decoder requires its own custom runtime; no compatible Windows loader is integrated."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-40B-Thinking",
+      "familyId": "publisher-iquest-coder-v1-40b-thinking",
+      "label": "IQuest Coder V1 40B Thinking",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "mradermacher/IQuest-Coder-V1-40B-Thinking-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-40B-Thinking.IQ4_XS.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-40B-Thinking.Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-40B-Thinking",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-40B-Thinking: exact 40B Thinking coding checkpoint. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-7B-Base-Stage1",
+      "familyId": "publisher-iquest-coder-v1-7b-base-stage1",
+      "label": "IQuest Coder V1 7B Base Stage1",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "xhxlb/IQuest-Coder-V1-7B-Base-Stage1-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-BF16.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-F16.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q4_0.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q5_0.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Stage1-Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-7B-Base-Stage1",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-7B-Base-Stage1: exact 7B Base Stage1 coding checkpoint. Base/Stage1 editions are pretraining checkpoints, not instruction-tuned assistants. Published live context is 16K; ECHO keeps exact archived history. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-7B-Base",
+      "familyId": "publisher-iquest-coder-v1-7b-base",
+      "label": "IQuest Coder V1 7B Base",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "xhxlb/IQuest-Coder-V1-7B-Base-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuest-Coder-V1-7B-Base-F16.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q2_K.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q3_K_L.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q3_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q3_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q4_0.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q4_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q4_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q5_0.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q5_K_M.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q5_K_S.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q6_K.gguf",
+            "gguf:IQuest-Coder-V1-7B-Base-Q8_0.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-7B-Base",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-7B-Base: exact 7B Base coding checkpoint. Base/Stage1 editions are pretraining checkpoints, not instruction-tuned assistants. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "IQuestLab/IQuest-Coder-V1-7B-Instruct",
+      "familyId": "publisher-iquest-coder-v1-7b-instruct",
+      "label": "IQuest Coder V1 7B Instruct",
+      "category": "text",
+      "sources": [
+        {
+          "repository": "DevQuasar/IQuestLab.IQuest-Coder-V1-7B-Instruct-GGUF",
+          "onlyVariantKeys": [
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q2_K.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q3_K_L.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q3_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q3_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q4_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q4_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q5_K_M.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q5_K_S.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q6_K.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.Q8_0.gguf",
+            "gguf:IQuestLab.IQuest-Coder-V1-7B-Instruct.f16.gguf"
+          ]
+        },
+        {
+          "repository": "IQuestLab/IQuest-Coder-V1-7B-Instruct",
+          "runtimeReason": "Original custom IQuestCoderForCausalLM implementation; a reviewed OpenCore Windows Transformers loader is not integrated. Select a compatible GGUF conversion where available. No arbitrary publisher code is executed."
+        }
+      ],
+      "description": "IQuestLab/IQuest-Coder-V1-7B-Instruct: exact 7B Instruct coding checkpoint. ECHO uses a 32K working window. Reviewed GGUF conversions use the managed Windows runtime; original custom safetensors retain their loader requirement. A real generation check is required before Ready."
+    },
+    {
+      "repository": "mohommed/Lucet-Coder-4B-Omega-GGUF",
+      "familyId": "publisher-lucet-spark-4b-uncensored",
+      "label": "Lucet Spark 4B Uncensored GSQ RCO",
+      "category": "text",
+      "description": "mohommed/Lucet-Coder-4B-Omega-GGUF: separately named Spark uncensored GSQ/RCO edition. All three published GGUF precisions use the managed Windows runtime with ECHO; the Omega edition remains a separate card. Runtime inference is checked after installation.",
+      "sources": [
+        {
+          "repository": "mohommed/Lucet-Coder-4B-Omega-GGUF",
+          "onlyVariantKeys": [
+            "gguf:lucet-spark-4b-uncensored-gsq-rco-q4_k_m.gguf",
+            "gguf:lucet-spark-4b-uncensored-gsq-rco-q4_k_s.gguf",
+            "gguf:lucet-spark-4b-uncensored-gsq-rco-q8_0.gguf"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "kvn420/tenro-computer-use-v2-lora",
+      "familyId": "publisher-tenro-computer-use-v2",
+      "label": "Tenro Computer Use v2",
+      "category": "text",
+      "description": "kvn420/tenro-computer-use-v2-lora: computer-use adapter plus publisher merged checkpoints. The merged F16 GGUF includes its vision projector and has a managed text-runtime path; screenshot grounding and autonomous action execution are unverified. LoRA needs its exact Qwen2.5-VL-3B base and a compatible PEFT vision runtime.",
+      "sources": [
+        {
+          "repository": "kvn420/tenro-computer-use-v2-lora",
+          "runtimeReason": "LoRA adapter only. Requires the exact Qwen2.5-VL-3B-Instruct base, PEFT and a compatible vision/action harness; this adapter execution path is not integrated.",
+          "packages": [
+            {
+              "key": "lora:root",
+              "format": "lora",
+              "quantization": "LoRA adapter",
+              "files": [
+                "adapter_model.safetensors",
+                "adapter_config.json",
+                "config.json",
+                "generation_config.json",
+                "chat_template.jinja",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "special_tokens_map.json",
+                "added_tokens.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "video_preprocessor_config.json",
+                "merges.txt",
+                "vocab.json",
+                "README.md"
+              ]
+            }
+          ]
+        }
+      ],
+      "reuseFamily": true,
+      "baseRepository": "Qwen/Qwen2.5-VL-3B-Instruct"
+    },
+    {
+      "repository": "kvn420/tenro-computer-use-v2-lora",
+      "familyId": "publisher-tenro-computer-use-v2",
+      "label": "Tenro Computer Use v2",
+      "category": "text",
+      "description": "kvn420/tenro-computer-use-v2-lora: computer-use adapter plus publisher merged checkpoints. The merged F16 GGUF includes its vision projector and has a managed text-runtime path; screenshot grounding and autonomous action execution are unverified. LoRA needs its exact Qwen2.5-VL-3B base and a compatible PEFT vision runtime.",
+      "sources": [
+        {
+          "repository": "kvn420/tenro-computer-use-v2-lora",
+          "runtimeReason": "Complete publisher merged BF16 vision checkpoint. Requires a compatible Qwen2.5-VL vision runtime and action harness; the safetensors execution path is not integrated.",
+          "packages": [
+            {
+              "key": "safetensors:fused",
+              "format": "safetensors",
+              "quantization": "Merged BF16",
+              "files": [
+                "fused/model.safetensors",
+                "fused/config.json",
+                "fused/generation_config.json",
+                "fused/chat_template.jinja",
+                "fused/tokenizer.json",
+                "fused/tokenizer_config.json",
+                "fused/preprocessor_config.json",
+                "fused/processor_config.json"
+              ]
+            }
+          ]
+        }
+      ],
+      "reuseFamily": true
     }
   ]
 }

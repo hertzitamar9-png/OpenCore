@@ -1,5 +1,11 @@
 const fs=require('node:fs'),path=require('node:path');
 module.exports=function applyContextActivity(app,{editFunction,replaceOnce}){
+  app=replaceOnce(app,'i.jsxs("span",{className:"composer-token-speed",children:[','i.jsx(globalThis.__opencoreOutputStats,{conversationId:e,fallback:[');
+  app=editFunction(app,'v8',text=>{
+    text=replaceOnce(text,'const d=','const $live=globalThis.__opencoreLiveFooter(t,r,$hubRequest,e);t=$live.snapshot;const d=');
+    text=replaceOnce(text,'" tokens/s"]','" tokens/s",t.telemetry.completionTokens?` · ${t.telemetry.completionTokens} out`:""]');
+    return replaceOnce(text,'conversationId:r,profile:d,runtime:t.runtime','conversationId:r,profile:d,runtime:t.runtime,liveContext:$live.context');
+  });
   app=replaceOnce(app,'Optional Q8_0 multimodal coding model · ECHO archive · 16K attention','Optional Q8_0 multimodal coding model · ECHO archive · 32K attention');
   app=replaceOnce(app,'Optional Q4_K_M with MTP draft head · ECHO archive · 16K attention','Optional Q4_K_M with MTP draft head · ECHO archive · 32K attention');
   app=editFunction(app,'g8',()=>fs.readFileSync(path.join(__dirname,'context-window.js'),'utf8'));

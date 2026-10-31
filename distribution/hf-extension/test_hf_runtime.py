@@ -10,6 +10,28 @@ from hf_runtime import RuntimeManager, checked_model_files, conversation_key, ru
 
 
 class RuntimeSafetyTests(unittest.TestCase):
+    def test_live_metrics_read_only_the_active_managed_model_without_exposing_its_key(self):
+        from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+        import threading
+        seen=[]
+        class Context(BaseHTTPRequestHandler):
+            def log_message(self,*args):pass
+            def do_GET(self):
+                seen.append((self.path,self.headers.get('Authorization')))
+                value=b'{"modelOutputTokens":42,"modelContextTokens":32768}'
+                self.send_response(200);self.send_header('Content-Length',str(len(value)));self.end_headers();self.wfile.write(value)
+        server=ThreadingHTTPServer(('127.0.0.1',0),Context)
+        threading.Thread(target=server.serve_forever,daemon=True).start()
+        self.addCleanup(server.server_close);self.addCleanup(server.shutdown)
+        runtime=RuntimeManager(self.root,self.resources)
+        self.assertIsNone(runtime.telemetry_source('hf-fixture','chat 1'))
+        runtime._active={'id':'hf-fixture','url':'http://127.0.0.1:'+str(server.server_port),'key':'managed-test-key'}
+        self.assertIsNone(runtime.telemetry_source('hf-other','chat 1'))
+        descriptor,read=runtime.telemetry_source('hf-fixture','chat 1')
+        self.assertNotIn('key',descriptor)
+        self.assertEqual(read(),{'modelOutputTokens':42,'modelContextTokens':32768})
+        self.assertEqual(seen,[('/echo/context?conversation=chat%201','Bearer managed-test-key')])
+
     def test_imported_models_launch_the_main_echo_context_loop(self):
         import sys
         seen=[]

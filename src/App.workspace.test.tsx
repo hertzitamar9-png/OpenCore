@@ -148,7 +148,7 @@ describe('OpenCore shared workspace', () => {
     fireEvent.click(screen.getByText('Older imported notes 101'));
     expect(await screen.findByRole('heading', {name: 'Older imported notes 101', level: 2})).toBeVisible();
     expect(history).toHaveBeenCalledWith(imported[101].id);
-  });
+    }, 10_000); // Rendering two 100-chat pages can exceed the default 5s on Windows.
 
   it('exports portable JSON through a format choice and keeps the current chat', async () => {
     const initial = await api.snapshot();

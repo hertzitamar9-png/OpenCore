@@ -1,0 +1,372 @@
+{
+  "_id": "6953f0cb0efededb21ff8ffa",
+  "id": "IQuestLab/IQuest-Coder-V1-40B-Loop-Instruct",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "iquestloopcoder",
+    "text-generation",
+    "conversational",
+    "custom_code",
+    "en",
+    "arxiv:2512.13472",
+    "arxiv:2512.23611",
+    "arxiv:2512.22087",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 1447,
+  "likes": 330,
+  "modelId": "IQuestLab/IQuest-Coder-V1-40B-Loop-Instruct",
+  "author": "IQuestLab",
+  "sha": "61e8589747f6987ec7725e4ffe205f7a84561bd2",
+  "lastModified": "2026-03-04T14:33:02.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "IQuestLoopCoderForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_iquestloopcoder.IQuestLoopCoderConfig",
+      "AutoModel": "modeling_iquestloopcoder.IQuestLoopCoderModel",
+      "AutoModelForCausalLM": "modeling_iquestloopcoder.IQuestLoopCoderForCausalLM"
+    },
+    "model_type": "iquestloopcoder",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "eos_token": "<|im_end|>",
+      "unk_token": "<unk>",
+      "pad_token": "<|endoftext|>",
+      "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- else %}\n        {{- 'You are LoopCoder, a helpful assistant developed by IQuest.' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are LoopCoder, a helpful assistant developed by IQuest.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}"
+    },
+    "_name_or_path": "iquestloopcoder",
+    "vocab_size": 76800,
+    "hidden_size": 5120,
+    "intermediate_size": 27648,
+    "num_hidden_layers": 80,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "num_attention_heads": 40,
+    "num_key_value_heads": 8,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "max_position_embeddings": 131072,
+    "initializer_range": 0.02,
+    "rms_norm_eps": 1e-05,
+    "use_cache": true,
+    "tie_word_embeddings": false,
+    "rope_theta": 500000,
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "mlp_bias": false,
+    "loop_num": 2,
+    "loop_window_size": 64,
+    "torch_dtype": "bfloat16",
+    "transformers_version": "4.55.4"
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "iquestcoder",
+    "license_link": "https://huggingface.co/IQuestLab/IQuest-Coder-V1-40B-Instruct/blob/main/LICENSE",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_iquestloopcoder.IQuestLoopCoderForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "3dc3552cc3e61a5c8157a268b77c0339aec0eea5",
+      "size": 1642
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "67ab50597a147f4b5bacf0bc71fb1ef1a42fce32",
+      "size": 1324
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b999037c94f50dc4feb62395c256ed44d843667b",
+      "size": 8093
+    },
+    {
+      "rfilename": "__init__.py",
+      "blobId": "67e6df6deb61f4c06d9bf42716d85775a9a50a01",
+      "size": 686
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "a9af0646f5f29b549986bf97cd11e488876cfc31",
+      "size": 969
+    },
+    {
+      "rfilename": "configuration_iquestloopcoder.py",
+      "blobId": "043cf0ecf0ce42647262543730e065af7fd75a57",
+      "size": 5292
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "45ee99831e84b4cdb7a926290dd94f7b887cf994",
+      "size": 127
+    },
+    {
+      "rfilename": "model-00001-of-00016.safetensors",
+      "blobId": "a4cc1724542959e59e7ef06aa0ad8015cdc01e96",
+      "size": 5359151696,
+      "lfs": {
+        "sha256": "a9433151153a8a83cc7aa4c15338e61fb73022b9377099596858181ba5efc7ce",
+        "size": 5359151696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00016.safetensors",
+      "blobId": "5c6c6ce61a4bf110461d27654e4892f396163765",
+      "size": 5274455744,
+      "lfs": {
+        "sha256": "00cf8bdb3506d972f5d528a9b070cbf66662109cfbea43fddcd15595cbe282de",
+        "size": 5274455744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00016.safetensors",
+      "blobId": "d0ad7976b3eb7001a0b084020f6d3553949ea4ae",
+      "size": 5159101664,
+      "lfs": {
+        "sha256": "0d75d4294504e0eed0095f0528adb9ed74617305fa87d5f915a68d6edf5cfcb5",
+        "size": 5159101664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00016.safetensors",
+      "blobId": "e6d670b2efc072b8d282ea9d9bd581cad22b7431",
+      "size": 5284951976,
+      "lfs": {
+        "sha256": "d86956a47df06e404ac8c00a2996eb180b67bb03ca4aa464c971a3f643a726d0",
+        "size": 5284951976,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00016.safetensors",
+      "blobId": "d3f9df82edda29c3cc202f7e5507ff3deaf11aef",
+      "size": 5159101664,
+      "lfs": {
+        "sha256": "5e667fa53b09c758774232aa81d232aad08179c3aa46892647538e21c0e332cc",
+        "size": 5159101664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00016.safetensors",
+      "blobId": "a2d56afe07c9db2eefb961dba61178807bd093a0",
+      "size": 5159101680,
+      "lfs": {
+        "sha256": "5fd7b5d45765e95e62c94508bc757d8d63e4eb29d646ac29ca672170c64f88a9",
+        "size": 5159101680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00016.safetensors",
+      "blobId": "b1a927ef71553f61537813553dbc4bdac7dcfb16",
+      "size": 5284951968,
+      "lfs": {
+        "sha256": "b6b756b0bdff8aa89599d49b43f6765b53c3b6e2a5b811255e100d538e8f093d",
+        "size": 5284951968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00008-of-00016.safetensors",
+      "blobId": "7313bec13de0c6efae25bcb54ab2d8034455d87f",
+      "size": 5159101680,
+      "lfs": {
+        "sha256": "78794dd0071ae57746030f5dd1ba2d8cba2546d44992ebb065454183525067b5",
+        "size": 5159101680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00009-of-00016.safetensors",
+      "blobId": "8ed3391e30b9fe71b4e73a3d17cd8dfbbe1d2d85",
+      "size": 5159101664,
+      "lfs": {
+        "sha256": "b80829c307ef680e282aae5153a7c78494664e6268e96fbffaaf1d714925e33f",
+        "size": 5159101664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00010-of-00016.safetensors",
+      "blobId": "2fbe719cfef08f4408a79b339b15174c4114568b",
+      "size": 5284951976,
+      "lfs": {
+        "sha256": "ccd839c88a7efca21e2cb18f7ea2764d1ba5deaff22259e0f315d6bc6b20a426",
+        "size": 5284951976,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00011-of-00016.safetensors",
+      "blobId": "3721d1ec5288b81c626f27b91e5a75c0cf627eef",
+      "size": 5159101664,
+      "lfs": {
+        "sha256": "7a3bca95b8e7cc54c8ff72182046031b5c3ea500ac6453fb99d00a84f0b3ed32",
+        "size": 5159101664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00012-of-00016.safetensors",
+      "blobId": "30d0a0742c4e923c704e925f68f01ea1ae6d6746",
+      "size": 5159101680,
+      "lfs": {
+        "sha256": "5eea564372bb8b8fe83908d608c11af4bd22e54a76b9a386737cdeb54c77dce7",
+        "size": 5159101680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00013-of-00016.safetensors",
+      "blobId": "8db968bc4b97aa8d4a0627d69fc4c3bf9b04698c",
+      "size": 5284951968,
+      "lfs": {
+        "sha256": "ffb8e154ba4f93956ace20501496bae0c9b9283ac2ddb9c41054a68750f0dfc6",
+        "size": 5284951968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00014-of-00016.safetensors",
+      "blobId": "c802bfdafeac3dc78b06e730d95826c62144c798",
+      "size": 5159101680,
+      "lfs": {
+        "sha256": "ee0dc913f924a572e61548035c151c772341c6a5dcc7d210a033f5d2f87ce71c",
+        "size": 5159101680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00015-of-00016.safetensors",
+      "blobId": "a657cbb153c0eeb61cdb1325d333bad568376339",
+      "size": 5159101672,
+      "lfs": {
+        "sha256": "aab0983411682f912be4c40bc32d9c1d58b098a12424b15e0afe8d871898a72f",
+        "size": 5159101672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00016-of-00016.safetensors",
+      "blobId": "c8c5331c95fa42b24a9d66a5a640d4e2fb455011",
+      "size": 1384163096,
+      "lfs": {
+        "sha256": "83cd92cdee77b61c58076ade54f843bbc017ed60fddad00fb220ace6805481f1",
+        "size": 1384163096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "2463da4287f54c6b534ff617912e56dd660a820f",
+      "size": 71593
+    },
+    {
+      "rfilename": "modeling_iquestloopcoder.py",
+      "blobId": "1cdd6fa6792ab0f7655d4946899db0462472ce4d",
+      "size": 48994
+    },
+    {
+      "rfilename": "papers/iquest-coder-v1-logo.png",
+      "blobId": "db8b265d824aa758048b67b57bc3b6aea5db1436",
+      "size": 122764,
+      "lfs": {
+        "sha256": "2fad84bb195ec8628191705c8c3f21ec21dc6dee27b72884e5342b3ffa0a0c0f",
+        "size": 122764,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "papers/results.png",
+      "blobId": "9e346b90296bc83b96a89f057deec415591fc588",
+      "size": 453412,
+      "lfs": {
+        "sha256": "b4b14ddc9c3fdfa2eed779e393a4ed67754255863b5d7f62641a4a04fcf2d462",
+        "size": 453412,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenization_iquestcoder.py",
+      "blobId": "9863d290f98a8db1ec5ce895006b23c1484d4973",
+      "size": 21762
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "c5da580a272417e860fb920c677fbf4d52d80f68",
+      "size": 1345108,
+      "lfs": {
+        "sha256": "7d3be68e090a927f31e0e378d7599b15c206dd47e4a73933775a746cc9c1cd91",
+        "size": 1345108,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "7417c00d694a5bfccd97969b568530ec8d8c5c2f",
+      "size": 8623
+    }
+  ],
+  "spaces": [
+    "hugobarros/coder",
+    "Kekulanus/iquest-loopcoder-40b-v2"
+  ],
+  "createdAt": "2025-12-30T15:33:31.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 39794696320
+    },
+    "total": 39794696320
+  },
+  "usedStorage": 79591977405,
+  "generation_config": {
+    "_from_model_config": true,
+    "bos_token_id": 1,
+    "eos_token_id": [
+      2,
+      75864,
+      75869
+    ],
+    "transformers_version": "4.55.4"
+  }
+}

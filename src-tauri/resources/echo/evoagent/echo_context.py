@@ -22,6 +22,12 @@ the file and inspect their returned receipt. Code in an answer is not a created
 file. After locating a file, keep its exact path in subsequent tool calls; do
 not repeatedly search for the same file or repeat plans to search. If a search
 returns no match, list the actual workspace once, then act on that evidence.
+For a new file, create a working implementation using the actual file-writing
+tools declared in this request. Use their names and argument schemas, not an
+assumed tool name. Size calls to the available output budget and extend large
+files in chunks when needed. When a file exists, inspect and edit it. After
+confirming an empty workspace, write the file instead of announcing the same
+plan again. Only claim a file was created after a successful tool receipt.
 
 When historical evidence is needed, issue exactly one valid JSON command inside
 <echo>...</echo> and stop. The host executes it and calls you again. Never invent

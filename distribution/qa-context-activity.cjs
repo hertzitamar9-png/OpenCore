@@ -7,6 +7,7 @@ code=code.replace('<link rel="stylesheet" href="/phone/mobile.css">','<link rel=
 code=code.replace('res.end(fs.readFileSync(file));',"res.end(name==='/phone/mobile-shim.js'?fs.readFileSync(file,'utf8').replace('globalThis.__OPENCORE_MOBILE__=true','globalThis.__OPENCORE_MOBILE__=innerWidth<768'):fs.readFileSync(file));");
 code=code.replace("else if(command==='get_conversation')value=fixture.timeline;", "else if(command==='get_conversation')value=fixture.timeline;else if(command==='echo_working_set')value=fixture.context;");
 code=code.replace('channel.port1.start();window.postMessage',"fixture.emit=(event,payload)=>channel.port1.postMessage(JSON.stringify({type:'event',handler:fixture.listeners[event],payload:{event,payload}}));channel.port1.start();window.postMessage");
+code=code.replace("const body=request.path==='/api/status'?","const body=request.path==='/api/telemetry'?{telemetry:fixture.liveHardware||{},context:fixture.context}:request.path==='/api/status'?");
 code+=String.raw`
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -29,7 +30,36 @@ code+=String.raw`
       const meter=page.locator('progress[aria-label="Model context usage"]');
       await page.waitForFunction(()=>document.querySelector('progress[aria-label="Model context usage"]')?.getAttribute('value')==='12400');
       assert.equal(await meter.getAttribute('max'),'32768');
+      await page.evaluate(()=>{fixture.liveHardware={gpuUtilization:87,vramUsedMib:5120,tokensPerSecond:35,completionTokens:81};fixture.context={...fixture.context,modelActiveTokens:12480,modelUsageKind:'live',modelOutputTokens:81,modelSessionActive:true};});
+      await page.waitForFunction(()=>document.querySelector('progress[aria-label="Model context usage"]')?.getAttribute('value')==='12480');
+      const footer=page.locator('footer.statusbar');
+      await footer.getByText('GPU 87%',{exact:true}).waitFor({state:'attached'});
+      assert.ok((await footer.innerText()).includes('5.0GB VRAM'));
+      assert.ok((await footer.innerText()).includes('35.0 tokens/s'));
+      assert.ok((await footer.innerText()).includes('81 out'));
+      await page.evaluate(()=>{fixture.context={...fixture.context,modelActiveTokens:12520,modelOutputTokens:121};fixture.liveHardware={gpuUtilization:63,vramUsedMib:6144,tokensPerSecond:40,completionTokens:121};});
+      await page.waitForFunction(()=>document.querySelector('progress[aria-label="Model context usage"]')?.getAttribute('value')==='12520');
+      await footer.getByText('GPU 63%',{exact:true}).waitFor({state:'attached'});
+      assert.ok((await footer.innerText()).includes('6.0GB VRAM'));
+      assert.ok((await footer.innerText()).includes('40.0 tokens/s'));
+      await page.getByText('40.0 output tokens/s · 121 output tokens',{exact:true}).waitFor({state:'attached'});
+      if(width>767){
+        const nav=page.locator('.conversation-app-rail .nav-item.active').first(),row=page.locator('.conversation-row-shell.selected').first();
+        const fill=element=>getComputedStyle(element).backgroundColor;
+        assert.equal(await nav.evaluate(fill),await row.evaluate(fill),'Navigation and selected chats must use one highlight fill');
+        const memory=page.locator('.conversation-app-rail .nav-item').nth(5);await memory.hover();
+        await page.waitForFunction(()=>{const nav=document.querySelectorAll('.conversation-app-rail .nav-item')[5],row=document.querySelector('.conversation-row-shell.selected');return nav&&row&&getComputedStyle(nav).backgroundColor===getComputedStyle(row).backgroundColor;});
+        assert.equal(await memory.evaluate(fill),await row.evaluate(fill),'Hover and selection must share the highlight color');
+      }
       if(width>767)assert.ok(await meter.isVisible(),'The desktop live context bar must be visible');
+      if(width>767){
+        const selected=page.locator('.conversation-row-shell.selected'),other=page.locator('.conversation-row-shell:not(.selected)').first();
+        await other.hover();
+        assert.equal(await selected.count(),1,'Hover must not select another chat');
+        assert.notEqual(await selected.evaluate(e=>getComputedStyle(e).borderColor),await other.evaluate(e=>getComputedStyle(e).borderColor),'Unselected chat must not copy selected border');
+        const input=page.getByRole('textbox',{name:'Message OpenCore',exact:true});await input.focus();
+        assert.equal(await input.evaluate(e=>getComputedStyle(e).outlineStyle),'none','Typing must not outline the composer');
+      }
       await page.evaluate(({call,result})=>{fixture.timeline.push(call,result);fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',checkpoint:true,phase:'tool',segments:[]});},{call,result});
       await page.getByText(/Used\s*1\s*tool/).first().waitFor({timeout:10000});
       await page.evaluate(()=>fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',phase:'reasoning',segments:[{kind:'thinking',itemId:'reason-1',content:'I will inspect the file that was found.'}]}));
@@ -51,7 +81,7 @@ code+=String.raw`
       await page.waitForFunction(()=>{const bar=document.querySelector('progress[aria-label="Model context usage"]');return bar?.getAttribute('max')==='32768'&&!bar.hasAttribute('value');});
       assert.deepEqual(errors,[]);
       await page.screenshot({path:path.join(folder,'context-activity-'+width+'.png')});
-      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedCatalogLimitVerified:true,errors});
+      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedCatalogLimitVerified:true,liveContextSamples:[12480,12520],liveHardwareSamples:[87,63],liveOutputRates:[35,40],sharedHighlightsVerified:width>767,errors});
       await page.close();
     }
     fs.writeFileSync(path.join(folder,'context-activity-render.json'),JSON.stringify({passed:true,proof},null,2));
