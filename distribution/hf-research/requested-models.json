@@ -1864,6 +1864,21 @@
           ]
         }
       ]
+    },
+    {
+      "repository": "pragmaticcs/Qwen3.8-KAT-AgentWorld-35B-A3B-Coder-GGUF",
+      "familyId": "publisher-qwen38-kat-agentworld-35b-coder",
+      "label": "Qwen3.8 KAT AgentWorld 35B A3B Coder",
+      "category": "text",
+      "description": "pragmaticcs/Qwen3.8-KAT-AgentWorld-35B-A3B-Coder-GGUF: coding and tool-use merge on the Qwen3.5 MoE architecture. All five publisher GGUF choices are included, with a 32K ECHO working window. Publisher-gated: an approved Hugging Face account and read token in Settings are required to download. Runtime generation must pass before Ready.",
+      "sources": [
+        {
+          "repository": "pragmaticcs/Qwen3.8-KAT-AgentWorld-35B-A3B-Coder-GGUF",
+          "quantizationLabels": {
+            "GGUF": "APEX High Quality"
+          }
+        }
+      ]
     }
   ]
 }

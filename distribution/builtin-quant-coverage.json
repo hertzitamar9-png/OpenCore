@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 561,
-  "withFive": 217,
+  "families": 562,
+  "withFive": 218,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5576,6 +5576,17 @@
       "source": "bundled packages",
       "repositories": [
         "DavidAU/Qwen3.8-27B-Jumbo-Fusion-IQ-747-900-Turbo-Brilliance-50X-Reasoning-Instruct-NEO-MAX-MTP-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-qwen38-kat-agentworld-35b-coder",
+      "label": "Qwen3.8 KAT AgentWorld 35B A3B Coder",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "pragmaticcs/Qwen3.8-KAT-AgentWorld-35B-A3B-Coder-GGUF"
       ]
     },
     {

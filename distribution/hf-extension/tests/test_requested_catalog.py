@@ -14,6 +14,23 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_agentworld_coder_keeps_all_five_gated_publisher_ggufs(self):
+        entries=self.family('qwen38-kat-agentworld-35b-coder')
+        self.assertEqual(len(entries),5)
+        self.assertEqual({e['quantization'] for e in entries},{'Q4_K_M','Q5_K_M','Q6_K','Q8_0','APEX High Quality'})
+        for entry in entries:
+            self.assertEqual(entry['originalRepository'],'pragmaticcs/Qwen3.8-KAT-AgentWorld-35B-A3B-Coder-GGUF')
+            self.assertEqual(entry['repository'],entry['originalRepository'])
+            self.assertEqual(entry['revision'],'4583cd85a72f6bbe5c8f531bf87024f04eed1252')
+            self.assertTrue(entry['gated'] and entry['installable'])
+            self.assertEqual(entry['contextTokens'],32768)
+            self.assertEqual(entry['memoryMode'],'echo')
+            self.assertEqual(entry['runtime']['adapter'],'gguf')
+            self.assertEqual(entry['managedEngine'],'flint-cpu-v1')
+            self.assertFalse(entry['runtime']['inferenceVerified'])
+            self.assertEqual(len([p for p in entry['files'] if p['role']=='model']),1)
+            self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+
     def test_crowd_keeps_published_precisions_components_and_2048_token_limit(self):
         entries=self.family('crowd-v1')
         self.assertEqual(len(entries),2)
@@ -300,7 +317,7 @@ class RequestedCatalogTests(unittest.TestCase):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 18)
+        self.assertEqual(report['withFive'], 19)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):
