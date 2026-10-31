@@ -95309,6 +95309,138 @@
       "license": "mit",
       "catalogOrder": 1,
       "echoWorkingWindowTokens": 32768
+    },
+    {
+      "id": "hf-f83445a04d97cc1af860b3cb",
+      "repository": "AlmawaveLabs/Velvet2-3B",
+      "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+      "variantKey": "safetensors:.",
+      "name": "Velvet2 3B · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 7785117848,
+      "files": [
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "model-00001-of-00002.safetensors",
+          "bytes": 4988883064,
+          "sha256": "b3769f68d25678fc097893f2c9868cf9fb0e8b25d5c5b58aacd6d6924d08cbf5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "model-00002-of-00002.safetensors",
+          "bytes": 2786742160,
+          "sha256": "893cfcd29089efe62f6328ddb5d3e6a0c0dc43cd61dbcfd4a5d79581da4822e1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "chat_template.jinja",
+          "bytes": 3113,
+          "sha256": null,
+          "gitBlobSha1": "de6ef77f29316dd2b2fe0e5b7f0b338b12947fb4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "config.json",
+          "bytes": 687,
+          "sha256": null,
+          "gitBlobSha1": "eb4709e97bddb3363df8ea813e881907272d5752",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "generation_config.json",
+          "bytes": 111,
+          "sha256": null,
+          "gitBlobSha1": "8f34e3f23bb20640c319fcc03256f99a4f515d7b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "model.safetensors.index.json",
+          "bytes": 28407,
+          "sha256": null,
+          "gitBlobSha1": "d8994077fd487b62065f7431d35e644e4b0e3c8f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "special_tokens_map.json",
+          "bytes": 437,
+          "sha256": null,
+          "gitBlobSha1": "72ecfeeb7e14d244c936169d2ed139eeae235ef1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "tokenizer.json",
+          "bytes": 9363328,
+          "sha256": null,
+          "gitBlobSha1": "b9a1904670b34953a12d1b2f7d0bad79d9974a35",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "revision": "26f1d5c014d459da2787e968388a102de6b3132b",
+          "filename": "tokenizer_config.json",
+          "bytes": 96541,
+          "sha256": null,
+          "gitBlobSha1": "9080dc8c21ed928a5f66d73465e412b44f83dfdd",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "mistral",
+      "architectures": [
+        "MistralForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": true,
+      "sourceUrl": "https://huggingface.co/AlmawaveLabs/Velvet2-3B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-velvet2-3b",
+      "familyLabel": "Velvet2 3B",
+      "originalRepository": "AlmawaveLabs/Velvet2-3B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "AlmawaveLabs/Velvet2-3B: multilingual Mistral instruction-tuned text model with function-calling support. The complete original BF16 checkpoint uses the managed Transformers runtime and a 32K ECHO working window. Publisher-gated: accept the repository access terms and add your Hugging Face read token in Settings before downloading. Generation must pass before Ready.",
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768
     }
   ]
 }

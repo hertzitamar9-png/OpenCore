@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 562,
+  "families": 563,
   "withFive": 218,
   "models": [
     {
@@ -5685,6 +5685,17 @@
       "source": "bundled packages",
       "repositories": [
         "baidu/Unlimited-OCR-2"
+      ]
+    },
+    {
+      "id": "publisher-velvet2-3b",
+      "label": "Velvet2 3B",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "AlmawaveLabs/Velvet2-3B"
       ]
     }
   ]

@@ -1879,6 +1879,19 @@
           }
         }
       ]
+    },
+    {
+      "repository": "AlmawaveLabs/Velvet2-3B",
+      "familyId": "publisher-velvet2-3b",
+      "label": "Velvet2 3B",
+      "category": "text",
+      "description": "AlmawaveLabs/Velvet2-3B: multilingual Mistral instruction-tuned text model with function-calling support. The complete original BF16 checkpoint uses the managed Transformers runtime and a 32K ECHO working window. Publisher-gated: accept the repository access terms and add your Hugging Face read token in Settings before downloading. Generation must pass before Ready.",
+      "sources": [
+        {
+          "repository": "AlmawaveLabs/Velvet2-3B",
+          "quantization": "BF16"
+        }
+      ]
     }
   ]
 }

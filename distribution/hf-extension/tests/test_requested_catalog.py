@@ -14,6 +14,24 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_velvet2_keeps_the_complete_gated_bf16_text_checkpoint(self):
+        entries=self.family('velvet2-3b')
+        self.assertEqual(len(entries),1)
+        entry=entries[0]
+        self.assertEqual(entry['repository'],'AlmawaveLabs/Velvet2-3B')
+        self.assertEqual(entry['originalRepository'],entry['repository'])
+        self.assertEqual(entry['revision'],'26f1d5c014d459da2787e968388a102de6b3132b')
+        self.assertEqual(entry['quantization'],'BF16')
+        self.assertEqual(entry['runtime']['adapter'],'transformers')
+        self.assertFalse(entry['runtime']['inferenceVerified'])
+        self.assertTrue(entry['gated'] and entry['installable'])
+        self.assertEqual(entry['contextTokens'],32768)
+        self.assertEqual(entry['memoryMode'],'echo')
+        names={pin['filename'] for pin in entry['files']}
+        self.assertTrue({'model-00001-of-00002.safetensors','model-00002-of-00002.safetensors','model.safetensors.index.json','config.json','generation_config.json','tokenizer.json','chat_template.jinja'}<=names)
+        self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+        self.assertNotIn('tool_parser_plugin.py',names)
+
     def test_agentworld_coder_keeps_all_five_gated_publisher_ggufs(self):
         entries=self.family('qwen38-kat-agentworld-35b-coder')
         self.assertEqual(len(entries),5)
