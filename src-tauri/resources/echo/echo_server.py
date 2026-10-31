@@ -321,6 +321,35 @@ TOOL_CALL_INITIAL_TOKENS = 1200
 TOOL_CALL_MAX_CHARS = 6000
 
 
+def _tool_stream_lines(response, calls, started):
+    """Bound a partially emitted tool call even if its upstream goes silent."""
+    iterator = iter(response)
+    while True:
+        if calls:
+            remaining = TOOL_CALL_SECONDS - (time.monotonic() - started)
+            if remaining <= 0:
+                yield None
+                return
+            # urllib's local HTTP response uses SocketIO beneath its buffered
+            # reader. A timeout here also wakes a blocked readline when there is
+            # no new SSE chunk on which the normal deadline check could run.
+            sock = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
+            if sock is not None:
+                try:
+                    sock.settimeout(max(0.001, remaining))
+                except OSError:
+                    pass
+        try:
+            yield next(iterator)
+        except StopIteration:
+            return
+        except TimeoutError:
+            if not calls:
+                raise
+            yield None
+            return
+
+
 def _partial_tool_action(arguments):
     """Read a completed top-level action from an otherwise incomplete object."""
     decoder = json.JSONDecoder()
@@ -2745,7 +2774,12 @@ class Handler(BaseHTTPRequestHandler):
             result = {'choices': [{'message': message, 'finish_reason': None}]}
             finished = False
             loop_guard = ReasoningLoopGuard()
-            for line in response:
+            for line in _tool_stream_lines(response, calls, started):
+                if line is None:
+                    result['echo_incomplete_tool_call'] = 'time'
+                    result['choices'][0]['finish_reason'] = 'length'
+                    finished = True
+                    break
                 self._retain_stream_chunk(line, phase, generation)
                 if not line.startswith(b'data:'):
                     continue

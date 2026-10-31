@@ -2,6 +2,10 @@ import io
 import types
 import unittest
 import json
+import threading
+import time
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 from echo_server import Handler,ReasoningLoopGuard,recover_embedded_tool_call,recover_requested_html_file,tool_call_error
 
@@ -128,5 +132,45 @@ class LoopGuardTests(unittest.TestCase):
             result=handler._generate_live({'stream':True,'max_tokens':1024},'working')
         self.assertEqual(result.get('echo_incomplete_tool_call'),'time')
         self.assertEqual(result['choices'][0]['finish_reason'],'length')
+
+    def test_a_silent_partial_tool_stream_times_out_without_another_chunk(self):
+        stopped=threading.Event()
+        event={'choices':[{'delta':{'tool_calls':[{'index':0,'id':'call-1','function':{'name':'mcp__opencore__dev','arguments':'{"action":"write","content":"unfinished'}}]}}]}
+        class SilentStream(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200);self.send_header('Content-Type','text/event-stream');self.end_headers()
+                self.wfile.write(('data: '+json.dumps(event)+'\n\n').encode());self.wfile.flush()
+                stopped.wait(3)
+            def log_message(self,*_): pass
+        server=ThreadingHTTPServer(('127.0.0.1',0),SilentStream)
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        self.addCleanup(server.server_close);self.addCleanup(server.shutdown);self.addCleanup(stopped.set)
+        handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None);handler._live_event=lambda *_:None
+        handler._upstream=lambda *a,**k:urllib.request.urlopen('http://127.0.0.1:%d/'%server.server_port,timeout=5)
+        started=time.monotonic()
+        with patch('echo_server.TOOL_CALL_SECONDS',0.2):
+            result=handler._generate_live({'stream':True,'max_tokens':1024},'working')
+        self.assertLess(time.monotonic()-started,2)
+        self.assertEqual(result.get('echo_incomplete_tool_call'),'time')
+        self.assertEqual(result['choices'][0]['finish_reason'],'length')
+
+    def test_a_slow_answer_without_a_partial_tool_is_not_cut_off(self):
+        class SlowAnswer(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200);self.send_header('Content-Type','text/event-stream');self.end_headers()
+                self.wfile.write(b'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n');self.wfile.flush()
+                time.sleep(0.35)
+                self.wfile.write(b'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n');self.wfile.flush()
+            def log_message(self,*_): pass
+        server=ThreadingHTTPServer(('127.0.0.1',0),SlowAnswer)
+        threading.Thread(target=server.serve_forever,daemon=True).start()
+        self.addCleanup(server.server_close);self.addCleanup(server.shutdown)
+        handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None);handler._live_event=lambda *_:None
+        handler._upstream=lambda *a,**k:urllib.request.urlopen('http://127.0.0.1:%d/'%server.server_port,timeout=5)
+        with patch('echo_server.TOOL_CALL_SECONDS',0.2):
+            result=handler._generate_live({'stream':True,'max_tokens':1024},'working')
+        self.assertFalse(result.get('echo_incomplete_tool_call'))
+        self.assertEqual(result['choices'][0]['message']['content'],'Hello')
+        self.assertEqual(result['choices'][0]['finish_reason'],'stop')
 
 if __name__=='__main__':unittest.main()
