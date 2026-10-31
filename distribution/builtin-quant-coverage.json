@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 559,
-  "withFive": 216,
+  "families": 560,
+  "withFive": 217,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5576,6 +5576,22 @@
       "source": "bundled packages",
       "repositories": [
         "webmp3/Sakura-Iris-3B-Uncensored-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-sensenova-loop-9b-preview",
+      "label": "SenseNova Loop 9B Preview",
+      "category": "text",
+      "quantizations": 11,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/SenseNova-Loop-9B-Preview-GGUF",
+        "annelo/SenseNova-Loop-9B-Preview-Q4_K_M-Vision-GGUF",
+        "gitcommit90/SenseNova-Loop-9B-Preview-NVFP4",
+        "guideboardlabs/SenseNova-Loop-9B-Preview-GGUF",
+        "notfakerv/SenseNova-Loop-9B-Preview-GGUF",
+        "sensenova/SenseNova-Loop-9B-Preview"
       ]
     },
     {

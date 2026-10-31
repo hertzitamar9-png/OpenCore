@@ -1,0 +1,1517 @@
+{
+  "_id": "6ae55a3074908b35b788cc6c",
+  "id": "gitcommit90/SenseNova-Loop-9B-Preview-NVFP4",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "sensenova_loop",
+    "text-generation",
+    "nvfp4",
+    "modelopt",
+    "quantized",
+    "multimodal",
+    "looped-transformer",
+    "mhc",
+    "mtp",
+    "custom_code",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "zh",
+    "base_model:sensenova/SenseNova-Loop-9B-Preview",
+    "base_model:quantized:sensenova/SenseNova-Loop-9B-Preview",
+    "license:apache-2.0",
+    "8-bit",
+    "region:us"
+  ],
+  "downloads": 1,
+  "likes": 0,
+  "modelId": "gitcommit90/SenseNova-Loop-9B-Preview-NVFP4",
+  "author": "gitcommit90",
+  "sha": "8edc128b0e751107315c77a58ed73caad5c41d45",
+  "lastModified": "2026-10-31T07:45:06.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "SenseNovaLoopForConditionalGeneration"
+    ],
+    "auto_map": {
+      "AutoConfig": "modeling_sensenova_loop.SenseNovaLoopConfig",
+      "AutoModel": "modeling_sensenova_loop.SenseNovaLoopModel",
+      "AutoModelForCausalLM": "modeling_sensenova_loop.SenseNovaLoopForConditionalGeneration",
+      "AutoModelForImageTextToText": "modeling_sensenova_loop.SenseNovaLoopForConditionalGeneration"
+    },
+    "model_type": "sensenova_loop",
+    "quantization_config": {
+      "config_groups": {
+        "group_0": {
+          "input_activations": {
+            "dynamic": false,
+            "num_bits": 4,
+            "type": "float",
+            "group_size": 16
+          },
+          "weights": {
+            "dynamic": false,
+            "num_bits": 4,
+            "type": "float",
+            "group_size": 16
+          },
+          "targets": [
+            "Linear"
+          ]
+        }
+      },
+      "ignore": [
+        "lm_head",
+        "model.language_model.embed_tokens",
+        "model.language_model.layers.0.linear_attn.conv1d",
+        "model.language_model.layers.0.linear_attn.in_proj_a",
+        "model.language_model.layers.0.linear_attn.in_proj_b",
+        "model.language_model.layers.1.linear_attn.conv1d",
+        "model.language_model.layers.1.linear_attn.in_proj_a",
+        "model.language_model.layers.1.linear_attn.in_proj_b",
+        "model.language_model.layers.10.linear_attn.conv1d",
+        "model.language_model.layers.10.linear_attn.in_proj_a",
+        "model.language_model.layers.10.linear_attn.in_proj_b",
+        "model.language_model.layers.12.linear_attn.conv1d",
+        "model.language_model.layers.12.linear_attn.in_proj_a",
+        "model.language_model.layers.12.linear_attn.in_proj_b",
+        "model.language_model.layers.13.linear_attn.conv1d",
+        "model.language_model.layers.13.linear_attn.in_proj_a",
+        "model.language_model.layers.13.linear_attn.in_proj_b",
+        "model.language_model.layers.14.linear_attn.conv1d",
+        "model.language_model.layers.14.linear_attn.in_proj_a",
+        "model.language_model.layers.14.linear_attn.in_proj_b",
+        "model.language_model.layers.16.linear_attn.conv1d",
+        "model.language_model.layers.16.linear_attn.in_proj_a",
+        "model.language_model.layers.16.linear_attn.in_proj_b",
+        "model.language_model.layers.17.linear_attn.conv1d",
+        "model.language_model.layers.17.linear_attn.in_proj_a",
+        "model.language_model.layers.17.linear_attn.in_proj_b",
+        "model.language_model.layers.18.linear_attn.conv1d",
+        "model.language_model.layers.18.linear_attn.in_proj_a",
+        "model.language_model.layers.18.linear_attn.in_proj_b",
+        "model.language_model.layers.2.linear_attn.conv1d",
+        "model.language_model.layers.2.linear_attn.in_proj_a",
+        "model.language_model.layers.2.linear_attn.in_proj_b",
+        "model.language_model.layers.20.linear_attn.conv1d",
+        "model.language_model.layers.20.linear_attn.in_proj_a",
+        "model.language_model.layers.20.linear_attn.in_proj_b",
+        "model.language_model.layers.21.linear_attn.conv1d",
+        "model.language_model.layers.21.linear_attn.in_proj_a",
+        "model.language_model.layers.21.linear_attn.in_proj_b",
+        "model.language_model.layers.22.linear_attn.conv1d",
+        "model.language_model.layers.22.linear_attn.in_proj_a",
+        "model.language_model.layers.22.linear_attn.in_proj_b",
+        "model.language_model.layers.24.linear_attn.conv1d",
+        "model.language_model.layers.24.linear_attn.in_proj_a",
+        "model.language_model.layers.24.linear_attn.in_proj_b",
+        "model.language_model.layers.25.linear_attn.conv1d",
+        "model.language_model.layers.25.linear_attn.in_proj_a",
+        "model.language_model.layers.25.linear_attn.in_proj_b",
+        "model.language_model.layers.26.linear_attn.conv1d",
+        "model.language_model.layers.26.linear_attn.in_proj_a",
+        "model.language_model.layers.26.linear_attn.in_proj_b",
+        "model.language_model.layers.28.linear_attn.conv1d",
+        "model.language_model.layers.28.linear_attn.in_proj_a",
+        "model.language_model.layers.28.linear_attn.in_proj_b",
+        "model.language_model.layers.29.linear_attn.conv1d",
+        "model.language_model.layers.29.linear_attn.in_proj_a",
+        "model.language_model.layers.29.linear_attn.in_proj_b",
+        "model.language_model.layers.30.linear_attn.conv1d",
+        "model.language_model.layers.30.linear_attn.in_proj_a",
+        "model.language_model.layers.30.linear_attn.in_proj_b",
+        "model.language_model.layers.4.linear_attn.conv1d",
+        "model.language_model.layers.4.linear_attn.in_proj_a",
+        "model.language_model.layers.4.linear_attn.in_proj_b",
+        "model.language_model.layers.5.linear_attn.conv1d",
+        "model.language_model.layers.5.linear_attn.in_proj_a",
+        "model.language_model.layers.5.linear_attn.in_proj_b",
+        "model.language_model.layers.6.linear_attn.conv1d",
+        "model.language_model.layers.6.linear_attn.in_proj_a",
+        "model.language_model.layers.6.linear_attn.in_proj_b",
+        "model.language_model.layers.8.linear_attn.conv1d",
+        "model.language_model.layers.8.linear_attn.in_proj_a",
+        "model.language_model.layers.8.linear_attn.in_proj_b",
+        "model.language_model.layers.9.linear_attn.conv1d",
+        "model.language_model.layers.9.linear_attn.in_proj_a",
+        "model.language_model.layers.9.linear_attn.in_proj_b",
+        "model.visual*",
+        "mtp.fc",
+        "mtp.layers.0.input_layernorm",
+        "mtp.layers.0.mlp.down_proj",
+        "mtp.layers.0.mlp.gate_proj",
+        "mtp.layers.0.mlp.up_proj",
+        "mtp.layers.0.post_attention_layernorm",
+        "mtp.layers.0.self_attn.k_norm",
+        "mtp.layers.0.self_attn.k_proj",
+        "mtp.layers.0.self_attn.o_proj",
+        "mtp.layers.0.self_attn.q_norm",
+        "mtp.layers.0.self_attn.q_proj",
+        "mtp.layers.0.self_attn.v_proj",
+        "mtp.norm",
+        "mtp.pre_fc_norm_embedding",
+        "mtp.pre_fc_norm_hidden"
+      ],
+      "quant_algo": "NVFP4",
+      "group_size": 16,
+      "producer": {
+        "name": "modelopt",
+        "version": "0.48.0rc1"
+      },
+      "quant_method": "modelopt"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "unk_token": null,
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token_id": null,
+    "dtype": "bfloat16",
+    "eos_token_id": 248046,
+    "hidden_size": 4096,
+    "image_token_id": 248056,
+    "loop_settings": {
+      "counts": [
+        2
+      ],
+      "end": 28,
+      "eval_count": 2,
+      "start": 4
+    },
+    "mhc": {
+      "end": 28,
+      "fixed_identity": false,
+      "iterations": 20,
+      "pre_scale": 1.0,
+      "start": 4,
+      "streams": 2
+    },
+    "model_name": "SenseNova-Loop-9B-Preview",
+    "pad_token_id": 248044,
+    "patch_conv3d": true,
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "attn_output_gate": true,
+      "bos_token_id": null,
+      "dtype": "bfloat16",
+      "eos_token_id": 248044,
+      "full_attention_interval": 4,
+      "head_dim": 256,
+      "hidden_act": "silu",
+      "hidden_size": 4096,
+      "initializer_range": 0.02,
+      "intermediate_size": 12288,
+      "layer_types": [
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention"
+      ],
+      "linear_conv_kernel_dim": 4,
+      "linear_key_head_dim": 128,
+      "linear_num_key_heads": 16,
+      "linear_num_value_heads": 32,
+      "linear_value_head_dim": 128,
+      "mamba_ssm_dtype": "float32",
+      "max_position_embeddings": 262144,
+      "mlp_only_layers": [],
+      "model_type": "qwen3_5_text",
+      "mtp_num_hidden_layers": 1,
+      "mtp_use_dedicated_embeddings": false,
+      "num_attention_heads": 16,
+      "num_hidden_layers": 32,
+      "num_key_value_heads": 4,
+      "pad_token_id": 248044,
+      "partial_rotary_factor": 0.25,
+      "rms_norm_eps": 1e-06,
+      "rope_parameters": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          11,
+          11,
+          10
+        ],
+        "partial_rotary_factor": 0.25,
+        "rope_theta": 10000000,
+        "rope_type": "default"
+      },
+      "tie_word_embeddings": false,
+      "use_cache": true,
+      "vocab_size": 248320
+    },
+    "tie_word_embeddings": false,
+    "transformers_version": "5.18.0",
+    "video_token_id": 248057,
+    "vision_config": {
+      "deepstack_visual_indexes": [],
+      "depth": 27,
+      "dtype": "bfloat16",
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1152,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4304,
+      "model_type": "qwen3_5_vision",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 4096,
+      "patch_size": 16,
+      "rope_parameters": {
+        "rope_theta": 10000.0,
+        "rope_type": "axial"
+      },
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 248054,
+    "vision_start_token_id": 248053
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "sensenova/SenseNova-Loop-9B-Preview",
+    "base_model_relation": "quantized",
+    "library_name": "transformers",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "tags": [
+      "nvfp4",
+      "modelopt",
+      "quantized",
+      "multimodal",
+      "looped-transformer",
+      "mhc",
+      "mtp",
+      "custom_code"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_sensenova_loop.SenseNovaLoopForConditionalGeneration",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6c93463c466ac496d8d2b8cf10cd6da55bc32f17",
+      "size": 2614
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "size": 11357
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "9d8f35da2bd3219a9dfddbb654c206eea21fe007",
+      "size": 18939
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "14a7e1b19f162008b9fb32238adb004fdfd8d30c",
+      "size": 23588
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "a585dec894e63da457d9440ec6aa7caa16d20860",
+      "size": 7756
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "877b73e1fb98b21a70f5d8274c6cb380bcf49d34",
+      "size": 10614
+    },
+    {
+      "rfilename": "evaluation/QUALITY_GATES.md",
+      "blobId": "7ed322cabfca70563103a3ecb5cb2745d8804c77",
+      "size": 1296
+    },
+    {
+      "rfilename": "evaluation/compare_vs_ref.json",
+      "blobId": "ff56ebbda242b59aeaf73c31850978c296efa220",
+      "size": 3214
+    },
+    {
+      "rfilename": "evaluation/eval_data_MANIFEST.json",
+      "blobId": "cbd7f95b103970d5a5761f1d9cc0b0f2df24e45a",
+      "size": 2778
+    },
+    {
+      "rfilename": "evaluation/harness/build_eval_data.py",
+      "blobId": "9ed80eb40848c465e966c835d97e2bfe2ffcc790",
+      "size": 6616
+    },
+    {
+      "rfilename": "evaluation/harness/common.py",
+      "blobId": "1a5d961aa42097ed512eca1cdbdee088a30054a9",
+      "size": 6824
+    },
+    {
+      "rfilename": "evaluation/harness/compare.py",
+      "blobId": "1fa0604fe837b4b8e2fda890c16d597109b85264",
+      "size": 5437
+    },
+    {
+      "rfilename": "evaluation/harness/ifeval_lite.py",
+      "blobId": "bb95435994045b22aea0293f5b14f85b60d3e1e0",
+      "size": 7642
+    },
+    {
+      "rfilename": "evaluation/harness/mock_server.py",
+      "blobId": "52ca6bb0a75713c1ea22671d6e7811aa3e088f9e",
+      "size": 7173
+    },
+    {
+      "rfilename": "evaluation/harness/perf_bench.py",
+      "blobId": "a211d2b51a95d2bee686a807546976ea4307e689",
+      "size": 9316
+    },
+    {
+      "rfilename": "evaluation/harness/requirements.lock",
+      "blobId": "61552d8da9e3f5f5c88415e39cfacc6977859283",
+      "size": 798
+    },
+    {
+      "rfilename": "evaluation/harness/run_eval.py",
+      "blobId": "a405655af838909f5241d09d6d24f0f0b2fba89a",
+      "size": 6500
+    },
+    {
+      "rfilename": "evaluation/harness/tasks.py",
+      "blobId": "9c24e2fa7cffe6b9b4824b3addfb4e666c24393e",
+      "size": 10860
+    },
+    {
+      "rfilename": "evaluation/harness/test_harness.py",
+      "blobId": "870ea0de7d5ef5a774ca50ebe62953086d454cfb",
+      "size": 8650
+    },
+    {
+      "rfilename": "evaluation/harness/tool_cases.py",
+      "blobId": "463695cd34241dcf63f439224776da184165e3d3",
+      "size": 9338
+    },
+    {
+      "rfilename": "evaluation/hf_bf16_checks.json",
+      "blobId": "81473a35d2028992fc1a5078ef45149704ce0720",
+      "size": 2675
+    },
+    {
+      "rfilename": "evaluation/kernel_summary.txt",
+      "blobId": "81204c51415d50799f9abf464b67b7fea9b8a9eb",
+      "size": 4589
+    },
+    {
+      "rfilename": "evaluation/nvfp4_v1_mtp_release_probe.json",
+      "blobId": "215985084141abc882e838487f89ec2bdc24fe24",
+      "size": 2468
+    },
+    {
+      "rfilename": "evaluation/nvfp4_v1_probe.json",
+      "blobId": "f87bd9f0bbd41c9a8d8e8c48029191268fbf917d",
+      "size": 2549
+    },
+    {
+      "rfilename": "evaluation/perf_sglang_bf16.json",
+      "blobId": "b5cd6786e3275c09746fc01a359bacf4028f7a7d",
+      "size": 4588
+    },
+    {
+      "rfilename": "evaluation/perf_sglang_bf16_mtp.json",
+      "blobId": "cfc116924f1d06eab8fe43798fe5db0f9c8fe8c4",
+      "size": 4586
+    },
+    {
+      "rfilename": "evaluation/perf_sglang_nvfp4_v1.json",
+      "blobId": "b4681560346eb6d6e6d5ba80dc1d49dad952d029",
+      "size": 4601
+    },
+    {
+      "rfilename": "evaluation/perf_sglang_nvfp4_v1_marlin_w4a16.json",
+      "blobId": "4fc53dd3d7cee671f8370ba92af040add436f918",
+      "size": 2644
+    },
+    {
+      "rfilename": "evaluation/perf_sglang_nvfp4_v1_mtp.json",
+      "blobId": "9abaaaabe1c10a8d9bc2e02dd56ca808d24b2fc1",
+      "size": 4605
+    },
+    {
+      "rfilename": "evaluation/sglang_bf16_mtp_probe.json",
+      "blobId": "916b82166dba1865880cc0e3e6db5a3a5f99701f",
+      "size": 2759
+    },
+    {
+      "rfilename": "evaluation/sglang_bf16_probe.json",
+      "blobId": "79814cc88e3a570d55976cb0d0d1b9ee0226fa16",
+      "size": 2747
+    },
+    {
+      "rfilename": "evaluation/summary_sglang_bf16.json",
+      "blobId": "7996c1afd49fcc4741c7a4cdabddcd5d1ac8f708",
+      "size": 3655
+    },
+    {
+      "rfilename": "evaluation/summary_sglang_bf16_mtp.json",
+      "blobId": "a626dfb288d5395dfd7faf700d1aaf846a99cee6",
+      "size": 2581
+    },
+    {
+      "rfilename": "evaluation/summary_sglang_nvfp4_v1.json",
+      "blobId": "ed4d6120399918f09c0ee876ceb0b3c6b9e767b3",
+      "size": 3659
+    },
+    {
+      "rfilename": "evaluation/summary_sglang_nvfp4_v1_marlin_w4a16_gsm8k.json",
+      "blobId": "4e5303e6bcf7717c1bd151376537e66a6c22e833",
+      "size": 1643
+    },
+    {
+      "rfilename": "evaluation/summary_sglang_nvfp4_v1_mtp.json",
+      "blobId": "dcc5ee545b281fe6e7b0a3bed4a3c1955c33eb80",
+      "size": 2583
+    },
+    {
+      "rfilename": "figures/README.md",
+      "blobId": "81007633bf3d33ce620b5e40c09eb5a68d46012c",
+      "size": 1281
+    },
+    {
+      "rfilename": "figures/performance-summary.pdf",
+      "blobId": "aa5101b380b3ad79a7e1f366c7d991e477dd7ca8",
+      "size": 37832
+    },
+    {
+      "rfilename": "figures/performance-summary.png",
+      "blobId": "b4c3ac50a744cfca8cc3d50373a2e7a406ca5cb5",
+      "size": 461205,
+      "lfs": {
+        "sha256": "7012b65a258263617bcd3a9d57e93c4cb24836d9da35a69d723a0f6ef6416d68",
+        "size": 461205,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "figures/performance-summary.svg",
+      "blobId": "577d7ad8f1d7eb9da665b65e98be58fcce85a60f",
+      "size": 31849
+    },
+    {
+      "rfilename": "figures/plot_benchmarks.py",
+      "blobId": "99555f6257197734301fc1d373a4a1a3bd6b4d45",
+      "size": 5596
+    },
+    {
+      "rfilename": "figures/plot_runtime_v2.py",
+      "blobId": "bbea85c1a6e03f621a7c4907e7158ddc5a37a538",
+      "size": 5708
+    },
+    {
+      "rfilename": "figures/quality-summary.pdf",
+      "blobId": "72d07018a3f2d2d16ad2e687bb3847b1ac31d75f",
+      "size": 37589
+    },
+    {
+      "rfilename": "figures/quality-summary.png",
+      "blobId": "e4785638537cc906e94252f8eb2b722e052a56ad",
+      "size": 379938,
+      "lfs": {
+        "sha256": "761cb0de5f120ec2934b7b900b0d4961464ba24686b4175095289e9d245b0a04",
+        "size": 379938,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "figures/quality-summary.svg",
+      "blobId": "9aafc419e89fb12564b0601706d36d4040753428",
+      "size": 27838
+    },
+    {
+      "rfilename": "figures/requirements.txt",
+      "blobId": "1f745f132bdd94bcd8e2c19114d3a43f16aa6d8b",
+      "size": 31
+    },
+    {
+      "rfilename": "figures/runtime-v2-performance.pdf",
+      "blobId": "9d1d3f576cb703ab8d4fcb3096bdd91126846985",
+      "size": 39780
+    },
+    {
+      "rfilename": "figures/runtime-v2-performance.png",
+      "blobId": "ce3cc4161dbdb12ac1a9bbeca3f13fb4b7cbdf4e",
+      "size": 507237,
+      "lfs": {
+        "sha256": "6b0145854cf885771b77dd327e3d5cb0a742b04c9c744bf24006ba98f4569313",
+        "size": 507237,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "figures/runtime-v2-performance.svg",
+      "blobId": "12341b1ab6a54a3fe7b8215b7449a975d835330c",
+      "size": 31583
+    },
+    {
+      "rfilename": "figures/runtime-v2-quality.pdf",
+      "blobId": "63fe166ee177ed9257f91c4469e24c599acab40e",
+      "size": 36792
+    },
+    {
+      "rfilename": "figures/runtime-v2-quality.png",
+      "blobId": "874521c84610cdc67945e24bdcea2859ad2569a5",
+      "size": 396018,
+      "lfs": {
+        "sha256": "c66a6044c2160795ef18de6906060864ed793adfe08a27a8fce20e5f59306695",
+        "size": 396018,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "figures/runtime-v2-quality.svg",
+      "blobId": "f5cd71f7673d8a5aa0f1de811d7f7653ae2bac93",
+      "size": 25397
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "01ef5fe745f2da9f28195696343e01b39b0fa163",
+      "size": 198
+    },
+    {
+      "rfilename": "hf_quant_config.json",
+      "blobId": "2240c310293ee5b5aeb842181cd222db697360ad",
+      "size": 5764
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "f8c8153eeff8ecfb564f158931c8b715367e567f",
+      "size": 9382671592,
+      "lfs": {
+        "sha256": "1e420ea69111b7bb3c7c529cdbbb4ff4e6ebb531c0cd2be5c634cd88cd40eaca",
+        "size": 9382671592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_sensenova_loop.py",
+      "blobId": "b437a10fa8d157bcbde656b967015da7dc86ea94",
+      "size": 18968
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "8ed39680d90d989c35a3e308338a24875bafbc42",
+      "size": 443
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "33818c7f9e991ad735fd240209f4fa73e6c28c50",
+      "size": 1191
+    },
+    {
+      "rfilename": "quantization/10_reference_checks.py",
+      "blobId": "ead5ad0471853c91de175a069728b4db737ad824",
+      "size": 4937
+    },
+    {
+      "rfilename": "quantization/20_quantize.py",
+      "blobId": "4e81a35354809676035f996516109c3d6d8c0b7b",
+      "size": 5993
+    },
+    {
+      "rfilename": "quantization/30_verify_export.py",
+      "blobId": "bae94c104ccb9310f638d3753f8db745b99b0f7e",
+      "size": 5243
+    },
+    {
+      "rfilename": "quantization/build_calib.py",
+      "blobId": "888461f207b2c6178787cfe7547ae96a8062fad6",
+      "size": 14646
+    },
+    {
+      "rfilename": "quantization/calib_v1.jsonl.sha256",
+      "blobId": "36b50ccd7b5bc9254adde56b88123612976cbb81",
+      "size": 87
+    },
+    {
+      "rfilename": "quantization/calib_v1.meta.json",
+      "blobId": "59cde1771a87c742f3a6467a95d25e1d5f6a699b",
+      "size": 1975
+    },
+    {
+      "rfilename": "quantization/quantization_stats.json",
+      "blobId": "f212a0163807706eeac18566efe5ad93aa618d27",
+      "size": 11685
+    },
+    {
+      "rfilename": "quantization/requirements-quant.lock",
+      "blobId": "b67ad770680e28cc048eb57e5e90805b4d321867",
+      "size": 1988
+    },
+    {
+      "rfilename": "quantization/verify.json",
+      "blobId": "fa858691b2f2aa5d7243bc2511fe3412ee9985e6",
+      "size": 935
+    },
+    {
+      "rfilename": "runtime-v2/.gitignore",
+      "blobId": "c18dd8d83ceed1806b50b0aaa46beb7e335fff13",
+      "size": 13
+    },
+    {
+      "rfilename": "runtime-v2/LEDGER.md",
+      "blobId": "222fe9e96dc4629cf8d7683eeb67ff14d8b45714",
+      "size": 3167
+    },
+    {
+      "rfilename": "runtime-v2/README.md",
+      "blobId": "49f122fc092d9badc1a5c0c1041df8533af415f1",
+      "size": 7679
+    },
+    {
+      "rfilename": "runtime-v2/RESULTS.md",
+      "blobId": "e445756a76cd33610928b3c6e099f8c01e0da79c",
+      "size": 5315
+    },
+    {
+      "rfilename": "runtime-v2/bench/README.md",
+      "blobId": "d07faf207c03da15082a714e49a2bfd79f2b1855",
+      "size": 2404
+    },
+    {
+      "rfilename": "runtime-v2/bench/fp4_gemm_bench.py",
+      "blobId": "587f9ff2c8311e067a581b0995490769b9ae18a0",
+      "size": 2627
+    },
+    {
+      "rfilename": "runtime-v2/bench/prof_drive.py",
+      "blobId": "5847fb42b2598dc189bb65628fc6f82175fcbd66",
+      "size": 1321
+    },
+    {
+      "rfilename": "runtime-v2/bench/report_tables.py",
+      "blobId": "c586ffc6cb79bf55f0be50564f00221b03b5c043",
+      "size": 3152
+    },
+    {
+      "rfilename": "runtime-v2/bench/screen.py",
+      "blobId": "ec18543a70781bae1e5aaaa95f4fb1c9f4c7081c",
+      "size": 8664
+    },
+    {
+      "rfilename": "runtime-v2/bench/trace_graphs.py",
+      "blobId": "8e7b7e0e4e5579a80e50eed1e6ba4f21c0bec077",
+      "size": 1576
+    },
+    {
+      "rfilename": "runtime-v2/bench/trace_summary.py",
+      "blobId": "f6b4005893b6476c1aa4444408c1693eee02cf06",
+      "size": 2680
+    },
+    {
+      "rfilename": "runtime-v2/bench/trace_summary_lib.py",
+      "blobId": "499f9344398d8dd469e649ae5604aa616777b7d4",
+      "size": 948
+    },
+    {
+      "rfilename": "runtime-v2/bench/wait_ready.sh",
+      "blobId": "c6aa06ae8ae3ecb9042ff661d875d2ebcc7ff810",
+      "size": 495
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/configs/__init__.py",
+      "blobId": "56baf7f6a85bbdfc6daf791e4fec02ae36eb6f6a",
+      "size": 6335
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/configs/model_config.py",
+      "blobId": "a9e4a0fd9686798edb6b8cd29628343c194eacb3",
+      "size": 122877
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/configs/sensenova_loop.py",
+      "blobId": "1d31f256aaf1153bb4341098fffedc2096250219",
+      "size": 2738
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/layers/rotary_embedding/mrope_rope_index.py",
+      "blobId": "d46b9aff35d5eaafcd9f5257a59b0a2642e937c9",
+      "size": 34652
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/layers/sensenova_mhc_fused.py",
+      "blobId": "0338c12989e74275f3779dea7e23062817246054",
+      "size": 15149
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/models/sensenova_loop.py",
+      "blobId": "786e05aaa27d36f0f5307fe41a1a9d0ceda4c3a0",
+      "size": 15496
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/multimodal/processors/qwen_vl.py",
+      "blobId": "743bc6d7295ee7f9ce51939153104d4ae55b8683",
+      "size": 48519
+    },
+    {
+      "rfilename": "runtime-v2/overlay/python/sglang/srt/utils/hf_transformers/common.py",
+      "blobId": "204f334ad004dd289a50a762bde1f1d2c76484da",
+      "size": 27398
+    },
+    {
+      "rfilename": "runtime-v2/patches/model_config_mtp_draft.patch",
+      "blobId": "c6e23ab8a1367119843b3c0c4f9bf1c4587566f1",
+      "size": 1515
+    },
+    {
+      "rfilename": "runtime-v2/patches/sensenova_loop_quant.patch",
+      "blobId": "50e14c0a9b224807bdbeb1ddf3d4f8b4edc42a93",
+      "size": 1292
+    },
+    {
+      "rfilename": "runtime-v2/patches/v2_mhc_fused_router.patch",
+      "blobId": "ff34f0c32e5594f395eaa6708198fb3d49c24add",
+      "size": 21363
+    },
+    {
+      "rfilename": "runtime-v2/runs/chain1.log",
+      "blobId": "2cb996c69d37db765ea7bff08f9701a66e9e2d5d",
+      "size": 1048
+    },
+    {
+      "rfilename": "runtime-v2/runs/chain2.log",
+      "blobId": "c28c975d81d712846518c6e76855d028b6bdbce9",
+      "size": 563
+    },
+    {
+      "rfilename": "runtime-v2/runs/chain3.log",
+      "blobId": "de56d4a67f2388269ebf261399780d495bc1d7fc",
+      "size": 923
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_chain.log",
+      "blobId": "6b9ea8d09aabccc666ede52e13c37a88e0cc073e",
+      "size": 261
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval.log",
+      "blobId": "52c6820e19edfa75a7a25cc2a2863ee4ab87632f",
+      "size": 558
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/compare_vs_ref.json",
+      "blobId": "4f687a924acb100879076a84924cc1ae8ccea889",
+      "size": 1742
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/raw_gsm8k.jsonl",
+      "blobId": "9a87e5b6209932a715d71bc439d0d65ce5a2a1b0",
+      "size": 80937
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/raw_humaneval.jsonl",
+      "blobId": "987b87d1bb5e0ed265bfadd2bfc6738567f6c4a5",
+      "size": 99937
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/raw_ifeval.jsonl",
+      "blobId": "9886d79ee8ec6974bd316daa96f8153f6298531a",
+      "size": 166235
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/raw_mmlu_pro.jsonl",
+      "blobId": "721f38e3b1e62f3be03583006e7fd431373b0c24",
+      "size": 139586
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/raw_tools.jsonl",
+      "blobId": "ec6153021548d168860f9d6ae957390ad1ae0494",
+      "size": 19378
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/raw_vqa.jsonl",
+      "blobId": "7992bab4daf541efb0167034c93c42b76ac3a84b",
+      "size": 22036
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval/summary.json",
+      "blobId": "1d3bc4af4257177e0561564fa6201b71a289faf3",
+      "size": 3654
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/eval_compare.txt",
+      "blobId": "9731d28652243fcc07693defc608ac36027f733f",
+      "size": 539
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/gpu_after.txt",
+      "blobId": "02284aa5d8430a8234355ceed0ea074df82e2676",
+      "size": 22
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/gpu_before.txt",
+      "blobId": "c568338aab0e56b7ef6fb1ca22a721532e174a4f",
+      "size": 22
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/greedy.json",
+      "blobId": "2849e625506ca77793119d43bf85cd30246d2bca",
+      "size": 6755
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/greedy_diff.txt",
+      "blobId": "8532a2c8637b91d99167fc2a6a3025e98b8c1161",
+      "size": 426
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/mem.txt",
+      "blobId": "bc697da20dc4eafdef5c3a4385c97bd8f1e7e1c1",
+      "size": 41
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/perf_matched.json",
+      "blobId": "b4fd872719942d220ffb9c4c72e86777c7f65b35",
+      "size": 4599
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/perf_matched.log",
+      "blobId": "dcba5d1d3f8d6a88a56f5071203ef0794a10ef7d",
+      "size": 505
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/screen_code.json",
+      "blobId": "20214a2e5ad45baca2bdfeafd3f017eb401cb26d",
+      "size": 2781
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/screen_doc.json",
+      "blobId": "d9f2d8434beca1b18c402af6f53afbaaea19875d",
+      "size": 2786
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_frozen_v1/startup.txt",
+      "blobId": "ec75d4de839314c5b4ab3b8992ac524c293f0b01",
+      "size": 1330
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval.log",
+      "blobId": "59ad524e5a52d46123eb610100990149bcf3b6e8",
+      "size": 531
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/compare_vs_ref.json",
+      "blobId": "e8a922d4aacfe5117aa8d75fe9b2fb9788f33fab",
+      "size": 3236
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/raw_gsm8k.jsonl",
+      "blobId": "45978ab690e49e4f61bf84102c32457d9f716b72",
+      "size": 80028
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/raw_humaneval.jsonl",
+      "blobId": "19322dc9567198e48df4ba09f33bb0c70dfd1bfc",
+      "size": 97871
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/raw_ifeval.jsonl",
+      "blobId": "e19b30dd0013543fcf0eb8fe8b717a77b13f78a5",
+      "size": 155847
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/raw_mmlu_pro.jsonl",
+      "blobId": "0b24cb9812f0b0e8756fbd0c8c9e5b84f52dbb90",
+      "size": 136789
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/raw_tools.jsonl",
+      "blobId": "f53e44194adcde429faff7313ceac4ed17cb5a7b",
+      "size": 19522
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/raw_vqa.jsonl",
+      "blobId": "775f115202fd805049bfe73deeee805f66d965c5",
+      "size": 22089
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval/summary.json",
+      "blobId": "84f8fd46c5ff4fffd42f3f05945eae943b889f1e",
+      "size": 3631
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/eval_compare.txt",
+      "blobId": "19835d1128cfbcecd1be2e3f722dc66f50229c24",
+      "size": 829
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/gpu_after.txt",
+      "blobId": "eb9dc86c68fc958f4f0e0857796cc5ab45229053",
+      "size": 22
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/gpu_before.txt",
+      "blobId": "df45e32f25e2e1fb069c2a6120a85ac8398c217e",
+      "size": 22
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/greedy.json",
+      "blobId": "45ca73f925ab9bf5bd0736ee20440303e60748ff",
+      "size": 6755
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/greedy_diff.txt",
+      "blobId": "981661240e782c711b689d874f61ecc29ca323b2",
+      "size": 426
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/mem.txt",
+      "blobId": "626e0ad974bd9a92974057f6a2957a9e9a85a02f",
+      "size": 41
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/perf_matched.json",
+      "blobId": "bd09614a32b4169d13aaedc1e6d891468235fe2a",
+      "size": 4600
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/perf_matched.log",
+      "blobId": "d761b7c6bf6af18bad3f91dbcabf4a6329d1f86c",
+      "size": 504
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/screen_code.json",
+      "blobId": "1bb71b2f1667976d59ec9d8cebcd878f9b4a312c",
+      "size": 2785
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/screen_doc.json",
+      "blobId": "ceff7f686ee23f12fc0ea8525002d9f75eabb7ab",
+      "size": 2784
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_exact/startup.txt",
+      "blobId": "b36191d449c0e17d42316b6d43ccf6c12b3d2d44",
+      "size": 1329
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval.log",
+      "blobId": "3ca56bcd6356153c30da9cfe738ac02258296c35",
+      "size": 558
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/compare_vs_ref.json",
+      "blobId": "dc70661bd18e36652485e6f11502a46d61cb0587",
+      "size": 3316
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/raw_gsm8k.jsonl",
+      "blobId": "cc111cccbf8b49fa4bbcc74b2a9f8c174a099185",
+      "size": 80607
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/raw_humaneval.jsonl",
+      "blobId": "c1a3b39bfb93278a5671af60b0c9c8b21569db22",
+      "size": 96669
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/raw_ifeval.jsonl",
+      "blobId": "25cc5a57fe50a2828405d7d7b07b99341a3df156",
+      "size": 177043
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/raw_mmlu_pro.jsonl",
+      "blobId": "c96d1b2601ead8177b5d06152bba46b423c948b7",
+      "size": 148217
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/raw_tools.jsonl",
+      "blobId": "41cae163432f8b9b99b111bebab127612f8cd8ad",
+      "size": 19766
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/raw_vqa.jsonl",
+      "blobId": "24224069ec23c31748c2f24568b7ba0fa98d37df",
+      "size": 21999
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval/summary.json",
+      "blobId": "183d06c7ccc69c293ebe5729fbd047da30fe8a57",
+      "size": 3660
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/eval_compare.txt",
+      "blobId": "c06e7b2e36e19c05c4214415b5a28f9fd4d1ddf0",
+      "size": 537
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/gpu_after.txt",
+      "blobId": "3e3d1cf017666c850637ef5caf8d473a3e47dfe0",
+      "size": 22
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/gpu_before.txt",
+      "blobId": "7e5017d2d4622ca260a76baf05dfc076dfb68cf7",
+      "size": 22
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/greedy.json",
+      "blobId": "0f930d58bfa3a3e6a6d4c075d6bae00bfd81c8a9",
+      "size": 6388
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/greedy_diff.txt",
+      "blobId": "91e06732a4503388d32c0b971fbb19cc943c9902",
+      "size": 2351
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/mem.txt",
+      "blobId": "198b21f14b69d8a0e14f28f5c86472162da1dc1d",
+      "size": 41
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/perf_matched.json",
+      "blobId": "0962abb10080859e133558fcec93fb15a38e01ff",
+      "size": 4594
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/perf_matched.log",
+      "blobId": "da32d1dd463bcb8ed41ca461e702072db6eed208",
+      "size": 502
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/screen_code.json",
+      "blobId": "a0cf14cc11579172f68ccb177911ab07c55a2cd7",
+      "size": 2776
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/screen_doc.json",
+      "blobId": "4f00fa5926153b904db6a4aad5637199eed5cef3",
+      "size": 2784
+    },
+    {
+      "rfilename": "runtime-v2/runs/final_v2_fast/startup.txt",
+      "blobId": "50b4592b14a5203e2442f691d35db55e5e02b824",
+      "size": 1329
+    },
+    {
+      "rfilename": "runtime-v2/runs/hiconc_full_mtp_code.json",
+      "blobId": "6f9cf3242405affa9e4d6efd193ea6aefc4e90bc",
+      "size": 2049
+    },
+    {
+      "rfilename": "runtime-v2/runs/hiconc_full_mtp_synthetic.json",
+      "blobId": "f79d046e026c27bae4194c716911c957027d65bd",
+      "size": 2046
+    },
+    {
+      "rfilename": "runtime-v2/runs/hiconc_full_nomtp_code.json",
+      "blobId": "7558937d237d413bc784857cbe9227aabd945259",
+      "size": 1966
+    },
+    {
+      "rfilename": "runtime-v2/runs/hiconc_full_nomtp_synthetic.json",
+      "blobId": "ec4a96a5a9d4e76b9e7e2ccf30cda8031d204e4a",
+      "size": 1980
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_nomtp_code.json",
+      "blobId": "121cb092c29b5b08aae4959442af341c13f1b1cd",
+      "size": 1980
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_nomtp_synthetic.json",
+      "blobId": "38e3279a09ea0301e2d5c7ef5846b0bd9924c46d",
+      "size": 1998
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm32k_code.json",
+      "blobId": "ba91aa6aba17bd43fa2b291228a06fde62827b32",
+      "size": 2066
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm32k_synthetic.json",
+      "blobId": "a19060397f93f8ab1123dfd2dfd31d4cb4b6cf65",
+      "size": 2072
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_code.json",
+      "blobId": "0997d7d45e9f266d5cb0630e7b3a403814fb5158",
+      "size": 2065
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_cutlass_code.json",
+      "blobId": "007c3075c6959316a73ad934ed812ad8ab202b49",
+      "size": 2081
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_cutlass_synthetic.json",
+      "blobId": "f0e622b15e6500d841e08fcf016f8b26fc3d1c4d",
+      "size": 2098
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_marlin_code.json",
+      "blobId": "30ebe2c5687422b72f7c192d360359aa5f54d233",
+      "size": 2083
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_marlin_synthetic.json",
+      "blobId": "a9e500cb025961736178a3b9d0ff2e1ce399efd7",
+      "size": 2095
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_s2_code.json",
+      "blobId": "6ed4c222210859fb27015ef3d1f2c0392bb3bd05",
+      "size": 2071
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_s2_synthetic.json",
+      "blobId": "af30fc4ce894961ee317df40cca83d8646ef05c5",
+      "size": 2089
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_s4_code.json",
+      "blobId": "d4105c9fc67a03afc5cfaeff8f4c8681cb36eb2c",
+      "size": 2070
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_s4_synthetic.json",
+      "blobId": "c015a3e5cdab298e1b072d29a270fc2ba001e70c",
+      "size": 2084
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_s5_code.json",
+      "blobId": "692f30df95cd769e3a12359e75652e6d8853a28c",
+      "size": 2070
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_s5_synthetic.json",
+      "blobId": "ba423864018f3365dbad3e7776236e44fca6f288",
+      "size": 2047
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exact_tm64k_synthetic.json",
+      "blobId": "031610f095bfae5efff9edaf0b53d9e8bbbf7416",
+      "size": 2077
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exactfused_code.json",
+      "blobId": "40305e8480c4e1ce0cd42acc884de0488233e18c",
+      "size": 2062
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_exactfused_synthetic.json",
+      "blobId": "4265b5af01cde2b5067c7e2ae8b9a8e980f58a55",
+      "size": 2075
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_frozen_code.json",
+      "blobId": "7d3ea457d009a732c3959da52b43143bfd8d8e7c",
+      "size": 2048
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_frozen_synthetic.json",
+      "blobId": "1e24190f62c02e8268c3795bd291f80c9ece92ee",
+      "size": 2060
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_full_tm64k_code.json",
+      "blobId": "bd9648596dd09cf5f34788a6dc0e3263bf033d64",
+      "size": 2063
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_full_tm64k_synthetic.json",
+      "blobId": "1035f803ffbe7a7ea1d812ca1cda490dbff6dcb8",
+      "size": 2055
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_fused_code.json",
+      "blobId": "df7e778838c20b1c1d1f4053a03af779dd24c052",
+      "size": 2043
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_fused_synthetic.json",
+      "blobId": "0d90ff9bfcbb7878a84dfefe7c8eae48339a5fa1",
+      "size": 2057
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_tm32k_code.json",
+      "blobId": "0c4898026b80fa7c7154c782ab92ac6902ed257c",
+      "size": 2048
+    },
+    {
+      "rfilename": "runtime-v2/runs/screen_tm32k_synthetic.json",
+      "blobId": "8a0087f1abe12db203a056863e6d8c7c5c7e5e6c",
+      "size": 2037
+    },
+    {
+      "rfilename": "runtime-v2/runs/test_mhc_fused.log",
+      "blobId": "682771b6ae8277c57b3db6996ae7f0c1fd1d2772",
+      "size": 7846
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/frozen_mmlu_1.log",
+      "blobId": "35bd28f3a0a618fd0424ea7ca3d578fc68c5d1f6",
+      "size": 124
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/frozen_mmlu_1/raw_mmlu_pro.jsonl",
+      "blobId": "ba880c3af990d14834dd6c5ea10a1191a7bd068d",
+      "size": 139407
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/frozen_mmlu_1/summary.json",
+      "blobId": "7f92b1e1fc7413458b38ec4c2680041bb0773709",
+      "size": 1628
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/frozen_mmlu_2.log",
+      "blobId": "bfd0c86ecbf5267454f7dd35bb80a21ff12ad584",
+      "size": 126
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/frozen_mmlu_2/raw_mmlu_pro.jsonl",
+      "blobId": "7f9bad5fa838f85c519f497cb17434e0fb17d980",
+      "size": 144079
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/frozen_mmlu_2/summary.json",
+      "blobId": "84c497940e465d941e81758ee2b7da681e24d1b5",
+      "size": 1631
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/v2_fast_mmlu_1.log",
+      "blobId": "1d07d80ceeca06560648ed98671ee28fd3ce381b",
+      "size": 138
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/v2_fast_mmlu_1/raw_mmlu_pro.jsonl",
+      "blobId": "c9a225a85b1366b0475cd8135a0d20bd5462be54",
+      "size": 146919
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/v2_fast_mmlu_1/summary.json",
+      "blobId": "87bbf1b19d0260919197c3c9a09590b855d704d1",
+      "size": 1656
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/v2_fast_mmlu_2.log",
+      "blobId": "dd0f6c0f30b7ed2cdb6eaa1745d0b6c635791792",
+      "size": 137
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/v2_fast_mmlu_2/raw_mmlu_pro.jsonl",
+      "blobId": "84ff9b84e1152a774e0206f9d7fa16f4f48864f0",
+      "size": 145674
+    },
+    {
+      "rfilename": "runtime-v2/runs/var/v2_fast_mmlu_2/summary.json",
+      "blobId": "7f403d98487e6fdfaf34b1e06079bac613ea405f",
+      "size": 1641
+    },
+    {
+      "rfilename": "runtime-v2/serve_sglang.sh",
+      "blobId": "ba7b1c1f5fa3b207978e764fc9d1be1073970ead",
+      "size": 3446
+    },
+    {
+      "rfilename": "runtime-v2/tests/greedy_outputs.py",
+      "blobId": "ae3d2b73685269fdc35d35a4cace5bec26048b5f",
+      "size": 4024
+    },
+    {
+      "rfilename": "runtime-v2/tests/test_mhc_fused.py",
+      "blobId": "799646b0f56507873714680688e586da7b5f8128",
+      "size": 16847
+    },
+    {
+      "rfilename": "runtime-v2/tests/test_mhc_fused.result.txt",
+      "blobId": "682771b6ae8277c57b3db6996ae7f0c1fd1d2772",
+      "size": 7846
+    },
+    {
+      "rfilename": "runtime-v2/tokenmap/build_token_map.py",
+      "blobId": "b078971759b3b53debfbfac655f0c0b7e1794d26",
+      "size": 2785
+    },
+    {
+      "rfilename": "runtime-v2/tokenmap/hot_32k.pt",
+      "blobId": "ab8aac79cea98260d1dd07e4249763af83890bbf",
+      "size": 263721,
+      "lfs": {
+        "sha256": "3f15c5ab3623692cd2ac59a3fa4bd10cf41bfa6f36049b3a182bb82be99af31e",
+        "size": 263721,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "runtime-v2/tokenmap/hot_64k.pt",
+      "blobId": "e26a4dc8e7c5a144f89be74c707aa6282d5c4d0a",
+      "size": 525865,
+      "lfs": {
+        "sha256": "119fa796636a94aa5bc9b3cc31e0410d34d4a6f4e023b9ee8ed783320c916a57",
+        "size": 525865,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "runtime-v2/tokenmap/token_map_stats.json",
+      "blobId": "86dd9559d93a4a6bb07815f81e443a4c21dd1d15",
+      "size": 325
+    },
+    {
+      "rfilename": "runtime/COMPAT_NOTES.md",
+      "blobId": "80470cb29369cfc6571a5d190c6f76684ee65ff5",
+      "size": 12010
+    },
+    {
+      "rfilename": "runtime/overlay/python/sglang/srt/configs/__init__.py",
+      "blobId": "56baf7f6a85bbdfc6daf791e4fec02ae36eb6f6a",
+      "size": 6335
+    },
+    {
+      "rfilename": "runtime/overlay/python/sglang/srt/configs/model_config.py",
+      "blobId": "a9e4a0fd9686798edb6b8cd29628343c194eacb3",
+      "size": 122877
+    },
+    {
+      "rfilename": "runtime/overlay/python/sglang/srt/configs/sensenova_loop.py",
+      "blobId": "1d31f256aaf1153bb4341098fffedc2096250219",
+      "size": 2738
+    },
+    {
+      "rfilename": "runtime/overlay/python/sglang/srt/layers/rotary_embedding/mrope_rope_index.py",
+      "blobId": "d46b9aff35d5eaafcd9f5257a59b0a2642e937c9",
+      "size": 34652
+    },
+    {
+      "rfilename": "runtime/overlay/python/sglang/srt/models/sensenova_loop.py",
+      "blobId": "e813eb23e9c3f67f2b19c5c7e99a07f207861c11",
+      "size": 12098
+    },
+    {
+      "rfilename": "runtime/overlay/python/sglang/srt/multimodal/processors/qwen_vl.py",
+      "blobId": "743bc6d7295ee7f9ce51939153104d4ae55b8683",
+      "size": 48519
+    },
+    {
+      "rfilename": "runtime/overlay/python/sglang/srt/utils/hf_transformers/common.py",
+      "blobId": "204f334ad004dd289a50a762bde1f1d2c76484da",
+      "size": 27398
+    },
+    {
+      "rfilename": "runtime/patches/model_config_mtp_draft.patch",
+      "blobId": "c6e23ab8a1367119843b3c0c4f9bf1c4587566f1",
+      "size": 1515
+    },
+    {
+      "rfilename": "runtime/patches/sensenova_loop_quant.patch",
+      "blobId": "50e14c0a9b224807bdbeb1ddf3d4f8b4edc42a93",
+      "size": 1292
+    },
+    {
+      "rfilename": "runtime/probe.py",
+      "blobId": "b56156bc90d9cd75d023c032a09c3bbea88abb2b",
+      "size": 1814
+    },
+    {
+      "rfilename": "runtime/serve_sglang.sh",
+      "blobId": "3e6f8da1ac9c23d7dcc61d4a6fb3877b15898b2b",
+      "size": 2317
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "5520bfd2dd834ce386c1312c410fa71af56db5ad",
+      "size": 19989325,
+      "lfs": {
+        "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+        "size": 19989325,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "1d134cd298be1e3be25db393d93a1cefe80e3214",
+      "size": 1165
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "a79976a713e19d6c551fe4abefb01a09cd944ed8",
+      "size": 550
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-31T03:02:08.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 3146112,
+      "BF16": 2740891376,
+      "U8": 3456106496
+    },
+    "total": 6200143984
+  },
+  "usedStorage": 9405194901,
+  "generation_config": {
+    "_from_model_config": true,
+    "eos_token_id": [
+      248044,
+      248046
+    ],
+    "transformers_version": "5.18.0",
+    "use_cache": true,
+    "temperature": 1.0,
+    "do_sample": true,
+    "top_p": 0.95
+  }
+}

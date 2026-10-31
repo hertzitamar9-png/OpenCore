@@ -28,7 +28,7 @@ for(const id of ['llama32-1b','sage-a15-q4-k-m','holo4-27b']){
  record(id+' offers direct installation',await card.getByRole('button',{name:'Install',exact:true}).isEnabled());
  await card.screenshot({path:path.join(__dirname,'.output/builtin-'+id+'.png')});
 }
-const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-ternarypilot-v2',1],['publisher-gui-jepa',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29],['publisher-tiel-coder-apex-miniplus-v2-1',1],['publisher-tals-coder-flash-02',1],['publisher-kestrel-4b-coder',5],['publisher-hi3d-v1',1],['publisher-qwen35-4b-3d-coder',3],['publisher-lfm3-vl-2b',21],['publisher-lfm3-1-7b',22],['publisher-lfm3-audio-2b',15],['publisher-lfm3-omni-2b',15],['publisher-lfm3-1-7b-base',2],['publisher-carbon-x',13],['publisher-apex-35b-v1',26],['publisher-groot-19b-a3b-261023',28]];
+const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-ternarypilot-v2',1],['publisher-gui-jepa',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29],['publisher-tiel-coder-apex-miniplus-v2-1',1],['publisher-tals-coder-flash-02',1],['publisher-kestrel-4b-coder',5],['publisher-hi3d-v1',1],['publisher-qwen35-4b-3d-coder',3],['publisher-lfm3-vl-2b',21],['publisher-lfm3-1-7b',22],['publisher-lfm3-audio-2b',15],['publisher-lfm3-omni-2b',15],['publisher-lfm3-1-7b-base',2],['publisher-carbon-x',13],['publisher-apex-35b-v1',26],['publisher-groot-19b-a3b-261023',28],['publisher-sensenova-loop-9b-preview',11]];
 const screenshotDirectory=process.env.OPENCORE_MODEL_QA_DIR||path.join(require('os').tmpdir(),'opencore-requested-models-qa');fs.mkdirSync(screenshotDirectory,{recursive:true});
 for(const [family,count] of requested){
  const entries=presetCatalog.entries.filter(entry=>entry.familyId===family),entry=entries[0];
@@ -54,6 +54,9 @@ for(const [family,count] of requested){
  }
  if(family==='publisher-kestrel-4b-coder'){
   record('Kestrel offers exactly its four publisher GGUFs plus the original BF16 without duplicate cards',entries.filter(value=>value.format==='gguf').length===4&&await card.locator('select option').count()===5&&await card.innerText().then(text=>text.includes('32K working window')));
+ }
+ if(family==='publisher-sensenova-loop-9b-preview'){
+  record('SenseNova Loop preserves the publisher identity, ECHO and required custom architecture',await card.innerText().then(text=>text.includes('sensenova/SenseNova-Loop-9B-Preview')&&text.includes('32K working window')&&text.includes('mHC')&&text.includes('Compatible adapter required')&&!text.includes('Ready to use')));
  }
  await card.screenshot({path:path.join(screenshotDirectory,family+'.png')});
 }

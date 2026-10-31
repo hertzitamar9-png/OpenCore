@@ -1731,6 +1731,85 @@
           ]
         }
       ]
+    },
+    {
+      "repository": "sensenova/SenseNova-Loop-9B-Preview",
+      "familyId": "publisher-sensenova-loop-9b-preview",
+      "label": "SenseNova Loop 9B Preview",
+      "category": "text",
+      "description": "sensenova/SenseNova-Loop-9B-Preview: text-and-image model with shared decoder loops and two-stream mHC routing. Text-only GGUF exports and the separate vision-projector package are labeled individually. ECHO uses a 32K working window when a compatible custom runtime is available.",
+      "sources": [
+        {
+          "repository": "AtomicChat/SenseNova-Loop-9B-Preview-GGUF",
+          "runtimeReason": "Requires a SenseNova Loop runtime that implements the repeated decoder passes and mHC routing. Stock Qwen/llama.cpp is incompatible; a verified OpenCore Windows runtime is not integrated."
+        },
+        {
+          "repository": "guideboardlabs/SenseNova-Loop-9B-Preview-GGUF",
+          "runtimeReason": "Requires a SenseNova Loop runtime that implements the repeated decoder passes and mHC routing. Stock Qwen/llama.cpp is incompatible; a verified OpenCore Windows runtime is not integrated."
+        },
+        {
+          "repository": "notfakerv/SenseNova-Loop-9B-Preview-GGUF",
+          "quantization": "Q8_0 (notfakerv text export)",
+          "runtimeReason": "Requires a SenseNova Loop runtime that implements the repeated decoder passes and mHC routing. Stock Qwen/llama.cpp is incompatible; a verified OpenCore Windows runtime is not integrated."
+        },
+        {
+          "repository": "annelo/SenseNova-Loop-9B-Preview-Q4_K_M-Vision-GGUF",
+          "quantization": "Q4_K_M + F16 vision",
+          "runtimeReason": "Requires a SenseNova Loop runtime that implements the repeated decoder passes and mHC routing. Stock Qwen/llama.cpp is incompatible; a verified OpenCore Windows runtime is not integrated."
+        },
+        {
+          "repository": "sensenova/SenseNova-Loop-9B-Preview",
+          "runtimeReason": "Original mixed FP32/BF16 publisher checkpoint. Requires the custom SenseNova Loop Transformers implementation with looped cache handling and mHC routing; a reviewed OpenCore Windows loader is not integrated.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "FP32 backbone + BF16 MTP",
+              "files": [
+                "*.safetensors",
+                "model.safetensors.index.json",
+                "config.json",
+                "generation_config.json",
+                "hf_quant_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "video_preprocessor_config.json",
+                "chat_template.jinja",
+                "LICENSE",
+                "README.md"
+              ]
+            }
+          ]
+        },
+        {
+          "repository": "gitcommit90/SenseNova-Loop-9B-Preview-NVFP4",
+          "runtimeReason": "Requires the community custom SGLang CUDA runtime for SenseNova Loop NVFP4 and mHC routing. The tested SM121 platform and Linux runtime are not an integrated OpenCore Windows adapter.",
+          "packages": [
+            {
+              "key": "safetensors:.",
+              "format": "safetensors",
+              "quantization": "NVFP4",
+              "files": [
+                "*.safetensors",
+                "model.safetensors.index.json",
+                "config.json",
+                "generation_config.json",
+                "hf_quant_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "video_preprocessor_config.json",
+                "chat_template.jinja",
+                "LICENSE",
+                "README.md"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

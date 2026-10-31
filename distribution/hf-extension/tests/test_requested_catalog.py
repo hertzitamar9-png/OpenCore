@@ -14,6 +14,39 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_sensenova_loop_keeps_real_quants_and_requires_the_custom_loop_runtime(self):
+        entries=self.family('sensenova-loop-9b-preview')
+        self.assertEqual(len(entries),11)
+        self.assertTrue(all(e['originalRepository']=='sensenova/SenseNova-Loop-9B-Preview' for e in entries))
+        self.assertTrue(all(e['memoryMode']=='echo' and e['contextTokens']==32768 for e in entries))
+        self.assertTrue(all(e['installable'] and not e['runtime']['inferenceVerified'] for e in entries))
+        self.assertTrue(all(e['runtime']['adapter'] is None and 'managedEngine' not in e for e in entries))
+        self.assertTrue(all(pin['pinned'] for e in entries for pin in e['files']))
+        gguf=[e for e in entries if e['format']=='gguf']
+        self.assertTrue({'BF16','Q8_0','Q6_K','Q5_K_M','Q4_K_M','Q4_0','Q3_K_M'}.issubset({e['quantization'] for e in gguf}))
+        self.assertTrue(all('loop' in e['runtime']['reason'].lower() for e in gguf))
+        # A qwen35 tag must not route a checkpoint that needs mHC to stock Qwen.
+        atomic=[e for e in gguf if e['repository']=='AtomicChat/SenseNova-Loop-9B-Preview-GGUF']
+        self.assertEqual(len(atomic),5)
+        self.assertTrue(all(e['runtime']['adapter'] is None for e in atomic))
+
+    def test_sensenova_original_and_vision_packages_keep_their_real_components(self):
+        entries=self.family('sensenova-loop-9b-preview')
+        original=next((e for e in entries if e['repository']=='sensenova/SenseNova-Loop-9B-Preview'),None)
+        self.assertIsNotNone(original)
+        self.assertEqual(original['revision'],'27abea779b1e6634b136805b6519371739d551f7')
+        names={p['filename'] for p in original['files']}
+        self.assertTrue({f'model-{i:05d}-of-00008.safetensors' for i in range(1,9)}<=names)
+        self.assertTrue({'model.safetensors.index.json','mtp.safetensors','config.json','tokenizer.json','chat_template.jinja'}<=names)
+        self.assertFalse(any(name.endswith('.py') for name in names),'Publisher code must use a separately reviewed runtime, not execute from a downloaded checkpoint')
+        self.assertTrue(original['quantization'].startswith('FP32'))
+        vision=next(e for e in entries if e['repository']=='annelo/SenseNova-Loop-9B-Preview-Q4_K_M-Vision-GGUF')
+        projector=next(p for p in vision['files'] if p['role']=='companion')
+        self.assertEqual(projector['filename'],'mmproj-SenseNova-Loop-F16.gguf')
+        nvfp4=next(e for e in entries if e['quantization']=='NVFP4')
+        self.assertIn('hf_quant_config.json',{p['filename'] for p in nvfp4['files']})
+        self.assertFalse(any(p['filename'].startswith('runtime') for p in nvfp4['files']))
+
     def test_computer_use_entries_keep_adapters_and_complete_policy_as_separate_models(self):
         hobby = self.family('hobbylm-1b-computer-use')
         ternary = self.family('ternarypilot-v2')
@@ -250,7 +283,7 @@ class RequestedCatalogTests(unittest.TestCase):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 17)
+        self.assertEqual(report['withFive'], 18)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):
