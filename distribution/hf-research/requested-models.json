@@ -1810,6 +1810,60 @@
           ]
         }
       ]
+    },
+    {
+      "repository": "Vxtzq/Crowd-v1",
+      "familyId": "publisher-crowd-v1",
+      "label": "Crowd v1",
+      "category": "text",
+      "description": "Vxtzq/Crowd-v1: partially trained 1B SotaGPT research checkpoint with CPU engrams. The publisher limits the live context to 2,048 tokens and cautions that language output may be incoherent. Original BF16 and FP32 packages retain their complete model and engram weights. ECHO archival does not enlarge the published live window.",
+      "sources": [
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "runtimeReason": "Requires a reviewed SotaGPT runtime with the publisher CPU engram implementation. The custom CrowdGPT architecture is not an integrated OpenCore execution adapter; the Qwen-compatible tokenizer does not make this a Qwen model.",
+          "packages": [
+            {
+              "key": "safetensors:hf-bf16",
+              "format": "safetensors",
+              "quantization": "BF16",
+              "files": [
+                "model.safetensors",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "special_tokens_map.json",
+                "added_tokens.json",
+                "badge_tokens.json",
+                "chat_template.jinja",
+                "merges.txt",
+                "vocab.json",
+                "README.md"
+              ]
+            },
+            {
+              "key": "safetensors:split-fp32",
+              "format": "safetensors",
+              "quantization": "FP32",
+              "files": [
+                "model_fp32.safetensors",
+                "engram_fp32.safetensors",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "special_tokens_map.json",
+                "added_tokens.json",
+                "badge_tokens.json",
+                "chat_template.jinja",
+                "merges.txt",
+                "vocab.json",
+                "README.md"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

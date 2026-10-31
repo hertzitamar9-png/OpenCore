@@ -1,0 +1,222 @@
+{
+  "_id": "6a885b7894933060f3ff96d0",
+  "id": "Vxtzq/Crowd-v1",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "safetensors",
+    "text-generation",
+    "conversational",
+    "ia",
+    "dataset:openbmb/Ultra-FineWeb-L3",
+    "dataset:HuggingFaceFW/fineweb",
+    "dataset:Vxtzq/CrowdGPT",
+    "license:mit",
+    "region:us"
+  ],
+  "downloads": 96807,
+  "likes": 25,
+  "modelId": "Vxtzq/Crowd-v1",
+  "author": "Vxtzq",
+  "sha": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+  "lastModified": "2026-10-31T12:11:06.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "unk_token": null,
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "architecture": "SotaGPT",
+    "vocabSize": 151669,
+    "dim": 1536,
+    "nLayers": 24,
+    "nHeads": 16,
+    "nKvHeads": 4,
+    "headDim": 96,
+    "maxSeqLen": 2048,
+    "mlpHidden": 2560,
+    "weightTying": true,
+    "globalStep": 292,
+    "modelSize": 657787392,
+    "engramParams": 350000640,
+    "uploadedAt": "2026-10-31T11:22:00.312514+00:00"
+  },
+  "cardData": {
+    "license": "mit",
+    "language": [
+      "ia"
+    ],
+    "pipeline_tag": "text-generation",
+    "datasets": [
+      "openbmb/Ultra-FineWeb-L3",
+      "HuggingFaceFW/fineweb",
+      "Vxtzq/CrowdGPT"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d3979eda7f3a575a84bd49c8dcdf56c1cdcdf210",
+      "size": 7098
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+      "size": 707
+    },
+    {
+      "rfilename": "badge_tokens.json",
+      "blobId": "f681046ef553d4f20b8060e6ccd9a1203b117bf0",
+      "size": 96
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "01be9b307daa2d425f7c168c9fb145a286e0afb4",
+      "size": 4168
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "3b780da3374fadb21a82f8328e52164b67730ba7",
+      "size": 329
+    },
+    {
+      "rfilename": "configuration_crowd.py",
+      "blobId": "b61a4f90abfe998cad06879c9ebe62309a9e7862",
+      "size": 1335
+    },
+    {
+      "rfilename": "engram_bf16.safetensors",
+      "blobId": "6ce349914f59388f3039b0e6753d558acf756aa6",
+      "size": 700001368,
+      "lfs": {
+        "sha256": "391b10ef5dad10ff25aa8d9024015f19912265034150572a5e039af5e1adb45f",
+        "size": 700001368,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "engram_fp32.safetensors",
+      "blobId": "bd1a8396f9a645327f4836cfe31c0da3227694c8",
+      "size": 1400002648,
+      "lfs": {
+        "sha256": "7af679cc34eee53a41615b458556b726ee693959e7fca6d613d4696f92907f61",
+        "size": 1400002648,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "e052c864ab6aa56a73f157231561d998d9c1810c",
+      "size": 91
+    },
+    {
+      "rfilename": "leaderboard.json",
+      "blobId": "a69b58f271cd5997ffa02da4f42fae5012180b1e",
+      "size": 9871
+    },
+    {
+      "rfilename": "loss_history.json",
+      "blobId": "7aa82e7938274c0f1d49e32cec1fc4dc32142030",
+      "size": 10716
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "baf6f132af355555c7e3812d6ebd83bc6335b99c",
+      "size": 2015601760,
+      "lfs": {
+        "sha256": "1f8214ca6856280b48817402f9f8f0a3affd938d39718ade8f528f0102c2209f",
+        "size": 2015601760,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_bf16.safetensors",
+      "blobId": "55641bb988ca9c7a8f0b3be482829de76dc23588",
+      "size": 1315574872,
+      "lfs": {
+        "sha256": "a4a009326f11cabaa05f2ac5877d663817b8c62385b3da6df531f545b7092145",
+        "size": 1315574872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_fp32.safetensors",
+      "blobId": "8adc05b9c074b8434bdb8ea512c73e399df5563d",
+      "size": 2631149656,
+      "lfs": {
+        "sha256": "5398e7c43b04bb8a1895264e8f35eef729d5bb645f3a80a4c96ab48b68f0f576",
+        "size": 2631149656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_crowd.py",
+      "blobId": "6e4af85aeb4109f3a60a7e19e4e0d1586cad4d4b",
+      "size": 9231
+    },
+    {
+      "rfilename": "public_log.json",
+      "blobId": "df2ff66c233496b91504889427c654f187bd68ed",
+      "size": 77172
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "status.json",
+      "blobId": "80167dcedda468cce3e28e2a9b4c601d97612a01",
+      "size": 762
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "cd71f61a15a522601badb3dc960d800d9cb3766c",
+      "size": 11422654,
+      "lfs": {
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "size": 11422654,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "ddaf69808214a44fdd26d3785b66c1367c78277a",
+      "size": 5404
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-08-21T14:06:48.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1007788032
+    },
+    "total": 1007788032
+  },
+  "usedStorage": 2235247450822,
+  "generation_config": {
+    "_from_model_config": true,
+    "transformers_version": "4.57.6",
+    "use_cache": false
+  }
+}

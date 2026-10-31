@@ -14,6 +14,23 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_crowd_keeps_published_precisions_components_and_2048_token_limit(self):
+        entries=self.family('crowd-v1')
+        self.assertEqual(len(entries),2)
+        self.assertEqual({e['quantization'] for e in entries},{'BF16','FP32'})
+        self.assertTrue(all(e['revision']=='db57354c65dd37732f6cf9f0f91f5d59fdd78ff1' for e in entries))
+        self.assertTrue(all(e['originalRepository']=='Vxtzq/Crowd-v1' and e['contextTokens']==2048 and e['memoryMode']=='echo' for e in entries))
+        self.assertTrue(all(e['runtime']['adapter'] is None and not e['runtime']['inferenceVerified'] and 'managedEngine' not in e for e in entries))
+        self.assertTrue(all('SotaGPT' in e['runtime']['reason'] and 'partially trained' in e['builtInDescription'] for e in entries))
+        bf16=next(e for e in entries if e['quantization']=='BF16')
+        fp32=next(e for e in entries if e['quantization']=='FP32')
+        self.assertEqual({p['filename'] for p in bf16['files'] if p['role']=='model'},{'model.safetensors'})
+        self.assertEqual({p['filename'] for p in fp32['files'] if p['role']=='model'},{'model_fp32.safetensors','engram_fp32.safetensors'})
+        for entry in entries:
+            self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+            self.assertFalse(any(pin['filename'].endswith('.py') for pin in entry['files']))
+            self.assertTrue({'config.json','generation_config.json','tokenizer.json','chat_template.jinja'} <= {p['filename'] for p in entry['files']})
+
     def test_sensenova_loop_keeps_real_quants_and_requires_the_custom_loop_runtime(self):
         entries=self.family('sensenova-loop-9b-preview')
         self.assertEqual(len(entries),11)

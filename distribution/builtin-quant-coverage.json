@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 560,
+  "families": 561,
   "withFive": 217,
   "models": [
     {
@@ -5267,6 +5267,17 @@
       "source": "bundled packages",
       "repositories": [
         "infosave/cortiq_qwopus_dev"
+      ]
+    },
+    {
+      "id": "publisher-crowd-v1",
+      "label": "Crowd v1",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Vxtzq/Crowd-v1"
       ]
     },
     {

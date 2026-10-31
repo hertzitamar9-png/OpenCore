@@ -62794,6 +62794,328 @@
       "echoWorkingWindowTokens": 32768
     },
     {
+      "id": "hf-5a52ac5928beb2c4e8bfc526",
+      "variantKey": "safetensors:hf-bf16",
+      "repository": "Vxtzq/Crowd-v1",
+      "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+      "format": "safetensors",
+      "quantization": "BF16",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "README.md",
+          "bytes": 7098,
+          "sha256": null,
+          "gitBlobSha1": "d3979eda7f3a575a84bd49c8dcdf56c1cdcdf210",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "added_tokens.json",
+          "bytes": 707,
+          "sha256": null,
+          "gitBlobSha1": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "badge_tokens.json",
+          "bytes": 96,
+          "sha256": null,
+          "gitBlobSha1": "f681046ef553d4f20b8060e6ccd9a1203b117bf0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "chat_template.jinja",
+          "bytes": 4168,
+          "sha256": null,
+          "gitBlobSha1": "01be9b307daa2d425f7c168c9fb145a286e0afb4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "config.json",
+          "bytes": 329,
+          "sha256": null,
+          "gitBlobSha1": "3b780da3374fadb21a82f8328e52164b67730ba7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "generation_config.json",
+          "bytes": 91,
+          "sha256": null,
+          "gitBlobSha1": "e052c864ab6aa56a73f157231561d998d9c1810c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "merges.txt",
+          "bytes": 1671853,
+          "sha256": null,
+          "gitBlobSha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "model.safetensors",
+          "bytes": 2015601760,
+          "sha256": "1f8214ca6856280b48817402f9f8f0a3affd938d39718ade8f528f0102c2209f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "tokenizer.json",
+          "bytes": 11422654,
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "tokenizer_config.json",
+          "bytes": 5404,
+          "sha256": null,
+          "gitBlobSha1": "ddaf69808214a44fdd26d3785b66c1367c78277a",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 2031491606,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/Vxtzq/Crowd-v1",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires a reviewed SotaGPT runtime with the publisher CPU engram implementation. The custom CrowdGPT architecture is not an integrated OpenCore execution adapter; the Qwen-compatible tokenizer does not make this a Qwen model."
+      },
+      "familyId": "publisher-crowd-v1",
+      "familyLabel": "Crowd v1",
+      "originalRepository": "Vxtzq/Crowd-v1",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Vxtzq/Crowd-v1: partially trained 1B SotaGPT research checkpoint with CPU engrams. The publisher limits the live context to 2,048 tokens and cautions that language output may be incoherent. Original BF16 and FP32 packages retain their complete model and engram weights. ECHO archival does not enlarge the published live window.",
+      "contextTokens": 2048,
+      "license": "mit",
+      "name": "Crowd v1 · BF16",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 2048
+    },
+    {
+      "id": "hf-12cacab0f664d5c541bc7a76",
+      "variantKey": "safetensors:split-fp32",
+      "repository": "Vxtzq/Crowd-v1",
+      "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+      "format": "safetensors",
+      "quantization": "FP32",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "README.md",
+          "bytes": 7098,
+          "sha256": null,
+          "gitBlobSha1": "d3979eda7f3a575a84bd49c8dcdf56c1cdcdf210",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "added_tokens.json",
+          "bytes": 707,
+          "sha256": null,
+          "gitBlobSha1": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "badge_tokens.json",
+          "bytes": 96,
+          "sha256": null,
+          "gitBlobSha1": "f681046ef553d4f20b8060e6ccd9a1203b117bf0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "chat_template.jinja",
+          "bytes": 4168,
+          "sha256": null,
+          "gitBlobSha1": "01be9b307daa2d425f7c168c9fb145a286e0afb4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "config.json",
+          "bytes": 329,
+          "sha256": null,
+          "gitBlobSha1": "3b780da3374fadb21a82f8328e52164b67730ba7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "engram_fp32.safetensors",
+          "bytes": 1400002648,
+          "sha256": "7af679cc34eee53a41615b458556b726ee693959e7fca6d613d4696f92907f61",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "generation_config.json",
+          "bytes": 91,
+          "sha256": null,
+          "gitBlobSha1": "e052c864ab6aa56a73f157231561d998d9c1810c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "merges.txt",
+          "bytes": 1671853,
+          "sha256": null,
+          "gitBlobSha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "model_fp32.safetensors",
+          "bytes": 2631149656,
+          "sha256": "5398e7c43b04bb8a1895264e8f35eef729d5bb645f3a80a4c96ab48b68f0f576",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "tokenizer.json",
+          "bytes": 11422654,
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "tokenizer_config.json",
+          "bytes": 5404,
+          "sha256": null,
+          "gitBlobSha1": "ddaf69808214a44fdd26d3785b66c1367c78277a",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Vxtzq/Crowd-v1",
+          "revision": "db57354c65dd37732f6cf9f0f91f5d59fdd78ff1",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 4047042150,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/Vxtzq/Crowd-v1",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires a reviewed SotaGPT runtime with the publisher CPU engram implementation. The custom CrowdGPT architecture is not an integrated OpenCore execution adapter; the Qwen-compatible tokenizer does not make this a Qwen model."
+      },
+      "familyId": "publisher-crowd-v1",
+      "familyLabel": "Crowd v1",
+      "originalRepository": "Vxtzq/Crowd-v1",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Vxtzq/Crowd-v1: partially trained 1B SotaGPT research checkpoint with CPU engrams. The publisher limits the live context to 2,048 tokens and cautions that language output may be incoherent. Original BF16 and FP32 packages retain their complete model and engram weights. ECHO archival does not enlarge the published live window.",
+      "contextTokens": 2048,
+      "license": "mit",
+      "name": "Crowd v1 · FP32",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 2048
+    },
+    {
       "id": "hf-56b805058db4c5973d866364",
       "repository": "bartowski/Gen-Verse_DiscoveryRSI-27B-GGUF",
       "revision": "e0bb3117febac7127429fa5c5739b3f0b2eee273",

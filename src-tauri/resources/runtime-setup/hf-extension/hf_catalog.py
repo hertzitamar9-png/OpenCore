@@ -25,7 +25,7 @@ def echo_context_tokens(metadata, fallback=ECHO_WINDOW_TOKENS):
     if not isinstance(config,dict):config={}
     for block in (config.get('text_config') or {}, config, metadata.get('gguf') or {}):
         if not isinstance(block,dict):continue
-        for key in ('max_position_embeddings', 'context_length', 'n_positions', 'max_seq_len', 'seq_length'):
+        for key in ('max_position_embeddings', 'context_length', 'n_positions', 'max_seq_len', 'maxSeqLen', 'seq_length'):
             value = block.get(key)
             if type(value) is int and value > 0:
                 return min(ECHO_WINDOW_TOKENS, value)
