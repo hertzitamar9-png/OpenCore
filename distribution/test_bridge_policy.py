@@ -47,30 +47,45 @@ class BridgePolicyTests(unittest.TestCase):
                 self.assertTrue(retire_automatic_plugin(root))
             self.assertEqual(json.loads(path.read_bytes()),{'enabledPlugins':{'other@publisher':True}})
 
-    def test_registered_plugin_uses_only_the_user_scope_uninstall_and_owned_marketplace(self):
+    def test_registered_plugin_is_retired_without_starting_any_client(self):
         with tempfile.TemporaryDirectory() as root:
             directory=Path(root)/'.claude';(directory/'plugins').mkdir(parents=True)
             registry=directory/'plugins/installed_plugins.json'
             registry.write_text(json.dumps({'version':2,'plugins':{PLUGIN:[{'scope':'user'}],'other@publisher':[{'scope':'user'}]}}))
-            (directory/'plugins/known_marketplaces.json').write_text(json.dumps({'opencore-local':{'source':{'source':'directory','path':'owned-market'}}}))
-            cli=Path(root)/'resources'/RELATIVE/'opencore-agent.exe';cli.parent.mkdir(parents=True);cli.write_bytes(b'MZ-test-cli')
-            calls=[]
-            def run(command,**options):
-                args=command[1:];calls.append(args)
-                self.assertEqual(options['env']['CLAUDE_CONFIG_DIR'],str(directory))
-                value=json.loads(registry.read_bytes())
-                if args[:2]==['plugin','uninstall']:
-                    self.assertEqual(args,['plugin','uninstall',PLUGIN,'--scope','user'])
-                    value['plugins'].pop(PLUGIN);registry.write_text(json.dumps(value))
-                elif args[:3]==['plugin','marketplace','remove']:
-                    self.assertEqual(args,['plugin','marketplace','remove','opencore-local','--scope','user'])
-                output=[{'id':key,'scope':'user'} for key in value['plugins']]
-                return type('Response',(),{'returncode':0,'stdout':json.dumps(output),'stderr':''})()
-            with patch('subprocess.run',side_effect=run):
+            marketplace=directory/'plugins/known_marketplaces.json'
+            marketplace.write_text(json.dumps({'opencore-local':{'source':{'source':'directory','path':'owned-market'}},'other':{'source':'keep'}}))
+            with patch('subprocess.run',side_effect=AssertionError('No external client should be started')):
                 self.assertTrue(retire_automatic_plugin(root,Path(root)/'resources'))
             self.assertEqual(json.loads(registry.read_bytes())['plugins'],{'other@publisher':[{'scope':'user'}]})
-            self.assertIn(['plugin','marketplace','remove','opencore-local','--scope','user'],calls)
+            self.assertEqual(json.loads(marketplace.read_bytes()),{'other':{'source':'keep'}})
+            self.assertFalse(retire_automatic_plugin(root,Path(root)/'resources'))
+
+    def test_shared_marketplace_and_unrelated_plugins_are_preserved(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory=Path(root)/'.claude';(directory/'plugins').mkdir(parents=True)
+            registry=directory/'plugins/installed_plugins.json'
+            registry.write_text(json.dumps({'plugins':{PLUGIN:[{'scope':'user'},{'scope':'project','projectPath':'keep'}],'other@opencore-local':[{'scope':'user'}]}}))
+            marketplace=directory/'plugins/known_marketplaces.json';marketplace.write_text(json.dumps({'opencore-local':{'source':'keep'}}))
+            with patch('subprocess.run',side_effect=AssertionError('No external client should be started')):
+                self.assertTrue(retire_automatic_plugin(root,Path(root)/'resources'))
+            self.assertNotIn(PLUGIN,json.loads(registry.read_bytes())['plugins'])
+            self.assertIn('other@opencore-local',json.loads(registry.read_bytes())['plugins'])
+            self.assertIn('opencore-local',json.loads(marketplace.read_bytes()))
+
+    def test_shared_marketplace_is_kept_when_another_plugin_is_enabled(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory=Path(root)/'.claude';(directory/'plugins').mkdir(parents=True)
+            settings=directory/'settings.json'
+            settings.write_text(json.dumps({'enabledPlugins':{PLUGIN:True,'other@opencore-local':True},'extraKnownMarketplaces':{'opencore-local':{'source':'keep'}}}))
+            marketplace=directory/'plugins/known_marketplaces.json';marketplace.write_text(json.dumps({'opencore-local':{'source':'keep'}}))
+            self.assertTrue(retire_automatic_plugin(root))
+            self.assertIn('other@opencore-local',json.loads(settings.read_bytes())['enabledPlugins'])
+            self.assertIn('opencore-local',json.loads(settings.read_bytes())['extraKnownMarketplaces'])
+            self.assertIn('opencore-local',json.loads(marketplace.read_bytes()))
 
     def test_private_sdk_uses_the_separate_agent_path(self):
         runner=(Path(__file__).resolve().parents[1]/'src-tauri/resources/claude/runner.mjs').read_text(encoding='utf-8')
         self.assertIn('pathToClaudeCodeExecutable: privateAgentExecutable()',runner)
+        self.assertIn('settingSources: []',runner)
+        self.assertIn('strictMcpConfig: true',runner)
+        self.assertIn("if (!existsSync(path)) throw new Error",runner)

@@ -1,6 +1,9 @@
+import io
+import types
 import unittest
 import json
-from echo_server import ReasoningLoopGuard,recover_requested_html_file
+from unittest.mock import patch
+from echo_server import Handler,ReasoningLoopGuard,recover_embedded_tool_call,recover_requested_html_file,tool_call_error
 
 
 class LoopGuardTests(unittest.TestCase):
@@ -48,5 +51,82 @@ class LoopGuardTests(unittest.TestCase):
         self.assertFalse(recover_requested_html_file({'content':'```html\n<html>\n```'},tools,'Make an HTML file',[]))
         self.assertFalse(recover_requested_html_file({'content':'```html\n<html></html>\n```'},[],'Make an HTML file',[]))
         self.assertFalse(recover_requested_html_file({'content':'```html\n<html></html>\n```'},tools,'Explain this HTML snippet',[]))
+
+    def test_namespaced_dev_calls_receive_the_same_write_validation(self):
+        name='mcp__opencore__dev'
+        tools=[{'type':'function','function':{'name':name,'parameters':{'properties':{}}}}]
+        message={'tool_calls':[{'function':{'name':name,'arguments':json.dumps({'action':'write','content':'x'*6001})}}]}
+        self.assertIn('too large',tool_call_error(message,tools))
+
+    def test_complete_qwen_json_call_uses_the_declared_namespaced_tool(self):
+        name='mcp__opencore__dev'
+        tools=[{'type':'function','function':{'name':name,'parameters':{'properties':{}}}}]
+        message={'reasoning_content':'<tool_call>{"name":"dev","arguments":{"action":"status"}}</tool_call>'}
+        self.assertTrue(recover_embedded_tool_call(message,tools))
+        self.assertEqual(message['tool_calls'][0]['function']['name'],name)
+        self.assertEqual(json.loads(message['tool_calls'][0]['function']['arguments']),{'action':'status'})
+
+    def test_tool_markup_in_a_code_example_is_not_executed(self):
+        tools=[{'type':'function','function':{'name':'mcp__opencore__dev','parameters':{'properties':{}}}}]
+        message={'content':'Example:\n```xml\n<tool_call>{"name":"dev","arguments":{"action":"status"}}</tool_call>\n```'}
+        self.assertFalse(recover_embedded_tool_call(message,tools))
+        self.assertNotIn('tool_calls',message)
+
+    def test_multiple_embedded_calls_across_fields_are_ambiguous(self):
+        tools=[{'type':'function','function':{'name':'mcp__opencore__dev','parameters':{'properties':{}}}}]
+        call='<tool_call>{"name":"dev","arguments":{"action":"status"}}</tool_call>'
+        message={'reasoning_content':call,'content':call}
+        self.assertFalse(recover_embedded_tool_call(message,tools))
+        self.assertNotIn('tool_calls',message)
+
+    def test_namespaced_html_write_uses_the_declared_tool(self):
+        name='mcp__opencore__dev'
+        tools=[{'type':'function','function':{'name':name,'parameters':{'properties':{'action':{'enum':['write']}}}}}]
+        message={'content':'```html\n<html></html>\n```'}
+        self.assertTrue(recover_requested_html_file(message,tools,'Make an HTML file',[]))
+        self.assertEqual(message['tool_calls'][0]['function']['name'],name)
+
+    def test_unfinished_large_dev_write_is_interrupted_without_becoming_a_tool_call(self):
+        handler=Handler.__new__(Handler)
+        handler.state=types.SimpleNamespace(log=lambda *_:None)
+        handler._live_event=lambda *_:None
+        argument='{"action":"write","path":"index.html","content":"'+'x'*7000
+        event={'choices':[{'delta':{'tool_calls':[{'index':0,'id':'call-1','function':{'name':'mcp__opencore__dev','arguments':argument}}]}}]}
+        handler._upstream=lambda *args,**kwargs:io.BytesIO(('data: '+json.dumps(event)+'\n\n').encode())
+        result=handler._generate_live({'stream':True,'max_tokens':8000},'working')
+        self.assertTrue(result.get('echo_incomplete_tool_call'))
+        self.assertEqual(result['choices'][0]['finish_reason'],'length')
+
+    def test_a_complete_short_tool_call_remains_executable(self):
+        handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None);handler._live_event=lambda *_:None
+        args=json.dumps({'action':'status'})
+        events=[{'choices':[{'delta':{'tool_calls':[{'index':0,'id':'call-1','function':{'name':'mcp__opencore__dev','arguments':args}}]}}]},
+                {'choices':[{'delta':{},'finish_reason':'tool_calls'}]}]
+        stream=''.join('data: '+json.dumps(event)+'\n\n' for event in events)+'data: [DONE]\n\n'
+        handler._upstream=lambda *a,**k:io.BytesIO(stream.encode())
+        result=handler._generate_live({'stream':True,'max_tokens':1024},'working')
+        self.assertEqual(result['choices'][0]['finish_reason'],'tool_calls')
+        self.assertEqual(json.loads(result['choices'][0]['message']['tool_calls'][0]['function']['arguments']),{'action':'status'})
+        self.assertFalse(result.get('echo_incomplete_tool_call'))
+
+    def test_large_complete_non_dev_call_is_not_cut_off(self):
+        handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None);handler._live_event=lambda *_:None
+        args=json.dumps({'query':'x'*7000})
+        events=[{'choices':[{'delta':{'tool_calls':[{'index':0,'id':'call-1','function':{'name':'search','arguments':args}}]}}]},
+                {'choices':[{'delta':{},'finish_reason':'tool_calls'}]}]
+        handler._upstream=lambda *a,**k:io.BytesIO((''.join('data: '+json.dumps(e)+'\n\n' for e in events)+'data: [DONE]\n\n').encode())
+        result=handler._generate_live({'stream':True,'max_tokens':8000},'working')
+        self.assertEqual(result['choices'][0]['finish_reason'],'tool_calls')
+        self.assertEqual(json.loads(result['choices'][0]['message']['tool_calls'][0]['function']['arguments'])['query'],'x'*7000)
+        self.assertFalse(result.get('echo_incomplete_tool_call'))
+
+    def test_a_stalled_incomplete_tool_call_is_bounded_even_for_other_tools(self):
+        handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None);handler._live_event=lambda *_:None
+        event={'choices':[{'delta':{'tool_calls':[{'index':0,'id':'call-1','function':{'name':'read','arguments':'{"path":"unfinished'}}]}}]}
+        handler._upstream=lambda *a,**k:io.BytesIO(('data: '+json.dumps(event)+'\n\n').encode())
+        with patch('echo_server.time.monotonic',side_effect=[0,201]):
+            result=handler._generate_live({'stream':True,'max_tokens':1024},'working')
+        self.assertEqual(result.get('echo_incomplete_tool_call'),'time')
+        self.assertEqual(result['choices'][0]['finish_reason'],'length')
 
 if __name__=='__main__':unittest.main()

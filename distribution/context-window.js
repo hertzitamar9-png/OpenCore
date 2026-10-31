@@ -11,11 +11,14 @@ function g8({conversationId:t,profile:e,runtime:n,liveContext}){
   const current=liveContext||s;
   const configured=!running?fd(e).configuredContextTokens:null;
   const capacity=running&&n.contextSize>0?n.contextSize:configured||(current?.available?current.modelContextTokens||current.windowTokens:null);
-  const windowTokens=current?.available&&current.contextMode==='persistent_echo'&&current.windowTokens>0?Math.min(capacity||current.windowTokens,current.windowTokens):capacity;
+  const reportedWindow=current?.available&&current.contextMode==='persistent_echo'&&current.windowTokens>0?current.windowTokens:null;
+  const activeReport=running&&(current?.active||current?.modelSessionActive);
+  const windowTokens=activeReport&&reportedWindow?Math.min(capacity||reportedWindow,reportedWindow):capacity||reportedWindow;
   const maximum=Math.max(1,windowTokens||1);
   const slot=current?.modelActiveTokens;
   const reported=typeof slot==='number'&&Number.isFinite(slot)?slot:current?.available?current.promptTokens??current.liveTokens:undefined;
-  const known=windowTokens>0&&typeof reported==='number'&&Number.isFinite(reported)&&reported>=0;
+  const staleSmaller=!activeReport&&reportedWindow&&windowTokens&&reportedWindow<windowTokens;
+  const known=!staleSmaller&&windowTokens>0&&typeof reported==='number'&&Number.isFinite(reported)&&reported>=0;
   const used=known?Math.min(maximum,reported):undefined;
   const kind=typeof slot==='number'&&current?.modelUsageKind!=='prompt'?(running&&(current?.modelSessionActive||current?.active)?'live':'last'):current?.active?'prompt':'last';
   const idle=n.status==='starting'?'Model loading':'Model not running';

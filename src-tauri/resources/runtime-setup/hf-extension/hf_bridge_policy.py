@@ -2,7 +2,6 @@
 import json
 import os
 from pathlib import Path
-import subprocess
 from hf_connectors import checked
 from hf_download import atomic_json
 
@@ -31,51 +30,30 @@ def retire_automatic_plugin(home=None, resources=None):
     extras=settings.get('extraKnownMarketplaces',{})
     if not all(isinstance(value,dict) for value in (enabled,plugins,extras)):
         raise ValueError('Invalid Claude plugin inventory')
-    registered=any(row.get('scope')=='user' for row in plugins.get(PLUGIN,[]) if isinstance(row,dict))
-    marketplace=MARKETPLACE in markets or MARKETPLACE in extras
-    if PLUGIN not in enabled and not registered and not marketplace: return False
-    # Fresh installations do not invoke Claude or create its external profile.
-    # Back up existing configuration before the supported scoped uninstall.
-    for name,(value,raw) in records.items():
-        if raw is None: continue
+    # Remove only OpenCore's legacy registration. Never launch an external
+    # client or its plugins while starting OpenCore.
+    shared=any(isinstance(key,str) and key!=PLUGIN and key.endswith('@'+MARKETPLACE)
+               for key in (*plugins, *enabled))
+    changes=[]
+    if PLUGIN in enabled:
+        enabled.pop(PLUGIN);changes.append('settings.json')
+    if PLUGIN in plugins:
+        plugins.pop(PLUGIN);changes.append('plugins/installed_plugins.json')
+    if not shared:
+        if MARKETPLACE in markets:
+            markets.pop(MARKETPLACE);changes.append('plugins/known_marketplaces.json')
+        if MARKETPLACE in extras:
+            extras.pop(MARKETPLACE);changes.append('settings.json')
+    changes=list(dict.fromkeys(changes))
+    if not changes:return False
+    for name in changes:
+        value,raw=records[name]
+        if raw is None or paths[name].read_bytes()!=raw:
+            raise ValueError('Plugin settings changed during removal')
         backup=checked(paths[name].with_name(paths[name].name+'.before-opencore-removal.bak'))
         if not backup.exists():
-            with backup.open('xb') as output: output.write(raw)
-    removed_marketplace=False
-    if registered or marketplace:
-        if resources is None or not Path(resources).is_absolute(): raise ValueError('An installed resource root is required for plugin removal')
-        cli=Path(resources)/'claude/node_modules/@anthropic-ai/claude-agent-sdk-win32-x64/opencore-agent.exe'
-        if not cli.is_file(): raise ValueError('The managed agent is unavailable for legacy plugin removal')
-        with cli.open('rb') as source:
-            if source.read(2)!=b'MZ': raise ValueError('The managed agent is not executable')
-        environment=dict(os.environ,CLAUDE_CONFIG_DIR=str(directory),CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC='1')
-        def run(*args):
-            result=subprocess.run([str(cli),*args],stdin=subprocess.DEVNULL,capture_output=True,
-                text=True,encoding='utf-8',errors='replace',env=environment,timeout=25,
-                creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-            if result.returncode: raise RuntimeError('Claude could not remove the legacy OpenCore plugin')
-            return result.stdout
-        before=json.loads(run('plugin','list','--json'))
-        if not isinstance(before,list): raise ValueError('Invalid Claude plugin inventory')
-        if any(row.get('id')==PLUGIN and row.get('scope')=='user' for row in before):
-            run('plugin','uninstall',PLUGIN,'--scope','user')
-        others=[row for row in before if row.get('id','').endswith('@'+MARKETPLACE) and row.get('id')!=PLUGIN]
-        if marketplace and not others:
-            run('plugin','marketplace','remove',MARKETPLACE,'--scope','user')
-            removed_marketplace=True
-        after=json.loads(run('plugin','list','--json'))
-        if any(row.get('id')==PLUGIN and row.get('scope')=='user' for row in after):
-            raise RuntimeError('Claude still lists the legacy OpenCore plugin')
-        if not {(row.get('id'),row.get('scope')) for row in before if row.get('id')!=PLUGIN} <= {(row.get('id'),row.get('scope')) for row in after}:
-            raise RuntimeError('Claude plugin inventory changed during removal')
-    # Also retire old disabled entries when the plugin was already uninstalled.
-    value,raw=_read(paths['settings.json'])
-    changed=False
-    for key,entry in (('enabledPlugins',PLUGIN),('extraKnownMarketplaces',MARKETPLACE)):
-        items=value.get(key,{})
-        if isinstance(items,dict) and entry in items and (key=='enabledPlugins' or removed_marketplace):
-            items.pop(entry);changed=True
-    if changed:
-        if paths['settings.json'].read_bytes()!=raw: raise ValueError('Claude settings changed during removal')
-        atomic_json(paths['settings.json'],value)
+            with backup.open('xb') as output:output.write(raw)
+        if paths[name].read_bytes()!=raw:
+            raise ValueError('Plugin settings changed during removal')
+        atomic_json(paths[name],value)
     return True

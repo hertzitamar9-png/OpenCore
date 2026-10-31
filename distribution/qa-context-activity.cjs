@@ -54,9 +54,10 @@ code+=String.raw`
       if(width>767)assert.ok(await meter.isVisible(),'The desktop live context bar must be visible');
       if(width>767){
         const selected=page.locator('.conversation-row-shell.selected'),other=page.locator('.conversation-row-shell:not(.selected)').first();
-        await other.hover();
-        assert.equal(await other.evaluate(e=>getComputedStyle(e).outlineStyle),'solid','Hovered chats need a visible outline');
-        assert.equal(await other.evaluate(e=>getComputedStyle(e).outlineColor),'rgb(244, 248, 252)','Hover must use a white outline');
+        await other.locator('.conversation-row').hover();
+        assert.equal(await other.evaluate(e=>getComputedStyle(e).borderColor),'rgb(244, 248, 252)','The chat under the pointer must have a visible white border');
+        assert.match(await other.evaluate(e=>getComputedStyle(e).boxShadow),/rgb\(244, 248, 252\)/,'The hover border must be drawn inside the chat row');
+        await page.screenshot({path:path.join(folder,'chat-hover-desktop.png')});
         assert.equal(await selected.count(),1,'Hover must not select another chat');
         assert.notEqual(await selected.evaluate(e=>getComputedStyle(e).borderColor),await other.evaluate(e=>getComputedStyle(e).borderColor),'Unselected chat must not copy selected border');
         const input=page.getByRole('textbox',{name:'Message OpenCore',exact:true});await input.focus();
@@ -79,7 +80,7 @@ code+=String.raw`
       assert.ok(await page.getByText(/Used\s*1\s*tool/).first().isVisible());
       const cards=await page.getByText('I will inspect the file that was found.',{exact:true}).evaluateAll(items=>new Set(items.map(item=>item.closest('details'))).size);
       assert.equal(cards,1,'The saved reasoning and its preview must share one disclosure');
-      await page.evaluate(()=>{fixture.snapshot.runtime.status='stopped';fixture.context={available:false,windowTokens:65536};});
+      await page.evaluate(()=>{fixture.snapshot.runtime.status='stopped';fixture.context={available:true,active:false,modelSessionActive:false,contextMode:'persistent_echo',windowTokens:16384,modelActiveTokens:16384,modelUsageKind:'live'};});
       await page.waitForFunction(()=>{const bar=document.querySelector('progress[aria-label="Model context usage"]');return bar?.getAttribute('max')==='32768'&&!bar.hasAttribute('value');});
       assert.deepEqual(errors,[]);
       await page.screenshot({path:path.join(folder,'context-activity-'+width+'.png')});

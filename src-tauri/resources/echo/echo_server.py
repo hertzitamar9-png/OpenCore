@@ -144,6 +144,19 @@ _EMBEDDED_PARAMETER = re.compile(
     r"<parameter=([A-Za-z_][A-Za-z_0-9]*)>\s*(.*?)\s*</parameter>",
     re.DOTALL,
 )
+_EMBEDDED_JSON_TOOL = re.compile(r"<tool_call>\s*(\{.*?\})\s*</tool_call>", re.DOTALL)
+
+
+def _is_dev_tool(name):
+    return name in ('dev', 'mcp__opencore__dev')
+
+
+def _declared_tool_name(name, allowed):
+    if name in allowed:
+        return name
+    if name == 'dev' and 'mcp__opencore__dev' in allowed:
+        return 'mcp__opencore__dev'
+    return None
 
 
 def recover_embedded_tool_call(message, declared_tools):
@@ -156,17 +169,39 @@ def recover_embedded_tool_call(message, declared_tools):
         return False
     allowed = {tool.get("function", {}).get("name") for tool in declared_tools or []
                if tool.get("type") == "function"}
+    sources = [message.get(field) for field in ("reasoning_content", "content")]
+    if sum(source.count('<tool_call>') for source in sources if isinstance(source, str)) != 1:
+        return False
     for field in ("reasoning_content", "content"):
         source = message.get(field)
-        if not isinstance(source, str):
+        if not isinstance(source, str) or '```' in source:
             continue
-        matches = list(_EMBEDDED_TOOL.finditer(source))
+        matches = [(match, 'xml') for match in _EMBEDDED_TOOL.finditer(source)]
+        matches += [(match, 'json') for match in _EMBEDDED_JSON_TOOL.finditer(source)]
         if len(matches) != 1:
             continue
-        match = matches[0]
-        name, body = match.group(1), match.group(2)
-        if name not in allowed:
+        match, kind = matches[0]
+        if field == 'content' and source.strip() != match.group(0):
             continue
+        if kind == 'json':
+            try:
+                value = json.loads(match.group(1))
+                if not isinstance(value, dict) or set(value) != {'name', 'arguments'}:
+                    continue
+                name = _declared_tool_name(value['name'], allowed)
+                arguments = value['arguments']
+                if isinstance(arguments, str):
+                    arguments = json.loads(arguments)
+                if not name or not isinstance(arguments, dict):
+                    continue
+            except (ValueError, TypeError):
+                continue
+            message['tool_calls'] = [{'id': 'call_' + uuid.uuid4().hex, 'type': 'function',
+                                      'function': {'name': name, 'arguments': json.dumps(arguments)}}]
+            message[field] = (source[:match.start()] + source[match.end():]).strip()
+            return True
+        name, body = _declared_tool_name(match.group(1), allowed), match.group(2)
+        if not name: continue
         parameters = list(_EMBEDDED_PARAMETER.finditer(body))
         if not parameters or _EMBEDDED_PARAMETER.sub("", body).strip():
             continue
@@ -201,7 +236,7 @@ def recover_requested_html_file(message, declared_tools, question, live_messages
     """
     if message.get('tool_calls') or not re.match(r'^\s*(?:please\s+)?(?:make|create|build|generate|write|send|give)\b',question,re.I) or not re.search(r'\bhtml\b|\.html\b',question,re.I):
         return False
-    tool=next((item.get('function') for item in declared_tools or [] if item.get('function',{}).get('name')=='dev'),None)
+    tool=next((item.get('function') for item in declared_tools or [] if _is_dev_tool(item.get('function',{}).get('name'))),None)
     if not tool or 'write' not in tool.get('parameters',{}).get('properties',{}).get('action',{}).get('enum',[]):
         return False
     text=message.get('content') or ''
@@ -214,9 +249,9 @@ def recover_requested_html_file(message, declared_tools, question, live_messages
         for call in previous.get('tool_calls') or []:
             try:
                 args=json.loads(call.get('function',{}).get('arguments','{}'))
-                if call.get('function',{}).get('name')=='dev' and args.get('action')=='write' and args.get('path')==filename:return False
+                if _is_dev_tool(call.get('function',{}).get('name')) and args.get('action')=='write' and args.get('path')==filename:return False
             except (ValueError,TypeError):pass
-    message['tool_calls']=[{'id':'call_'+uuid.uuid4().hex,'type':'function','function':{'name':'dev','arguments':json.dumps({'action':'write','path':filename,'content':source,'explanation':'Save the complete HTML file requested by the user. The visible code is the exact file content.'})}}]
+    message['tool_calls']=[{'id':'call_'+uuid.uuid4().hex,'type':'function','function':{'name':tool['name'],'arguments':json.dumps({'action':'write','path':filename,'content':source,'explanation':'Save the complete HTML file requested by the user. The visible code is the exact file content.'})}}]
     return True
 
 
@@ -234,14 +269,14 @@ def tool_call_error(message, declared_tools):
             return 'Incomplete or invalid JSON arguments for %s. No action was executed.' % name
         if not isinstance(args, dict):
             return 'Tool arguments must be a JSON object.'
-        if name == 'dev' and args.get('action') == 'write':
+        if _is_dev_tool(name) and args.get('action') == 'write':
             content = args.get('content')
             if isinstance(content, str) and len(content) > TOOL_CALL_MAX_CHARS:
                 return ('dev write content is too large for one response and risks being cut '
                         'off before it is saved. Write a compact skeleton under 3,000 characters '
                         'first, then extend it with dev edit calls of at most 60 lines each. '
                         'No action was executed.')
-        if name == 'dev' and args.get('action') in ('edit', 'patch', 'apply_patch'):
+        if _is_dev_tool(name) and args.get('action') in ('edit', 'patch', 'apply_patch'):
             if (not isinstance(args.get('path'), str) or not args['path'] or
                     not isinstance(args.get('expectedSha256'), str) or not args['expectedSha256'] or
                     not isinstance(args.get('edits'), list) or not 1 <= len(args['edits']) <= 32 or
@@ -284,6 +319,31 @@ TOOL_CALL_MIN_TOKENS = 800
 TOOL_CALL_MAX_TOKENS = 3000
 TOOL_CALL_INITIAL_TOKENS = 1200
 TOOL_CALL_MAX_CHARS = 6000
+
+
+def _partial_tool_action(arguments):
+    """Read a completed top-level action from an otherwise incomplete object."""
+    decoder = json.JSONDecoder()
+    position = len(arguments) - len(arguments.lstrip())
+    if position >= len(arguments) or arguments[position] != '{': return None
+    position += 1
+    try:
+        while position < len(arguments):
+            while position < len(arguments) and arguments[position].isspace(): position += 1
+            key, position = decoder.raw_decode(arguments, position)
+            if not isinstance(key, str): return None
+            while position < len(arguments) and arguments[position].isspace(): position += 1
+            if position >= len(arguments) or arguments[position] != ':': return None
+            position += 1
+            while position < len(arguments) and arguments[position].isspace(): position += 1
+            value, position = decoder.raw_decode(arguments, position)
+            if key == 'action': return value if isinstance(value, str) else None
+            while position < len(arguments) and arguments[position].isspace(): position += 1
+            if position >= len(arguments) or arguments[position] != ',': return None
+            position += 1
+    except (ValueError, TypeError):
+        pass
+    return None
 
 
 def load_reasoning_policy(path=None):
@@ -1904,6 +1964,7 @@ class Handler(BaseHTTPRequestHandler):
         malformed_controls = 0
         malformed_tools = 0
         loop_recoveries = 0
+        continuation_guard = ReasoningLoopGuard()
         last_output = None
         repeated_outputs = 0
         paragraph_break = False
@@ -1955,7 +2016,7 @@ class Handler(BaseHTTPRequestHandler):
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
             body['reasoning_budget_tokens'] = reasoning_budget_for_output(int(body.get('reasoning_budget_tokens') or 0), reserve)
-            if loop_recoveries:
+            if loop_recoveries or malformed_tools:
                 body.update(reasoning_budget_tokens=0,reasoning_min_tokens=0,reasoning_format='none',
                             chat_template_kwargs={**(body.get('chat_template_kwargs') or {}),'enable_thinking':False})
             if total_output_budget is not None:
@@ -1966,6 +2027,9 @@ class Handler(BaseHTTPRequestHandler):
                 body.pop("max_completion_tokens", None)
                 body['reasoning_budget_tokens'] = reasoning_budget_for_output(
                     body['reasoning_budget_tokens'], body["max_tokens"])
+            if malformed_tools:
+                body['max_tokens'] = min(int(body.get('max_tokens') or reserve), self.state.tool_call_budget())
+                body.pop('max_completion_tokens', None)
             live.prompt_tokens = system_tokens + live.tokens
             live.save()
 
@@ -2007,6 +2071,16 @@ class Handler(BaseHTTPRequestHandler):
             self.state._backend_needs_reset = False
             live.mark_backend_sent()
             calls += 1
+            if not parsed.get('echo_loop_detected'):
+                candidate = parsed['choices'][0]
+                draft = candidate.get('message') or {}
+                reasoning = draft.get('reasoning_content') or ''
+                content = draft.get('content') or ''
+                if (candidate.get('finish_reason') == 'length' and not draft.get('tool_calls')
+                        and isinstance(reasoning, str) and isinstance(content, str)
+                        and '<tool_call>' not in reasoning + content
+                        and continuation_guard.feed(reasoning + '\n' + content + '\n')):
+                    parsed['echo_loop_detected'] = True
             if parsed.get('echo_loop_detected'):
                 loop_recoveries += 1
                 if loop_recoveries > 1:
@@ -2040,6 +2114,8 @@ class Handler(BaseHTTPRequestHandler):
                     # Retain exact evidence on disk, but never replay malformed
                     # arguments through the backend's chat template parser.
                     live.archive.append(json.dumps(message, ensure_ascii=False), conversation)
+                    self.state._backend_conversation = None
+                    self.state._backend_needs_reset = True
                     malformed_tools += 1
                     if malformed_tools >= 3:
                         raise ValueError('The model could not produce a valid tool call after 3 attempts. No incomplete action was executed. ' + error)
@@ -2657,6 +2733,7 @@ class Handler(BaseHTTPRequestHandler):
         streaming = bool(body.get('stream'))
         if streaming:
             body = dict(body, stream_options={'include_usage': True})
+        started = time.monotonic()
         with self._upstream('/v1/chat/completions', body, stream=streaming) as response:
             if not streaming:
                 return self._retain_generation(json.load(response), body, phase)
@@ -2718,9 +2795,21 @@ class Handler(BaseHTTPRequestHandler):
                             target['id'] = call['id']
                         for key in ('name', 'arguments'):
                             target['function'][key] += (call.get('function') or {}).get(key) or ''
+                    if calls and not choice.get('finish_reason'):
+                        oversized = any(_is_dev_tool(call['function']['name'])
+                            and len(call['function']['arguments']) > TOOL_CALL_MAX_CHARS + 512
+                            and _partial_tool_action(call['function']['arguments']) == 'write'
+                            for call in calls.values())
+                        if oversized or time.monotonic() - started >= TOOL_CALL_SECONDS:
+                            # Do not expose an unfinished call as executable. The
+                            # caller retries with a smaller, complete action.
+                            result['echo_incomplete_tool_call'] = 'size' if oversized else 'time'
+                            result['choices'][0]['finish_reason'] = 'length'
+                            finished = True
+                            break
                     if choice.get('finish_reason'):
                         result['choices'][0]['finish_reason'] = choice['finish_reason']
-                if result.get('echo_loop_detected'):
+                if result.get('echo_loop_detected') or result.get('echo_incomplete_tool_call'):
                     break
             if not finished or not result['choices'][0]['finish_reason']:
                 raise ValueError('Upstream stream ended before completion; partial output is unverified')

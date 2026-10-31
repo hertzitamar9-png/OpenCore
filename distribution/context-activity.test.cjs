@@ -77,3 +77,9 @@ test('an unloaded model uses its catalog window rather than the stopped runtimes
  let bar;walk(meter({conversationId:'chat',profile:'ornith-1-5-9b-mtp',runtime:{status:'stopped',profile:'stopped',contextSize:65536}}),x=>{if(x.type==='progress')bar=x});
  assert.equal(bar.max,32768);assert.equal(bar.value,undefined,'Unknown usage must not be shown as zero');
 });
+test('an unloaded 32K profile does not show a previous 16K session as its current window',()=>{
+ const telemetry={available:true,active:false,modelSessionActive:false,windowTokens:16384,modelActiveTokens:16384,modelUsageKind:'live',contextMode:'persistent_echo'},jsx=(type,props)=>({type,...props});
+ const meter=evaluate('g8',{fd:()=>({configuredContextTokens:32768}),p:{useState:()=>[telemetry,()=>{}],useEffect:()=>{}},i:{jsx,jsxs:jsx},hr:String,Kp:()=>true});
+ let bar;walk(meter({conversationId:'chat',profile:'ornith',runtime:{status:'stopped',profile:'stopped',contextSize:16384}}),x=>{if(x.type==='progress')bar=x});
+ assert.equal(bar.max,32768);assert.equal(bar.value,undefined);
+});

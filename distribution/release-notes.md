@@ -1,8 +1,14 @@
-Deleting a provider's imported conversations also removes project groups that become empty in OpenCore; groups shared with other chats remain. Hovered chats get a clear white outline, while the chosen chat keeps its selection mark and accent color.
+Chat rows now draw a visible white border on the row under the pointer, including when the pointer is over its contents. The selected chat keeps its accent highlight. The context meter no longer presents a stopped model's old 16K session as the capacity of a 32K profile; while running it still reports the actual runtime allocation.
+
+ECHO detects repeated planning across output continuations and recovers from incomplete namespaced tool calls with a smaller retry. An unfinished call is not executed, and ambiguous tool markup or a code example is not treated as an action. Coding guidance asks for real tool calls and small, complete file edits. Ornith 1.5 9B MTP was tested in an isolated 32K runtime with a real model-generated tool call. Model capabilities and publisher context limits still vary.
+
+OpenCore's private agent no longer loads project client settings or falls back to the user's Claude or Codex executable. Legacy OpenCore plugin registrations are removed directly, without starting another client; unrelated plugin settings are preserved. Connectors remain opt-in.
+
+Deleting a provider's imported conversations also removes project groups that become empty in OpenCore; groups shared with other chats remain.
 
 Update planning compares the saved per-file manifest with the new release before opening file contents. A locally repaired EXE or changed build metadata no longer discards the records for every unchanged runtime library. Only affected files are checked and downloaded. Explicit repair still checks installed contents; a missing or malformed installation record needs an initial inventory. The full installer saves the record for the first update as well.
 
-OpenCore no longer installs its Claude plugin automatically. Updates remove the legacy OpenCore plugin and its user-scope marketplace registration through Claude's supported CLI, preserving unrelated plugins, settings and source conversations. Fresh profiles are untouched. Conversation history import works independently of optional local-model profiles. OpenCore's internal agent has a separate private executable, so the legacy automatic installer cannot register the plugin again.
+OpenCore no longer installs its Claude plugin automatically. Fresh profiles are untouched. Conversation history import works independently of optional local-model profiles. OpenCore's internal agent has a separate private executable, so the legacy automatic installer cannot register the plugin again.
 
 The context meter, GPU load, VRAM, output token count and output speed refresh during decoding for native and managed text runtimes. Samples read the owned local engine without scanning model files or starting hardware-monitoring processes. Sidebar groups display each chat once, only the current chat has the selection highlight, and typing does not outline the composer. Buttons and navigation share one accent highlight. Planning-loop detection covers short repeated answer paragraphs, and live streams send non-content heartbeats while the backend is working.
 

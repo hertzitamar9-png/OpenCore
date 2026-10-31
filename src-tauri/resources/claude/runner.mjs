@@ -9,9 +9,10 @@ import { contextBudgetEnvironment, deriveContextBudget } from './context-budget.
 import { CodingVerification, codingBoundaryGuidance, toolFailed } from './coding-verification.mjs';
 const write = value => process.stdout.write(JSON.stringify(value) + '\n');
 function privateAgentExecutable() {
-  if (process.platform !== 'win32') return undefined;
+  if (process.platform !== 'win32') throw new Error('The bundled OpenCore agent is unavailable on this platform.');
   const path = fileURLToPath(new URL('./node_modules/@anthropic-ai/claude-agent-sdk-win32-x64/opencore-agent.exe', import.meta.url));
-  return existsSync(path) ? path : undefined;
+  if (!existsSync(path)) throw new Error('The bundled OpenCore agent is missing. Repair the OpenCore installation.');
+  return path;
 }
 const input = createInterface({ input: process.stdin });
 const pending = new Map();
@@ -63,7 +64,7 @@ async function run(config) {
   });
   // Isolate credentials/config from the user's independent Claude installation.
   const env = { ...process.env };
-  for (const key of Object.keys(env)) if (/^(ANTHROPIC_|CLAUDE_CODE_USE_|CLAUDE_CODE_OAUTH_TOKEN|CLAUDE_CONFIG_DIR)/.test(key)) delete env[key];
+  for (const key of Object.keys(env)) if (/^(ANTHROPIC_|CLAUDE_|CODEX_)/.test(key)) delete env[key];
   Object.assign(env, {
     ANTHROPIC_BASE_URL: config.gateway ?? 'http://127.0.0.1:8812', ANTHROPIC_AUTH_TOKEN: 'opencore-local',
     ANTHROPIC_MODEL: `opencore:${config.effort}`, ANTHROPIC_DEFAULT_HAIKU_MODEL: `opencore:${config.effort}`,
@@ -88,8 +89,8 @@ async function run(config) {
     // The SDK bounds its active working set; OpenCore separately archives the
     // exact timeline in ECHO and makes it searchable after each compact boundary.
     // Disabling SDK compaction would let long sessions overrun the model window.
-    settingSources: config.projectSkillsEnabled ? ['project'] : [], settings: { autoCompactEnabled: true },
-    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\n${verificationGuidance} Use the project's existing tests or compiler. Read real failures, repair their cause, and rerun the relevant check; retain test assertions and existing behavior.\n${codingBoundaryGuidance}\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
+    settingSources: [], settings: { autoCompactEnabled: true },
+    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\n${verificationGuidance} Use the project's existing tests or compiler. Read real failures, repair their cause, and rerun the relevant check; retain test assertions and existing behavior.\n${codingBoundaryGuidance}\nCall the actual tool when an action is needed; a plan or reasoning is not a tool result. For dev writes, start with a complete file under 3,000 characters, then extend it with small edits using the current file hash. Do not claim a tool ran without its result.\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
     // Keep the official Claude Code tool surface as the default. OpenCore MCP
     // tools are added below; subagent policy and approval still pass through
     // OpenCore's existing limit and permission bridge.
