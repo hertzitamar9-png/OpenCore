@@ -9,8 +9,8 @@ function g8({conversationId:t,profile:e,runtime:n,liveContext}){
   },[t,e,n.profile,n.status]);
   const running=n.status==='running'&&n.profile===e;
   const current=liveContext||s;
-  const configured=!running&&!current?.available?fd(e).configuredContextTokens:null;
-  const capacity=running&&n.contextSize>0?n.contextSize:current?.available?current.modelContextTokens||current.windowTokens:configured;
+  const configured=!running?fd(e).configuredContextTokens:null;
+  const capacity=running&&n.contextSize>0?n.contextSize:configured||(current?.available?current.modelContextTokens||current.windowTokens:null);
   const windowTokens=current?.available&&current.contextMode==='persistent_echo'&&current.windowTokens>0?Math.min(capacity||current.windowTokens,current.windowTokens):capacity;
   const maximum=Math.max(1,windowTokens||1);
   const slot=current?.modelActiveTokens;

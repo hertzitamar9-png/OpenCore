@@ -3,6 +3,12 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const acorn=require('acorn');
 const root=__dirname;
+test('an empty first-run composer renders its fallback before any live sample exists',()=>{
+ const source=fs.readFileSync(path.join(root,'../src/live-footer.js'),'utf8');
+ const React={useState:value=>[value,()=>{}],useEffect(){},createElement:(type,props,children)=>({type,props,children})};
+ const stats=vm.runInNewContext(source+';LiveOutputStats',{React});
+ assert.equal(stats({conversationId:undefined,fallback:'Waiting for token metrics'}).children,'Waiting for token metrics');
+});
 let code=fs.readFileSync(path.join(root,'recovered-dist/assets/App-kNA9sRUP.js'),'utf8');
 const patch=path.join(root,'context-activity-patches.cjs');
 function editFunction(text,name,edit){const node=acorn.parse(text,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='FunctionDeclaration'&&n.id.name===name);return text.slice(0,node.start)+edit(text.slice(node.start,node.end))+text.slice(node.end)}
@@ -29,6 +35,14 @@ test('every ECHO model shows its reported prompt occupancy, not an empty bar',()
  const telemetry={available:true,active:true,promptTokens:12400,liveTokens:11000,windowTokens:32768,contextMode:'persistent_echo'};
  const jsx=(type,props)=>({type,...props});const meter=evaluate('g8',{p:{useState:()=>[telemetry,()=>{}],useEffect:()=>{}},i:{jsx,jsxs:jsx},hr:n=>String(n),Kp:()=>true});
  const rendered=meter({conversationId:'chat',profile:'frognano-4b',runtime:{status:'running',profile:'frognano-4b',contextSize:32768}});let bar;walk(rendered,x=>{if(x.type==='progress')bar=x});assert.ok(bar);assert.equal(bar.value,12400);assert.equal(bar.max,32768);
+});
+
+test('an unloaded model does not reuse the archives generic 64K capacity as its actual window',()=>{
+ const telemetry={available:true,active:false,promptTokens:20510,windowTokens:65536,contextMode:'persistent_echo'};
+ const jsx=(type,props)=>({type,...props});
+ const meter=evaluate('g8',{p:{useState:()=>[telemetry,()=>{}],useEffect(){}},i:{jsx,jsxs:jsx},hr:String,Kp:()=>true,fd:()=>({configuredContextTokens:32768})});
+ const rendered=meter({conversationId:'chat',profile:'ornith-1-5-9b-mtp',runtime:{status:'stopped',profile:'ornith-1-5-9b-mtp',contextSize:65536}});
+ let bar;walk(rendered,x=>{if(x.type==='progress')bar=x});assert.equal(bar.max,32768);assert.equal(bar.value,20510);
 });
 test('a checkpoint keeps an unsaved streaming item until its persisted copy arrives',async()=>{
  const fn=source('w8');let listener;walk(acorn.parse(fn,{ecmaVersion:'latest'}),n=>{if(n.type==='CallExpression'&&n.callee.name==='It'&&n.arguments[0]?.value==='opencore-generation')listener=n.arguments[1]});assert.ok(listener);

@@ -13,10 +13,11 @@ code+=String.raw`
     for(const width of [1366,393]){
       const page=await browser.newPage({viewport:{width,height:852},isMobile:width<500,hasTouch:width<500}),errors=[];
       page.on('pageerror',error=>errors.push(error.message));
+      page.on('console',message=>{if(message.type()==='error')console.error('First-run console:',message.text());});
       await page.addInitScript(fake,{snapshot,timeline:[],firstRun:true,startupDelay:1500});
       await page.goto('http://127.0.0.1:'+server.address().port+'/index.html',{waitUntil:'domcontentloaded'});
       await page.getByRole('progressbar',{name:'Opening your local workspace'}).waitFor({timeout:10000});
-      await page.locator('.opencore-shell').waitFor({timeout:15000});
+      await page.locator('.opencore-shell').waitFor({timeout:15000}).catch(async error=>{console.error(JSON.stringify({width,errors,body:await page.locator('body').textContent()}));throw error;});
       assert.equal(await page.evaluate(()=>fixture.calls.some(item=>item.command==='account_action')),false,'Local startup must not wait for a hosted account check');
       assert.ok(await page.getByRole('navigation',{name:'OpenCore sections'}).isVisible());
       assert.deepEqual(errors,[]);proof.push({width,emptyProfileOpened:true,accountServerRequired:false,visibleProgress:true});

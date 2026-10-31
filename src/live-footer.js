@@ -34,6 +34,6 @@ function LiveOutputStats({conversationId, fallback}) {
     window.addEventListener('opencore-live-metrics',refresh);
     return()=>window.removeEventListener('opencore-live-metrics',refresh);
   },[]);
-  const live=sample?.conversationId===conversationId&&sample.active&&Number.isFinite(sample.completionTokens);
+  const live=sample?.active&&sample.conversationId===conversationId&&Number.isFinite(sample.completionTokens);
   return React.createElement('span',{className:'composer-token-speed'},live?`${(sample.tokensPerSecond||0).toFixed(1)} output tokens/s · ${sample.completionTokens.toLocaleString()} output tokens`:fallback);
 }
