@@ -2,10 +2,10 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 function fixture(){
   const native=[{id:'claude-uuid',client:'Claude Code Mods'},{id:'codex-uuid',client:'Codex SDK'},{id:'local-uuid',client:'OpenCore'}];
   const imported=Array.from({length:205},(_,n)=>({id:'import:'+n,client:n===0?'Imported Claude Code':'Imported JSON'}));
-  const state={native,imported,active:[],operations:[],calls:[],removed:[],fail:null};
+  const state={native,imported,projects:[],removedProjects:[],active:[],operations:[],calls:[],removed:[],fail:null};
   const context={globalThis:null,document:{head:{appendChild(){}},createElement:()=>({})},setTimeout,clearTimeout,CustomEvent:class{},dispatchEvent(){},p:async(command,args={})=>{
     state.calls.push({command,args});
-    if(command==='get_snapshot')return {activeConversationIds:state.active};
+    if(command==='get_snapshot')return {activeConversationIds:state.active,projects:state.projects.map(row=>({...row}))};
     if(command==='list_operations')return state.operations;
     if(command==='list_conversations')return [...state.native.slice(0,500),...(state.bridgeReady?state.imageOnly||[]:[])].map(row=>({...row}));
     if(command==='list_saved_conversations'){
@@ -18,6 +18,11 @@ function fixture(){
       if(args.id===state.fail)throw Error('Deletion blocked by active image generation');
       state.removed.push(args.id);state.native=state.native.filter(row=>row.id!==args.id);state.imported=state.imported.filter(row=>row.id!==args.id);state.imageOnly=state.imageOnly?.filter(row=>row.id!==args.id);return;
     }
+    if(command==='delete_empty_projects'){
+      const linked=new Set([...state.native,...state.imported,...state.imageOnly||[]].map(row=>row.projectId));
+      const deleted=state.projects.filter(row=>args.ids.includes(row.id)&&!linked.has(row.id)).map(row=>row.id);
+      state.projects=state.projects.filter(row=>!deleted.includes(row.id));state.removedProjects.push(...deleted);return {deleted};
+    }
     throw Error('Unexpected command '+command);
   }};
   context.globalThis=context;vm.runInNewContext(fs.readFileSync(path.join(__dirname,'conversation-deletion.js'),'utf8'),context);
@@ -28,6 +33,34 @@ test('source deletion includes UUID Claude Mods and exported Claude chats withou
   assert.deepEqual(Array.from(plan.items,row=>row.id).sort(),['claude-uuid','import:0']);
   await api.execute(plan);assert.deepEqual(state.removed.sort(),['claude-uuid','import:0']);
   assert.ok(state.native.some(row=>row.id==='codex-uuid'));assert.ok(state.native.some(row=>row.id==='local-uuid'));
+});
+
+test('provider deletion removes its project group only after the final chat is gone',async()=>{
+  const {api,state}=fixture();state.native[0].projectId='claude-project';state.imported[0].projectId='claude-project';
+  state.projects=[{id:'claude-project',name:'Claude project'},{id:'empty-unrelated',name:'Other empty project'}];
+  const plan=await api.plan('claude');assert.ok(Array.isArray(plan.projects));assert.deepEqual(Array.from(plan.projects,row=>row.id),['claude-project']);
+  const result=await api.execute(plan);
+  assert.equal(result.deletedProjects,1);assert.deepEqual(state.removedProjects,['claude-project']);
+  assert.deepEqual(state.projects.map(row=>row.id),['empty-unrelated']);
+});
+
+test('provider deletion retains a project shared with another source and a project reused after confirmation',async()=>{
+  const {api,state}=fixture();state.native[0].projectId='shared';state.native[1].projectId='shared';state.imported[0].projectId='reused';
+  state.projects=[{id:'shared',name:'Shared'},{id:'reused',name:'Reused'}];
+  const plan=await api.plan('claude');
+  assert.ok(Array.isArray(plan.projects));assert.deepEqual(Array.from(plan.projects,row=>row.id),['reused']);
+  state.native.push({id:'new-chat',client:'OpenCore',projectId:'reused'});
+  await api.execute(plan);
+  assert.deepEqual(state.removedProjects,[]);assert.equal(state.projects.length,2);
+  assert.equal(state.native.find(row=>row.id==='new-chat').projectId,'reused');
+});
+
+test('project cleanup includes provider chats beyond the recent native list',async()=>{
+  const {api,state}=fixture();
+  state.native.push(...Array.from({length:620},(_,n)=>({id:'older-'+String(n).padStart(4,'0'),client:'OpenCore'})),{id:'zz-old-provider',client:'Claude Code Mods',projectId:'older-project'});
+  state.projects=[{id:'older-project',name:'Older imported project'}];
+  const plan=await api.plan('claude');assert.deepEqual(Array.from(plan.projects,row=>row.id),['older-project']);
+  await api.execute(plan);assert.deepEqual(state.removedProjects,['older-project']);
 });
 test('all-chat deletion plans every imported page, deduplicates overlaps and never deletes a later new chat',async()=>{
   const {api,state}=fixture();state.native.push({...state.imported[0]},...Array.from({length:620},(_,n)=>({id:'older-'+String(n).padStart(4,'0'),client:'OpenCore'})));const plan=await api.plan('all');

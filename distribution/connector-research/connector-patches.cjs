@@ -52,7 +52,7 @@ function applyConnectorPatches(appText, helpers = {}) {
         text = replace(text, 'Ne=async(q,Z)=>{qe(', 'Ne=async(q,Z)=>{$forgetConnectorClearFeedback(q);qe(');
         text = replace(text, 'const oe=await g1(q,Z);return x(oe)', 'const oe=await g1(q,Z);await $reconnectConnectorProfile(q);return x(oe)');
         // Import reads original transcripts; it does not require a client profile.
-        text = replace(text, 'Clear imported ${Z} conversations from OpenCore and ECHO?', 'Delete all ${Z} conversations from OpenCore and ECHO?');
+        text = replace(text, 'Clear imported ${Z} conversations from OpenCore and ECHO?', 'Delete ${Z} chats, their ECHO history and empty OpenCore project groups?');
         text = replace(text, 'const Z=await h1(q);return lt.current=', 'const Z=await h1(q);$watchConnectorSync(Z);return lt.current=');
         text = replace(text, 'Bt=async q=>{const Z=', 'Bt=async q=>{if($connectorClearJobs.has(q))return null;const Z=');
         text = replace(text, 'const oe=await p1(q);return it(_e=>({..._e,[q]:{message:oe,error:!1}})),await l(),oe', 'const oe=await $clearConnectorHistory(q);return it(_e=>({..._e,[q]:{message:oe,error:!1}})),$refreshConnectorView(l,q,oe),oe');

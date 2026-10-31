@@ -42,10 +42,29 @@ def saved_conversations_page(app_data, after=None, limit=200):
     if not database.is_file():
         raise ValueError('The local chat database is unavailable; nothing was deleted')
     with closing(sqlite3.connect(database.as_uri()+'?mode=ro',uri=True,timeout=3)) as db:
-        rows=db.execute('SELECT id,title,client FROM conversations WHERE id>? ORDER BY id LIMIT ?',
+        columns={row[1] for row in db.execute('PRAGMA table_info(conversations)')}
+        project='project_id' if 'project_id' in columns else 'NULL'
+        rows=db.execute('SELECT id,title,client,'+project+' FROM conversations WHERE id>? ORDER BY id LIMIT ?',
                         (after or '',limit+1)).fetchall()
-    values=[{'id':key,'title':title,'client':client} for key,title,client in rows[:limit]]
+    values=[{'id':key,'title':title,'client':client,**({'projectId':project} if project else {})} for key,title,client,project in rows[:limit]]
     return {'conversations':values,'nextCursor':values[-1]['id'] if len(rows)>limit else None}
+
+
+def delete_empty_projects(app_data, ids):
+    """Remove only empty OpenCore groups, atomically; source folders are untouched."""
+    if not isinstance(ids,list) or len(ids)>5000 or any(not isinstance(key,str) or not key or len(key)>512 or '\x00' in key for key in ids):
+        raise ValueError('Choose valid project group identities')
+    ids=list(dict.fromkeys(ids))
+    if not ids:return {'deleted':[]}
+    root=Path(app_data).absolute();database=confined(root/'control-center.sqlite3',root)
+    if not database.is_file():raise ValueError('The local project database is unavailable')
+    marks=','.join('?' for _ in ids)
+    with closing(sqlite3.connect(database,timeout=3)) as db,db:
+        db.execute('BEGIN IMMEDIATE')
+        empty={row[0] for row in db.execute('SELECT p.id FROM projects p WHERE p.id IN ('+marks+') AND NOT EXISTS (SELECT 1 FROM conversations c WHERE c.project_id=p.id)',ids)}
+        deleted=[key for key in ids if key in empty]
+        if deleted:db.executemany('DELETE FROM projects WHERE id=?',[(key,) for key in deleted])
+    return {'deleted':deleted}
 
 
 class ChatMedia:

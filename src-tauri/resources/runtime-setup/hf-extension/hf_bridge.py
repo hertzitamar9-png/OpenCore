@@ -32,7 +32,7 @@ from hf_specialist_ocr import OCRManager, supports as supports_ocr
 from hf_image_runtime import ImageRuntimeManager, supports as supports_image
 from hf_memory_repair import MemoryRepair
 from hf_prompt_assistant import PromptAssistant
-from hf_chat_media import ChatMedia, saved_conversations_page
+from hf_chat_media import ChatMedia, saved_conversations_page, delete_empty_projects
 from hf_connectors import ConnectorProfiles
 from hf_telemetry import LiveTelemetry
 from hf_computer_runtime import ComputerManager, supports as supports_computer
@@ -932,6 +932,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
             appdata=os.environ.get('APPDATA')
             if not appdata:raise ValueError('The OpenCore application data directory is unavailable')
             self._send(200,saved_conversations_page(Path(appdata)/'ai.opencore.control-center',body.get('after'),body.get('limit',200)))
+        elif route=='/projects/delete-empty':
+            appdata=os.environ.get('APPDATA')
+            if not appdata:raise ValueError('The OpenCore application data directory is unavailable')
+            self._send(200,delete_empty_projects(Path(appdata)/'ai.opencore.control-center',body.get('ids')))
         elif route=='/images/conversation':
             self._send(200,{'entries':state.images.conversation_entries(body.get('id'))})
         elif route=='/images/conversation/update':

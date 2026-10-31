@@ -42,6 +42,22 @@
   box-shadow: none !important;
 }
 
+@media (hover: hover) {
+  .conversation-list-focus .conversation-row-shell:hover {
+    outline: 2px solid #f4f8fc !important;
+    outline-offset: -1px;
+  }
+}
+
+.conversation-list-focus .conversation-row-shell:has(> .conversation-row:focus-visible) {
+  outline: 2px solid #f4f8fc !important;
+  outline-offset: -1px;
+}
+
+.conversation-list-focus .conversation-row:focus-visible {
+  outline: none !important;
+}
+
 .opencore-shell textarea[aria-label^="Message "]:focus {
   outline: none !important;
   box-shadow: none !important;

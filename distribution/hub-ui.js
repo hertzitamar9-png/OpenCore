@@ -124,7 +124,8 @@ async function $hubRegister(entry) {
   await $hubRefresh(true);return profile.profileId;
 }
 async function $hubInvoke(command,args,run) {
-  if(command==='list_saved_conversations')return $hubRequest('/conversations/list',args);
+  const historyPath=command==='list_saved_conversations'?'/conversations/list':command==='delete_empty_projects'?'/projects/delete-empty':null;
+  if(historyPath)return $hubRequest(historyPath,args);
   if(command==='get_snapshot'){
     const snapshot=globalThis.__opencoreImageConversationInvoke?await globalThis.__opencoreImageConversationInvoke(command,args,run):await run();
     if(snapshot?.connectors&&typeof $connectorView==='function')return {...snapshot,connectors:snapshot.connectors.map(row=>$connectorView(row,$connectorProfiles))};

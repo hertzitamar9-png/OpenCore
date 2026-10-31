@@ -44,6 +44,16 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_empty_project_cleanup_requires_auth_and_preserves_shared_groups(self):
+        appdata=self.root/'appdata';directory=appdata/'ai.opencore.control-center';directory.mkdir(parents=True)
+        with closing(sqlite3.connect(directory/'control-center.sqlite3')) as db,db:
+            db.execute('CREATE TABLE projects(id TEXT PRIMARY KEY)');db.executemany('INSERT INTO projects VALUES(?)',[('empty',),('shared',)])
+            db.execute('CREATE TABLE conversations(id TEXT PRIMARY KEY,project_id TEXT)');db.execute("INSERT INTO conversations VALUES('new-chat','shared')")
+        with patch.dict(os.environ,{'APPDATA':str(appdata)}):
+            self.assertEqual(self.request('POST','/api/projects/delete-empty',{'ids':['empty','shared']},secret=None)[0],401)
+            result=self.request('POST','/api/projects/delete-empty',{'ids':['empty','shared']})
+        self.assertEqual(result[0],200);self.assertEqual(result[2],{'deleted':['empty']})
+
     def test_telemetry_rejects_a_non_object_runtime(self):
         self.assertEqual(self.request('POST','/api/telemetry',{'runtime':['running']})[0],400)
 

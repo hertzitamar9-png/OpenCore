@@ -55,6 +55,8 @@ code+=String.raw`
       if(width>767){
         const selected=page.locator('.conversation-row-shell.selected'),other=page.locator('.conversation-row-shell:not(.selected)').first();
         await other.hover();
+        assert.equal(await other.evaluate(e=>getComputedStyle(e).outlineStyle),'solid','Hovered chats need a visible outline');
+        assert.equal(await other.evaluate(e=>getComputedStyle(e).outlineColor),'rgb(244, 248, 252)','Hover must use a white outline');
         assert.equal(await selected.count(),1,'Hover must not select another chat');
         assert.notEqual(await selected.evaluate(e=>getComputedStyle(e).borderColor),await other.evaluate(e=>getComputedStyle(e).borderColor),'Unselected chat must not copy selected border');
         const input=page.getByRole('textbox',{name:'Message OpenCore',exact:true});await input.focus();
