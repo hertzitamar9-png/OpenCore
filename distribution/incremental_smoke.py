@@ -18,6 +18,8 @@ def run(nsis):
         (target/'build-info.json').write_text(json.dumps({'build':'0.3.203','commit':'b'*40,'appExeSha256':hashlib.sha256((target/'OpenCore.exe').read_bytes()).hexdigest()}))
         old_files=[{'path':'app/'+file.name,'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()} for file in target.iterdir()]
         (target/'installed-file-manifest.json').write_text(json.dumps({'schema':1,'version':'0.3.203','commit':'b'*40,'files':old_files}))
+        # Reproduce a local app repair without invalidating unchanged DLL pins.
+        (target/'OpenCore.exe').write_bytes(b'locally repaired executable')
         unchanged=(target/'runtime.dll').stat().st_mtime_ns
         index=build_payload(source,python,output,'0.3.204','a'*40)
         assert all(entry['path'].startswith('app/') for entry in index['files'])

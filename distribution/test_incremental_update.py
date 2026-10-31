@@ -47,15 +47,24 @@ function Get-UpdateHash([string]$Path){{$script:reads.Add($Path);& $script:origi
 $fast=New-UpdatePlan $index {quoted(stage)}
 if($fast.mode -ne 'release-difference' -or $fast.unchangedFilesSkipped -ne 2 -or $fast.filesInspected -ne 1 -or $fast.changes.Count -ne 1){{throw 'Incorrect release difference'}}
 if(@($script:reads|Where-Object {{$_ -like '*runtime.dll'}}).Count){{throw 'Unchanged runtime was opened'}}
+if($script:reads.Count -ne 1){{throw 'Unchanged identity files were read before the release comparison'}}
+[IO.File]::WriteAllText({quoted(app/'OpenCore.exe')},'a local executable repair')
+$script:reads.Clear()
+$localRepair=New-UpdatePlan $index {quoted(stage)}
+if($localRepair.mode -ne 'release-difference' -or $localRepair.unchangedFilesSkipped -ne 2 -or $localRepair.filesInspected -ne 1 -or $localRepair.changes.Count -ne 1){{throw 'A local executable change discarded unrelated runtime records'}}
+if(@($script:reads|Where-Object {{$_ -like '*runtime.dll'}}).Count){{throw 'Unchanged runtime was opened after a local executable repair'}}
 [IO.File]::WriteAllText({quoted(app/'runtime.dll')},'locally damaged runtime')
 $repair=New-UpdatePlan $index {quoted(stage)} -VerifyInstalledFiles
 if($repair.mode -ne 'full-verification' -or $repair.changes.Count -ne 2 -or $repair.filesInspected -ne 3){{throw 'Explicit repair did not find changed files'}}
 $original=[IO.File]::ReadAllText({quoted(receipt)})
-foreach($bad in @('{{broken json}}',$original.Replace('0.3.203','0.3.202'))){{
+foreach($bad in @('{{broken json}}')){{
  [IO.File]::WriteAllText({quoted(receipt)},$bad)
  $fallback=New-UpdatePlan $index {quoted(stage)}
  if($fallback.mode -ne 'full-verification' -or $fallback.filesInspected -ne 3){{throw 'Invalid receipt did not trigger verification'}}
 }}
+[IO.File]::WriteAllText({quoted(receipt)},$original.Replace('0.3.203','0.3.202'))
+$metadataRepair=New-UpdatePlan $index {quoted(stage)}
+if($metadataRepair.mode -ne 'release-difference' -or $metadataRepair.filesInspected -ne 1){{throw 'A metadata-only difference discarded unrelated file records'}}
 Remove-Item -LiteralPath {quoted(receipt)}
 $missing=New-UpdatePlan $index {quoted(stage)}
 if($missing.mode -ne 'full-verification'){{throw 'Missing receipt was accepted'}}

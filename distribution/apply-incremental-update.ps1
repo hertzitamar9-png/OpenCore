@@ -48,13 +48,10 @@ function Get-InstalledUpdateEntries {
       $entries.Add($entry.path,$entry)
     }
     if(-not $entries.ContainsKey('app/OpenCore.exe') -or -not $entries.ContainsKey('app/build-info.json')){return $null}
-    # Confirm the record belongs to this completed installation. Only these two
-    # small-in-number identity files are read; unchanged libraries are not opened.
-    foreach($path in @('app/OpenCore.exe','app/build-info.json')){
-      if(-not(Test-UpdateFile $entries[$path] (Get-UpdateTarget $path))){return $null}
-    }
-    $info=[IO.File]::ReadAllText((Get-UpdateTarget 'app/build-info.json')) | ConvertFrom-Json
-    if($info.build -ne $previous.version -or $info.commit -ne $previous.commit -or $info.appExeSha256 -ne $entries['app/OpenCore.exe'].sha256){return $null}
+    # The install ledger records each packaged file independently. A local EXE
+    # repair or changed build-info must not discard every unrelated runtime pin.
+    # Compare ledgers first; only affected files are read below. A full content
+    # audit remains available through the explicit VerifyInstalledFiles switch.
     return ,$entries
   }catch{return $null}
 }
@@ -77,7 +74,10 @@ function New-UpdatePlan($Index,[string]$Stage,[switch]$VerifyInstalledFiles){
     $target=Get-UpdateTarget $entry.path
     $inspected++
     if(-not(Test-UpdateFile $entry $target)){$changes.Add(@{entry=$entry;staged=(Join-Path $Stage ('file-'+$changes.Count))})}
-    if($inspected%20 -eq 0){Write-UpdateProgress ('Checking '+$inspected+' changed or unrecorded files') ([int](15*$compared/[Math]::Max(1,$Index.files.Count)))}
+    if($inspected%20 -eq 0){
+      $label=if($mode -eq 'release-difference'){'Checking '+$inspected+' changed files'}else{'Building the installation record: '+$inspected+' / '+$Index.files.Count+' files'}
+      Write-UpdateProgress $label ([int](15*$compared/[Math]::Max(1,$Index.files.Count)))
+    }
   }
   return @{changes=$changes;mode=$mode;unchangedFilesSkipped=$skipped;filesInspected=$inspected;filesCompared=$compared}
 }
