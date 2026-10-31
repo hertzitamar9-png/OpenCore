@@ -10,7 +10,7 @@ function replaceOnce(text,from,to){assert.equal(text.split(from).length,2,from);
 if(fs.existsSync(patch))code=require(patch)(code,{editFunction,replaceOnce});
 const tree=acorn.parse(code,{ecmaVersion:'latest',sourceType:'module'});
 function source(name){const node=tree.body.find(n=>n.type==='FunctionDeclaration'&&n.id.name===name)||tree.body.flatMap(n=>n.type==='VariableDeclaration'?n.declarations:[]).find(n=>n.id.name===name);assert.ok(node,name);return node.type==='VariableDeclarator'?'const '+code.slice(node.start,node.end):code.slice(node.start,node.end)}
-function evaluate(name,extra={}){return vm.runInNewContext(source(name)+';'+name,{...extra})}
+function evaluate(name,extra={}){return vm.runInNewContext(source(name)+';'+name,{an:[],...extra})}
 const event=(id,kind,content,metadata={})=>({id,kind,content,metadata,conversationId:'chat',role:kind.startsWith('tool')?'tool':kind==='message'&&id===1?'user':'assistant',timestamp:'2026-10-31T00:00:'+String(id).padStart(2,'0')+'Z',source:'OpenCore',title:kind});
 function walk(node,visit){if(!node||typeof node!=='object')return;visit(node);for(const x of Object.values(node))if(Array.isArray(x))x.forEach(n=>walk(n,visit));else if(x&&typeof x==='object')walk(x,visit)}
 function composerEntries(bindings){const fn=source('Fu');let memo;walk(acorn.parse(fn,{ecmaVersion:'latest'}),n=>{if(n.type==='VariableDeclarator'&&n.id.name==='Rn')memo=n.init.arguments[0]});assert.ok(memo);const helpers=Object.fromEntries(['Ll','JI','FI','EI','YI','zv'].map(name=>[name,evaluate(name)]));helpers.EI=evaluate('EI',helpers);return vm.runInNewContext('('+fn.slice(memo.start,memo.end)+')()',{...helpers,...bindings});}
@@ -56,4 +56,10 @@ test('the meter reflects a smaller actual runtime allocation instead of inventin
  const telemetry={available:true,active:true,promptTokens:8000,windowTokens:32768,contextMode:'persistent_echo'},jsx=(type,props)=>({type,...props});
  const meter=evaluate('g8',{p:{useState:()=>[telemetry,()=>{}],useEffect:()=>{}},i:{jsx,jsxs:jsx},hr:n=>String(n),Kp:()=>true});
  let bar;walk(meter({conversationId:'chat',profile:'test',runtime:{status:'running',profile:'test',contextSize:16384}}),x=>{if(x.type==='progress')bar=x});assert.equal(bar.max,16384);assert.equal(bar.value,8000);
+});
+test('an unloaded model uses its catalog window rather than the stopped runtimes generic limit',()=>{
+ const telemetry={available:false,windowTokens:65536},jsx=(type,props)=>({type,...props});
+ const meter=evaluate('g8',{an:[{id:'ornith-1-5-9b-mtp',contextTokens:32768,echoWorkingWindowTokens:32768}],p:{useState:()=>[telemetry,()=>{}],useEffect:()=>{}},i:{jsx,jsxs:jsx},hr:n=>String(n),Kp:()=>true});
+ let bar;walk(meter({conversationId:'chat',profile:'ornith-1-5-9b-mtp',runtime:{status:'stopped',profile:'stopped',contextSize:65536}}),x=>{if(x.type==='progress')bar=x});
+ assert.equal(bar.max,32768);assert.equal(bar.value,undefined,'Unknown usage must not be shown as zero');
 });

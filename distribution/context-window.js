@@ -8,8 +8,9 @@ function g8({conversationId:t,profile:e,runtime:n}){
     return()=>{active=false;if(timer!==null)window.clearInterval(timer)};
   },[t,e,n.profile,n.status]);
   const running=n.status==='running'&&n.profile===e;
-  const capacity=running&&n.contextSize>0?n.contextSize:s?.modelContextTokens||s?.windowTokens;
-  const windowTokens=s?.contextMode==='persistent_echo'&&s.windowTokens>0?Math.min(capacity||s.windowTokens,s.windowTokens):capacity;
+  const configured=!running&&!s?.available?an.find(model=>model.id===e):null;
+  const capacity=running&&n.contextSize>0?n.contextSize:s?.available?s.modelContextTokens||s.windowTokens:configured?.echoWorkingWindowTokens||configured?.contextTokens;
+  const windowTokens=s?.available&&s.contextMode==='persistent_echo'&&s.windowTokens>0?Math.min(capacity||s.windowTokens,s.windowTokens):capacity;
   const maximum=Math.max(1,windowTokens||1);
   const slot=s?.modelActiveTokens;
   const reported=typeof slot==='number'&&Number.isFinite(slot)?slot:s?.available?s.promptTokens??s.liveTokens:undefined;

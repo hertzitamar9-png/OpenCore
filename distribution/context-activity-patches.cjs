@@ -1,5 +1,7 @@
 const fs=require('node:fs'),path=require('node:path');
 module.exports=function applyContextActivity(app,{editFunction,replaceOnce}){
+  app=replaceOnce(app,'Optional Q8_0 multimodal coding model · ECHO archive · 16K attention','Optional Q8_0 multimodal coding model · ECHO archive · 32K attention');
+  app=replaceOnce(app,'Optional Q4_K_M with MTP draft head · ECHO archive · 16K attention','Optional Q4_K_M with MTP draft head · ECHO archive · 32K attention');
   app=editFunction(app,'g8',()=>fs.readFileSync(path.join(__dirname,'context-window.js'),'utf8'));
   // Only background history polls use this merge. Explicit deletion/reload still
   // replaces the authoritative history and unmounts a deleted conversation.

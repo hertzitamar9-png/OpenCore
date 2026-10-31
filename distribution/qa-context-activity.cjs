@@ -47,9 +47,11 @@ code+=String.raw`
       assert.ok(await page.getByText(/Used\s*1\s*tool/).first().isVisible());
       const cards=await page.getByText('I will inspect the file that was found.',{exact:true}).evaluateAll(items=>new Set(items.map(item=>item.closest('details'))).size);
       assert.equal(cards,1,'The saved reasoning and its preview must share one disclosure');
+      await page.evaluate(()=>{fixture.snapshot.runtime.status='stopped';fixture.context={available:false,windowTokens:65536};});
+      await page.waitForFunction(()=>{const bar=document.querySelector('progress[aria-label="Model context usage"]');return bar?.getAttribute('max')==='32768'&&!bar.hasAttribute('value');});
       assert.deepEqual(errors,[]);
       await page.screenshot({path:path.join(folder,'context-activity-'+width+'.png')});
-      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,errors});
+      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedCatalogLimitVerified:true,errors});
       await page.close();
     }
     fs.writeFileSync(path.join(folder,'context-activity-render.json'),JSON.stringify({passed:true,proof},null,2));
