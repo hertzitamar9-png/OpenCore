@@ -150,7 +150,7 @@ def codex_plan_history(messages, user_index):
     """Carry a no-progress guard across Codex model requests in the same user turn."""
     guard=ReasoningLoopGuard(); repeated=False
     if user_index < 0:return guard,repeated
-    for message in messages[user_index+1:]:
+    for message in messages[max(user_index+1,len(messages)-256):]:
         if message.get('role')=='tool':
             guard=ReasoningLoopGuard();repeated=False
         elif message.get('role')=='assistant' and not message.get('tool_calls'):
@@ -161,13 +161,14 @@ def codex_plan_history(messages, user_index):
 
 def codex_call_identity(call):
     function=call.get('function') or {}
+    if not isinstance(function,dict):return None,None
     name=function.get('name')
     try:
         args=json.loads(function.get('arguments','{}'))
         if not isinstance(name,str) or not isinstance(args,dict):return None,None
         # An explanation does not change what a dev inspection reads.
         if re.search(r'(?:^|__)dev$',name):args.pop('explanation',None)
-        identity=json.dumps([name,args],sort_keys=True,ensure_ascii=False,separators=(',',':'))
+        identity=json.dumps([name,args],sort_keys=True,separators=(',',':'))
         return (identity,args) if len(identity)<=200000 else (None,None)
     except (TypeError,ValueError):
         return None,None
@@ -176,7 +177,7 @@ def codex_call_identity(call):
 def codex_repeated_tool_cycle(messages,user_index):
     """Find three identical read-only cycles without blocking live job polling."""
     pending={};recent=[]
-    for message in messages[user_index+1:] if user_index>=0 else []:
+    for message in messages[max(user_index+1,len(messages)-256):] if user_index>=0 else []:
         if message.get('role')=='assistant':
             for call in message.get('tool_calls') or []:
                 if isinstance(call,dict):pending[call.get('id')]=call
@@ -185,7 +186,8 @@ def codex_repeated_tool_cycle(messages,user_index):
             if not call:
                 recent=[];continue
             identity,args=codex_call_identity(call)
-            name=(call.get('function') or {}).get('name','')
+            function=call.get('function') or {}
+            name=function.get('name','') if isinstance(function,dict) else ''
             if not isinstance(name,str):recent=[];continue
             result=message.get('content')
             try:
@@ -204,7 +206,7 @@ def codex_repeated_tool_cycle(messages,user_index):
                          (args.get('action') in ('status','list') and workspace))))
             if not identity or not read_only or result is None:
                 recent=[];continue
-            try:encoded=json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':'))
+            try:encoded=json.dumps(value,sort_keys=True,separators=(',',':'))
             except (TypeError,ValueError):recent=[];continue
             if len(encoded)>200000:recent=[];continue
             signature=hashlib.sha256((identity+'\0'+encoded).encode('utf-8')).hexdigest()
@@ -2079,9 +2081,10 @@ class Handler(BaseHTTPRequestHandler):
         repeated_controls = 0
         malformed_controls = 0
         malformed_tools = 0
-        # The native gateway forwards timeline ownership to ECHO; the original
-        # app-server harness header is consumed by the gateway itself.
-        codex_harness = getattr(self, 'headers', {}).get('x-opencore-timeline-owner') == 'app'
+        # Native chat forwards timeline ownership; some managed model proxies
+        # forward the tool definitions but not that gateway header.
+        codex_harness = (getattr(self, 'headers', {}).get('x-opencore-timeline-owner') == 'app'
+                         or bool(payload.get('tools')))
         continuation_guard, history_loop = codex_plan_history(supplied, user_index) if codex_harness else (ReasoningLoopGuard(),False)
         repeated_tool_keys = codex_repeated_tool_cycle(supplied,user_index) if codex_harness else set()
         loop_recoveries = 1 if history_loop or repeated_tool_keys else 0

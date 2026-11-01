@@ -1,16 +1,50 @@
 """Exercise tool recovery without executing a client, plugin, or real tool."""
 from contextlib import ExitStack
 import copy
+from http.server import ThreadingHTTPServer
 import json
 from pathlib import Path
 import tempfile
+import threading
 import unittest
+import urllib.request
 
 from echo_server import ArchiveSet, EchoState, Handler
 from evoagent.echo_adapters import adapter_for
 
 
 class ToolRecoveryTests(unittest.TestCase):
+    def test_desktop_timeline_header_reaches_the_guard_over_http(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=32768;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter
+            name='mcp__opencore__dev';requests=[]
+            class TestHandler(Handler):
+                def log_message(self,*_):pass
+                def _generate_live(self,body,phase):
+                    requests.append(copy.deepcopy(body))
+                    if any('previous attempt repeated a plan' in str(m.get('content','')).lower() for m in body['messages']):
+                        call={'id':'action','type':'function','function':{'name':name,'arguments':json.dumps({'action':'status'})}}
+                        return {'choices':[{'message':{'role':'assistant','content':'','tool_calls':[call]},'finish_reason':'tool_calls'}]}
+                    return {'choices':[{'message':{'role':'assistant','content':"I'll inspect the workspace before building the snake game."},'finish_reason':'stop'}]}
+            TestHandler.state=state
+            server=ThreadingHTTPServer(('127.0.0.1',0),TestHandler)
+            stack.callback(server.server_close);stack.callback(server.shutdown)
+            threading.Thread(target=server.serve_forever,daemon=True).start()
+            plan="I'll inspect the workspace before building the polished snake game."
+            history=[{'role':'user','content':'Make an HTML snake game.'}]+[{'role':'assistant','content':plan} for _ in range(10)]
+            tool={'type':'function','function':{'name':name,'parameters':{'type':'object','properties':{'action':{'enum':['status']}}}}}
+            payload={'messages':history,'tools':[tool],'max_tokens':1024,'stream':False}
+            request=urllib.request.Request('http://127.0.0.1:%d/v1/chat/completions'%server.server_port,
+                data=json.dumps(payload).encode(),headers={'Content-Type':'application/json','X-OpenCore-Timeline-Owner':'app','X-Echo-Conversation':'desktop-fixture'})
+            with urllib.request.urlopen(request,timeout=10) as response:result=json.load(response)
+            self.assertEqual(result['choices'][0]['message']['tool_calls'][0]['id'],'action')
+            self.assertEqual(requests[0]['reasoning_budget_tokens'],0)
+
     def test_codex_repeated_workspace_cycle_is_not_executed_again(self):
         with ExitStack() as stack:
             root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
@@ -66,6 +100,13 @@ class ToolRecoveryTests(unittest.TestCase):
             self.assertEqual(code,200)
             self.assertIn('tool_calls',result['choices'][0]['message'])
             self.assertEqual(result['choices'][0]['message']['tool_calls'][0]['id'],'actual-action')
+            self.assertEqual(calls[0]['reasoning_budget_tokens'],0)
+            # Managed model proxies may pass tool definitions without forwarding
+            # the desktop gateway's timeline-owner header.
+            handler.headers={};calls.clear()
+            code,result=handler._controlled_context_serial({'messages':history,'tools':[tool],'max_tokens':1024,'stream':False},'managed-fixture','off')
+            self.assertEqual(code,200)
+            self.assertIn('tool_calls',result['choices'][0]['message'])
             self.assertEqual(calls[0]['reasoning_budget_tokens'],0)
 
     def test_incomplete_write_resets_backend_and_only_returns_a_complete_retry(self):
