@@ -24,7 +24,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Pin the compressor used to fit the recovered executable's fixed
+          # asset slots. Node 22's Brotli exceeds the App slot on this build.
+          node-version: '25.9.0'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

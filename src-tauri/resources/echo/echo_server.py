@@ -145,6 +145,84 @@ class ReasoningLoopGuard:
         self.buffer = self.buffer[-8000:]
         return False
 
+
+def codex_plan_history(messages, user_index):
+    """Carry a no-progress guard across Codex model requests in the same user turn."""
+    guard=ReasoningLoopGuard(); repeated=False
+    if user_index < 0:return guard,repeated
+    for message in messages[user_index+1:]:
+        if message.get('role')=='tool':
+            guard=ReasoningLoopGuard();repeated=False
+        elif message.get('role')=='assistant' and not message.get('tool_calls'):
+            text=message.get('content')
+            if isinstance(text,str):repeated=guard.feed(text+'\n') or repeated
+    return guard,repeated
+
+
+def codex_call_identity(call):
+    function=call.get('function') or {}
+    name=function.get('name')
+    try:
+        args=json.loads(function.get('arguments','{}'))
+        if not isinstance(name,str) or not isinstance(args,dict):return None,None
+        # An explanation does not change what a dev inspection reads.
+        if re.search(r'(?:^|__)dev$',name):args.pop('explanation',None)
+        identity=json.dumps([name,args],sort_keys=True,ensure_ascii=False,separators=(',',':'))
+        return (identity,args) if len(identity)<=200000 else (None,None)
+    except (TypeError,ValueError):
+        return None,None
+
+
+def codex_repeated_tool_cycle(messages,user_index):
+    """Find three identical read-only cycles without blocking live job polling."""
+    pending={};recent=[]
+    for message in messages[user_index+1:] if user_index>=0 else []:
+        if message.get('role')=='assistant':
+            for call in message.get('tool_calls') or []:
+                if isinstance(call,dict):pending[call.get('id')]=call
+        elif message.get('role')=='tool':
+            call=pending.pop(message.get('tool_call_id'),None)
+            if not call:
+                recent=[];continue
+            identity,args=codex_call_identity(call)
+            name=(call.get('function') or {}).get('name','')
+            if not isinstance(name,str):recent=[];continue
+            result=message.get('content')
+            try:
+                value=json.loads(result) if isinstance(result,str) else result
+                if isinstance(value,dict) and isinstance(value.get('content'),list):
+                    text=next((item.get('text') for item in value['content']
+                               if isinstance(item,dict) and item.get('type')=='text'),None)
+                    if isinstance(text,str):value=json.loads(text)
+            except (TypeError,ValueError):
+                value=result
+            workspace=(isinstance(value,dict) and isinstance(value.get('workspace'),str)
+                       and isinstance(value.get('files'),list))
+            read_only=(name in ('Read','Grep','Glob','LS') or
+                       (re.search(r'(?:^|__)dev$',name) and isinstance(args,dict) and
+                        (args.get('action') in ('read','search') or
+                         (args.get('action') in ('status','list') and workspace))))
+            if not identity or not read_only or result is None:
+                recent=[];continue
+            try:encoded=json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':'))
+            except (TypeError,ValueError):recent=[];continue
+            if len(encoded)>200000:recent=[];continue
+            signature=hashlib.sha256((identity+'\0'+encoded).encode('utf-8')).hexdigest()
+            recent=(recent+[(signature,identity)])[-9:]
+    for width in (1,2,3):
+        if len(recent)>=width*3:
+            tail=recent[-width*3:]
+            if all(entry[0]==tail[index%width][0] for index,entry in enumerate(tail)):
+                return {entry[1] for entry in tail[-width:]}
+    return set()
+
+
+REPEATED_PLAN_GUIDANCE=('The previous attempt repeated a plan without acting. Use the available evidence '
+                        'and perform one concrete tool call now, or give a final answer. '
+                        'Do not repeat plans or searches already completed.')
+REPEATED_TOOL_GUIDANCE=('The previous tool requests repeated the same inspection with unchanged results. '
+                        'Use the existing evidence and choose a different action or give a final answer.')
+
 _EMBEDDED_TOOL = re.compile(
     r"<tool_call>\s*<function=([A-Za-z_][A-Za-z_0-9]*)>\s*(.*?)\s*</function>\s*</tool_call>",
     re.DOTALL,
@@ -2001,8 +2079,17 @@ class Handler(BaseHTTPRequestHandler):
         repeated_controls = 0
         malformed_controls = 0
         malformed_tools = 0
-        loop_recoveries = 0
-        continuation_guard = ReasoningLoopGuard()
+        # The native gateway forwards timeline ownership to ECHO; the original
+        # app-server harness header is consumed by the gateway itself.
+        codex_harness = getattr(self, 'headers', {}).get('x-opencore-timeline-owner') == 'app'
+        continuation_guard, history_loop = codex_plan_history(supplied, user_index) if codex_harness else (ReasoningLoopGuard(),False)
+        repeated_tool_keys = codex_repeated_tool_cycle(supplied,user_index) if codex_harness else set()
+        loop_recoveries = 1 if history_loop or repeated_tool_keys else 0
+        if loop_recoveries:
+            self.state._backend_conversation = None
+            self.state._backend_needs_reset = True
+            live.append({'role':'user','content':REPEATED_TOOL_GUIDANCE if repeated_tool_keys else REPEATED_PLAN_GUIDANCE},count,'echo')
+            ensure_room(reserve)
         last_output = None
         repeated_outputs = 0
         paragraph_break = False
@@ -2114,7 +2201,7 @@ class Handler(BaseHTTPRequestHandler):
                 draft = candidate.get('message') or {}
                 reasoning = draft.get('reasoning_content') or ''
                 content = draft.get('content') or ''
-                if (candidate.get('finish_reason') == 'length' and not draft.get('tool_calls')
+                if ((candidate.get('finish_reason') == 'length' or codex_harness) and not draft.get('tool_calls')
                         and isinstance(reasoning, str) and isinstance(content, str)
                         and '<tool_call>' not in reasoning + content
                         and continuation_guard.feed(reasoning + '\n' + content + '\n')):
@@ -2126,7 +2213,7 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError('The model repeated its plan without taking an action. The attempt stopped; your chat and files are preserved.')
                 self.state._backend_conversation = None
                 self.state._backend_needs_reset = True
-                live.append({'role':'user','content':'The previous attempt repeated a plan without acting. Use the available evidence and perform one concrete tool call now, or give a final answer. Do not repeat plans or searches already completed.'},count,'echo')
+                live.append({'role':'user','content':REPEATED_PLAN_GUIDANCE},count,'echo')
                 ensure_room(reserve)
                 continue
             choice = parsed["choices"][0]
@@ -2145,6 +2232,9 @@ class Handler(BaseHTTPRequestHandler):
             recover_embedded_tool_call(message, body.get("tools"))
             recover_requested_html_file(message,body.get('tools'),question,live.messages)
             if message.get("tool_calls"):
+                if repeated_tool_keys and any(codex_call_identity(call)[0] in repeated_tool_keys for call in message['tool_calls']):
+                    live.save()
+                    raise ValueError('The model repeated the same inspection with unchanged results. The attempt stopped; your chat and previous tool results are preserved.')
                 error = tool_call_error(message, payload.get('tools'))
                 if choice.get('finish_reason') == 'length':
                     error = 'The tool call reached its output limit before completion.'

@@ -7,10 +7,68 @@ import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
-from echo_server import Handler,ReasoningLoopGuard,recover_embedded_tool_call,recover_requested_html_file,tool_call_error
+from echo_server import Handler,ReasoningLoopGuard,codex_plan_history,codex_repeated_tool_cycle,recover_embedded_tool_call,recover_requested_html_file,tool_call_error
 
 
 class LoopGuardTests(unittest.TestCase):
+    def test_codex_repeated_workspace_reads_are_detected(self):
+        messages=[{'role':'user','content':'Build a snake game.'}]
+        for index in range(3):
+            call={'id':str(index),'function':{'name':'mcp__opencore__dev','arguments':json.dumps({'action':'status'})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':json.dumps({'workspace':'game','files':[]})}])
+        self.assertTrue(codex_repeated_tool_cycle(messages,0))
+
+    def test_codex_active_job_polling_is_not_a_repeated_workspace_read(self):
+        messages=[{'role':'user','content':'Wait for the job.'}]
+        for index in range(3):
+            call={'id':str(index),'function':{'name':'mcp__opencore__dev','arguments':json.dumps({'action':'status','job':'1'})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':json.dumps({'status':'running'})}])
+        self.assertFalse(codex_repeated_tool_cycle(messages,0))
+
+    def test_codex_changed_results_and_write_actions_break_the_cycle(self):
+        messages=[{'role':'user','content':'Inspect and edit.'}]
+        for index,action in enumerate(['read','read','write','read']):
+            call={'id':str(index),'function':{'name':'mcp__opencore__dev','arguments':json.dumps({'action':action,'path':'game.html'})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':str(index)}])
+        self.assertFalse(codex_repeated_tool_cycle(messages,0))
+
+    def test_codex_progress_after_an_earlier_cycle_clears_it(self):
+        messages=[{'role':'user','content':'Inspect and edit.'}]
+        for index,action in enumerate(['read','read','read','write']):
+            call={'id':str(index),'function':{'name':'mcp__opencore__dev','arguments':json.dumps({'action':action,'path':'game.html'})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':'same'}])
+        self.assertFalse(codex_repeated_tool_cycle(messages,0))
+
+    def test_codex_alternating_read_cycles_are_detected(self):
+        messages=[{'role':'user','content':'Inspect the workspace.'}]
+        for index in range(6):
+            call={'id':str(index),'function':{'name':'mcp__opencore__dev','arguments':json.dumps({'action':'read','path':str(index%2)})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':str(index%2)}])
+        self.assertEqual(len(codex_repeated_tool_cycle(messages,0)),2)
+
+    def test_codex_history_resets_after_a_real_tool_result(self):
+        plan="I'll build the polished snake game after I inspect its current workspace."
+        messages=[{'role':'user','content':'Build a snake game.'}]
+        messages.extend({'role':'assistant','content':plan} for _ in range(10))
+        messages.append({'role':'tool','content':'Found index.html','tool_call_id':'read-1'})
+        messages.append({'role':'assistant','content':plan})
+        _,repeated=codex_plan_history(messages,0)
+        self.assertFalse(repeated)
+
+    def test_codex_history_starts_at_the_current_user_turn(self):
+        plan="I'll build the polished snake game after I inspect its current workspace."
+        messages=[{'role':'user','content':'Build a snake game.'}]
+        messages.extend({'role':'assistant','content':plan} for _ in range(10))
+        messages.append({'role':'user','content':'Try again with a different design.'})
+        messages.append({'role':'assistant','content':plan})
+        _,repeated=codex_plan_history(messages,11)
+        self.assertFalse(repeated)
+
     def test_short_paraphrased_plans_with_single_newlines_do_not_run_forever(self):
         guard=ReasoningLoopGuard()
         plans=["Empty workspace. I'll build a polished, feature-rich snake game.",
