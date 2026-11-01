@@ -73,6 +73,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_bridge_policy
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest -v test_qa_native_bridge_startup
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-native-bridge-policy.cjs ../src-tauri/resources/claude/agent-loop-guard.test.mjs ../src-tauri/resources/claude/runner-loop.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_update_handoff
