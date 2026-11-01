@@ -219,6 +219,29 @@ def codex_repeated_tool_cycle(messages,user_index):
     return set()
 
 
+def codex_checkpoint_tool_cycle(live):
+    """Use exact retained receipts for repeat detection after a working-set trim."""
+    checkpoints = [entry for entry in live.entries if live.turn_id
+                   and entry.get('checkpoint_turn_id') == live.turn_id]
+    if len(checkpoints) != 1 or not checkpoints[0].get('checkpoint_complete'):
+        return set()
+    history = [{'role': 'user', 'content': live.question or ''}]
+    for record in checkpoints[0].get('checkpoint_records') or []:
+        if not (record.get('exact_arguments') and record.get('exact_result')):
+            # A truncated or missing receipt is not evidence that consecutive
+            # actions were identical; break the cycle rather than guessing.
+            history.append({'role': 'tool', 'tool_call_id': 'unavailable', 'content': ''})
+            continue
+        call = {'id': record['id'], 'type': 'function', 'function': {
+            'name': record['tool'], 'arguments': record['arguments']}}
+        history.extend([{'role': 'assistant', 'tool_calls': [call]},
+                        {'role': 'tool', 'tool_call_id': record['id'], 'content': record['result']}])
+    current = max((i for i, entry in enumerate(live.entries) if entry.get('kind') == live.TURN), default=-1)
+    history.extend(entry['message'] for entry in live.entries[current + 1:]
+                   if entry.get('kind') not in (live.NOTE, live.MEMORY))
+    return codex_repeated_tool_cycle(history, 0)
+
+
 REPEATED_PLAN_GUIDANCE=('The previous attempt repeated a plan without acting. Use the available evidence '
                         'and perform one concrete tool call now, or give a final answer. '
                         'Do not repeat plans or searches already completed.')
@@ -771,8 +794,8 @@ class EchoState:
         self._truncated_tool_calls = {}
         # Live transcript compaction: past live_high of the window, the oldest
         # whole turns move to the archive until live_low remains.
-        self.live_high = 0.85
-        self.live_low = 0.45
+        self.live_high = 0.98
+        self.live_low = 0.88
 
     def log(self, message: str) -> None:
         if self.verbose:
@@ -1955,8 +1978,6 @@ class Handler(BaseHTTPRequestHandler):
             # The backend already saw the malformed call. Rebuild the working
             # transcript once so its hidden state agrees with the repaired log.
             self.state._backend_conversation = None
-        completed_checkpoint = False
-
         previous_answer = live.last_answer_sha256
         if previous_answer is None:
             previous_answer = next((hashlib.sha256(entry['message']['content'].encode('utf-8')).hexdigest()
@@ -1968,8 +1989,9 @@ class Handler(BaseHTTPRequestHandler):
         if same_turn:
             live.open = True
             # The client is returning results for calls this transcript already holds.
-            answered = live.tool_result_ids()
-            recorded = {call.get("id") for m in live.messages for call in (m.get("tool_calls") or [])}
+            compacted_ids = set(live.compacted_tool_ids)
+            answered = live.tool_result_ids() | compacted_ids
+            recorded = {call.get("id") for m in live.messages for call in (m.get("tool_calls") or [])} | compacted_ids
             for message in client_tail:
                 if message.get("role") == "assistant":
                     calls = [c for c in message["tool_calls"] if c.get("id") not in recorded]
@@ -1983,11 +2005,6 @@ class Handler(BaseHTTPRequestHandler):
                                  "content": content if isinstance(content, str)
                                  else content}, count)
                     answered.add(message.get("tool_call_id"))
-                    try:
-                        receipt = json.loads(content) if isinstance(content, str) else content
-                        completed_checkpoint |= isinstance(receipt, dict) and receipt.get('checkpointSaved') is True
-                    except (ValueError, TypeError):
-                        pass
         else:
             # Keep completed turns in the live working set so normal dialogue
             # continuity survives across requests. ECHO archives exact events
@@ -2012,26 +2029,17 @@ class Handler(BaseHTTPRequestHandler):
             self.state.archive_messages(supplied, conversation)
 
         live.repair_invalid_calls(count)
-        if completed_checkpoint:
-            # The model explicitly marked a component complete, with exact source
-            # snapshots and a next-step record. Archive completed exchanges now.
-            if live.compact(4096, count):
-                self.state._backend_conversation = None
-                self.state._backend_needs_reset = True
-                for entry in live.entries:
-                    entry["backend_sent"] = False
-            live.save()
-
-
         def ensure_room(reserve_hint):
-            # Both thresholds count the same fixed costs, so the transcript left
-            # after compaction really sits below the trigger and grows for a long
-            # time before the next one - compacting every call would re-read the
-            # whole window each time, which is the cost this exists to remove.
-            fixed = system_tokens + reserve_hint + 2560
+            # The requested maximum is not a reason to evict a useful prompt.
+            # Keep enough room for a useful next generation, then use the room
+            # actually available for this pass. Longer output can continue.
+            minimum_output = min(max(0, reserve_hint), max(512, min(2048, window // 8)))
+            fixed = system_tokens + minimum_output + 2560
             if fixed + live.tokens <= int(window * self.state.live_high):
                 return
             before = live.tokens
+            # Leave some growth room, but retain substantially more of the
+            # working task than the old low-water mark of 45% of the window.
             moved = live.compact(max(0, int(window * self.state.live_low) - fixed), count)
             if moved:
                 self.state._backend_conversation = None
@@ -2099,7 +2107,7 @@ class Handler(BaseHTTPRequestHandler):
         # forward the tool definitions but not that gateway header.
         codex_harness = agent_request
         continuation_guard, history_loop = codex_plan_history(supplied, user_index) if codex_harness else (ReasoningLoopGuard(),False)
-        repeated_tool_keys = codex_repeated_tool_cycle(supplied,user_index) if codex_harness else set()
+        repeated_tool_keys = (codex_repeated_tool_cycle(supplied,user_index) | codex_checkpoint_tool_cycle(live)) if codex_harness else set()
         loop_recoveries = 1 if history_loop or repeated_tool_keys else 0
         if loop_recoveries:
             self.state._backend_conversation = None
@@ -2110,8 +2118,15 @@ class Handler(BaseHTTPRequestHandler):
         repeated_outputs = 0
         paragraph_break = False
         while call_limit == 0 or calls < call_limit:
+            ensure_room(reserve)
+            pass_reserve = min(reserve, max(0, window - system_tokens - live.tokens - 2560))
+            if pass_reserve < 1:
+                live.save()
+                raise ValueError('The active ECHO task leaves no room to continue within the model context window')
             body = {k: v for k, v in payload.items() if not k.startswith("echo_")}
             body.pop("conversation_id", None)
+            body['max_tokens'] = pass_reserve
+            body.pop('max_completion_tokens', None)
             has_media = any(
                 isinstance(entry["message"].get("content"), list)
                 and any(part.get("type") in ("image_url", "input_audio", "input_video", "media_marker")
@@ -2161,7 +2176,7 @@ class Handler(BaseHTTPRequestHandler):
                 body["echo_reset"] = True
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
-            body['reasoning_budget_tokens'] = reasoning_budget_for_output(int(body.get('reasoning_budget_tokens') or 0), reserve)
+            body['reasoning_budget_tokens'] = reasoning_budget_for_output(int(body.get('reasoning_budget_tokens') or 0), pass_reserve)
             if loop_recoveries or malformed_tools:
                 body.update(reasoning_budget_tokens=0,reasoning_min_tokens=0,reasoning_format='none',
                             chat_template_kwargs={**(body.get('chat_template_kwargs') or {}),'enable_thinking':False})
@@ -2169,7 +2184,7 @@ class Handler(BaseHTTPRequestHandler):
                 remaining_output = total_output_budget - generated_tokens
                 if remaining_output <= 0:
                     break
-                body["max_tokens"] = min(reserve, remaining_output)
+                body["max_tokens"] = min(pass_reserve, remaining_output)
                 body.pop("max_completion_tokens", None)
                 body['reasoning_budget_tokens'] = reasoning_budget_for_output(
                     body['reasoning_budget_tokens'], body["max_tokens"])
@@ -3179,9 +3194,9 @@ def main() -> int:
                         help="Backend context ceiling for providers without /props; match backend configuration")
     parser.add_argument("--context-steps", type=int, default=0,
                         help="Maximum backend calls per answer; 0 permits unlimited continuation with no-progress guards")
-    parser.add_argument("--live-high", type=float, default=0.85,
+    parser.add_argument("--live-high", type=float, default=0.98,
                         help="compact the live transcript once it fills this fraction of the window")
-    parser.add_argument("--live-low", type=float, default=0.45,
+    parser.add_argument("--live-low", type=float, default=0.88,
                         help="after compaction, keep about this fraction of the window live")
     parser.add_argument("--automatic-recall-tokens", type=int, default=4096,
                         help="maximum exact archived evidence tokens promoted automatically before a new turn; 0 disables automatic promotion")

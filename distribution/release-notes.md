@@ -1,3 +1,7 @@
+ECHO now waits until the working window is genuinely under pressure instead of evicting useful context to reserve an oversized output. When a long task must be trimmed, it keeps bounded excerpts of completed tool calls and their actual results alongside the current request, with the exact records remaining in the archive. Previously compacted tool IDs are not re-added when a client replays its history, and exact retained receipts can still help detect repeated inspections. The model can continue with a smaller per-pass output allowance when needed; context and model capabilities remain finite.
+
+The project selector and neighboring conversation controls now have larger, matching hover and click areas. Their edges are checked at desktop and phone widths.
+
 OpenCore Setup checks the installed version before downloading. If it is current, Setup offers to open the app without downloading it again; if an update is available, Setup uses the signed incremental updater. This change requires replacing the older Setup file once; the new one remains reusable for future updates.
 
 ECHO no longer repeats the user's original prompt when an agent continues the same turn after an assistant reply. Agent requests that expect a JSON response now inspect the model's stream internally, allowing the existing repeated-plan and incomplete-tool-call safeguards to act before the request times out. These changes address identified loop causes but cannot guarantee that every model completes every task.

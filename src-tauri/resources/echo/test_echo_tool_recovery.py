@@ -12,9 +12,150 @@ import urllib.request
 
 from echo_server import ArchiveSet, EchoState, Handler
 from evoagent.echo_adapters import adapter_for
+from evoagent.echo_context import LiveTranscript
 
 
 class ToolRecoveryTests(unittest.TestCase):
+    def test_repeated_read_guard_retains_history_across_compaction(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=8192;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter;state.backend_session_metrics=lambda *_:{}
+            conversation='cycle-after-compaction';live=LiveTranscript(archives.get(conversation),conversation)
+            user={'role':'user','content':'Fix the game.'};live.start_turn(user['content'],state.count_tokens)
+            history=[]
+            for index in range(3):
+                assistant={'role':'assistant','content':'','tool_calls':[{'id':str(index),'type':'function',
+                    'function':{'name':'Read','arguments':'{"path":"games/snake.html"}'}}]}
+                result={'role':'tool','tool_call_id':str(index),'content':'Same file contents'}
+                history.extend([assistant,result]);live.append(assistant,state.count_tokens);live.append(result,state.count_tokens)
+            live.append_generated({'role':'assistant','content':'old analysis '*1600},state.count_tokens)
+            live.append_generated({'role':'assistant','content':'Continue.'},state.count_tokens)
+            self.assertGreater(live.compact(2000,state.count_tokens),0);live.save()
+            handler=Handler.__new__(Handler);handler.state=state;handler.headers={'x-opencore-timeline-owner':'app'}
+            requests=[];handler._generate_live=lambda body,phase:(requests.append(copy.deepcopy(body)) or
+                {'choices':[{'message':{'role':'assistant','content':'I will use the existing result.'},'finish_reason':'stop'}]})
+            handler._send_json=lambda code,value:(code,value)
+            tool={'type':'function','function':{'name':'Read','parameters':{'type':'object','properties':{}}}}
+            handler._controlled_context_serial({'messages':[user,*history[-2:]],'tools':[tool],'max_tokens':512},conversation,'off',archive_input=False)
+            self.assertTrue(any('repeated the same inspection' in str(m.get('content')) for m in requests[0]['messages']))
+
+    def test_saved_checkpoint_does_not_evict_a_task_that_still_fits(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=32768;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter;state.backend_session_metrics=lambda *_:{}
+            conversation='saved-checkpoint';live=LiveTranscript(archives.get(conversation),conversation)
+            user={'role':'user','content':'Fix the game.'};live.start_turn(user['content'],state.count_tokens)
+            call={'id':'search','type':'function','function':{'name':'workspace','arguments':'{"action":"search"}'}}
+            live.append({'role':'assistant','content':'','tool_calls':[call]},state.count_tokens)
+            live.append({'role':'tool','tool_call_id':'search','content':'Found games/snake.html'},state.count_tokens)
+            live.append_generated({'role':'assistant','content':'evidence '*4000},state.count_tokens);live.save()
+            handler=Handler.__new__(Handler);handler.state=state;handler.headers={'x-opencore-timeline-owner':'app'}
+            requests=[];handler._generate_live=lambda body,phase:(requests.append(copy.deepcopy(body)) or
+                {'choices':[{'message':{'role':'assistant','content':'Proceeding.'},'finish_reason':'stop'}]})
+            handler._send_json=lambda code,value:(code,value)
+            tail=[{'role':'assistant','content':'','tool_calls':[{'id':'saved','type':'function','function':{'name':'workspace','arguments':'{"action":"checkpoint"}'}}]},
+                  {'role':'tool','tool_call_id':'saved','content':'{"checkpointSaved":true}'}]
+            tool={'type':'function','function':{'name':'workspace','parameters':{'type':'object','properties':{}}}}
+            handler._controlled_context_serial({'messages':[user,*tail],'tools':[tool],'max_tokens':512},conversation,'off',archive_input=False)
+            self.assertTrue(any(m.get('content')=='Found games/snake.html' for m in requests[0]['messages']))
+            self.assertEqual(LiveTranscript(archives.get(conversation),conversation).compactions,0)
+
+    def test_tool_history_replayed_by_client_is_not_readded_after_compaction(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=8192;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter;state.backend_session_metrics=lambda *_:{}
+            conversation='replayed-tools';live=LiveTranscript(archives.get(conversation),conversation)
+            user={'role':'user','content':'Fix the game.'};live.start_turn(user['content'],state.count_tokens)
+            first={'role':'assistant','content':'','tool_calls':[{'id':'search','type':'function','function':{'name':'workspace','arguments':'{"action":"search"}'}}]}
+            result={'role':'tool','tool_call_id':'search','content':'Found games/snake.html'}
+            live.append(first,state.count_tokens);live.append(result,state.count_tokens)
+            live.append_generated({'role':'assistant','content':'old analysis '*1600},state.count_tokens)
+            live.append_generated({'role':'assistant','content':'Proceed with the edit.'},state.count_tokens)
+            self.assertGreater(live.compact(600,state.count_tokens),0);live.save()
+            handler=Handler.__new__(Handler);handler.state=state;handler.headers={'x-opencore-timeline-owner':'app'}
+            requests=[];handler._generate_live=lambda body,phase:(requests.append(copy.deepcopy(body)) or
+                {'choices':[{'message':{'role':'assistant','content':'Proceeding.'},'finish_reason':'stop'}]})
+            handler._send_json=lambda code,value:(code,value)
+            tool={'type':'function','function':{'name':'workspace','parameters':{'type':'object','properties':{}}}}
+            new_call={'role':'assistant','content':'','tool_calls':[{'id':'edit','type':'function','function':{'name':'workspace','arguments':'{"action":"edit"}'}}]}
+            new_result={'role':'tool','tool_call_id':'edit','content':'Edit completed'}
+            handler._controlled_context_serial({'messages':[user,first,result,new_call,new_result],'tools':[tool],'max_tokens':512},conversation,'off',archive_input=False)
+            messages=requests[0]['messages']
+            self.assertEqual(sum(m.get('tool_call_id')=='search' for m in messages),0)
+            self.assertEqual(sum('Found games/snake.html' in str(m.get('content')) for m in messages),1)
+            self.assertEqual(sum(m.get('tool_call_id')=='edit' for m in messages),1)
+
+    def test_agent_receives_completed_tool_evidence_after_real_context_pressure(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=8192;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter;state.backend_session_metrics=lambda *_:{}
+            live=LiveTranscript(archives.get('pressure-fixture'),'pressure-fixture')
+            user={'role':'user','content':'Fix the game.'};live.start_turn(user['content'],state.count_tokens)
+            call={'id':'search','type':'function','function':{'name':'workspace','arguments':'{"action":"search","query":"snake"}'}}
+            live.append({'role':'assistant','content':'','tool_calls':[call]},state.count_tokens)
+            live.append({'role':'tool','tool_call_id':'search','content':'Found games/snake.html'},state.count_tokens)
+            live.append_generated({'role':'assistant','content':'old analysis '*2400},state.count_tokens)
+            live.save()
+            handler=Handler.__new__(Handler);handler.state=state;handler.headers={'x-opencore-timeline-owner':'app'}
+            requests=[]
+            handler._generate_live=lambda body,phase:(requests.append(copy.deepcopy(body)) or
+                {'choices':[{'message':{'role':'assistant','content':'Proceeding with the edit.'},'finish_reason':'stop'}]})
+            handler._send_json=lambda code,value:(code,value)
+            tail=[{'role':'assistant','content':'','tool_calls':[{'id':'next','type':'function','function':{'name':'workspace','arguments':'{"action":"status"}'}}]},
+                  {'role':'tool','tool_call_id':'next','content':'ready'}]
+            tool={'type':'function','function':{'name':'workspace','parameters':{'type':'object','properties':{}}}}
+            handler._controlled_context_serial({'messages':[user,*tail],'tools':[tool],'max_tokens':2048},'pressure-fixture','off',archive_input=False)
+            messages=requests[0]['messages']
+            self.assertTrue(any('Found games/snake.html' in str(m.get('content')) for m in messages))
+            self.assertTrue(any('working-task checkpoint' in str(m.get('content')) for m in messages))
+            self.assertGreater(LiveTranscript(archives.get('pressure-fixture'),'pressure-fixture').compactions,0)
+            self.assertLessEqual(requests[0]['max_tokens'],2048)
+
+    def test_large_requested_output_does_not_evict_evidence_that_still_fits(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=32768;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter
+            state.backend_session_metrics=lambda *_:{}
+            live=LiveTranscript(archives.get('capacity-fixture'),'capacity-fixture')
+            user={'role':'user','content':'Fix the game.'};live.start_turn(user['content'],state.count_tokens)
+            call={'id':'search','type':'function','function':{'name':'workspace','arguments':'{"action":"search"}'}}
+            live.append({'role':'assistant','content':'','tool_calls':[call]},state.count_tokens)
+            live.append({'role':'tool','tool_call_id':'search','content':'Found games/snake.html'},state.count_tokens)
+            live.append_generated({'role':'assistant','content':'evidence '*4000},state.count_tokens)
+            live.save()
+            handler=Handler.__new__(Handler);handler.state=state;handler.headers={'x-opencore-timeline-owner':'app'}
+            requests=[]
+            handler._generate_live=lambda body,phase:(requests.append(copy.deepcopy(body)) or
+                {'choices':[{'message':{'role':'assistant','content':'Proceeding with the edit.'},'finish_reason':'stop'}]})
+            handler._send_json=lambda code,value:(code,value)
+            tail=[{'role':'assistant','content':'','tool_calls':[{'id':'next','type':'function','function':{'name':'workspace','arguments':'{"action":"status"}'}}]},
+                  {'role':'tool','tool_call_id':'next','content':'ready'}]
+            tool={'type':'function','function':{'name':'workspace','parameters':{'type':'object','properties':{}}}}
+            handler._controlled_context_serial({'messages':[user,*tail],'tools':[tool],'max_tokens':16384},'capacity-fixture','off',archive_input=False)
+            messages=requests[0]['messages']
+            self.assertTrue(any('Found games/snake.html' in str(m.get('content')) for m in messages),
+                            'Output reservation must not discard a tool result that fits in the window')
+
     def test_json_agent_request_inspects_a_stream_and_returns_a_valid_json_tool_call(self):
         with ExitStack() as stack:
             root=Path(stack.enter_context(tempfile.TemporaryDirectory()))

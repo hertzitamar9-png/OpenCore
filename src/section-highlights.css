@@ -4,6 +4,18 @@
   --section-highlight-ink: var(--theme-ink, #f0f3f6);
 }
 
+/* The entire visible control, including the icon edges, is interactive. */
+.chat-mode .conversation-actions > button:not(.workspace-open-button) {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+}
+.chat-mode .conversation-actions .project-picker-trigger {
+  height: 40px !important;
+  min-height: 40px !important;
+}
+
 .opencore-shell button:not(:disabled):not(.conversation-row):is(:hover, :focus-visible, [aria-selected="true"], [aria-pressed="true"], .active, .selected),
 .opencore-shell .nav-item:is(:hover, :focus-visible, .active, [aria-current="page"]),
 .opencore-shell [role="tab"]:is(:hover, [aria-selected="true"]) {

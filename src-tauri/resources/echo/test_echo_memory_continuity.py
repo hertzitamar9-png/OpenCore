@@ -15,6 +15,79 @@ from echo_server import ArchiveSet, EchoState  # noqa: E402
 
 
 class EchoMemoryContinuityTests(unittest.TestCase):
+    def test_compaction_keeps_completed_current_task_tool_evidence(self):
+        with ExitStack() as stack:
+            temporary = stack.enter_context(tempfile.TemporaryDirectory())
+            archive = EchoArchive(Path(temporary) / 'archive.db')
+            stack.callback(archive.close)
+            count = lambda text: max(1, len(text) // 4)
+            live = LiveTranscript(archive, 'task')
+            live.start_turn('Fix the snake game.', count)
+            call = {'id': 'find-1', 'type': 'function', 'function': {
+                'name': 'workspace', 'arguments': '{"action":"search","query":"snake.html"}'}}
+            live.append({'role':'assistant','content':'','tool_calls':[call]},count)
+            live.append({'role':'tool','tool_call_id':'find-1',
+                         'content':'Found exact file: games/snake.html'},count)
+            live.append_generated({'role':'assistant','content':'old analysis ' * 1000},count)
+            live.append_generated({'role':'assistant','content':'Next edit the file.'},count)
+            self.assertGreater(live.compact(600,count),0)
+            active = '\n'.join(str(m.get('content') or '') for m in live.messages)
+            self.assertIn('Fix the snake game.', active)
+            self.assertIn('snake.html', active)
+            self.assertIn('Found exact file: games/snake.html', active)
+            self.assertIn('workspace', active)
+            self.assertLess(live.tokens, 1200)
+
+            live.save()
+            reopened = LiveTranscript(archive, 'task')
+            reopened.append_generated({'role':'assistant','content':'more old analysis ' * 1000},count)
+            reopened.append_generated({'role':'assistant','content':'The edit is next.'},count)
+            self.assertGreater(reopened.compact(600,count),0)
+            active = '\n'.join(str(m.get('content') or '') for m in reopened.messages)
+            self.assertIn('Found exact file: games/snake.html', active)
+            self.assertEqual(active.count('Found exact file: games/snake.html'), 1)
+            self.assertLess(reopened.tokens, 1200)
+
+    def test_task_checkpoint_keeps_target_and_failure_without_claiming_success(self):
+        with ExitStack() as stack:
+            temporary = stack.enter_context(tempfile.TemporaryDirectory())
+            archive = EchoArchive(Path(temporary) / 'archive.db'); stack.callback(archive.close)
+            count = lambda text: max(1, len(text) // 4)
+            live = LiveTranscript(archive, 'task')
+            live.start_turn('Update the game.', count)
+            import json
+            call = {'id':'write-1','type':'function','function':{'name':'workspace',
+                'arguments':json.dumps({'content':'code ' * 1000,'path':'games/snake.html','action':'write'})}}
+            live.append({'role':'assistant','content':'','tool_calls':[call]},count)
+            live.append({'role':'tool','tool_call_id':'write-1','content':'Permission denied; file not written.'},count)
+            live.append_generated({'role':'assistant','content':'analysis ' * 1000},count)
+            live.append_generated({'role':'assistant','content':'Need to handle the error.'},count)
+            self.assertGreater(live.compact(600,count),0)
+            active='\n'.join(str(m.get('content') or '') for m in live.messages)
+            self.assertIn('games/snake.html',active)
+            self.assertIn('Permission denied; file not written.',active)
+            self.assertNotIn('file written successfully',active.lower())
+            self.assertIn('[truncated]',active)
+
+    def test_legacy_turn_without_id_keeps_its_current_request_after_compaction(self):
+        with ExitStack() as stack:
+            temporary=stack.enter_context(tempfile.TemporaryDirectory())
+            archive=EchoArchive(Path(temporary)/'archive.db');stack.callback(archive.close)
+            count=lambda text:max(1,len(text)//4)
+            live=LiveTranscript(archive,'legacy-task');live.start_turn('Inspect the game.',count)
+            call={'id':'search','type':'function','function':{'name':'workspace','arguments':'{"action":"search"}'}}
+            live.append({'role':'assistant','content':'','tool_calls':[call]},count)
+            live.append({'role':'tool','tool_call_id':'search','content':'Found snake.html'},count)
+            live.append_generated({'role':'assistant','content':'old analysis '*1000},count)
+            live.append_generated({'role':'assistant','content':'Continue.'},count)
+            live.turn_id=None
+            self.assertGreater(live.compact(600,count),0)
+            active='\n'.join(str(m.get('content') or '') for m in live.messages)
+            self.assertIn('Inspect the game.',active)
+            self.assertIn('Found snake.html',active)
+            self.assertIn('Continue.',active)
+
+
     def test_resident_frame_is_not_reused_after_query_scope_model_or_budget_changes(self):
         changes = [dict(query='different fact'), dict(scopes=['other']),
                    dict(model=True), dict(force=True), dict(reserve_tokens=30000),

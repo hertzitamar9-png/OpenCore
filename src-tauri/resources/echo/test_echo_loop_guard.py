@@ -7,10 +7,23 @@ import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
-from echo_server import Handler,ReasoningLoopGuard,codex_plan_history,codex_repeated_tool_cycle,recover_embedded_tool_call,recover_requested_html_file,tool_call_error
+from echo_server import Handler,ReasoningLoopGuard,codex_plan_history,codex_repeated_tool_cycle,codex_checkpoint_tool_cycle,recover_embedded_tool_call,recover_requested_html_file,tool_call_error
 
 
 class LoopGuardTests(unittest.TestCase):
+    def test_compacted_repeat_guard_does_not_guess_across_a_missing_receipt(self):
+        call={'tool':'Read','arguments':'{"path":"snake.html"}','result':'same','exact_arguments':True,'exact_result':True}
+        records=[dict(call,id='one'),dict(call,id='two'),
+                 {'id':'unknown','tool':'Write','arguments':'{}','result':'[truncated]','exact_arguments':True,'exact_result':False},
+                 dict(call,id='three')]
+        checkpoint={'kind':'note','checkpoint_turn_id':'turn','checkpoint_complete':True,'checkpoint_records':records}
+        live=types.SimpleNamespace(turn_id='turn',question='Fix it',TURN='turn',NOTE='note',MEMORY='memory',
+                                   entries=[checkpoint,{'kind':'turn','message':{'role':'user','content':'Fix it'}}])
+        self.assertEqual(codex_checkpoint_tool_cycle(live),set())
+        checkpoint['checkpoint_complete']=False
+        checkpoint['checkpoint_records']=[dict(call,id=str(i)) for i in range(3)]
+        self.assertEqual(codex_checkpoint_tool_cycle(live),set())
+
     def test_buffered_agent_stream_detects_loops_without_sending_sse_to_json_client(self):
         handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None)
         handler._live_event=lambda *_:self.fail('A non-streaming client received an SSE preview')
