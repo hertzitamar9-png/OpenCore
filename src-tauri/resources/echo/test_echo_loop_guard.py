@@ -11,6 +11,15 @@ from echo_server import Handler,ReasoningLoopGuard,codex_plan_history,codex_repe
 
 
 class LoopGuardTests(unittest.TestCase):
+    def test_buffered_agent_stream_detects_loops_without_sending_sse_to_json_client(self):
+        handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None)
+        handler._live_event=lambda *_:self.fail('A non-streaming client received an SSE preview')
+        phrase="I need to find the snake game in the workspace before editing it. "
+        events=[{'choices':[{'delta':{'reasoning_content':phrase}}]} for _ in range(12)]
+        handler._upstream=lambda path,body,stream:(self.assertNotIn('_echo_buffer_preview',body) or io.BytesIO((''.join('data: '+json.dumps(e)+'\n\n' for e in events)+'data: [DONE]\n\n').encode()))
+        result=handler._generate_live({'stream':True,'_echo_buffer_preview':True,'max_tokens':1024},'working')
+        self.assertTrue(result.get('echo_loop_detected'))
+
     def test_codex_repeated_workspace_reads_are_detected(self):
         messages=[{'role':'user','content':'Build a snake game.'}]
         for index in range(3):

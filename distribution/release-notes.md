@@ -1,4 +1,8 @@
-OpenCore no longer starts its legacy external Claude bridge installer. The old OpenCore-owned bridge folders are removed only after their ownership and contents are checked; other plugins, chats and settings are preserved. A one-time replacement OpenCore Setup rejects releases older than this protection and remains the reusable installer for future updates.
+OpenCore Setup checks the installed version before downloading. If it is current, Setup offers to open the app without downloading it again; if an update is available, Setup uses the signed incremental updater. This change requires replacing the older Setup file once; the new one remains reusable for future updates.
+
+ECHO no longer repeats the user's original prompt when an agent continues the same turn after an assistant reply. Agent requests that expect a JSON response now inspect the model's stream internally, allowing the existing repeated-plan and incomplete-tool-call safeguards to act before the request times out. These changes address identified loop causes but cannot guarantee that every model completes every task.
+
+OpenCore no longer starts its legacy external Claude bridge installer. The old OpenCore-owned bridge folders are removed only after their ownership and contents are checked; other plugins, chats and settings are preserved. Setup rejects releases older than this protection.
 
 ECHO detects repeated plans across the model responses of one desktop-chat request and repeated read-only inspections with unchanged results. It asks for a different action and stops a repeated inspection if necessary, preserving the earlier activity. It also detects repeated streamed plans that have no line breaks. These guards reduce common loops; model behavior and task difficulty still vary.
 

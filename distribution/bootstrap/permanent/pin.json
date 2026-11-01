@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "bootstrapVersion": "0.3.243",
-  "bytes": 483840,
-  "sha256": "97547cceac59de9ec80a48a7be2b37ead7e2b8087783492e039330e05d068cf8",
+  "bootstrapVersion": "0.3.248",
+  "bytes": 487424,
+  "sha256": "0e28686cd463406d55222890b781ef064ff6a526b3fc4d8b07002283887ad4c8",
   "source": "https://github.com/hertzitamar9-png/OpenCore/releases/latest/download/OpenCore.Setup.exe",
-  "behavior": "One permanent setup file. It discovers the latest stable app and refuses releases older than the automatic-bridge removal."
+  "behavior": "One reusable setup file. It checks the installed version, skips downloads when current, uses the signed incremental updater for older installations, and rejects releases older than the automatic-bridge removal."
 }

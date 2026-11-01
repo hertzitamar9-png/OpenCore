@@ -61,6 +61,8 @@ jobs:
           python -m unittest -v test_permanent_bootstrap
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_bootstrap_bridge_policy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest -v test_bootstrap_installation
           $publishTestsExit = $LASTEXITCODE
           Pop-Location
           if ($publishTestsExit -ne 0) { exit $publishTestsExit }
@@ -223,7 +225,7 @@ jobs:
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Setup.exe' 'distribution/.output/release/OpenCore Setup.exe.sig' src-tauri/tauri.conf.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify the small setup accepts only genuine signed packages
-        run: python distribution/qa-bootstrap.py --exe 'distribution/.output/release/OpenCore Setup.exe' --package 'distribution/.output/release/OpenCore Package.exe' --signature 'distribution/.output/release/OpenCore Package.exe.sig'
+        run: python distribution/qa-bootstrap.py --exe 'distribution/.output/release/OpenCore Setup.exe' --package 'distribution/.output/release/OpenCore Package.exe' --signature 'distribution/.output/release/OpenCore Package.exe.sig' --update 'distribution/.output/release/OpenCore Update.exe' --update-signature 'distribution/.output/release/OpenCore Update.exe.sig'
       - name: Verify changed-file updater payload and transaction behavior
         run: |
           python -m unittest discover -s distribution -p test_incremental_update.py

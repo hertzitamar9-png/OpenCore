@@ -84,6 +84,7 @@ class LiveTranscript:
         self.prompt_tokens = int(saved.get('prompt_tokens', 0))
         self.offloaded_messages = int(saved.get('offloaded_messages', 0))
         self.turn_id = saved.get("turn_id")
+        self.last_answer_sha256 = saved.get("last_answer_sha256")
         self.virtual_memory = saved.get("virtual_memory", {})
         self.model_fingerprint = saved.get("model_fingerprint")
 
@@ -225,6 +226,7 @@ class LiveTranscript:
                          "content": "Not run: the user sent a new message before this action ran."},
                         count_tokens)
         self.question, self.open = question, True
+        self.last_answer_sha256 = None
         self.turn_id = uuid.uuid4().hex
         self.append({"role": "user", "content": question if content is None else content}, count_tokens, self.TURN)
 
@@ -343,7 +345,8 @@ class LiveTranscript:
         state = {"entries": self.entries, "question": self.question, "open": self.open,
                  "virtual_memory": self.virtual_memory, "model_fingerprint": self.model_fingerprint,
                  "compactions": self.compactions, "prompt_tokens": self.prompt_tokens,
-                 "offloaded_messages": self.offloaded_messages, "turn_id": self.turn_id}
+                 "offloaded_messages": self.offloaded_messages, "turn_id": self.turn_id,
+                 "last_answer_sha256": self.last_answer_sha256}
         with self.archive._lock:
             self.archive.db.execute("INSERT OR REPLACE INTO echo_live_transcript VALUES (?,?)",
                                     (self.conversation, json.dumps(state, ensure_ascii=False)))

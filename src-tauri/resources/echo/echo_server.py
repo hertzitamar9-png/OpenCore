@@ -1937,6 +1937,11 @@ class Handler(BaseHTTPRequestHandler):
         question = _last_user_message(supplied)
         user_index = max((index for index, message in enumerate(supplied)
                           if _is_user_request(message)), default=-1)
+        agent_request = (getattr(self, 'headers', {}).get('x-opencore-timeline-owner') == 'app'
+                         or bool(payload.get('tools')))
+        assistant_tail = [message.get('content') for message in supplied[user_index + 1:]
+                          if message.get('role') == 'assistant' and not message.get('tool_calls')
+                          and isinstance(message.get('content'),str) and message.get('content')]
         client_tail = [message for message in supplied[user_index + 1:]
                        if message.get("role") == "tool"
                        or (message.get("role") == "assistant" and message.get("tool_calls"))]
@@ -1952,7 +1957,16 @@ class Handler(BaseHTTPRequestHandler):
             self.state._backend_conversation = None
         completed_checkpoint = False
 
-        if live.open and live.question == question and client_tail:
+        previous_answer = live.last_answer_sha256
+        if previous_answer is None:
+            previous_answer = next((hashlib.sha256(entry['message']['content'].encode('utf-8')).hexdigest()
+                for entry in reversed(live.entries) if entry.get('kind') == 'answer'
+                and isinstance(entry.get('message',{}).get('content'),str)),None)
+        continuing_answer = (agent_request and live.question == question and previous_answer is not None
+            and any(hashlib.sha256(text.encode('utf-8')).hexdigest() == previous_answer for text in assistant_tail))
+        same_turn = live.question == question and ((live.open and bool(client_tail)) or continuing_answer)
+        if same_turn:
+            live.open = True
             # The client is returning results for calls this transcript already holds.
             answered = live.tool_result_ids()
             recorded = {call.get("id") for m in live.messages for call in (m.get("tool_calls") or [])}
@@ -2051,7 +2065,7 @@ class Handler(BaseHTTPRequestHandler):
             payload["max_tokens"] = reserve
             payload.pop("max_completion_tokens", None)
         self.state.refresh_memory(live, question, conversation, system_tokens, reserve,
-                                  "tool_result" if client_tail else "new_turn", scopes=scopes)
+                                  "tool_result" if client_tail else "generation_block" if same_turn else "new_turn", scopes=scopes)
         room = window - system_tokens - live.tokens - 2560
         reserve = min(reserve, max(0, room))
         if reserve < 1:
@@ -2083,8 +2097,7 @@ class Handler(BaseHTTPRequestHandler):
         malformed_tools = 0
         # Native chat forwards timeline ownership; some managed model proxies
         # forward the tool definitions but not that gateway header.
-        codex_harness = (getattr(self, 'headers', {}).get('x-opencore-timeline-owner') == 'app'
-                         or bool(payload.get('tools')))
+        codex_harness = agent_request
         continuation_guard, history_loop = codex_plan_history(supplied, user_index) if codex_harness else (ReasoningLoopGuard(),False)
         repeated_tool_keys = codex_repeated_tool_cycle(supplied,user_index) if codex_harness else set()
         loop_recoveries = 1 if history_loop or repeated_tool_keys else 0
@@ -2137,7 +2150,12 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 body["messages"] = system_messages + live.messages
                 body["echo_append"] = False
-            body["stream"] = bool(payload.get("stream"))
+            # Agent clients can request a JSON response while the model itself
+            # still streams internally; otherwise partial tool calls and loops
+            # cannot be detected until after the client's timeout.
+            body["stream"] = bool(payload.get("stream")) or (agent_request and tool_request)
+            if body["stream"] and not payload.get("stream"):
+                body['_echo_buffer_preview'] = True
             body["cache_prompt"] = True
             if (same_backend_session and not body.get("echo_append")) or self.state._backend_needs_reset:
                 body["echo_reset"] = True
@@ -2430,6 +2448,7 @@ class Handler(BaseHTTPRequestHandler):
                         review = {"status": "failed", "error": str(error)}
             live.append_generated({"role": "assistant", "content": text}, count, "answer")
             live.open = False
+            live.last_answer_sha256 = hashlib.sha256(head.encode('utf-8')).hexdigest()
             offloaded = live.archive_completed() if not archive_input else 0
             live.save()
             if offloaded:
@@ -2861,6 +2880,8 @@ class Handler(BaseHTTPRequestHandler):
         preview events let the app show them immediately without executing partial
         tool JSON or passing an unreviewed draft off as the final answer.
         """
+        body = dict(body)
+        buffer_preview = bool(body.pop('_echo_buffer_preview',False))
         streaming = bool(body.get('stream'))
         if streaming:
             body = dict(body, stream_options={'include_usage': True})
@@ -2897,7 +2918,7 @@ class Handler(BaseHTTPRequestHandler):
                 upstream_preview = event.get('echo_preview')
                 if isinstance(upstream_preview, dict):
                     delta = upstream_preview.get('delta')
-                    if isinstance(delta, dict) and delta:
+                    if isinstance(delta, dict) and delta and not buffer_preview:
                         self._live_event({'echo_preview': {
                             'generation': upstream_preview.get('generation') or generation,
                             'phase': upstream_preview.get('phase') or phase,
@@ -2913,7 +2934,7 @@ class Handler(BaseHTTPRequestHandler):
                     if choice.get('index', 0) != 0:
                         continue
                     delta = choice.get('delta') or {}
-                    if delta:
+                    if delta and not buffer_preview:
                         self._live_event({'echo_preview': {'generation': generation,
                                                           'phase': phase, 'delta': delta}})
                     for key in ('content', 'reasoning_content'):

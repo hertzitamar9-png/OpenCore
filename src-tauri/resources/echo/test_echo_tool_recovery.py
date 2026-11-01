@@ -2,6 +2,7 @@
 from contextlib import ExitStack
 import copy
 from http.server import ThreadingHTTPServer
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -14,6 +15,66 @@ from evoagent.echo_adapters import adapter_for
 
 
 class ToolRecoveryTests(unittest.TestCase):
+    def test_json_agent_request_inspects_a_stream_and_returns_a_valid_json_tool_call(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=32768;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter
+            name='mcp__opencore__dev';requests=[]
+            class TestHandler(Handler):
+                def log_message(self,*_):pass
+                def _upstream(self,path,body,stream):
+                    requests.append(copy.deepcopy(body))
+                    call={'index':0,'id':'actual-call','function':{'name':name,'arguments':json.dumps({'action':'status'})}}
+                    events=[{'choices':[{'delta':{'tool_calls':[call]}}]},
+                            {'choices':[{'delta':{},'finish_reason':'tool_calls'}]}]
+                    return io.BytesIO((''.join('data: '+json.dumps(e)+'\n\n' for e in events)+'data: [DONE]\n\n').encode())
+            TestHandler.state=state
+            server=ThreadingHTTPServer(('127.0.0.1',0),TestHandler)
+            stack.callback(server.server_close);stack.callback(server.shutdown)
+            threading.Thread(target=server.serve_forever,daemon=True).start()
+            tool={'type':'function','function':{'name':name,'parameters':{'type':'object','properties':{'action':{'enum':['status']}}}}}
+            payload={'messages':[{'role':'user','content':'Check the workspace.'}],'tools':[tool],'max_tokens':1024,'stream':False}
+            request=urllib.request.Request('http://127.0.0.1:%d/v1/chat/completions'%server.server_port,
+                data=json.dumps(payload).encode(),headers={'Content-Type':'application/json','X-OpenCore-Timeline-Owner':'app','X-Echo-Conversation':'buffered-fixture'})
+            with urllib.request.urlopen(request,timeout=10) as response:
+                self.assertEqual(response.headers.get_content_type(),'application/json')
+                result=json.load(response)
+            self.assertTrue(requests[0]['stream'])
+            self.assertNotIn('_echo_buffer_preview',requests[0])
+            self.assertEqual(result['choices'][0]['message']['tool_calls'][0]['id'],'actual-call')
+
+    def test_codex_continuation_keeps_prior_answer_without_repeating_the_user_turn(self):
+        with ExitStack() as stack:
+            root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+            state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+            state._ctx_size=32768;state.count_tokens=lambda text:max(1,len(str(text))//4)
+            state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+            state.memory_adapter=lambda:state._memory_adapter
+            state.backend_session_metrics=lambda *_:{}
+            handler=Handler.__new__(Handler);handler.state=state;handler.headers={'x-opencore-timeline-owner':'app'}
+            requests=[]
+            replies=['I inspected the workspace.','I am writing the requested file.','I will handle the repeated request separately.']
+            def generate(body,phase):
+                requests.append(copy.deepcopy(body))
+                return {'choices':[{'message':{'role':'assistant','content':replies[len(requests)-1]},'finish_reason':'stop'}]}
+            handler._generate_live=generate;handler._send_json=lambda code,value:(code,value)
+            tool={'type':'function','function':{'name':'mcp__opencore__dev','parameters':{'type':'object','properties':{}}}}
+            user={'role':'user','content':'Build the snake game.'}
+            first=handler._controlled_context_serial({'messages':[user],'tools':[tool],'max_tokens':1024},'same-turn','off',archive_input=False)[1]['choices'][0]['message']
+            self.assertTrue(requests[0]['stream'],'Agent calls need an internally inspected stream')
+            self.assertTrue(requests[0]['_echo_buffer_preview'],'A JSON client must not receive SSE previews')
+            second=handler._controlled_context_serial({'messages':[user,first],'tools':[tool],'max_tokens':1024},'same-turn','off',archive_input=False)[1]['choices'][0]['message']
+            visible=[(m['role'],m.get('content')) for m in requests[1]['messages'] if m.get('role') in ('user','assistant')]
+            self.assertEqual(visible.count(('user',user['content'])),1)
+            self.assertIn(('assistant',first['content']),visible)
+            handler._controlled_context_serial({'messages':[user,first,second,user],'tools':[tool],'max_tokens':1024},'same-turn','off',archive_input=False)
+            self.assertEqual(sum(m.get('role')=='user' and m.get('content')==user['content'] for m in requests[2]['messages']),2)
+
     def test_desktop_timeline_header_reaches_the_guard_over_http(self):
         with ExitStack() as stack:
             root=Path(stack.enter_context(tempfile.TemporaryDirectory()))

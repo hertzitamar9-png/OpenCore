@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 [assembly: AssemblyTitle("OpenCore Setup")]
 [assembly: AssemblyProduct("OpenCore")]
@@ -36,6 +37,60 @@ internal static class Setup
         return Version.TryParse(tag.Substring(5), out version) && version >= new Version(0, 3, 243);
     }
 
+    // 0: current/newer, 10: update, 11: installed but unknown, 20: fresh install.
+    internal static int CheckInstalled(string root, string tag)
+    {
+        if (!SafeRelease(tag)) return 2;
+        if (String.IsNullOrWhiteSpace(root)) return 20;
+        try {
+            root = Path.GetFullPath(root);
+            if (!File.Exists(Path.Combine(root, "OpenCore.exe"))) return 20;
+            string info = Path.Combine(root, "build-info.json");
+            if (!File.Exists(info) || new FileInfo(info).Length > 1024 * 1024) return 11;
+            var data = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(File.ReadAllText(info));
+            object value; Version installed, available;
+            string build = data != null && data.TryGetValue("build", out value) ? value as string : null;
+            if (build == null || !Regex.IsMatch(build, @"^\d+\.\d+\.\d+$") ||
+                !Version.TryParse(build, out installed) || !Version.TryParse(tag.Substring(5), out available)) return 11;
+            return installed >= available ? 0 : 10;
+        } catch (IOException) { return 11; }
+        catch (UnauthorizedAccessException) { return 11; }
+        catch (ArgumentException) { return 11; }
+        catch (InvalidOperationException) { return 11; }
+        catch (NotSupportedException) { return 11; }
+        catch (System.Security.SecurityException) { return 11; }
+    }
+
+    internal static string AssetFor(int decision)
+    {
+        return decision == 10 ? "OpenCore.Update.exe" : decision == 20 ? "OpenCore.Package.exe" : "";
+    }
+
+    internal static string InstalledRoot(out bool updateSafe)
+    {
+        updateSafe = true;
+        string registered = null;
+        try {
+            using (RegistryKey baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64))
+            using (RegistryKey key = baseKey.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenCore"))
+                if (key != null) registered = key.GetValue("InstallLocation") as string;
+        } catch (IOException) { updateSafe = false; }
+        catch (UnauthorizedAccessException) { updateSafe = false; }
+        catch (System.Security.SecurityException) { updateSafe = false; }
+        if (!String.IsNullOrWhiteSpace(registered)) {
+            try {
+                registered = Path.GetFullPath(registered.Trim().Trim('"'));
+                if (File.Exists(Path.Combine(registered, "OpenCore.exe"))) return registered;
+                updateSafe = false;
+            } catch (ArgumentException) { updateSafe = false; }
+            catch (NotSupportedException) { updateSafe = false; }
+            catch (IOException) { updateSafe = false; }
+            catch (System.Security.SecurityException) { updateSafe = false; }
+        }
+        string fallback = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OpenCore");
+        return File.Exists(Path.Combine(fallback, "OpenCore.exe")) ? fallback : null;
+    }
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -45,6 +100,8 @@ internal static class Setup
             return 2;
         }
         if (args.Length == 2 && args[0] == "--check-release") return SafeRelease(args[1]) ? 0 : 2;
+        if (args.Length == 3 && args[0] == "--check-installed") return CheckInstalled(args[1], args[2]);
+        if (args.Length == 4 && args[0] == "--check-asset") return AssetFor(CheckInstalled(args[1], args[2])) == args[3] ? 0 : 1;
         if (args.Length == 4 && args[0] == "--verify-only") {
             try { Verify(args[1], args[2], args[3], null); return 0; }
             catch (Exception error) { Console.Error.WriteLine(error.Message); return 1; }
@@ -136,6 +193,7 @@ internal sealed class SetupWindow : Form
     private readonly ProgressBar progress = new ProgressBar();
     private readonly Button action = new Button();
     private readonly string report;
+    private string openInstalled;
     private volatile bool cancelled;
     private volatile bool running;
     private HttpWebRequest activeRequest;
@@ -155,7 +213,7 @@ internal sealed class SetupWindow : Form
         using (Image image = Image.FromStream(stream)) logo.Image = new Bitmap(image);
         Label title = new Label(); title.Text = "OpenCore Setup"; title.Font = new Font("Segoe UI", 20, FontStyle.Bold);
         title.SetBounds(106, 25, 440, 38);
-        Label subtitle = new Label(); subtitle.Text = "Downloads OpenCore and its core dependencies";
+        Label subtitle = new Label(); subtitle.Text = "Installs OpenCore or updates an existing installation";
         subtitle.SetBounds(108, 67, 440, 28); subtitle.ForeColor = Color.FromArgb(174, 185, 199);
         stage.SetBounds(28, 114, 524, 29); stage.Text = "Checking the latest OpenCore release…";
         stage.AccessibleName = "Setup status";
@@ -166,7 +224,11 @@ internal sealed class SetupWindow : Form
         action.FlatStyle = FlatStyle.Flat; action.BackColor = Color.FromArgb(38, 91, 157);
         action.ForeColor = Color.White;
         action.Click += delegate {
-            if (running) { cancelled = true; if (activeRequest != null) activeRequest.Abort(); action.Enabled = false; }
+            if (openInstalled != null) {
+                try { using (Process child = Process.Start(new ProcessStartInfo(openInstalled) { UseShellExecute = true })) { } Close(); }
+                catch (Exception error) { Update("Could not open OpenCore", error.Message, 0, false); }
+            }
+            else if (running) { cancelled = true; if (activeRequest != null) activeRequest.Abort(); action.Enabled = false; }
             else BeginDownload();
         };
         LinkLabel notices = new LinkLabel(); notices.Text = "Third-party licenses";
@@ -234,7 +296,7 @@ internal sealed class SetupWindow : Form
         return expected;
     }
 
-    private void Download(string url, string path, long expectedBytes)
+    private void Download(string url, string path, long expectedBytes, bool update)
     {
         long offset = File.Exists(path) ? new FileInfo(path).Length : 0;
         if (offset > expectedBytes) { File.Delete(path); offset = 0; }
@@ -254,7 +316,7 @@ internal sealed class SetupWindow : Form
                     if (received > expectedBytes) throw new InvalidDataException("The package exceeded its declared size.");
                     destination.Write(buffer, 0, count);
                     if (paint.ElapsedMilliseconds > 100) {
-                        Update("Downloading OpenCore…",
+                        Update(update ? "Downloading the OpenCore update…" : "Downloading OpenCore…",
                             String.Format("{0:F1} / {1:F1} MB  ·  {2:F1} MB/s", received / 1e6, expectedBytes / 1e6,
                                 (received - offset) / 1e6 / Math.Max(0.1, speed.Elapsed.TotalSeconds)),
                             (int)(received * 1000 / expectedBytes), false);
@@ -270,28 +332,43 @@ internal sealed class SetupWindow : Form
     {
         if (running) return;
         running = true; cancelled = false; action.Text = "Pause download"; action.Enabled = true;
+        string installedToOpen = null;
         try {
             await Task.Run((Action)delegate {
-                Update("Checking the latest OpenCore release…", "Connecting to OpenCore's official GitHub repository", 0, true);
+                bool updateSafe = true;
+                string installed = report == null ? Setup.InstalledRoot(out updateSafe) : null;
+                if (report == null && !updateSafe && installed == null)
+                    throw new InvalidDataException("OpenCore's installation location could not be checked. Open OpenCore to check for updates.");
+                Update(installed == null ? "Checking the latest OpenCore release…" : "Checking for updates…",
+                    "Connecting to OpenCore's official GitHub repository", 0, true);
                 Dictionary<string, object> release = json.Deserialize<Dictionary<string, object>>(
                     ReadText("https://api.github.com/repos/" + Setup.Repository + "/releases/latest", 2 * 1024 * 1024));
                 if ((bool)release["draft"] || (bool)release["prerelease"]) throw new InvalidDataException("The release is not published.");
                 string tag = (string)release["tag_name"];
                 if (!Setup.SafeRelease(tag)) throw new InvalidDataException("This release predates the protection against automatic external Claude plugins. Try the latest OpenCore release.");
-                Dictionary<string, object> package = Asset(release, "OpenCore.Package.exe");
-                Dictionary<string, object> signature = Asset(release, "OpenCore.Package.exe.sig");
+                int decision = Setup.CheckInstalled(installed, tag);
+                if (decision == 0 || decision == 11 || (decision == 10 && !updateSafe)) {
+                    installedToOpen = Path.Combine(installed, "OpenCore.exe");
+                    Update(decision == 0 ? "OpenCore is up to date" : "OpenCore is already installed",
+                        decision == 0 ? "No download is needed." : "Open OpenCore and check for updates there.", 1000, false);
+                    return;
+                }
+                bool update = decision == 10;
+                string assetName = Setup.AssetFor(decision);
+                Dictionary<string, object> package = Asset(release, assetName);
+                Dictionary<string, object> signature = Asset(release, assetName + ".sig");
                 Match digest = Regex.Match(package["digest"] as string ?? "", "^sha256:([a-f0-9]{64})$");
                 if (!digest.Success) throw new InvalidDataException("GitHub did not provide a verified package checksum.");
                 string expectedHash = digest.Groups[1].Value;
                 long bytes = Convert.ToInt64(package["size"]);
-                if (bytes < 2000000 || bytes > 8L * 1024 * 1024 * 1024) throw new InvalidDataException("Invalid OpenCore package size.");
+                if (bytes < 1 || bytes > (update ? 100L * 1024 * 1024 : 8L * 1024 * 1024 * 1024)) throw new InvalidDataException("Invalid OpenCore package size.");
                 string folder = Path.Combine(Setup.CacheRoot, tag); Directory.CreateDirectory(folder);
-                string target = Path.Combine(folder, "OpenCore.Package.exe");
-                string signed = Path.Combine(folder, "OpenCore.Package.exe.sig");
+                string target = Path.Combine(folder, assetName);
+                string signed = Path.Combine(folder, assetName + ".sig");
                 File.WriteAllText(signed, ReadText(AssetUrl(signature, tag), 65536), new UTF8Encoding(false));
                 if (!File.Exists(target) || new FileInfo(target).Length != bytes || Setup.Hash(target, CheckCancelled) != expectedHash) {
                     string partial = target + ".partial";
-                    Download(AssetUrl(package, tag), partial, bytes);
+                    Download(AssetUrl(package, tag), partial, bytes, update);
                     if (Setup.Hash(partial, CheckCancelled) != expectedHash) {
                         File.Delete(partial);
                         throw new InvalidDataException("The download checksum failed. Choose Retry to download a clean copy.");
@@ -301,15 +378,32 @@ internal sealed class SetupWindow : Form
                 }
                 Update("Verifying OpenCore…", "Checking the package checksum and OpenCore's update signature", 1000, true);
                 Setup.Verify(target, signed, expectedHash, CheckCancelled); CheckCancelled();
+                if (report == null) {
+                    bool safeNow; string now = Setup.InstalledRoot(out safeNow);
+                    int current = Setup.CheckInstalled(now, tag);
+                    if (current == 0 || current == 11 || (current == 10 && (!safeNow || !update))) {
+                        installedToOpen = Path.Combine(now, "OpenCore.exe");
+                        Update(current == 0 ? "OpenCore is up to date" : "OpenCore is already installed",
+                            current == 0 ? "No further download is needed." : "Open OpenCore and check for updates there.", 1000, false);
+                        return;
+                    }
+                    if (update && (current != 10 || !String.Equals(Path.GetFullPath(now), Path.GetFullPath(installed), StringComparison.OrdinalIgnoreCase)))
+                        throw new InvalidDataException("The OpenCore installation changed. Open Setup again to check it.");
+                }
                 if (report != null) {
                     File.WriteAllText(report, json.Serialize(new {passed = true, version = tag.Substring(5),
                         package = target, bytes = bytes, sha256 = expectedHash, signatureVerified = true, installerStarted = false}));
                 } else {
-                    Update("Starting OpenCore Setup…", "The verified package is ready to install.", 1000, false);
+                    Update(update ? "Starting the OpenCore update…" : "Starting OpenCore Setup…", "The verified package is ready.", 1000, false);
                     ProcessStartInfo start = new ProcessStartInfo(target); start.UseShellExecute = true;
+                    if (update) start.Arguments = "/S /UPDATE";
                     using (Process child = Process.Start(start)) { }
                 }
             });
+            if (installedToOpen != null) {
+                running = false; openInstalled = installedToOpen; action.Text = "Open OpenCore"; action.Enabled = true;
+                return;
+            }
             Environment.ExitCode = 0; running = false; Close();
         }
         catch (Exception error) {
