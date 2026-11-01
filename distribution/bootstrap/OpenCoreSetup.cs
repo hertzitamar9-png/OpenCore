@@ -26,6 +26,16 @@ internal static class Setup
     internal static readonly string CacheRoot = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OpenCoreSetup", "packages");
 
+    // Older packages contain the automatic external Claude-bridge startup.
+    // This one-time setup replacement refuses those releases even if selected
+    // by stale metadata; future app updates keep using this same downloader.
+    internal static bool SafeRelease(string tag)
+    {
+        if (tag == null || !Regex.IsMatch(tag, @"^app-v\d+\.\d+\.\d+$")) return false;
+        Version version;
+        return Version.TryParse(tag.Substring(5), out version) && version >= new Version(0, 3, 243);
+    }
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -34,6 +44,7 @@ internal static class Setup
             MessageBox.Show("OpenCore requires 64-bit Windows.", "OpenCore Setup");
             return 2;
         }
+        if (args.Length == 2 && args[0] == "--check-release") return SafeRelease(args[1]) ? 0 : 2;
         if (args.Length == 4 && args[0] == "--verify-only") {
             try { Verify(args[1], args[2], args[3], null); return 0; }
             catch (Exception error) { Console.Error.WriteLine(error.Message); return 1; }
@@ -266,7 +277,7 @@ internal sealed class SetupWindow : Form
                     ReadText("https://api.github.com/repos/" + Setup.Repository + "/releases/latest", 2 * 1024 * 1024));
                 if ((bool)release["draft"] || (bool)release["prerelease"]) throw new InvalidDataException("The release is not published.");
                 string tag = (string)release["tag_name"];
-                if (!Regex.IsMatch(tag, @"^app-v\d+\.\d+\.\d+$")) throw new InvalidDataException("Invalid OpenCore release identity.");
+                if (!Setup.SafeRelease(tag)) throw new InvalidDataException("This release predates the protection against automatic external Claude plugins. Try the latest OpenCore release.");
                 Dictionary<string, object> package = Asset(release, "OpenCore.Package.exe");
                 Dictionary<string, object> signature = Asset(release, "OpenCore.Package.exe.sig");
                 Match digest = Regex.Match(package["digest"] as string ?? "", "^sha256:([a-f0-9]{64})$");

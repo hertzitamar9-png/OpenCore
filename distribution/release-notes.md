@@ -1,3 +1,7 @@
+OpenCore no longer starts its legacy external Claude bridge installer. The old OpenCore-owned bridge folders are removed only after their ownership and contents are checked; other plugins, chats and settings are preserved. A one-time replacement OpenCore Setup rejects releases older than this protection and remains the reusable installer for future updates.
+
+The agent detects repeated plans across separate turns and repeated read-only tools with unchanged results, then stops with its existing activity preserved. ECHO also detects repeated streamed plans that have no line breaks. These guards reduce common loops; model behavior and task difficulty still vary.
+
 Text-capable Hugging Face models remain in their original multimodal, OCR or computer-use library category while their verified text runtime can register and use an ECHO chat profile. The chat picker uses the registered profile identity; use the model's card once to register a newly prepared import. Terminal-RSI's IQ3_S GGUF is identified as a text package and uses the same managed runtime policy as the other GGUF variants in its family. Installation still checks actual generation before marking it ready.
 
 Managed GGUF text runtimes allocate one model slot for ECHO. Where the server reports its actual slot capacity, ECHO uses that value and the model picker reports it rather than the catalog estimate. Models whose available context is below the agent's 8,192-token minimum remain unavailable for ECHO chat. The installation probe has a bounded output budget.

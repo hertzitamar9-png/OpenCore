@@ -11,6 +11,7 @@
   "chrome-extension/popup.html": "chrome-extension/popup.html",
   "chrome-extension/popup.js": "chrome-extension/popup.js",
   "claude/coding-verification.mjs": "src-tauri/resources/claude/coding-verification.mjs",
+  "claude/agent-loop-guard.mjs": "src-tauri/resources/claude/agent-loop-guard.mjs",
   "claude/context-budget.mjs": "src-tauri/resources/claude/context-budget.mjs",
   "claude/package-lock.json": "src-tauri/resources/claude/package-lock.json",
   "claude/package.json": "src-tauri/resources/claude/package.json",

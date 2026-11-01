@@ -14,6 +14,7 @@ import re
 import secrets
 import shutil
 import socket
+import sqlite3
 import subprocess
 import sys
 import threading
@@ -1192,7 +1193,7 @@ def ensure_service(root, resources):
 def serve(root, resources, owner):
     if not owner_alive(owner):
         return 1
-    from hf_bridge_policy import retire_automatic_plugin
+    from hf_bridge_policy import retire_automatic_plugin, retire_legacy_files, retire_legacy_auth
     state = BridgeState(root, resources)
     state.owner = owner
     remote_config = managed_path(Path(root).resolve(), 'runtime-setup', 'remote-access.json')
@@ -1209,9 +1210,14 @@ def serve(root, resources, owner):
         "owner": owner, "process": {k: current[k] for k in ("pid", "path", "created")}, "secret": secret,
         "url": "http://127.0.0.1:" + str(server.server_port), "instanceId": server.instance_id})
     def retire_legacy_plugin():
-        try: retire_automatic_plugin(resources=resources)
-        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired):
-            print('Legacy Claude plugin removal could not finish; it will be retried on the next launch',file=sys.stderr)
+        actions=[lambda:retire_automatic_plugin(resources=resources)]
+        if os.environ.get('APPDATA'):
+            app_data=Path(os.environ['APPDATA'])/'ai.opencore.control-center'
+            actions.extend((lambda:retire_legacy_auth(app_data),lambda:retire_legacy_files(app_data)))
+        for action in actions:
+            try:action()
+            except (OSError, ValueError, RuntimeError, sqlite3.Error, subprocess.TimeoutExpired):
+                print('Legacy Claude bridge cleanup could not finish; it will be retried on the next launch',file=sys.stderr)
     threading.Thread(target=retire_legacy_plugin,daemon=True).start()
     finished = threading.Event()
     def watch_owner():

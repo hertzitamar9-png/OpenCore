@@ -1,5 +1,7 @@
 import hashlib
 import json
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 import sys
 import tempfile
@@ -7,10 +9,56 @@ import unittest
 from unittest.mock import patch
 from bridge_policy import prepare, RELATIVE
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src-tauri/resources/runtime-setup/hf-extension'))
-from hf_bridge_policy import retire_automatic_plugin, PLUGIN
+from hf_bridge_policy import retire_automatic_plugin, retire_legacy_files, retire_legacy_auth, PLUGIN
 
 
 class BridgePolicyTests(unittest.TestCase):
+    def test_bridge_pairing_token_is_revoked_without_deleting_chats_or_other_settings(self):
+        with tempfile.TemporaryDirectory() as root:
+            db=Path(root)/'control-center.sqlite3'
+            with closing(sqlite3.connect(db)) as connection:
+                connection.execute('CREATE TABLE settings (key TEXT PRIMARY KEY,value TEXT)')
+                connection.executemany('INSERT INTO settings VALUES (?,?)', [('claude_bridge_token_v1','old-token'),('claude_bridge_enabled_v1','true'),('other','keep')])
+                connection.execute('CREATE TABLE chats (content TEXT)');connection.execute("INSERT INTO chats VALUES ('keep chat')")
+                connection.commit()
+            self.assertTrue(retire_legacy_auth(Path(root)))
+            with closing(sqlite3.connect(db)) as connection:
+                self.assertEqual(connection.execute('SELECT key,value FROM settings').fetchall(),[('other','keep')])
+                self.assertEqual(connection.execute('SELECT content FROM chats').fetchall(),[('keep chat',)])
+            self.assertFalse(retire_legacy_auth(Path(root)))
+
+    def test_missing_app_database_is_not_created_by_bridge_cleanup(self):
+        with tempfile.TemporaryDirectory() as root:
+            self.assertFalse(retire_legacy_auth(Path(root)))
+            self.assertFalse((Path(root)/'control-center.sqlite3').exists())
+
+    def make_bridge(self,root,relative):
+        path=Path(root)/relative
+        (path/'.claude-plugin').mkdir(parents=True)
+        (path/'.claude-plugin/plugin.json').write_text(json.dumps({'name':'opencore-bridge'}))
+        (path/'hooks').mkdir();(path/'hooks/bridge.mjs').write_text('old bridge')
+        return path
+
+    def test_legacy_owned_bridge_directories_are_removed_without_touching_chats(self):
+        with tempfile.TemporaryDirectory() as root:
+            direct=self.make_bridge(root,'claude-bridge')
+            plugin=self.make_bridge(root,'claude-marketplace/plugins/opencore-bridge')
+            market=Path(root)/'claude-marketplace';(market/'.claude-plugin').mkdir()
+            (market/'.claude-plugin/marketplace.json').write_text(json.dumps({'name':'opencore-local','plugins':[{'name':'opencore-bridge'}]}))
+            chat=Path(root)/'control-center.sqlite3';chat.write_bytes(b'preserve chats')
+            self.assertTrue(retire_legacy_files(Path(root)))
+            self.assertFalse(direct.exists());self.assertFalse(plugin.exists());self.assertFalse(market.exists())
+            self.assertEqual(chat.read_bytes(),b'preserve chats')
+
+    def test_unknown_bridge_files_and_shared_marketplace_are_preserved(self):
+        with tempfile.TemporaryDirectory() as root:
+            direct=self.make_bridge(root,'claude-bridge');(direct/'personal.txt').write_text('keep')
+            market=Path(root)/'claude-marketplace';(market/'plugins/other').mkdir(parents=True)
+            self.make_bridge(root,'claude-marketplace/plugins/opencore-bridge')
+            (market/'.claude-plugin').mkdir()
+            (market/'.claude-plugin/marketplace.json').write_text(json.dumps({'name':'opencore-local','plugins':[{'name':'opencore-bridge'},{'name':'other'}]}))
+            self.assertFalse(retire_legacy_files(Path(root)))
+            self.assertTrue((direct/'personal.txt').exists());self.assertTrue((market/'plugins/other').exists())
     def test_fresh_package_cannot_invoke_legacy_plugin_installer_and_keeps_private_agent(self):
         with tempfile.TemporaryDirectory() as root:
             directory=Path(root)/RELATIVE;directory.mkdir(parents=True)

@@ -1,11 +1,10 @@
-"""Reuse the exact signed setup file for every app release; never rebuild it."""
+"""Reuse the exact setup executable across releases and sign it in CI."""
 import argparse
 import hashlib
 import json
 from pathlib import Path
 import re
 import shutil
-import subprocess
 
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE / 'bootstrap/permanent'
@@ -20,12 +19,13 @@ def load_pin():
     return json.loads((SOURCE / 'pin.json').read_text(encoding='utf-8'))
 
 
-def validate_files(folder, pin):
+def validate_files(folder, pin, *, require_signature=True):
     setup = folder / 'OpenCore Setup.exe'
     signature = folder / 'OpenCore Setup.exe.sig'
-    if (not setup.is_file() or not signature.is_file()
+    if (not setup.is_file() or (require_signature and not signature.is_file())
             or setup.stat().st_size != pin['bytes'] or not 0 < pin['bytes'] <= 2_000_000
-            or digest(setup) != pin['sha256'] or digest(signature) != pin['signatureSha256']):
+            or digest(setup) != pin['sha256']
+            or (require_signature and pin.get('signatureSha256') and digest(signature) != pin['signatureSha256'])):
         raise ValueError('The permanent OpenCore Setup file or its signature changed')
     return setup
 
@@ -37,16 +37,15 @@ def prepare(output, app_version, *, source=SOURCE):
     if output == SOURCE.resolve():
         raise ValueError('The permanent setup source cannot be used as build output')
     pin = load_pin()
-    setup = validate_files(source, pin)
-    subprocess.run(['node', str(HERE / 'verify-signature.cjs'), str(setup), str(setup) + '.sig',
-                    str(HERE.parent / 'src-tauri/tauri.conf.json')], check=True)
+    validate_files(source, pin, require_signature=False)
     output.mkdir(parents=True, exist_ok=True)
-    for name in ('OpenCore Setup.exe', 'OpenCore Setup.exe.sig'):
-        shutil.copy2(source / name, output / name)
-    validate_files(output, pin)
+    if (output/'OpenCore Setup.exe.sig').exists():
+        raise ValueError('Refusing to reuse a stale setup signature')
+    shutil.copy2(source/'OpenCore Setup.exe', output/'OpenCore Setup.exe')
+    validate_files(output, pin, require_signature=False)
     result = dict(passed=True, permanent=True, bootstrapVersion=pin['bootstrapVersion'],
                   verifiedForAppVersion=app_version, bytes=pin['bytes'], maximumBytes=2_000_000,
-                  sha256=pin['sha256'], signatureSha256=pin['signatureSha256'],
+                  sha256=pin['sha256'],
                   embeddedVerifierPinned=True, packageSignatureRequired=True)
     (output / 'bootstrap-verification.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(result))

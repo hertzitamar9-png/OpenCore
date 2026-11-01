@@ -57,6 +57,8 @@ jobs:
           python -m unittest -v test_publish
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_permanent_bootstrap
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest -v test_bootstrap_bridge_policy
           $publishTestsExit = $LASTEXITCODE
           Pop-Location
           if ($publishTestsExit -ne 0) { exit $publishTestsExit }
@@ -68,6 +70,8 @@ jobs:
           python -m unittest -v test_setup_repair
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_bridge_policy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test test-native-bridge-policy.cjs ../src-tauri/resources/claude/agent-loop-guard.test.mjs ../src-tauri/resources/claude/runner-loop.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_update_handoff
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -193,7 +197,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$testRoot/test-python/python.exe" -I -B distribution/qa-portable-runtime.py --root $testRoot --output distribution/.output/release/runtime-verification.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Reuse the permanent signed setup unchanged
+          python distribution/qa-native-bridge-startup.py --root $testRoot --output distribution/.output/release/bridge-startup-verification.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Reuse the permanent setup executable unchanged
         run: python distribution/permanent_bootstrap.py --output distribution/.output/release --app-version $env:OPENCORE_RELEASE_VERSION
       - name: Sign the new app package and verify the permanent setup
         env:
@@ -203,6 +209,8 @@ jobs:
           npx tauri signer sign 'distribution/.output/release/OpenCore Package.exe'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx tauri signer sign 'distribution/.output/release/OpenCore Update.exe'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx tauri signer sign 'distribution/.output/release/OpenCore Setup.exe'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Update.exe' 'distribution/.output/release/OpenCore Update.exe.sig' src-tauri/tauri.conf.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

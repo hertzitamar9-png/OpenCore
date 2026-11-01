@@ -122,8 +122,17 @@ class ReasoningLoopGuard:
     def feed(self, delta):
         self.chars += len(delta)
         self.buffer += delta
-        while '\n' in self.buffer:
-            paragraph, self.buffer = self.buffer.split('\n', 1)
+        while True:
+            # A complete newline-delimited reasoning block stays one unit;
+            # only split sentences when a stream supplies no line breaks.
+            newline = self.buffer.find('\n')
+            boundary = re.search(r'(?<=[.!?])\s+', self.buffer) if newline < 0 else None
+            if newline >= 0:
+                paragraph, self.buffer = self.buffer[:newline], self.buffer[newline+1:]
+            elif boundary is not None:
+                paragraph, self.buffer = self.buffer[:boundary.start()], self.buffer[boundary.end():]
+            else:
+                break
             tokens = re.findall(r'[\w./\\:-]+', paragraph.lower())[-256:]
             if len(tokens) < 6:
                 continue

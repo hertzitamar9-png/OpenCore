@@ -30,6 +30,15 @@ class LoopGuardTests(unittest.TestCase):
             for offset in range(0,len(block),11):detected=guard.feed(block[offset:offset+11]) or detected
         self.assertTrue(detected)
 
+    def test_repeated_plans_without_line_breaks_are_detected_during_streaming(self):
+        guard=ReasoningLoopGuard()
+        text=('I need to find the snake game in the workspace before editing it. '
+              'I should search the workspace for the snake game before I edit it. ')*8
+        detected=False
+        for offset in range(0,len(text),13):
+            detected=guard.feed(text[offset:offset+13]) or detected
+        self.assertTrue(detected)
+
     def test_distinct_steps_and_one_recheck_are_not_a_loop(self):
         guard=ReasoningLoopGuard()
         for block in [

@@ -7,6 +7,7 @@ import { mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { contextBudgetEnvironment, deriveContextBudget } from './context-budget.mjs';
 import { CodingVerification, codingBoundaryGuidance, toolFailed } from './coding-verification.mjs';
+import { AgentLoopGuard, forwardGuardedAgent, guardedToolResult } from './agent-loop-guard.mjs';
 const write = value => process.stdout.write(JSON.stringify(value) + '\n');
 function privateAgentExecutable() {
   if (process.platform !== 'win32') throw new Error('The bundled OpenCore agent is unavailable on this platform.');
@@ -35,6 +36,7 @@ async function run(config) {
   mkdirSync(config.cwd, { recursive: true });
   const devAvailable = (config.tools ?? []).some(spec => spec.function?.name === 'dev');
   const verification = new CodingVerification(config.cwd, { devAvailable });
+  const loopGuard = new AgentLoopGuard();
   const verificationGuidance = devAvailable
     ? 'For final coding verification, use dev action run with verifyPaths naming the changed files, so the check records their exact source hashes.'
     : 'For final coding verification, run the relevant checks using the available Bash tool and inspect their explicit exit status.';
@@ -130,6 +132,8 @@ async function run(config) {
     }] }],
       PostToolUse: [{ hooks: [async data => {
         verification.recordSdkTool(data);
+        const stop = guardedToolResult(loopGuard,data,write);
+        if (stop) return stop;
         if (backgroundHandoff) {
           write({kind:'handoff',...backgroundHandoff});
           return {continue:false,stopReason:'OpenCore is handing the GPU to the queued background job.'};
@@ -156,10 +160,6 @@ async function run(config) {
         isAutoCompactEnabled:usage.isAutoCompactEnabled}});
     } catch (error) { write({kind:'diagnostic',text:`Context telemetry: ${error}`}); }
   };
-  try { for await (const message of agent) {
-    write({ kind: 'sdk', message });
-    if ((message.type === 'system' && (message.subtype === 'init' || message.subtype === 'compact_boundary'))
-      || message.type === 'assistant' || message.type === 'user') await reportContext();
-  } }
+  try { await forwardGuardedAgent(agent,loopGuard,write,reportContext); }
   finally { agent.close(); }
 }

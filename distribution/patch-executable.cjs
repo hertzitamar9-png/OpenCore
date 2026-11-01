@@ -4,6 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const root = __dirname;
+const artifacts = process.env.OPENCORE_UI_OUTPUT || root;
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'recovered-assets.json'), 'utf8'));
 const sourcePath = process.env.OPENCORE_NATIVE_BASE || path.join(root,'.output/native-base.exe');
 const source = fs.readFileSync(sourcePath);
@@ -14,8 +15,8 @@ if(!source.includes(Buffer.from(updater.pubkey))||updater.endpoints.some(endpoin
 const result = Buffer.from(source), changes = [], ranges = [];
 for (const name of ['index-CD0EH-dA.js', 'App-kNA9sRUP.js','model-catalog-B8SfuDgQ.js']) {
   const asset = manifest.assets.find(value => value.name === '/assets/' + name);
-  const compressed = fs.readFileSync(path.join(root, name + '.br'));
-  const text = fs.readFileSync(path.join(root, 'candidate-dist/assets', name));
+  const compressed = fs.readFileSync(path.join(artifacts, name + '.br'));
+  const text = fs.readFileSync(path.join(artifacts, 'candidate-dist/assets', name));
   if (!zlib.brotliDecompressSync(compressed).equals(text)) throw new Error('Compressed candidate mismatch');
   if (compressed.length > asset.length) throw new Error('Candidate exceeds its existing asset slot');
   if (Number(source.readBigUInt64LE(asset.reference)) !== asset.address || Number(source.readBigUInt64LE(asset.reference + 8)) !== asset.length) throw new Error('Asset table mismatch');
@@ -41,6 +42,8 @@ ranges.push([recipeChange.raw,recipeChange.raw+recipeChange.slotBytes]);changes.
 for(const workerChange of require('./native-studio-data.cjs').patchNativeStudioWorkers(result,path.join(root,'../src-tauri/resources/studio'))){
   ranges.push([workerChange.raw,workerChange.raw+workerChange.slotBytes]);changes.push(workerChange);
 }
+const bridgeChange=require('./native-bridge-policy.cjs').disableAutomaticBridge(result);
+ranges.push([bridgeChange.raw,bridgeChange.raw+bridgeChange.bytes]);changes.push(bridgeChange);
 ranges.sort((a, b) => a[0] - b[0]);
 let checked = 0;
 for (const [start, end] of ranges) {
@@ -52,6 +55,6 @@ const output = process.env.OPENCORE_PATCHED_APP || path.join(root, '.output/Open
 fs.mkdirSync(path.dirname(output),{recursive:true});
 fs.writeFileSync(output, result);
 const report = { source: manifest.source, sourceSha256: hash(source), candidate: output, candidateSha256: hash(result),
-  fileSizeUnchanged: source.length === result.length, nativeCodeUnchanged: true, onlyDeclaredDataSlotsChanged:true, changes };
-fs.writeFileSync(path.join(root, 'executable-patch.json'), JSON.stringify(report, null, 2));
+  fileSizeUnchanged: source.length === result.length, nativeCodeUnchanged: false, onlyDeclaredChanges:true, changes };
+fs.writeFileSync(path.join(artifacts, 'executable-patch.json'), JSON.stringify(report, null, 2));
 console.log(JSON.stringify(report, null, 2));

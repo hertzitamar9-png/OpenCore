@@ -61,6 +61,7 @@ class ReleasePublicationTests(unittest.TestCase):
             'package-manifest.json': {'build': self.version, 'commit': self.commit, 'appExeSha256': 'app-hash'},
             'installer-verification.json': {'passed': True, 'build': self.version, 'exactAppSha256': 'app-hash'},
             'runtime-verification.json': {'passed': True},
+            'bridge-startup-verification.json': {'passed':True,'appStartupObserved':True,'automaticClaudeBridgeCreated':False,'bridgeTokenPresent':False,'appExeSha256':'app-hash'},
         }.items():
             (self.folder / name).write_text(json.dumps(value), encoding='utf-8')
         self.release = {'id': 145, 'tag_name': 'app-v' + self.version, 'target_commitish': self.commit,
@@ -187,6 +188,13 @@ class ReleasePublicationTests(unittest.TestCase):
         with setup.open('wb') as output:
             output.truncate(2_000_001)
         with self.assertRaisesRegex(ValueError, 'small setup'):
+            self.run_publication()
+        self.assertFalse(self.commands)
+
+    def test_publication_requires_bridge_startup_verification_for_the_same_app(self):
+        path=self.folder/'bridge-startup-verification.json'
+        path.write_text(json.dumps({'passed':True,'appStartupObserved':True,'automaticClaudeBridgeCreated':False,'bridgeTokenPresent':False,'appExeSha256':'different-app'}))
+        with self.assertRaisesRegex(ValueError, 'bridge startup'):
             self.run_publication()
         self.assertFalse(self.commands)
 

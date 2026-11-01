@@ -76,6 +76,15 @@ def publish(folder, version, commit):
             or installer_check['build'] != version or installer_check['exactAppSha256'] != package['appExeSha256']
             or not runtime_check['passed']):
         raise ValueError('A release requires matching completed installer and runtime checks')
+    try:
+        bridge_check=json.loads((folder/'bridge-startup-verification.json').read_text(encoding='utf-8'))
+    except (OSError,ValueError):
+        raise ValueError('A release requires bridge startup verification') from None
+    if (bridge_check.get('passed') is not True or bridge_check.get('appStartupObserved') is not True
+            or bridge_check.get('automaticClaudeBridgeCreated') is not False
+            or bridge_check.get('bridgeTokenPresent') is not False
+            or bridge_check.get('appExeSha256') != package['appExeSha256']):
+        raise ValueError('A release requires bridge startup verification for the same app')
     installer = folder / 'OpenCore Package.exe'
     signature = folder / 'OpenCore Package.exe.sig'
     bootstrap = folder / 'OpenCore Setup.exe'
@@ -116,7 +125,7 @@ def publish(folder, version, commit):
         raise ValueError('This release is already public; never replace a published installer')
     initial = [installer, signature, bootstrap, folder / 'OpenCore Setup.exe.sig',
                folder / 'bootstrap-verification.json', folder / 'package-manifest.json',
-               folder / 'installer-verification.json', folder / 'runtime-verification.json']
+               folder / 'installer-verification.json', folder / 'runtime-verification.json',folder/'bridge-startup-verification.json']
     initial += prepare_mobile(folder)
     if incremental.is_file():
         initial += [incremental,folder/'OpenCore Update.exe.sig',folder/'OpenCore.Update.data',folder/'incremental-index.json',folder/'incremental-verification.json']
