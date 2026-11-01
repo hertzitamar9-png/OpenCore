@@ -2,7 +2,7 @@
 // with Playwright and a disposable native IPC fixture; never install a live app.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),acorn=require('acorn');
 const {chromium}=require(process.env.OPENCORE_PLAYWRIGHT||'playwright');
-const root=__dirname,directory=path.join(root,'candidate-dist'),output=path.join(root,'.output');
+const root=__dirname,directory=path.join(process.env.OPENCORE_UI_OUTPUT||root,'candidate-dist'),output=path.join(root,'.output');
 fs.mkdirSync(output,{recursive:true});
 const screenshotOutput=process.env.OPENCORE_UPDATE_QA_DIR||path.join(require('node:os').tmpdir(),'opencore-update-controls-qa');
 fs.mkdirSync(screenshotOutput,{recursive:true});
@@ -53,6 +53,7 @@ const server=http.createServer((request,response)=>{
   assert.equal(await page.getByRole('button').count(),1);
   assert.equal(await page.getByRole('button',{name:'Updating…',exact:true}).evaluate((element,previous)=>element===previous,readyButton),true);
   await page.getByRole('progressbar',{name:'Update download in progress'}).waitFor();
+  assert.equal(await page.locator('.app-update-overlay').evaluate(element=>getComputedStyle(element).position),'fixed','The update progress style must be present in the loaded entry asset');
   await page.clock.fastForward(6000);
   assert.equal(await page.getByText('Preparing and downloading the update…',{exact:true}).isVisible(),true);
   await page.getByRole('button',{name:'Updating…',exact:true}).dispatchEvent('click');assert.equal(await installs(),1);
