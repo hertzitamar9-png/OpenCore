@@ -44,6 +44,18 @@ test('alternating unchanged searches cannot form an endless two-tool cycle',()=>
   assert.equal(issue?.kind,'repeated-tool');
 });
 
+test('repeated unchanged workspace inspections stop without blocking active-job status polling',()=>{
+  const guard=new AgentLoopGuard();let issue;
+  const result={workspace:'C:/project',files:[],priorArtifacts:[]};
+  for(let i=0;i<3;i++)issue=guard.observeToolResult('mcp__opencore__dev',{action:'status'},result);
+  assert.equal(issue?.kind,'repeated-tool');
+  const wrapped=new AgentLoopGuard();
+  for(let i=0;i<3;i++)issue=wrapped.observeToolResult('mcp__opencore__dev',{action:'status'},{content:[{type:'text',text:JSON.stringify(result)}]});
+  assert.equal(issue?.kind,'repeated-tool');
+  const poll=new AgentLoopGuard();
+  for(let i=0;i<4;i++)assert.equal(poll.observeToolResult('mcp__opencore__dev',{action:'status'},{status:'running'}),null);
+});
+
 test('changed results and mutating actions are not stopped as repeated reads', () => {
   const guard=new AgentLoopGuard();
   for(let i=0;i<5;i++)assert.equal(guard.observeToolResult('Read',{file_path:'a.txt'},{content:`version ${i}`}),null);

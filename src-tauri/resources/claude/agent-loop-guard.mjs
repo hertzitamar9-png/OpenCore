@@ -34,9 +34,21 @@ function signature(name,input,result) {
     return createHash('sha256').update(text).digest('hex');
   } catch { return null; }
 }
-function readOnly(name,input) {
+function workspaceListing(result) {
+  try {
+    let value=result;
+    if(typeof value==='string')value=JSON.parse(value);
+    if(Array.isArray(value?.content)){
+      const text=value.content.find(item=>item?.type==='text'&&typeof item.text==='string')?.text;
+      if(text)value=JSON.parse(text);
+    }
+    return typeof value?.workspace==='string'&&Array.isArray(value.files);
+  } catch {return false;}
+}
+function readOnly(name,input,result) {
   if(['Read','Grep','Glob','LS'].includes(name))return true;
-  return /(?:^|__)dev$/.test(name)&&['read','search'].includes(input?.action);
+  return /(?:^|__)dev$/.test(name)&&(['read','search'].includes(input?.action)||
+    (['status','list'].includes(input?.action)&&workspaceListing(result)));
 }
 
 // One instance is scoped to one user request, not the life of a conversation.
@@ -59,7 +71,7 @@ export class AgentLoopGuard {
   }
   observeToolResult(name,input,result) {
     this.plans=[];
-    if(result===undefined||!readOnly(name,input)){this.tools=[];return null;}
+    if(result===undefined||!readOnly(name,input,result)){this.tools=[];return null;}
     const current=signature(name,input,result);
     if(!current){this.tools=[];return null;}
     this.tools.push(current);this.tools=this.tools.slice(-9);
