@@ -4,9 +4,10 @@ let $hubDescriptor = null, $hubConnecting = null, $hubStatusPending = null, $hub
 let $hubState = {catalog: [], progress: null, available: false, loaded: false, error: '', tokenConfigured: false};
 let $hubTimer = null;
 const $hubProviderSync=new Set();
+function $hubContext(entry){return Math.min(entry.runtimePreparation?.contextTokens||entry.echoWorkingWindowTokens||entry.contextTokens||32768,32768);}
 function $hubPublish(value) {
   if(value.connectorProfiles&&typeof $publishConnectorProfiles==='function'&&JSON.stringify(value.connectorProfiles.disconnected)!==JSON.stringify($connectorProfiles.disconnected))$publishConnectorProfiles(value.connectorProfiles);
-  if(value.catalog)globalThis.__opencoreHubEchoProfiles=new Set(value.catalog.filter(entry=>entry.profileId&&(entry.libraryCategory||entry.category||'text')==='text').map(entry=>entry.profileId));
+  if(value.catalog)globalThis.__opencoreHubEchoProfiles=new Set(value.catalog.filter(entry=>entry.profileId&&(entry.category||entry.libraryCategory||'text')==='text').map(entry=>entry.profileId));
   if (Object.entries(value).some(([key,item])=>item!==$hubState[key]&&JSON.stringify(item)!==JSON.stringify($hubState[key]))) {
     $hubState = {...$hubState,...value}; $hubListeners.forEach(fn => fn());
   }
@@ -52,7 +53,7 @@ async function $hubRefresh(force=false) {
     if(changed&&$hubNativeLibrary)window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:$hubAugment($hubNativeLibrary)}));
     for(const entry of value.catalog||[]){
       const key=$hubDescriptor.url+'/'+entry.id;
-      if(entry.runtimeReady&&(entry.libraryCategory||entry.category||'text')==='text'&&entry.providerId&&!$hubProviderSync.has(key)){
+      if(entry.runtimeReady&&(entry.category||entry.libraryCategory||'text')==='text'&&entry.providerId&&!$hubProviderSync.has(key)){
         $hubProviderSync.add(key);
         setTimeout(()=>void $hubRegister(entry).catch(()=>{$hubProviderSync.delete(key);}),0);
       }
@@ -79,9 +80,9 @@ function $hubProgress() {
 }
 function $hubModel(entry) {
   return {id:entry.id,label:entry.familyLabel||entry.repository.split('/').at(-1),description:entry.repository,precision:entry.quantization,
-    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:(entry.libraryCategory||entry.category||'text')==='text'&&entry.runtime?.adapter?'echo':'native',backend:'hub',hubModel:true,hubEntry:entry,
-    selectable:(entry.libraryCategory||entry.category||'text')==='text'&&!!entry.runtimeReady,installed:entry.status==='installed',runtimeReady:!!entry.runtimeReady,installable:entry.installable,
-    category:entry.libraryCategory||entry.category||'text',contextTokens:entry.contextTokens||32768,totalBytes:entry.bytes,downloadBytes:entry.status==='installed'?0:entry.bytes,
+    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:(entry.category||entry.libraryCategory||'text')==='text'&&entry.runtime?.adapter?'echo':'native',backend:'hub',hubModel:true,hubEntry:entry,
+    selectable:(entry.category||entry.libraryCategory||'text')==='text'&&!!entry.runtimeReady&&!!entry.profileId,installed:entry.status==='installed',runtimeReady:!!entry.runtimeReady,installable:entry.installable,
+    category:entry.libraryCategory||entry.category||'text',contextTokens:$hubContext(entry),totalBytes:entry.bytes,downloadBytes:entry.status==='installed'?0:entry.bytes,
     weightBytes:entry.files.filter(f=>f.role==='model').reduce((n,f)=>n+f.bytes,0),experimental:false,sourceUrl:entry.sourceUrl,
     note:'Hugging Face checkpoint. Download, runtime preparation and actual generation are verified separately.',license:entry.license||'Publisher terms'};
 }
@@ -114,7 +115,7 @@ function $hubAugment(library) {
 async function $hubRegister(entry) {
   const descriptor=await $hubConnect();
   const input={...(entry.providerId?{id:entry.providerId}:{}),name:'Local · '+(entry.familyLabel||entry.repository.split('/').at(-1))+' · '+entry.quantization,baseUrl:descriptor.url+'/v1',model:entry.id,
-    contextTokens:Math.max(8192,Math.min(entry.echoWorkingWindowTokens||entry.contextTokens||entry.runtimePreparation?.contextTokens||32768,32768)),apiKey:descriptor.secret};
+    contextTokens:$hubContext(entry),apiKey:descriptor.secret};
   let provider=await window.__TAURI_INTERNALS__.invoke('api_provider_save',{input});
   provider=await window.__TAURI_INTERNALS__.invoke('api_provider_model',{id:provider.id,model:entry.id,enabled:true,manual:true});
   const profile=provider.models?.find(m=>m.id===entry.id);

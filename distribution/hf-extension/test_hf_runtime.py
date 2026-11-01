@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -6,7 +7,7 @@ import unittest
 import types
 from unittest.mock import patch
 
-from hf_runtime import RuntimeManager, checked_model_files, conversation_key, runtime_plan, system_prefix, _worker_main
+from hf_runtime import RuntimeManager, checked_model_files, conversation_key, runtime_plan, system_prefix, _worker_main, admitted_context
 
 
 class RuntimeSafetyTests(unittest.TestCase):
@@ -93,6 +94,62 @@ class RuntimeSafetyTests(unittest.TestCase):
         self.assertIn('--fit', plan['command'])
         self.assertIn('--no-webui', plan['command'])
         self.assertNotIn('--trust-remote-code', plan['command'])
+
+    def test_generic_gguf_runtime_reserves_the_full_context_for_one_echo_slot(self):
+        plan=runtime_plan(self.entry,self.root,self.resources)
+        command=plan['command']
+        self.assertEqual(command[command.index('--parallel')+1],'1')
+
+    def test_echo_uses_the_actual_single_slot_context_and_rejects_too_small_models(self):
+        self.assertEqual(admitted_context(32768,{'default_generation_settings':{'n_ctx':16384}}),(16384,True))
+        self.assertEqual(admitted_context(32768,{'n_ctx':8192}),(8192,True))
+        self.assertEqual(admitted_context(16384,{'n_ctx':32768}),(16384,True))
+        self.assertEqual(admitted_context(32768,{}),(32768,False))
+        with self.assertRaisesRegex(ValueError,'2048|2,048'):
+            admitted_context(32768,{'default_generation_settings':{'n_ctx':2048}})
+
+    def test_model_list_reports_the_verified_runtime_context(self):
+        self.entry.update(runtimeReady=True,runtimePreparation={'contextTokens':8192})
+        models=RuntimeManager(self.root,self.resources).models([self.entry])
+        self.assertEqual(models['data'][0]['context_length'],8192)
+
+    def test_echo_installation_probe_has_a_bounded_total_generation_budget(self):
+        runtime=RuntimeManager(self.root,self.resources)
+        runtime._spawn=lambda *args,**kwargs:types.SimpleNamespace(poll=lambda:None)
+        runtime._wait_health=lambda *args,**kwargs:None
+        calls=[]
+        def request(url,payload=None,key=None,**kwargs):
+            calls.append((url,payload))
+            if url.endswith('/props'):
+                return io.BytesIO(json.dumps({'default_generation_settings':{'n_ctx':8192}}).encode())
+            if payload and payload.get('conversation_id'):
+                if payload.get('echo_max_total_tokens')!=payload.get('max_tokens'):
+                    raise RuntimeError('ECHO smoke test did not bound its total output')
+            return io.BytesIO(json.dumps({'choices':[{'message':{'content':'Hello'}}],'usage':{'completion_tokens':1}}).encode())
+        runtime._request=request
+        with patch('hf_runtime._available_memory',return_value=None):
+            proof=runtime.prepare(self.entry)
+        self.assertTrue(proof['echoReady'])
+        self.assertTrue(proof['contextVerified'])
+        self.assertEqual(proof['contextTokens'],8192)
+        self.assertTrue(any(payload and payload.get('echo_max_total_tokens')==16 for _,payload in calls))
+        runtime.stop()
+
+    def test_transformers_runtime_also_uses_its_actual_reported_context(self):
+        runtime=RuntimeManager(self.root,self.resources)
+        runtime._spawn=lambda *args,**kwargs:types.SimpleNamespace(poll=lambda:None)
+        runtime._wait_health=lambda *args,**kwargs:None
+        runtime._ensure_transformers=lambda *args,**kwargs:None
+        def request(url,payload=None,key=None,**kwargs):
+            value={'n_ctx':8192} if url.endswith('/props') else {'choices':[{'message':{'content':'Hello'}}]}
+            return io.BytesIO(json.dumps(value).encode())
+        runtime._request=request
+        plan={'format':'safetensors','context':32768,'folder':str(self.folder),'command':['fake-worker','{port}']}
+        with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime.runtime_plan',return_value=plan):
+            proof=runtime.prepare(self.entry)
+        self.assertEqual(proof['contextTokens'],8192)
+        self.assertTrue(proof['contextVerified'])
+        runtime.stop()
 
     def test_unsupported_format_is_downloadable_but_not_executable(self):
         self.entry['format'] = 'mlx'

@@ -102480,6 +102480,57 @@
       "echoWorkingWindowTokens": 32768
     },
     {
+      "id": "hf-db2909ce207f3b73030af5d3",
+      "repository": "mradermacher/Terminal-RSI-27B-i1-GGUF",
+      "revision": "0992305ce4bbe9667fdcdcc3c789bd4a66102c0b",
+      "variantKey": "gguf:Terminal-RSI-27B.i1-IQ3_S.gguf",
+      "name": "Terminal-RSI 27B · IQ3_S",
+      "quantization": "IQ3_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 12602608064,
+      "files": [
+        {
+          "repository": "mradermacher/Terminal-RSI-27B-i1-GGUF",
+          "revision": "0992305ce4bbe9667fdcdcc3c789bd4a66102c0b",
+          "filename": "Terminal-RSI-27B.i1-IQ3_S.gguf",
+          "bytes": 12602608064,
+          "sha256": "7cbfcdf5c9e356511472de85be3eb7bfa13fbeb6cc4a8a173147bdb2adbd7df2",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Terminal-RSI-27B-i1-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-terminal-rsi-27b",
+      "familyLabel": "Terminal-RSI 27B",
+      "originalRepository": "Teriminal-RSI/Terminal-RSI-27B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Qwen3.8 27B checkpoint trained for terminal-agent tasks and recursive self-improvement. ECHO archives and retrieves conversation history within the runtime's working context.",
+      "contextTokens": 32768,
+      "license": "apache-2.0",
+      "memoryMode": "echo",
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768
+    },
+    {
       "id": "hf-f8683b80623cddb94f4d93cf",
       "repository": "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF",
       "revision": "f2b788a1938fb9ee75c30e7a71b594487281df06",
@@ -103980,54 +104031,6 @@
       "license": "apache-2.0",
       "catalogOrder": 0,
       "echoWorkingWindowTokens": 32768
-    },
-    {
-      "id": "hf-db2909ce207f3b73030af5d3",
-      "repository": "mradermacher/Terminal-RSI-27B-i1-GGUF",
-      "revision": "0992305ce4bbe9667fdcdcc3c789bd4a66102c0b",
-      "variantKey": "gguf:Terminal-RSI-27B.i1-IQ3_S.gguf",
-      "name": "Terminal-RSI 27B · IQ3_S",
-      "quantization": "IQ3_S",
-      "format": "gguf",
-      "subdirectory": "",
-      "category": "omni",
-      "bytes": 12602608064,
-      "files": [
-        {
-          "repository": "mradermacher/Terminal-RSI-27B-i1-GGUF",
-          "revision": "0992305ce4bbe9667fdcdcc3c789bd4a66102c0b",
-          "filename": "Terminal-RSI-27B.i1-IQ3_S.gguf",
-          "bytes": 12602608064,
-          "sha256": "7cbfcdf5c9e356511472de85be3eb7bfa13fbeb6cc4a8a173147bdb2adbd7df2",
-          "gitBlobSha1": null,
-          "role": "model",
-          "pinned": true
-        }
-      ],
-      "installable": true,
-      "reason": null,
-      "modelType": "qwen35",
-      "architectures": [],
-      "runtime": {
-        "adapter": null,
-        "available": false,
-        "inferenceVerified": false,
-        "reason": "No verified managed runtime adapter supports this format"
-      },
-      "private": false,
-      "gated": false,
-      "sourceUrl": "https://huggingface.co/mradermacher/Terminal-RSI-27B-i1-GGUF",
-      "status": "not-installed",
-      "familyId": "publisher-terminal-rsi-27b",
-      "familyLabel": "Terminal-RSI 27B",
-      "originalRepository": "Teriminal-RSI/Terminal-RSI-27B",
-      "builtIn": true,
-      "nativeModelIds": [],
-      "libraryCategory": "text",
-      "builtInDescription": "Qwen3.8 27B checkpoint trained for terminal-agent tasks and recursive self-improvement. ECHO archives and retrieves conversation history within the runtime's working context.",
-      "contextTokens": 8192,
-      "license": "apache-2.0",
-      "catalogOrder": 1
     },
     {
       "id": "hf-3f025c48c583b8ac122fa02d",

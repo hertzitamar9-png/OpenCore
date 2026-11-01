@@ -1,12 +1,13 @@
 const fs=require('fs'),path=require('path'),http=require('http'),acorn=require('acorn');
 const {chromium}=require(process.env.OPENCORE_PLAYWRIGHT || 'playwright');
-const directory=path.join(__dirname,'candidate-dist'),entryName='index-CD0EH-dA.js',appName='App-kNA9sRUP.js';
+const directory=path.join(process.env.OPENCORE_UI_OUTPUT||__dirname,'candidate-dist'),entryName='index-CD0EH-dA.js',appName='App-kNA9sRUP.js';
 let entry=fs.readFileSync(path.join(directory,'assets',entryName),'utf8');
 const tree=acorn.parse(entry,{ecmaVersion:'latest',sourceType:'module'}),mount=tree.body.find(n=>n.type==='ExpressionStatement'&&entry.slice(n.start,n.end).includes('createRoot('));
 entry=entry.slice(0,mount.start)+entry.slice(mount.end)+'\nexport{ev as TestDOM};';
-const app=fs.readFileSync(path.join(directory,'assets',appName),'utf8')+'\nexport{yj as TestModels,$HubSettings as TestHubSettings,$hubAugment as TestAugment,$hubInvoke as TestInvoke};';
+const app=fs.readFileSync(path.join(directory,'assets',appName),'utf8')+'\nexport{yj as TestModels,$HubSettings as TestHubSettings,$hubAugment as TestAugment,$hubInvoke as TestInvoke,Rp as TestProfile,Up as TestProfiles};';
 const fixture=`
 window.fixture={catalog:[],progress:null,calls:[],token:false};
+window.fixtureProfile=id=>'api:provider-fixture:'+Array.from(new TextEncoder().encode(id),byte=>byte.toString(16).padStart(2,'0')).join('');
 fixture.variants=['Q4_K_M','Q8_0'].map((q,j)=>({id:'hf-'+String(j+1).repeat(24),repository:'fixture/tiny-model',revision:'a'.repeat(40),variantKey:'gguf:'+q,name:'tiny-model',quantization:q,format:'gguf',subdirectory:'',bytes:100+j,files:[{filename:'model-'+q+'.gguf',bytes:100+j,role:'model',sha256:'b'.repeat(64)}],installable:true,runtime:{adapter:'gguf'},sourceUrl:'https://huggingface.co/fixture/tiny-model',status:'not-installed'}));
 window.__TAURI_INTERNALS__={invoke:async(command,args={})=>{fixture.calls.push({command,args});switch(command){
 case 'runtime_setup_probe':return{hubBridge:{available:true,url:'http://127.0.0.1:59999',secret:'fixture-secret-secret-secret-secret',authHeader:'X-OpenCore-Hub-Secret'}};
@@ -18,8 +19,8 @@ case 'uninstall_model':fixture.nativeModels=[];return null;
 case 'install_model':{const model=(fixture.nativeModels||[]).find(model=>model.id===args.id);if(model)model.installed=true;return null;}
 case 'speech_status':return{enabled:false,installed:false,modelId:'whisper-large-v3-turbo',phase:'off'};
 case 'model_weight_update_status':return{enabled:false,phase:'idle',models:[]};
-case 'api_provider_save':return{id:'provider-fixture',name:args.input.name,models:[{id:args.input.model,profileId:'api:provider-fixture:'+args.input.model,enabled:true,available:true,contextTokens:8192}]};
-case 'api_provider_model':return{id:args.id,name:'Local fixture',models:[{id:args.model,profileId:'api:provider-fixture:'+args.model,enabled:true,available:true,contextTokens:8192}]};
+case 'api_provider_save':return{id:'provider-fixture',name:args.input.name,models:[{id:args.input.model,profileId:fixtureProfile(args.input.model),enabled:true,available:true,contextTokens:8192}]};
+case 'api_provider_model':return{id:args.id,name:'Local fixture',models:[{id:args.model,profileId:fixtureProfile(args.model),enabled:true,available:true,contextTokens:8192}]};
 default:return null;}}};
 window.fetch=async(url,options={})=>{const route=new URL(url).pathname.replace('/api',''),body=options.body?JSON.parse(options.body):{};fixture.calls.push({route,body,headers:options.headers});let value={};
 if(route==='/status'){const snapshot=JSON.stringify(fixture.catalog);if(snapshot!==fixture.snapshot){fixture.snapshot=snapshot;fixture.revision=(fixture.revision||0)+1;fixture.catalogRevision=fixture.revision.toString(16).padStart(64,'0');}value={...(options.headers?.['X-OpenCore-Catalog-Revision']===fixture.catalogRevision?{}:{catalog:fixture.catalog}),catalogRevision:fixture.catalogRevision,progress:fixture.progress,tokenConfigured:fixture.token};}
@@ -60,6 +61,14 @@ record('Use model registers and selects an actual native chat profile',await pag
 await page.getByLabel('Hugging Face access token',{exact:true}).fill('hf_fake_fixture_token');await page.getByRole('button',{name:'Save token',exact:true}).click();await page.getByRole('region',{name:'Hugging Face access',exact:true}).getByText('Access token saved',{exact:true}).waitFor();
 record('token save clears password field and returns status only',await page.getByLabel('Hugging Face access token',{exact:true}).inputValue()===''&&!await page.locator('body').innerText().then(t=>t.includes('hf_fake_fixture_token')));
 await page.getByRole('button',{name:'Remove token',exact:true}).click();await page.getByRole('region',{name:'Hugging Face access',exact:true}).getByText('No token saved',{exact:true}).waitFor();record('token removal is independent from public catalog',await page.getByRole('article').count()===1);
+await page.evaluate(()=>{fixture.catalog=[{...fixture.variants[0],id:'hf-'+'8'.repeat(24),familyId:'echo-vision-fixture',familyLabel:'Echo Vision fixture',category:'text',libraryCategory:'omni',memoryMode:'echo',status:'installed',runtimeReady:true,profileId:null,providerId:null}];fixture.progress=null;});
+const echoCard=page.getByRole('article',{name:'Echo Vision fixture'});await echoCard.waitFor();
+const pending=await page.evaluate(async()=>{const {TestAugment}=await import('/assets/App-kNA9sRUP.js');return TestAugment({models:[]}).models.find(m=>m.id==='hf-'+'8'.repeat(24));});
+record('a ready imported text model waits for a real chat profile rather than exposing an invalid model id',pending.memoryMode==='echo'&&!pending.selectable);
+await echoCard.getByRole('button',{name:'Use model',exact:true}).click();
+await page.waitForFunction(()=>window.selected&&globalThis.__opencoreHubEchoProfiles?.has(window.selected));
+const echoSelection=await page.evaluate(async()=>{const {TestAugment,TestProfile,TestProfiles}=await import('/assets/App-kNA9sRUP.js');const model=TestAugment({models:[]}).models.find(m=>m.id==='hf-'+'8'.repeat(24)),profile=TestProfile(model);const options=TestProfiles([profile,{id:window.selected,label:'provider fixture'}],window.selected);return {memoryMode:model.memoryMode,category:model.category,selectable:model.selectable,pickerId:profile.id,selected:window.selected,pickerMatches:options.filter(item=>item.id===window.selected).length};});
+record('a multimodal text model keeps its category and selects its registered ECHO chat profile',echoSelection.memoryMode==='echo'&&echoSelection.category==='omni'&&echoSelection.selectable&&echoSelection.pickerId===echoSelection.selected&&echoSelection.pickerMatches===1);
 await page.evaluate(()=>{fixture.catalog=fixture.variants.map(v=>({...v,status:'not-installed',runtimeReady:false,profileId:null,providerId:null,familyId:'publisher-flint',familyLabel:'Flint 40B A2.5B',nativeModelIds:['flint'],repository:v.quantization==='Q8_0'?'publisher/flint-other-quants':v.repository}));fixture.catalog.push({...fixture.catalog[0],id:'hf-'+'3'.repeat(24),familyId:'publisher-raon-1-mini',familyLabel:'Raon 1 mini',repository:'KRAFTON/Raon-1-mini-preview-gguf',nativeModelIds:['raon-1-mini']});});
 await page.getByRole('heading',{name:'Flint 40B A2.5B',exact:true}).waitFor();await page.getByRole('heading',{name:'Raon 1 mini',exact:true}).waitFor();
 record('publisher quantizations from multiple repositories share two family cards',await page.getByRole('article').count()===2&&await page.getByLabel('Quantization for fixture/tiny-model').locator('option').count()===2);

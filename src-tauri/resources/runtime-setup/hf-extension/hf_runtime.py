@@ -71,6 +71,19 @@ def conversation_key(value):
     return value
 
 
+def admitted_context(requested, props):
+    """Use the server's real per-slot capacity when it exposes one."""
+    settings = props.get('default_generation_settings') if isinstance(props, dict) else None
+    actual = settings.get('n_ctx') if isinstance(settings, dict) else None
+    if type(actual) is not int or actual <= 0:
+        actual = props.get('n_ctx') if isinstance(props, dict) else None
+    verified = type(actual) is int and actual > 0
+    context = min(requested, actual) if verified else requested
+    if context < 8192:
+        raise ValueError(f'This runtime provides {context:,} context tokens; the ECHO chat agent needs at least 8,192. Choose a compatible model or runtime.')
+    return context, verified
+
+
 def _python(root):
     for recipe in ('managed-transformers-text-v1', 'edgerock-portable-v1'):
         path = Path(root) / 'runtime-setup/environments' / recipe / 'Scripts/python.exe'
@@ -106,12 +119,12 @@ def runtime_plan(entry, root, resources):
         model = sorted(models, key=lambda p: p.name)[0]
         command = [str(engine), '--model', str(model), '--host', '127.0.0.1', '--port', '{port}',
                    '--ctx-size', str(context), '--threads', '2', '--threads-batch', '2',
-                   '--gpu-layers', 'auto', '--fit', 'on', '--no-webui', '--api-key-file', '{keyfile}']
+                   '--gpu-layers', 'auto', '--fit', 'on', '--parallel', '1', '--no-webui', '--api-key-file', '{keyfile}']
         if publisher_engine:
             # The publisher CPU builds work without a CUDA SDK or a particular GPU.
             command[command.index('--gpu-layers') + 1] = '0'
             command[command.index('--fit') + 1] = 'off'
-            command += ['--no-repack', '--cache-ram', '0', '--parallel', '1', '--no-warmup', '--jinja',
+            command += ['--no-repack', '--cache-ram', '0', '--no-warmup', '--jinja',
                         '--batch-size', '64', '--ubatch-size', '16']
             if publisher_engine == 'edgerock-cpu-v1':
                 command += ['--no-context-shift']
@@ -197,7 +210,7 @@ class RuntimeManager:
     def models(self, catalog):
         values = catalog.get('models', []) if isinstance(catalog, dict) else catalog
         return {'object': 'list', 'data': [{'id': e['id'], 'object': 'model', 'owned_by': 'local-huggingface',
-            'context_length': max(1, min(int(e.get('contextTokens') or 32768), 32768))} for e in values
+            'context_length': max(1, min(int((e.get('runtimePreparation') or {}).get('contextTokens') or e.get('contextTokens') or 32768), 32768))} for e in values
             if e.get('category','text')=='text' and e.get('status') == 'installed' and (e.get('runtimeReady') or e.get('runtimePreparation', {}).get('runtimeReady'))]}
 
     def set_context(self, model_id, conversation_id, request_id):
@@ -346,6 +359,12 @@ class RuntimeManager:
                             cwd=Path(command[0]).parent if plan.get('publisherEngine') else None)
         upstream = f'http://127.0.0.1:{port}'
         self._wait_health(child, upstream, key, log_path)
+        try:
+            with self._request(upstream + '/props', key=key, timeout=5) as response:
+                props = json.load(response)
+        except (OSError, ValueError, RuntimeError):
+            props = {}
+        plan['context'], context_verified = admitted_context(plan['context'], props)
         self.on_progress(stage='verifying-inference', detail='Checking an actual short generation')
         with self._request(upstream + '/v1/chat/completions', {'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
                 'max_tokens': 8, 'temperature': 0, 'stream': False}, key, timeout=120) as response:
@@ -368,7 +387,7 @@ class RuntimeManager:
         self.on_progress(stage='verifying-echo', detail='Checking a generated reply through the ECHO endpoint')
         with self._request(echo_url + '/v1/chat/completions', {
                 'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
-                'max_tokens': 16, 'temperature': 0, 'stream': False,
+                'max_tokens': 16, 'echo_max_total_tokens': 16, 'temperature': 0, 'stream': False,
                 'conversation_id': 'installation-check-' + uuid.uuid4().hex,
                 'chat_template_kwargs': {'enable_thinking': False}}, key, timeout=180) as response:
             echo_result = json.load(response)
@@ -379,7 +398,7 @@ class RuntimeManager:
         stats = [{'filename': str(path.relative_to(Path(plan['folder']))), 'bytes': path.stat().st_size,
                   'modifiedNs': path.stat().st_mtime_ns} for path in files]
         proof = {'runtimeReady': True, 'inferenceVerified': True, 'echoReady': True, 'contextTokens': plan['context'],
-                 'echoMode': 'main-context-v1',
+                 'echoMode': 'main-context-v1', 'contextVerified': context_verified,
                  'verifiedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'repository': entry['repository'],
                  'revision': entry['revision'], 'receiptSha256': _hash(entry['receiptPath']),
                  'generatedTokens': proof_result.get('usage', {}).get('completion_tokens'),

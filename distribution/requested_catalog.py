@@ -86,7 +86,7 @@ def append_requested(entries, manifest, snapshots):
             for value in plan['variants']:
                 entry = copy.deepcopy(value)
                 if source.get('inferenceCategory'):
-                    if source['inferenceCategory'] != 'text' or not repository.startswith('LiquidAI/LFM3-'):
+                    if source['inferenceCategory'] != 'text' or not (repository.startswith('LiquidAI/LFM3-') or repository=='mradermacher/Terminal-RSI-27B-i1-GGUF'):
                         raise ValueError('Unreviewed inference category override')
                     entry['category'] = 'text'
                 quant = source.get('quantization', source.get('quantizationLabels', {}).get(entry['quantization'], entry['quantization']))

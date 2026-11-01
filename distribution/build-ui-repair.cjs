@@ -59,6 +59,7 @@ index+='\nconst $sectionHighlights=document.createElement("style");$sectionHighl
 index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement("style");style.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/navigation-divider.css'),'utf8'))+';document.head.appendChild(style);}\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 app=editFunction(app,'Kp',text=>replaceOnce(text,'function Kp(t){','function Kp(t){if(globalThis.__opencoreHubEchoProfiles?.has(t))return true;'));
+app=editFunction(app,'Rp',text=>replaceOnce(text,'return{id:t.id,','return{id:t.hubEntry?.profileId||t.id,'));
 app=editFunction(app,'pk',text=>{
   text=replaceOnce(text,'const u=await jj();','const u=$manualUpdatePolicy.normalize(await jj());');
   return replaceOnce(text,'busy:a||l,check:c,install:d','busy:a||l,installing:l,check:c,install:d');
