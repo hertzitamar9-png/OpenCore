@@ -269,6 +269,31 @@ def build_plan(metadata):
                     'sentence-similarity': 'embedding', 'text-classification': 'classification',
                     'image-classification': 'classification'}.get(task, 'text' if task in (
                         '', 'text-generation', 'text2text-generation', 'image-text-to-text', 'conversational') else 'omni')
+        # Output modality and runtime execution are separate questions.
+        # Transcription and multimodal tasks may generate text but require their
+        # own input processor; this metadata never claims that a runner works.
+        text_output_tasks = {
+            '', 'text-generation', 'text2text-generation', 'conversational',
+            'image-text-to-text', 'image-to-text', 'visual-question-answering',
+            'document-question-answering', 'video-text-to-text',
+            'audio-text-to-text', 'automatic-speech-recognition',
+            'translation', 'summarization', 'question-answering',
+            'table-question-answering',
+        }
+        input_modalities = (
+            ['audio'] if task in ('automatic-speech-recognition', 'audio-text-to-text') else
+            ['video', 'text'] if task == 'video-text-to-text' else
+            ['image', 'text'] if task in ('image-text-to-text', 'image-to-text',
+                                        'visual-question-answering', 'document-question-answering') else
+            ['text']
+        )
+        output_modalities = (
+            ['text'] if task in text_output_tasks else
+            ['image'] if category == 'image' else
+            ['video'] if category == 'video' else
+            ['audio'] if category == 'tts' else
+            []
+        )
         runtime_kind = ("gguf" if format_name == "gguf" else "transformers" if format_name == "safetensors" else None) if category == 'text' else None
         if category=='image' and format_name=='diffusers':runtime_kind='diffusers'
         is_adapter = (adapter_only and format_name != 'gguf') or format_name == 'lora'
@@ -281,6 +306,7 @@ def build_plan(metadata):
         variants.append({"id": stable_id(repo, key), "repository": repo, "revision": revision, "variantKey": key,
             "name": repo.split("/", 1)[1] + " · " + quant + (" · " + subdir if subdir else ""),
             "quantization": quant, "format": format_name, "subdirectory": subdir, 'category': category,
+            "inputModalities": input_modalities, "outputModalities": output_modalities,
             "bytes": sum(p["bytes"] for p in pins), "files": pins, "installable": reason is None,
             "reason": reason, "modelType": config.get("model_type") or (metadata.get("gguf") or {}).get("architecture"), "architectures": config.get("architectures", []),
             "runtime": runtime, "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),
