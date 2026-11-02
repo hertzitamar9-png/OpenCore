@@ -18,7 +18,7 @@ import uuid
 if __name__ == '__main__':
     # -I workers resolve only these installed, app-owned sibling modules.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-from model_modes import mode_context, NATIVE_TARGET, ECHO_TARGET
+from model_modes import mode_context, supports_text_generation, NATIVE_TARGET, ECHO_TARGET
 
 
 def _hash(path, cancel=None):
@@ -228,7 +228,7 @@ class RuntimeManager:
         values = catalog.get('models', []) if isinstance(catalog, dict) else catalog
         return {'object': 'list', 'data': [{'id': e['id'], 'object': 'model', 'owned_by': 'local-huggingface',
             'context_length': max(1, int((e.get('runtimePreparation') or {}).get('contextTokens') or mode_context(e)))} for e in values
-            if e.get('category','text')=='text' and e.get('status') == 'installed' and (e.get('runtimeReady') or e.get('runtimePreparation', {}).get('runtimeReady'))]}
+            if supports_text_generation(e) and e.get('status') == 'installed' and (e.get('runtimeReady') or e.get('runtimePreparation', {}).get('runtimeReady'))]}
 
     def set_context(self, model_id, conversation_id, request_id):
         conversation_key(conversation_id)
