@@ -258,6 +258,17 @@ class RuntimeSafetyTests(unittest.TestCase):
         self.assertEqual(runtime._context['conversationId'], 'chat-2')
         runtime.stop()
 
+    def test_verified_multimodal_text_generator_is_listed_as_chat_backend(self):
+        runtime=RuntimeManager(self.root,self.resources)
+        vl={**self.entry,'category':'omni','status':'installed','inputModalities':['image','text'],
+            'outputModalities':['text'],'runtimeReady':True}
+        audio={**self.entry,'id':'asr-model','category':'speech','inputModalities':['audio'],
+            'outputModalities':['text'],'runtimeReady':True}
+        unverified={**vl,'id':'vl-unverified','runtimeReady':False,'runtimePreparation':{}}
+        catalog=runtime.models([vl,audio,unverified])
+        self.assertEqual([item['id'] for item in catalog['data']],[self.entry['id']])
+        self.assertEqual(catalog['data'][0]['context_length'],32768)
+
     def test_models_does_not_call_unverified_download_runtime_ready(self):
         runtime = RuntimeManager(self.root, self.resources)
         models = runtime.models([self.entry])
