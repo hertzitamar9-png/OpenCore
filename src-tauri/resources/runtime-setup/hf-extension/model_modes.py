@@ -26,6 +26,25 @@ def supports_text_generation(model, info=None):
     if (info.get('pipeline_tag') or model.get('task')) in ('text-generation','text2text-generation','image-text-to-text'):return True
     return category in ('omni','computer-use','ocr') and 'text' in model.get('inputModalities',[]) and 'text' in model.get('outputModalities',[])
 
+def produces_text(model, info=None):
+    """Output modality inventory, separate from verified chat/runtime capability.
+
+    ASR and OCR can produce text without implementing conversation generation.
+    This flag must never be used by itself to mark a model runtime-ready.
+    """
+    info=info or {}
+    output=model.get('outputModalities')
+    if isinstance(output,(list,tuple)) and any(str(value).lower()=='text' for value in output):
+        return True
+    task=str(info.get('pipeline_tag') or model.get('task') or '').lower()
+    return task in {
+        'text-generation','text2text-generation','conversational','image-text-to-text',
+        'video-text-to-text','audio-text-to-text','image-to-text','visual-question-answering',
+        'document-question-answering','automatic-speech-recognition','translation',
+        'summarization','question-answering','table-question-answering'
+    } or model.get('category','text') in ('text','brain')
+
+
 def descriptors(model, info=None):
     info=info or {};published=published_context_tokens(info) or positive(model.get('publishedContextTokens'))
     # Existing supported context is a conservative fallback, not evidence for 1M.
@@ -45,6 +64,7 @@ def apply_operating_modes(models, metadata=lambda _:{}):
     for model in models:
         info=metadata(model) or {}
         enabled=supports_text_generation(model,info)
+        model['outputsText']=produces_text(model,info)
         model['supportsTextGeneration']=enabled
         model['operatingModes']=[]
         if enabled:
