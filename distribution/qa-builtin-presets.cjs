@@ -24,7 +24,7 @@ for(const id of ['llama32-1b','sage-a15-q4-k-m','holo4-27b']){
  if(!entry)throw new Error('Missing bundled family '+id);
  await searches.fill(entry.familyLabel);
  const card=page.getByRole('article',{name:entry.familyLabel,exact:true});await card.waitFor();
- record(id+' has at least five preset choices before any repository check',await card.locator('select option').count()>=5);
+ record(id+' has at least five preset choices before any repository check',await card.getByRole('combobox',{name:/^Quantization for /}).locator('option').count()>=5);
  record(id+' offers direct installation',await card.getByRole('button',{name:'Install',exact:true}).isEnabled());
  await card.screenshot({path:path.join(__dirname,'.output/builtin-'+id+'.png')});
 }
@@ -36,25 +36,25 @@ for(const [family,count] of requested){
  if(!entry)throw new Error('Missing requested model '+family);
  await searches.fill(entry.familyLabel);
  const card=page.getByRole('article',{name:entry.familyLabel,exact:true});await card.waitFor();
- record(entry.familyLabel+' has one card with every reviewed preset package',await card.count()===1&&await card.locator('select option').count()===count);
+ record(entry.familyLabel+' has one card with every reviewed preset package',await card.count()===1&&await card.getByRole('combobox',{name:/^Quantization for /}).locator('option').count()===count);
  record(entry.familyLabel+' has a direct Install button',await card.getByRole('button',{name:'Install',exact:true}).isEnabled());
  if(family==='publisher-hobbylm-1b-computer-use')record('HobbyLM explains its exact base and reviewed local prediction runtime',await card.innerText().then(text=>text.includes('harims95/hobbylm-1B-instruct')&&text.includes('isolated Windows CPU loader')));
  else if(entries.some(value=>value.format==='gguf'&&['Q4_K_M','Q8_0'].includes(value.quantization))){
   const quant=entries.find(value=>value.format==='gguf'&&value.quantization==='Q4_K_M')||entries.find(value=>value.format==='gguf'&&value.quantization==='Q8_0');
-  await card.locator('select').selectOption(quant.id);
-  record(entry.familyLabel+' switches to its pinned '+quant.quantization+' package',await card.locator('select').inputValue()===quant.id&&await card.innerText().then(text=>text.includes(quant.repository)));
+  await card.getByRole('combobox',{name:/^Quantization for /}).selectOption(quant.id);
+  record(entry.familyLabel+' switches to its pinned '+quant.quantization+' package',await card.getByRole('combobox',{name:/^Quantization for /}).inputValue()===quant.id&&await card.innerText().then(text=>text.includes(quant.repository)));
  }
  else{
-  record(entry.familyLabel+' keeps the publisher custom quantization label',await card.locator('select').inputValue()===entry.id&&await card.locator('select option').first().innerText().then(text=>text.includes(entry.quantization)));
+  record(entry.familyLabel+' keeps the publisher custom quantization label',await card.getByRole('combobox',{name:/^Quantization for /}).inputValue()===entry.id&&await card.getByRole('combobox',{name:/^Quantization for /}).locator('option').first().innerText().then(text=>text.includes(entry.quantization)));
   if(family==='publisher-tals-coder-flash-02')record('Tals shows its required Hadamard runtime without claiming readiness',await card.innerText().then(text=>text.includes('Hadamard')&&text.includes('Compatible adapter required')&&!text.includes('Ready to use')));
  }
  if(family==='publisher-groot-19b-a3b-261023'){
   record('Groot preserves its exact publisher identity and ECHO working window',await card.innerText().then(text=>text.includes('GrootTeam/Groot-19B-A3B-261023')&&text.includes('32K working window')));
-  const fp4=entries.find(value=>value.format==='safetensors'&&value.quantization==='NVFP4');await card.locator('select').selectOption(fp4.id);
+  const fp4=entries.find(value=>value.format==='safetensors'&&value.quantization==='NVFP4');await card.getByRole('combobox',{name:/^Quantization for /}).selectOption(fp4.id);
   record('Groot NVFP4 shows its actual runtime requirement',await card.innerText().then(text=>text.includes('compatible NVFP4 hardware')&&text.includes('Compatible adapter required')&&!text.includes('Ready to use')));
  }
  if(family==='publisher-kestrel-4b-coder'){
-  record('Kestrel offers exactly its four publisher GGUFs plus the original BF16 without duplicate cards',entries.filter(value=>value.format==='gguf').length===4&&await card.locator('select option').count()===5&&await card.innerText().then(text=>text.includes('32K working window')));
+  record('Kestrel offers exactly its four publisher GGUFs plus the original BF16 without duplicate cards',entries.filter(value=>value.format==='gguf').length===4&&await card.getByRole('combobox',{name:/^Quantization for /}).locator('option').count()===5&&await card.innerText().then(text=>text.includes('32K working window')));
  }
  if(family==='publisher-sensenova-loop-9b-preview'){
   record('SenseNova Loop preserves the publisher identity, ECHO and required custom architecture',await card.innerText().then(text=>text.includes('sensenova/SenseNova-Loop-9B-Preview')&&text.includes('32K working window')&&text.includes('mHC')&&text.includes('Compatible adapter required')&&!text.includes('Ready to use')));
@@ -75,7 +75,7 @@ record('opening preset cards does not download weights',await page.evaluate(()=>
 record('the app has no community-quantization search controls',await page.getByRole('button',{name:/Find.*quantization/i}).count()===0&&await page.getByRole('checkbox',{name:/community/i}).count()===0);
 await searches.fill('Mano-CUA 2.0 4B');
 const manoCard=page.getByRole('article',{name:'Mano-CUA 2.0 4B',exact:true}),mano=presetCatalog.entries.find(entry=>entry.familyId==='publisher-mano-cua-2-0-4b'&&entry.format==='gguf'&&entry.quantization==='Q4_K_M');
-await manoCard.locator('select').selectOption(mano.id);await manoCard.getByRole('button',{name:'Install',exact:true}).click();
+await manoCard.getByRole('combobox',{name:/^Quantization for /}).selectOption(mano.id);await manoCard.getByRole('button',{name:'Install',exact:true}).click();
 await manoCard.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('requested model installation uses its selected preset and locks duplicate installs',await manoCard.getByRole('button',{name:'Installing…',exact:true}).isDisabled()&&await page.evaluate(id=>fixture.calls.some(call=>call.route==='/install'&&call.body.id===id),mano.id));
 await page.locator('.model-install-progress progress').waitFor();
@@ -84,7 +84,7 @@ await page.locator('.model-install-progress').getByRole('button',{name:'Pause in
 record('pausing the requested download releases its Install button',await manoCard.getByRole('button',{name:'Install',exact:true}).isEnabled());
 const kestrel=presetCatalog.entries.find(entry=>entry.familyId==='publisher-kestrel-4b-coder'&&entry.format==='gguf'&&entry.quantization==='Q4_K_M');
 await searches.fill(kestrel.familyLabel);const kestrelCard=page.getByRole('article',{name:kestrel.familyLabel,exact:true});
-await kestrelCard.locator('select').selectOption(kestrel.id);await kestrelCard.getByRole('button',{name:'Install',exact:true}).click();
+await kestrelCard.getByRole('combobox',{name:/^Quantization for /}).selectOption(kestrel.id);await kestrelCard.getByRole('button',{name:'Install',exact:true}).click();
 await kestrelCard.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('Kestrel installs its selected publisher Q4 package and locks duplicate installation',await kestrelCard.getByRole('button',{name:'Installing…',exact:true}).isDisabled()&&await page.evaluate(id=>fixture.calls.some(call=>call.route==='/install'&&call.body.id===id),kestrel.id));
 await page.locator('.model-install-progress progress').waitFor();
@@ -93,7 +93,7 @@ await page.locator('.model-install-progress').getByRole('button',{name:'Pause in
 record('pausing Kestrel releases its Install button',await kestrelCard.getByRole('button',{name:'Install',exact:true}).isEnabled());
 const groot=presetCatalog.entries.find(entry=>entry.familyId==='publisher-groot-19b-a3b-261023'&&entry.repository==='GrootTeam/Groot-19B-A3B-261023-GGUF');
 await searches.fill(groot.familyLabel);const grootCard=page.getByRole('article',{name:groot.familyLabel,exact:true});
-await grootCard.locator('select').selectOption(groot.id);await grootCard.getByRole('button',{name:'Install',exact:true}).click();
+await grootCard.getByRole('combobox',{name:/^Quantization for /}).selectOption(groot.id);await grootCard.getByRole('button',{name:'Install',exact:true}).click();
 await grootCard.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('Groot installs the exact publisher Q4 package and prevents duplicate installation',await grootCard.getByRole('button',{name:'Installing…',exact:true}).isDisabled()&&await page.evaluate(id=>fixture.calls.some(call=>call.route==='/install'&&call.body.id===id),groot.id));
 await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();await grootCard.getByRole('button',{name:'Install',exact:true}).waitFor();
