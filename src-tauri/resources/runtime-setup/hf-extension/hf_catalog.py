@@ -295,6 +295,13 @@ def build_plan(metadata):
             []
         )
         runtime_kind = ("gguf" if format_name == "gguf" else "transformers" if format_name == "safetensors" else None) if category == 'text' else None
+        # A vision-language GGUF with its pinned projector has a real candidate
+        # llama.cpp text-output backend. It is only marked *ready* after launch
+        # and actual generation; image-question accuracy is not inferred here.
+        if (runtime_kind is None and format_name == 'gguf' and
+                task in ('image-to-text', 'visual-question-answering', 'document-question-answering') and
+                any(pin.get('role') == 'companion' for pin in pins)):
+            runtime_kind = 'gguf'
         if category=='image' and format_name=='diffusers':runtime_kind='diffusers'
         is_adapter = (adapter_only and format_name != 'gguf') or format_name == 'lora'
         if is_adapter:
