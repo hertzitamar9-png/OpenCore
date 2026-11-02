@@ -37,6 +37,12 @@
       "format": "safetensors",
       "subdirectory": "",
       "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
       "bytes": 4357425394,
       "files": [
         {
@@ -152,6 +158,13 @@
       "format": "gguf",
       "subdirectory": "",
       "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
       "bytes": 3299640384,
       "files": [
         {
@@ -202,6 +215,10 @@
       "format": "pytorch",
       "subdirectory": "",
       "category": "omni",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [],
       "bytes": 608863580,
       "files": [
         {
