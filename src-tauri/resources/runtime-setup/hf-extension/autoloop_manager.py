@@ -141,6 +141,8 @@ class AutoLoopManager:
         result['modelPath'] = str(file)
         if result.get('requiresVisionCompatibility'):
             result.update(supported=False,reason='This vision checkpoint needs a separately verified companion after layer modification. AutoLoop leaves it unchanged.')
+        if result.get('supported') and (type(result.get('contextTokens')) is not int or result['contextTokens'] < 8192):
+            result.update(supported=False,reason='This GGUF does not declare the required 8,192-token context length. AutoLoop cannot promote it as an OpenCore chat model.')
         return result
 
     def status(self):
