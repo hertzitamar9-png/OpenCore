@@ -145,6 +145,26 @@ class ModelModePolicyTests(unittest.TestCase):
         self.assertEqual(catalog['artifacts'], original['artifacts'])
         self.assertEqual(catalog['models'][0]['artifacts'], original['models'][0]['artifacts'])
 
+    def test_text_output_inventory_is_not_a_claim_of_chat_runtime(self):
+        from model_modes import produces_text
+        transcription={'category':'speech','inputModalities':['audio'],'outputModalities':['text']}
+        self.assertTrue(produces_text(transcription))
+        apply_operating_modes([transcription])
+        self.assertTrue(transcription['outputsText'])
+        self.assertFalse(transcription['supportsTextGeneration'])
+        self.assertEqual(transcription['operatingModes'], [])
+        vl={'category':'omni','inputModalities':['text','image'],'outputModalities':['text'],
+            'runtime':{'adapter':'gguf'},'contextTokens':32768}
+        apply_operating_modes([vl])
+        self.assertTrue(vl['outputsText'])
+        self.assertTrue(vl['supportsTextGeneration'])
+        self.assertTrue(all(mode['supported'] for mode in vl['operatingModes']))
+        pending={'category':'omni','inputModalities':['text','video'],'outputModalities':['text'],
+                 'runtime':{'adapter':None},'contextTokens':32768}
+        apply_operating_modes([pending])
+        self.assertTrue(pending['outputsText'])
+        self.assertFalse(any(mode['supported'] for mode in pending['operatingModes']))
+
 
 if __name__ == '__main__':
     unittest.main()
