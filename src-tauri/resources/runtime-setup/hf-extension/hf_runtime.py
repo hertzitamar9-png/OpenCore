@@ -476,7 +476,7 @@ class RuntimeManager:
         if not (echo_message.get('content') or echo_message.get('reasoning_content')):
             raise RuntimeError('The ECHO endpoint did not return an actual generated reply')
         proof=self._runtime_proof(entry,plan,files,proof_result,sample,context_verified,log_path)
-            if media_verified:proof['verifiedInputModality']=media_verified
+        if media_verified:proof['verifiedInputModality']=media_verified
         (run_dir / 'inference-receipt.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
         self._active = {'id': entry['id'], 'url': echo_url, 'upstream': upstream, 'key': key, 'proof': proof,'mode':'echo'}
         return proof
