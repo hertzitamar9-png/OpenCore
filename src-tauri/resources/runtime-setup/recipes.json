@@ -555,6 +555,7 @@
         "accelerate": "1.13.0",
         "safetensors": "0.8.0",
         "psutil": "6.1.1",
+        "pillow": "11.3.0",
         "sentencepiece": "0.2.1"
       },
       "torchPackages": {
@@ -566,7 +567,8 @@
         "transformers": [
           "AutoTokenizer",
           "AutoModelForCausalLM",
-          "AutoModelForImageTextToText"
+          "AutoModelForImageTextToText",
+          "AutoProcessor"
         ],
         "accelerate": [],
         "safetensors": [],
