@@ -4,7 +4,7 @@ Shared groups let friends chat and mention agents hosted on their selected PCs. 
 
 The slash menu now fits the viewport, wraps its full descriptions and scrolls independently of the conversation. Arrow keys, Enter, Escape, mouse wheel and touch scrolling work within the menu. Task progress shows actual plan steps and agent calls without treating a finished chat as proof that every step was completed.
 
-Claude Code, Codex, Hermes and OpenCode profiles start disconnected. Existing external files are not consent to connect or import. Adding an OpenCore profile and importing history are separate, explicit actions. A fresh-profile packaged startup check includes synthetic Claude/Codex histories and verifies that none are imported automatically.
+Claude Code, Codex, Hermes and OpenCode profiles start disconnected. Existing external files are not consent to connect or import. Adding an OpenCore profile and importing history are separate, explicit actions. Startup no longer begins legacy Claude/Codex history migrations. A fresh-profile packaged startup check includes synthetic Claude/Codex histories and verifies that none are imported automatically.
 
 OrcaCyber Nano's native and publisher entries now share one family card with the two real published mixed-precision packages. Uninstalled packages use the managed download path instead of the older runtime path that failed before downloading weights. Publisher access terms and an authorized Hugging Face token still apply. Jommarn/JEV-Computer-Use is listed under its exact publisher identity; that repository currently publishes no model weights or quantizations, so OpenCore clearly marks it unavailable for installation.
 

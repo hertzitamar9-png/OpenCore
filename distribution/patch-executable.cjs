@@ -46,6 +46,8 @@ for(const workerChange of require('./native-studio-data.cjs').patchNativeStudioW
 }
 const bridgeChange=require('./native-bridge-policy.cjs').disableAutomaticBridge(result);
 ranges.push([bridgeChange.raw,bridgeChange.raw+bridgeChange.bytes]);changes.push(bridgeChange);
+const historyChange=require('./native-startup-data.cjs').patchNativeStartupDefaults(result);
+ranges.push([historyChange.raw,historyChange.raw+historyChange.slotBytes]);changes.push(historyChange);
 ranges.sort((a, b) => a[0] - b[0]);
 let checked = 0;
 for (const [start, end] of ranges) {

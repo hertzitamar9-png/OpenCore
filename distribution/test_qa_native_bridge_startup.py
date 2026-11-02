@@ -12,6 +12,32 @@ qa=importlib.util.module_from_spec(spec);spec.loader.exec_module(qa)
 
 
 class StartupQaTests(unittest.TestCase):
+    @unittest.skipUnless(os.name=='nt','Windows known folders')
+    def test_isolated_profile_resolves_windows_known_folders_before_native_startup(self):
+        probe='''import ctypes,json,uuid
+from ctypes import wintypes
+result={}
+for name,identity in [('roaming','3EB685DB-65F9-4CF6-A03A-E3EF65729F3D'),('local','F1B32785-6FBA-4FCF-9D55-7B8E7F157091')]:
+    folder=(ctypes.c_byte*16).from_buffer_copy(uuid.UUID(identity).bytes_le)
+    value=ctypes.c_wchar_p();shell=ctypes.WinDLL('shell32');shell.SHGetKnownFolderPath.restype=ctypes.c_long
+    status=shell.SHGetKnownFolderPath(ctypes.byref(folder),0,None,ctypes.byref(value))
+    result[name]={'status':status,'path':value.value}
+    if value:ctypes.OleDLL('ole32').CoTaskMemFree(value)
+print(json.dumps(result))'''
+        import json,sys
+        with tempfile.TemporaryDirectory(prefix='opencore-known-folders-qa-') as directory:
+            home=Path(directory)/'home';home.mkdir()
+            # This is the actual Windows failure, reproduced without launching
+            # OpenCore or touching the current user's application state.
+            missing=subprocess.run([sys.executable,'-I','-c',probe],env=dict(os.environ,USERPROFILE=str(home)),capture_output=True,text=True,check=True,timeout=10)
+            self.assertNotEqual(json.loads(missing.stdout)['roaming']['status'],0)
+            environment=qa.isolated_windows_environment(home)
+            result=subprocess.run([sys.executable,'-I','-c',probe],env=environment,capture_output=True,text=True,check=True,timeout=10)
+            paths=json.loads(result.stdout)
+            for key in ('roaming','local'):self.assertEqual(paths[key]['status'],0,paths)
+            self.assertEqual(Path(paths['roaming']['path']),Path(environment['APPDATA']))
+            self.assertEqual(Path(paths['local']['path']),Path(environment['LOCALAPPDATA']))
+
     def test_fresh_startup_check_rejects_imported_external_history(self):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory)/'app.sqlite3'

@@ -16,6 +16,19 @@ import time
 HISTORY_MARKER = 'OpenCore startup consent fixture'
 
 
+def isolated_windows_environment(home):
+    """Keep Windows known folders and environment paths in one valid profile."""
+    home=Path(home).resolve()
+    for relative in ('AppData/Roaming','AppData/Local','Desktop','Documents','Downloads','Pictures','Music','Videos'):
+        (home/relative).mkdir(parents=True,exist_ok=True)
+    drive,tail=os.path.splitdrive(str(home))
+    environment=dict(os.environ,USERPROFILE=str(home),HOMEDRIVE=drive,HOMEPATH=tail,
+                     APPDATA=str(home/'AppData/Roaming'),LOCALAPPDATA=str(home/'AppData/Local'),
+                     CLAUDE_CONFIG_DIR=str(home/'.claude'),CODEX_HOME=str(home/'.codex'))
+    environment.pop('OPENCORE_DESKTOP_RELAUNCH',None)
+    return environment
+
+
 def source_inventory(home):
     home = Path(home)
     return {path.relative_to(home).as_posix(): path.read_bytes()
@@ -135,22 +148,21 @@ def main():
     if os.name!='nt' or os.environ.get('GITHUB_ACTIONS')!='true':
         raise RuntimeError('This fresh-profile launch check runs only on an isolated Windows GitHub runner')
     exe=(args.root/'OpenCore.exe').resolve(strict=True)
-    app_data=Path(os.environ['APPDATA'])/'ai.opencore.control-center'
-    database=app_data/'control-center.sqlite3'
-    bridge_paths=[app_data/'claude-bridge',app_data/'claude-marketplace']
-    if database.exists() or (app_data/'control-center.recovered.sqlite3').exists() or any(p.exists() for p in bridge_paths):
-        raise RuntimeError('The test runner is not a fresh OpenCore profile')
     if _windows_processes(exe):raise RuntimeError('The test executable is already running')
-    log=Path(os.environ['LOCALAPPDATA'])/'OpenCore/logs/startup.log'
-    offset=log.stat().st_size if log.exists() else 0
     startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW;startup.wShowWindow=0
-    with tempfile.TemporaryDirectory(prefix='opencore-bridge-policy-') as directory:
+    with tempfile.TemporaryDirectory(prefix='opencore-bridge-policy-',ignore_cleanup_errors=True) as directory:
         home=Path(directory)/'home'
+        if not home.resolve().is_relative_to(Path(directory).resolve()):raise RuntimeError('Invalid isolated profile')
+        env=isolated_windows_environment(home)
+        app_data=Path(env['APPDATA'])/'ai.opencore.control-center'
+        database=app_data/'control-center.sqlite3'
+        bridge_paths=[app_data/'claude-bridge',app_data/'claude-marketplace']
+        if database.exists() or any(p.exists() for p in bridge_paths):raise RuntimeError('The test profile is not fresh')
+        log=Path(env['LOCALAPPDATA'])/'OpenCore/logs/startup.log'
+        offset=log.stat().st_size if log.exists() else 0
         source_files=seed_external_sources(home)
         config=home/'.claude'
         settings=config/'settings.json';baseline=json.loads(settings.read_text(encoding='utf-8'))
-        env=dict(os.environ,USERPROFILE=str(home),CLAUDE_CONFIG_DIR=str(config),CODEX_HOME=str(home/'.codex'))
-        env.pop('OPENCORE_DESKTOP_RELAUNCH',None)
         process=subprocess.Popen([str(exe)],cwd=str(exe.parent),env=env,startupinfo=startup,
                                  creationflags=subprocess.CREATE_NO_WINDOW)
         try:
