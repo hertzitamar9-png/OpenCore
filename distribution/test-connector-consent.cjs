@@ -26,3 +26,12 @@ test('loading saved consent enables only the explicitly selected profile', () =>
   assert.equal(api.view({id: 'codex', status: 'configured'}).status, 'configured');
   assert.equal(api.view({id: 'claude-code', status: 'configured'}).status, 'disconnected');
 });
+
+test('an unavailable connector status keeps safe defaults without breaking the phone workspace', () => {
+  const api = runtime();
+  for (const result of [undefined, null, {}, {disconnected:null}, {disconnected:[]}]) {
+    api.publish(result);
+    assert.equal(api.view({id:'claude-code',status:'configured'}).status,'disconnected');
+    assert.equal(api.view({id:'unsloth',status:'detected'}).status,'detected');
+  }
+});

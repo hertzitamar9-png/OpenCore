@@ -6,8 +6,9 @@ module.exports=function(app,{editFunction,replaceOnce}){
   // The unchanged native card receives the same separate mode control as Hub cards.
   app=editFunction(app,'yj',text=>{
     if(text.split('e(de.id)').length!==3)throw Error('Native model use controls changed');
+    text=replaceOnce(text,'ht=se.aliases[t]===de.id','ht=se.aliases[t]===de.id&&(!de.operatingProfileId||t===de.operatingProfileId)');
     return replaceOnce(text.replaceAll('e(de.id)','e(de.operatingProfileId||de.id)'),'Ft?i.jsxs("label",{className:"model-quantization-picker"',
-      'i.jsx(globalThis.__opencoreModelModes.Control,{model:de,disabled:!!O||B||n}),Ft?i.jsxs("label",{className:"model-quantization-picker"');
+      'i.jsx(globalThis.__opencoreModelModes.Control,{model:de,disabled:!!O||B}),Ft?i.jsxs("label",{className:"model-quantization-picker"');
   });
   return app+'\nimport{installModelModes as $installModelModes,modeCatalog as $modeCatalog}from"./model-catalog-B8SfuDgQ.js";$installModelModes(p,$modeCatalog,{invoke:(command,args)=>Ue(command,args),request:$hubRequest,catalog:()=>$hubState.catalog,changed:async()=>{await $hubRefresh(true);if($hubNativeLibrary)window.dispatchEvent(new CustomEvent("opencore-model-library-changed",{detail:$hubAugment($hubNativeLibrary)}))}});\n';
 };

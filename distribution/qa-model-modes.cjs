@@ -6,7 +6,8 @@ const data=String.raw`const modes=JSON.parse(fs.readFileSync(path.join(__dirname
 const family=modes.models.filter(m=>m.id==='neohorse-1-9b'||m.variantOf==='neohorse-1-9b');
 const modeScript='fixture.nativeModels='+JSON.stringify(family.map(m=>({...m,installed:true,selectable:true,runtimeReady:true,totalBytes:100}))).replaceAll('<','\\u003c')+';fixture.modes='+JSON.stringify(modes).replaceAll('<','\\u003c')+';';`;
 code=code.replace('const html=',data+'\nconst html=').replace('${fixture}</script>','${fixture}${modeScript}</script>')
-  .replace("case 'runtime_setup_probe':","case 'get_snapshot':return{activeConversationIds:[],runtime:{status:'stopped'}};case 'runtime_setup_probe':")
+  .replace("selectedProfile:'none'","selectedProfile:'neohorse-1-9b'").replace('runtimeActive:false','runtimeActive:true')
+  .replace("case 'runtime_setup_probe':","case 'get_snapshot':return{activeConversationIds:[],runtime:{status:'running',profile:'neohorse-1-9b'}};case 'runtime_setup_probe':")
   .replace("if(route==='/status')","if(route==='/runtime/modes')value=fixture.modes;else if(route==='/runtime/native-profile'){const model=fixture.modes.models.find(m=>m.id===body.id);value={profileId:model.modeProfiles[body.operatingMode],weightsReused:true};}else if(route==='/status')");
 code+=String.raw`
 (async()=>{

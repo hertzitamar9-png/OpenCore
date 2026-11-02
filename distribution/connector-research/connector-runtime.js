@@ -17,6 +17,7 @@ const $connectorProfileListeners = new Set();
 const $connectorDisconnectJobs = new Map();
 
 function $publishConnectorProfiles(value) {
+    if(!value||!value.disconnected||typeof value.disconnected!=='object'||Array.isArray(value.disconnected))return;
     $connectorProfiles = {...value, loaded:true};
     $connectorProfileListeners.forEach(listener => listener($connectorProfiles));
 }
