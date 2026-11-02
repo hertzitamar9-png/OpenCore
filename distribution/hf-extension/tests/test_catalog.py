@@ -125,6 +125,23 @@ class CatalogTests(unittest.TestCase):
         plan = catalog.build_plan(metadata([file('model-Q4_K_M.gguf'), file('model-DFlash2-Q8_0.gguf')]))
         self.assertEqual([v['quantization'] for v in plan['variants']], ['Q4_K_M'])
 
+    def test_text_output_tasks_keep_input_modality_and_only_validated_runtime_candidates(self):
+        for task,inputs in [('automatic-speech-recognition',['audio']),
+                            ('video-text-to-text',['video','text']),
+                            ('image-to-text',['image','text'])]:
+            with self.subTest(task=task):
+                entry=catalog.build_plan(metadata([file('model.safetensors')],pipeline_tag=task))['variants'][0]
+                self.assertEqual(entry['inputModalities'],inputs)
+                self.assertEqual(entry['outputModalities'],['text'])
+                self.assertIsNone(entry['runtime']['adapter'], 'Specialist/omni inputs are not a generic text-only Transformers runtime')
+        vl=catalog.build_plan(metadata([file('model-Q4_K_M.gguf'),file('mmproj-f16.gguf')],
+                                pipeline_tag='visual-question-answering'))['variants'][0]
+        self.assertEqual(vl['runtime']['adapter'],'gguf')
+        self.assertEqual(vl['inputModalities'],['image','text'])
+        self.assertEqual(vl['outputModalities'],['text'])
+        self.assertFalse(vl['runtime']['available'])
+        self.assertFalse(vl['runtime']['inferenceVerified'])
+
     def test_non_text_downloads_do_not_claim_a_text_runtime(self):
         plan = catalog.build_plan(metadata([file('model.safetensors')], pipeline_tag='text-to-image'))
         entry = plan['variants'][0]
