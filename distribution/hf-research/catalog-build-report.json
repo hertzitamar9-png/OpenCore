@@ -535,12 +535,12 @@
   ],
   "artifactCount": 4042,
   "modelCount": 2322,
-  "compactBytes": 5186546,
-  "nativeCatalogBytes": 4613414,
+  "compactBytes": 5231194,
+  "nativeCatalogBytes": 4658062,
   "operatingProfileAliases": 68,
   "embeddedSlotBytes": 5256247,
-  "remainingSlotBytes": 642833,
-  "catalogSha256": "9ad05d1138beb18fe1de0f2e3e04a3cda41fd540463e047af29a42775879341d",
+  "remainingSlotBytes": 598185,
+  "catalogSha256": "bacd2cbb0937ba095fe4d08fdbc4df4be8e9a792a14263f4c50d4a875c8a383e",
   "runtimeReadiness": "Existing native-text/managed-transformers adapter patterns only; no requested weights downloaded or executed.",
   "accessObservation": {
     "KRAFTON/Raon-1-mini-preview-gguf": {
