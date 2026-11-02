@@ -142,6 +142,23 @@ class CatalogTests(unittest.TestCase):
         self.assertFalse(vl['runtime']['available'])
         self.assertFalse(vl['runtime']['inferenceVerified'])
 
+    def test_pinned_conditional_generation_multimodal_safetensors_gets_candidate_backend(self):
+        for task in ('image-to-text','video-text-to-text','visual-question-answering'):
+            with self.subTest(task=task):
+                data=metadata([file('model.safetensors'),file('config.json'),
+                               file('processor_config.json'),file('tokenizer.json')],
+                    pipeline_tag=task,
+                    config={'model_type':'qwen2_5_vl','architectures':['Qwen2_5_VLForConditionalGeneration']})
+                entry=catalog.build_plan(data)['variants'][0]
+                self.assertEqual(entry['outputModalities'],['text'])
+                self.assertEqual(entry['runtime']['adapter'],'transformers')
+                self.assertFalse(entry['runtime']['inferenceVerified'])
+                self.assertFalse(entry['runtime']['available'])
+                without_processor=metadata([file('model.safetensors'),file('config.json')],
+                    pipeline_tag=task,
+                    config={'model_type':'qwen2_5_vl','architectures':['Qwen2_5_VLForConditionalGeneration']})
+                self.assertIsNone(catalog.build_plan(without_processor)['variants'][0]['runtime']['adapter'])
+
     def test_non_text_downloads_do_not_claim_a_text_runtime(self):
         plan = catalog.build_plan(metadata([file('model.safetensors')], pipeline_tag='text-to-image'))
         entry = plan['variants'][0]
