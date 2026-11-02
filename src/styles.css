@@ -1477,3 +1477,39 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 :root .manual-update-summary{display:flex;align-items:center;gap:8px}
 :root .manual-update-version{display:flex;align-items:center;gap:6px;color:var(--theme-muted,#aeb9c4);font-size:12px}
 :root .manual-update-current{color:var(--theme-muted,#aeb9c4)}
+
+
+/* OpenCore navigation readability restoration (desktop labels + larger compact rail). */
+@media (min-width: 1181px) {
+  .conversation-focus-shell { grid-template-columns: 190px 306px minmax(0, 1fr); }
+  .conversation-app-rail .brand-mini { padding: 0 16px; justify-content: flex-start; gap: 11px; }
+  .conversation-app-rail .brand-mini > span:last-child,
+  .conversation-app-rail .nav-item > span,
+  .conversation-app-rail .nav-footer small { display: inline; }
+  .conversation-app-rail nav { padding: 10px 8px; }
+  .conversation-app-rail .nav-item {
+    height: 48px; min-height: 48px; padding: 0 11px;
+    justify-content: flex-start; gap: 11px; text-align: left;
+    font-size: calc(12px * var(--ui-scale, 1));
+  }
+  .conversation-app-rail .nav-item > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conversation-app-rail .nav-item svg { flex: 0 0 22px; width: 22px; height: 22px; }
+  .conversation-app-rail .nav-footer { display: block; padding: 10px 12px 12px; }
+  .conversation-app-rail .nav-footer div { display: flex; font-size: calc(10px * var(--ui-scale, 1)); }
+}
+@media (max-width: 1180px) {
+  .conversation-focus-shell { grid-template-columns: 82px 270px minmax(0, 1fr); }
+  .conversation-app-rail .nav-item { height: 52px; min-height: 52px; }
+  .conversation-app-rail .nav-item svg { width: 23px; height: 23px; }
+  .conversation-app-rail nav { padding: 10px 9px; }
+}
+@media (max-width: 900px) {
+  .conversation-focus-shell { grid-template-columns: 76px 248px minmax(0, 1fr); }
+}
+@media (max-width: 820px) {
+  .conversation-focus-shell { grid-template-columns: 72px 230px minmax(0, 1fr); }
+}
+@media (max-width: 680px) {
+  .conversation-focus-shell { grid-template-columns: 68px 190px minmax(0, 1fr); }
+  .conversation-app-rail nav { padding-inline: 6px; }
+}
