@@ -96,6 +96,39 @@ def _python(root):
     return sys.executable
 
 
+def visual_text_probe(entry):
+    """Small, offline, synthetic media probe for candidate conditional-generation runtimes.
+
+    An input model is never marked ready on a text-only smoke test. No external
+    URLs or user images are fetched during this verification.
+    """
+    inputs=entry.get('inputModalities') or []
+    if (entry.get('format') != 'safetensors' or
+        (entry.get('runtime') or {}).get('adapter') != 'transformers' or
+        not any(value in inputs for value in ('image','video'))):
+        return None
+    import base64
+    import struct
+    import zlib
+
+    def chunk(kind,data):
+        return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data)&0xffffffff)
+
+    width=height=224
+    scanline=b'\\x00'+(b'\\x32\\x66\\x99'*width)
+    png=(b'\\x89PNG\\r\\n\\x1a\\n'+chunk(b'IHDR',struct.pack('>2I5B',width,height,8,2,0,0,0))+
+         chunk(b'IDAT',zlib.compress(scanline*height))+chunk(b'IEND',b''))
+    data='data:image/png;base64,'+base64.b64encode(png).decode('ascii')
+    if 'video' in inputs:
+        media={'type':'video','frames':[{'timestamp':0,'image_url':data},{'timestamp':1,'image_url':data}]}
+        kind='video-frames'
+    else:
+        media={'type':'image_url','image_url':{'url':data}}
+        kind='image'
+    return kind,{'messages':[{'role':'user','content':[{'type':'text','text':'Describe what you see in one sentence.'},media]}],
+                 'max_tokens':16,'temperature':0,'stream':False}
+
+
 def runtime_plan(entry, root, resources):
     root, resources = Path(root).resolve(), Path(resources).resolve()
     fmt = entry.get('format', '')
@@ -402,8 +435,22 @@ class RuntimeManager:
         sample = message.get('content') or message.get('reasoning_content') or message.get('reasoning')
         if not sample or proof_result.get('error'):
             raise RuntimeError('The runtime did not return a real generated response')
+        media_probe=visual_text_probe(entry)
+        media_verified=None
+        if media_probe:
+            kind,request=media_probe
+            self.on_progress(stage='verifying-vision',detail='Verifying real generated text from '+kind)
+            with self._request(upstream+'/v1/chat/completions',request,key,timeout=180) as response:
+                media_result=json.load(response)
+            media_choices=media_result.get('choices',[])
+            media_message=media_choices[0].get('message',{}) if media_choices else {}
+            media_sample=media_message.get('content') or media_message.get('reasoning_content')
+            if not isinstance(media_sample,str) or not media_sample.strip() or media_result.get('error'):
+                raise RuntimeError('The multimodal checkpoint did not generate text from the supplied inline '+kind)
+            media_verified=kind
         if plan['operatingMode']=='native':
             proof=self._runtime_proof(entry,plan,files,proof_result,sample,context_verified,log_path)
+            if media_verified:proof['verifiedInputModality']=media_verified
             (run_dir/'inference-receipt.json').write_text(json.dumps(proof,indent=2),encoding='utf-8')
             self._active={'id':entry['id'],'url':upstream,'upstream':upstream,'key':key,'proof':proof,'mode':'native','usage':{}}
             return proof
@@ -429,6 +476,7 @@ class RuntimeManager:
         if not (echo_message.get('content') or echo_message.get('reasoning_content')):
             raise RuntimeError('The ECHO endpoint did not return an actual generated reply')
         proof=self._runtime_proof(entry,plan,files,proof_result,sample,context_verified,log_path)
+            if media_verified:proof['verifiedInputModality']=media_verified
         (run_dir / 'inference-receipt.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
         self._active = {'id': entry['id'], 'url': echo_url, 'upstream': upstream, 'key': key, 'proof': proof,'mode':'echo'}
         return proof
