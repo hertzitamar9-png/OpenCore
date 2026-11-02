@@ -89,6 +89,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-connector-consent.cjs test-model-admission.cjs test-model-modes.cjs test-group-worker.cjs ../src-tauri/resources/agent/group-tools.test.mjs ../src-tauri/resources/agent/group-runners.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test test-frontend-catalog.cjs test-group-model-preparation.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test ../tests/task-progress.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs test-echo-profiles.cjs context-activity.test.cjs
@@ -152,6 +154,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-groups.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-group-workspace.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-menu-scroll.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub-pagination.cjs
@@ -187,6 +191,8 @@ jobs:
           node qa-first-run.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-context-activity.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-activity-retention.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-branding.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

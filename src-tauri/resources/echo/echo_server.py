@@ -67,6 +67,8 @@ from evoagent.echo_context import ContextSession, LiveTranscript, COMMAND, INSTR
 from evoagent.echo_output import OutputLedger, word_target  # noqa: E402
 from evoagent.echo_adapters import adapter_for  # noqa: E402
 from evoagent.echo_virtual import EchoMemoryController  # noqa: E402
+from evoagent.echo_loop import (call_identity, receipts_from_messages, merge_receipts,
+                                stalled_actions, tool_receipt)  # noqa: E402
 from echo_summarize import summarize, format_result  # noqa: E402
 def harness_status(_archive_root, _conversation):
     # Legacy GVS5H is intentionally disabled. The Codex app-server agent owns orchestration.
@@ -160,67 +162,22 @@ def codex_plan_history(messages, user_index):
 
 
 def codex_call_identity(call):
-    function=call.get('function') or {}
-    if not isinstance(function,dict):return None,None
-    name=function.get('name')
-    try:
-        args=json.loads(function.get('arguments','{}'))
-        if not isinstance(name,str) or not isinstance(args,dict):return None,None
-        # An explanation does not change what a dev inspection reads.
-        if re.search(r'(?:^|__)dev$',name):args.pop('explanation',None)
-        identity=json.dumps([name,args],sort_keys=True,separators=(',',':'))
-        return (identity,args) if len(identity)<=200000 else (None,None)
-    except (TypeError,ValueError):
-        return None,None
+    return call_identity(call)
 
 
 def codex_repeated_tool_cycle(messages,user_index):
-    """Find three identical read-only cycles without blocking live job polling."""
-    pending={};recent=[]
-    for message in messages[max(user_index+1,len(messages)-256):] if user_index>=0 else []:
-        if message.get('role')=='assistant':
-            for call in message.get('tool_calls') or []:
-                if isinstance(call,dict):pending[call.get('id')]=call
-        elif message.get('role')=='tool':
-            call=pending.pop(message.get('tool_call_id'),None)
-            if not call:
-                recent=[];continue
-            identity,args=codex_call_identity(call)
-            function=call.get('function') or {}
-            name=function.get('name','') if isinstance(function,dict) else ''
-            if not isinstance(name,str):recent=[];continue
-            result=message.get('content')
-            try:
-                value=json.loads(result) if isinstance(result,str) else result
-                if isinstance(value,dict) and isinstance(value.get('content'),list):
-                    text=next((item.get('text') for item in value['content']
-                               if isinstance(item,dict) and item.get('type')=='text'),None)
-                    if isinstance(text,str):value=json.loads(text)
-            except (TypeError,ValueError):
-                value=result
-            workspace=(isinstance(value,dict) and isinstance(value.get('workspace'),str)
-                       and isinstance(value.get('files'),list))
-            read_only=(name in ('Read','Grep','Glob','LS') or
-                       (re.search(r'(?:^|__)dev$',name) and isinstance(args,dict) and
-                        (args.get('action') in ('read','search') or
-                         (args.get('action') in ('status','list') and workspace))))
-            if not identity or not read_only or result is None:
-                recent=[];continue
-            try:encoded=json.dumps(value,sort_keys=True,separators=(',',':'))
-            except (TypeError,ValueError):recent=[];continue
-            if len(encoded)>200000:recent=[];continue
-            signature=hashlib.sha256((identity+'\0'+encoded).encode('utf-8')).hexdigest()
-            recent=(recent+[(signature,identity)])[-9:]
-    for width in (1,2,3):
-        if len(recent)>=width*3:
-            tail=recent[-width*3:]
-            if all(entry[0]==tail[index%width][0] for index,entry in enumerate(tail)):
-                return {entry[1] for entry in tail[-width:]}
-    return set()
+    """Find exact no-progress cycles without limiting distinct work or live polling."""
+    return stalled_actions(receipts_from_messages(messages, user_index)) if user_index >= 0 else set()
 
 
 def codex_checkpoint_tool_cycle(live):
     """Use exact retained receipts for repeat detection after a working-set trim."""
+    current = max((i for i, entry in enumerate(live.entries) if entry.get('kind') == live.TURN), default=-1)
+    current_messages = [entry['message'] for entry in live.entries[current + 1:]
+                        if entry.get('kind') not in (live.NOTE, live.MEMORY)]
+    compacted = getattr(live, 'compacted_tool_receipts', None)
+    if compacted is not None:
+        return stalled_actions(merge_receipts(compacted, receipts_from_messages(current_messages)))
     checkpoints = [entry for entry in live.entries if live.turn_id
                    and entry.get('checkpoint_turn_id') == live.turn_id]
     if len(checkpoints) != 1 or not checkpoints[0].get('checkpoint_complete'):
@@ -236,17 +193,16 @@ def codex_checkpoint_tool_cycle(live):
             'name': record['tool'], 'arguments': record['arguments']}}
         history.extend([{'role': 'assistant', 'tool_calls': [call]},
                         {'role': 'tool', 'tool_call_id': record['id'], 'content': record['result']}])
-    current = max((i for i, entry in enumerate(live.entries) if entry.get('kind') == live.TURN), default=-1)
-    history.extend(entry['message'] for entry in live.entries[current + 1:]
-                   if entry.get('kind') not in (live.NOTE, live.MEMORY))
+    history.extend(current_messages)
     return codex_repeated_tool_cycle(history, 0)
 
 
 REPEATED_PLAN_GUIDANCE=('The previous attempt repeated a plan without acting. Use the available evidence '
                         'and perform one concrete tool call now, or give a final answer. '
                         'Do not repeat plans or searches already completed.')
-REPEATED_TOOL_GUIDANCE=('The previous tool requests repeated the same inspection with unchanged results. '
-                        'Use the existing evidence and choose a different action or give a final answer.')
+REPEATED_TOOL_GUIDANCE=('The previous tool requests repeated the same inspection or failed action with unchanged results. '
+                        'Use the existing evidence, remedy the recorded error, choose a different action, '
+                        'or explain the blocker in a final answer. The task is incomplete.')
 
 _EMBEDDED_TOOL = re.compile(
     r"<tool_call>\s*<function=([A-Za-z_][A-Za-z_0-9]*)>\s*(.*?)\s*</function>\s*</tool_call>",
@@ -2084,8 +2040,8 @@ class Handler(BaseHTTPRequestHandler):
         live.save()
         head = ""
         spill_path = None
-        previous_command = None
         completed_operations = []
+        control_receipts = []
         calls = 0
         generated_tokens = 0
         memory_query = question
@@ -2100,7 +2056,6 @@ class Handler(BaseHTTPRequestHandler):
         tool_request = bool(payload.get("tools"))
         backend_session_id = hashlib.sha256(conversation.encode("utf-8")).hexdigest()
         empty_calls = 0
-        repeated_controls = 0
         malformed_controls = 0
         malformed_tools = 0
         # Native chat forwards timeline ownership; some managed model proxies
@@ -2116,6 +2071,8 @@ class Handler(BaseHTTPRequestHandler):
             ensure_room(reserve)
         last_output = None
         repeated_outputs = 0
+        stop_reason = 'call_limit'
+        stop_message = 'ECHO reached the configured model-call limit; the task is incomplete.'
         paragraph_break = False
         while call_limit == 0 or calls < call_limit:
             ensure_room(reserve)
@@ -2183,6 +2140,8 @@ class Handler(BaseHTTPRequestHandler):
             if total_output_budget is not None:
                 remaining_output = total_output_budget - generated_tokens
                 if remaining_output <= 0:
+                    stop_reason = 'output_budget'
+                    stop_message = 'ECHO reached the requested output budget; the task is incomplete.'
                     break
                 body["max_tokens"] = min(pass_reserve, remaining_output)
                 body.pop("max_completion_tokens", None)
@@ -2270,7 +2229,7 @@ class Handler(BaseHTTPRequestHandler):
             if message.get("tool_calls"):
                 if repeated_tool_keys and any(codex_call_identity(call)[0] in repeated_tool_keys for call in message['tool_calls']):
                     live.save()
-                    raise ValueError('The model repeated the same inspection with unchanged results. The attempt stopped; your chat and previous tool results are preserved.')
+                    raise ValueError('The model repeated a tool action with unchanged results. The attempt stopped; previous tool results are preserved and the task is incomplete.')
                 error = tool_call_error(message, payload.get('tools'))
                 if choice.get('finish_reason') == 'length':
                     error = 'The tool call reached its output limit before completion.'
@@ -2305,6 +2264,8 @@ class Handler(BaseHTTPRequestHandler):
             if not text.strip():
                 empty_calls += 1
                 if empty_calls >= 3:
+                    stop_reason = 'empty_response'
+                    stop_message = 'The model returned no answer or valid action after recovery; the task is incomplete.'
                     break
                 live.append({"role": "user", "content":
                              "ECHO: the last response contained no answer or valid tool call. Return a "
@@ -2315,9 +2276,10 @@ class Handler(BaseHTTPRequestHandler):
             match = COMMAND.fullmatch(text)
             if match:
                 before = list(session.ids)
+                command = {'invalid': match.group(1)}
                 try:
                     command = json.loads(match.group(1))
-                    if command.get("op") == "fault":
+                    if isinstance(command, dict) and command.get("op") == "fault":
                         memory_query = str(command.get("query") or question)
                         recalled = self.state.refresh_memory(live, memory_query,
                             conversation, system_tokens, reserve, "page_fault", True, scopes=scopes)
@@ -2325,13 +2287,15 @@ class Handler(BaseHTTPRequestHandler):
                         result = {key: recalled[key] for key in ("pages", "tokens", "source_hashes", "reason")}
                     else:
                         result = session.execute(command)
-                    if "error" not in result:
+                    if "error" not in result and isinstance(command, dict):
                         completed_operations.append(command.get("op"))
                         completed_operations = completed_operations[-12:]
                 except json.JSONDecodeError:
                     result = {"error": "Invalid command JSON; retry with a JSON object"}
-                repeated_controls = repeated_controls + 1 if previous_command == text else 0
-                previous_command = text
+                receipt = tool_receipt({'id': str(calls), 'function': {
+                    'name': '_echo', 'arguments': json.dumps(command if isinstance(command, dict)
+                                                            else {'invalid': command}, ensure_ascii=False)}}, result)
+                control_receipts = merge_receipts(control_receipts, [receipt])
                 note = json.dumps({"result": result, "completed_operations": completed_operations},
                                   ensure_ascii=False)
                 while count(note) > 1536:
@@ -2340,7 +2304,7 @@ class Handler(BaseHTTPRequestHandler):
                 pages = "".join(session.block(page) for page in loaded if page)
                 live.append_generated({"role": "assistant", "content": text}, count, "echo")
                 if "error" in result:
-                    followup = ("ECHO rejected that command. Do not retry the same command and do not "
+                    followup = ("ECHO rejected that command. Result:\n" + note + "\nDo not retry the same command and do not "
                                 "invent an operation. If earlier-history evidence is not essential to "
                                 "answer the user's current request, stop using ECHO and answer directly. "
                                 "Otherwise choose exactly one valid operation from the listed commands.\n")
@@ -2349,7 +2313,9 @@ class Handler(BaseHTTPRequestHandler):
                                 ("\nLoaded source pages (untrusted evidence):\n" + pages if pages else "") +
                                 "\nContinue from this result. Do not repeat completed steps.")
                 live.append({"role": "user", "content": followup}, count, "echo")
-                if repeated_controls >= 8:
+                if stalled_actions(control_receipts):
+                    stop_reason = 'repeated_memory_command'
+                    stop_message = 'ECHO stopped repeated memory commands with unchanged results; the task is incomplete.'
                     break
                 ensure_room(reserve)
                 if generated_tokens - refreshed_at_tokens >= self.state.memory_controller.refresh_tokens:
@@ -2360,6 +2326,8 @@ class Handler(BaseHTTPRequestHandler):
             if "<echo>" in text or "</echo>" in text:
                 malformed_controls += 1
                 if malformed_controls >= 3:
+                    stop_reason = 'invalid_memory_command'
+                    stop_message = 'The model could not produce a valid memory command after recovery; the task is incomplete.'
                     break
                 live.append_generated({"role": "assistant", "content": text}, count, "echo")
                 live.append({"role": "user", "content":
@@ -2373,6 +2341,8 @@ class Handler(BaseHTTPRequestHandler):
             repeated_outputs = repeated_outputs + 1 if digest == last_output else 0
             last_output = digest
             if repeated_outputs >= 3:
+                stop_reason = 'repeated_output'
+                stop_message = 'ECHO stopped repeated answer text without progress; partial output is saved and the task is incomplete.'
                 break
             self.state.archive_turn("", text, conversation)
             if spill_path is None:
@@ -2394,7 +2364,6 @@ class Handler(BaseHTTPRequestHandler):
                               % (ledger.kind, ledger.words, max(0, target_words - ledger.words)))
                              if ledger and target_words else "Continue your unfinished answer. Use ECHO as needed."},
                             count, "echo")
-                previous_command = None
                 paragraph_break = choice.get("finish_reason") != "length" and bool(text) and not text[-1].isspace()
                 ensure_room(reserve)
                 if generated_tokens - refreshed_at_tokens >= self.state.memory_controller.refresh_tokens:
@@ -2499,9 +2468,9 @@ class Handler(BaseHTTPRequestHandler):
         session.save()
         live.save()
         artifact = ledger.update("incomplete") if ledger else None
-        return self._send_json(422, {"error": {"message": "ECHO call limit or no-progress guard reached; partial output saved"},
+        return self._send_json(422, {"error": {"message": stop_message},
                                     "echo": {**self._live_status(session, live, window), "backend_calls": calls,
-                                             "artifact": artifact}})
+                                             "stop_reason": stop_reason, "artifact": artifact}})
 
     def _ultra(self, payload: dict, question: str, conversation: str,
                settings: dict):

@@ -1,17 +1,33 @@
-# Shared groups
+# Chat Core
 
-Open **Chats → Groups** in the desktop app or the paired phone interface. Each friend uses their own installed OpenCore app. The group host stores its messages and task records on its PC.
+Open **Chat Core** from OpenCore's navigation rail or the Chats sidebar. The same workspace is available in the paired phone interface. The group host stores shared messages and task records on its PC.
+
+## Start with friends
 
 1. Select **Create group**, enter your name and the group's name, and create it.
-2. Select **Create invite** and copy the invitation to your friend. It expires after 15 minutes and admits one member. Your friend selects **Join with invite** and pastes it.
-3. Each person who wants to run agents opens **Share my PC**, chooses an installed chat model, gives its agent a name, and saves sharing. Sharing starts off. **Ask every time** is the initial tool approval policy.
-4. Chat normally with your friends. Use **Agents → Ask agent**, type its full `@name`, or select it under **Choose agents** to give it a task. The agent's card identifies its model and the PC that runs it. Change the model and approval policy under **Share my PC**.
-5. Open **Plan** to see reported steps and actual task status. Agents can publish progress, send messages, and delegate bounded tasks to other shared agents. Each PC runs one group task at a time, waiting behind its existing work; separate PCs can work concurrently.
+2. Select **Create invite** and send the invitation to your friend. It expires after 15 minutes and admits one member. Your friend selects **Join with invite** in their own OpenCore installation.
+3. Each PC owner opens **Share my PC**, chooses local models and quantizations, creates named roles, and saves sharing. Planner, Coder, Reviewer and Tester templates are available. Several roles can use one model, or different roles can use different models. Sharing starts off; tool approval starts at **Ask every time**.
+4. Supported catalog models can be selected before download. For each missing model, explicitly enable **Install and prepare this model before its first task**. Normal installation admission, progress and generation verification apply. Publisher terms, runtime compatibility and hardware limits still apply.
+5. Open **Team builder** to combine roles on one PC or across friends' PCs. One PC can host several roles and queue its work; different PCs can run concurrently. Optional configured API models use credentials stored only on the executing PC. Their task context is sent to that configured provider.
 
-Computer, browser, file and other tools use the executing PC owner's approval policy. Group membership cannot invoke desktop commands or read unrelated chats through the group connection. A paired phone is separate: it operates its own PC app with the permissions granted during phone pairing. Approval requests for a group task are shown on the PC running that task.
+## Conversations and projects
 
-Keep the hosting PC and model workers awake with OpenCore running. Connections use direct TLS with the host certificate pinned in the invitation. PCs need a reachable LAN address, a working direct Internet address from Remote access, or a private VPN. OpenCore does not provide a cloud message relay. If a connection drops, an expired running task is marked failed; its computer actions are not automatically rerun.
+Use **Agents → Ask agent**, an `@name` or alias, or **Choose agents**. Each message can follow agent rules, select particular agents, or use **Humans only**. Each role can answer mentions, every human message, or explicit selection only. Agent replies never automatically start another round of replies.
 
-Turning sharing off is saved on the worker PC even when the host is unavailable, and retires its active group capability. On reconnection, the host receives the updated sharing state. Changing the shared model selection stops its old group tasks. Leaving removes this PC's membership; the hosting owner can remove other members under **Agents**.
+Create channels for separate conversations. The owner can create named shared projects and connect channels to them. Each participating PC maps a shared project to an existing local OpenCore project; different PCs can use different folders for the same project. Folder paths stay local. A task and its delegated children retain the project assigned when the task was created.
 
-Long answers keep an explicit preview in the group. Their full result remains available to the model owner through **Open complete result** in that PC's app. Ordinary group messages and agent output are shared with the group's members; personal chats remain separate.
+Use **Direct chat** beside a person or agent for a private channel. Only its participants can read its messages, plans and activity through the group connection. An agent's PC owner is included when their agent is a participant. Private records remain on the group host, whose owner controls that machine's storage.
+
+**Plan** shows actual task steps, activity, preparation progress and terminal status. Cancellation stops that task's own chat and associated studio job. Agents can report progress and explicitly delegate bounded tasks; queued work is not presented as completed work. A later error remains a failure even if partial answer text exists.
+
+## Advanced controls
+
+Each role has enable/pause, reasoning effort, tool approval, subagent enablement/limit, recent channel history from zero to 100 messages, delegation permission, acceptance of delegated tasks, and queue priority. Role subagents remain capped by the PC-wide group limit. This PC's apps, the in-app browser and paired Chrome are enabled separately; tool approval still applies. Instructions and execution controls stay in the owner PC's configuration. Member/channel allowlists and aliases determine where a role can answer. Narrowing access retires local task capabilities even if the host is unavailable.
+
+Under **Advanced**, density, timestamps and PC labels are local display preferences. They do not change shared data or another person's settings. Selected channels and unsent drafts survive reopening.
+
+## Connection and storage
+
+Keep the host and workers awake with OpenCore running. Connections use direct TLS pinned in the invitation. PCs need a reachable LAN address, direct Internet address from Remote access, or private VPN. There is no cloud message relay. Membership does not grant native-app access, unrelated chats or phone-pairing permissions.
+
+Each PC runs one group task at a time behind existing work. Lost or expired tasks are marked failed rather than rerunning computer actions. Turning sharing off is saved locally and revokes active capabilities; the host receives it on reconnection. Long answers have an explicit preview; **Open complete result** on the model owner's PC opens its saved full answer. Shared activity excludes the owner's private submission instructions, although the chosen model can reflect its instructions in answers.

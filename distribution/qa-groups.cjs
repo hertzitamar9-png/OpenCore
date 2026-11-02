@@ -37,8 +37,8 @@ fixture+=String.raw`
   await page.addInitScript(mobile=>{globalThis.__OPENCORE_MOBILE__=mobile},width<600);
   await page.goto('http://127.0.0.1:'+server.address().port);
   if(width<600)await page.getByRole('button',{name:'Chats',exact:true}).click();
-  await page.getByRole('button',{name:'Groups',exact:true}).click({timeout:4000});
-  const dialog=page.getByRole('dialog',{name:'Shared groups'});await dialog.waitFor();
+  await page.getByRole('button',{name:'Chat Core',exact:true}).click({timeout:4000});
+  const dialog=page.getByRole('dialog',{name:'Chat Core'});await dialog.waitFor();
   await dialog.getByRole('button',{name:'Create group',exact:true}).click();
   await dialog.getByLabel('Group name',{exact:true}).fill('Friends QA');
   await dialog.getByLabel('Your name',{exact:true}).fill('Owner');
@@ -48,8 +48,9 @@ fixture+=String.raw`
   assert.equal(await dialog.getByLabel('Share models from this PC',{exact:true}).isChecked(),false);
   assert.equal(await dialog.getByLabel('Group tool approval',{exact:true}).inputValue(),'ask-every-time');
   await dialog.getByLabel('Share models from this PC',{exact:true}).check();
-  await dialog.getByLabel('Share ECHO 3T',{exact:true}).check();
-  await dialog.getByLabel('Agent name for ECHO 3T',{exact:true}).fill('Helper');
+  await dialog.getByLabel('Model for new agent',{exact:true}).selectOption('echo');
+  await dialog.getByRole('button',{name:'Add agent',exact:true}).click();
+  await dialog.getByLabel(/^Agent name for ECHO 3T/).fill('Helper');
   await dialog.getByRole('button',{name:'Save sharing',exact:true}).click();
   await page.waitForFunction(()=>fixture.sharing.enabled&&fixture.sharing.models.some(model=>model.name==='Helper'));
   assert.equal(await page.evaluate(()=>fixture.sharing.approvalMode),'ask-every-time');
@@ -94,7 +95,7 @@ fixture+=String.raw`
   const bounds=await dialog.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   if(process.env.OPENCORE_GROUP_QA_SCREENSHOTS)await page.screenshot({path:path.join(process.env.OPENCORE_GROUP_QA_SCREENSHOTS,'groups-'+width+'.png')});
-  await dialog.getByRole('button',{name:'Close shared groups',exact:true}).click();await dialog.waitFor({state:'hidden'});
+  await dialog.getByRole('button',{name:'Close Chat Core',exact:true}).click();await dialog.waitFor({state:'hidden'});
   assert.deepEqual(errors,[]);console.log('PASS packaged shared-group create/join/sharing/mention/task UI at '+width+'px');
   await page.close();
  }}finally{await browser.close();server.close();}

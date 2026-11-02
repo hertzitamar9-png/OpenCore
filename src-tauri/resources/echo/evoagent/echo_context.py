@@ -9,6 +9,8 @@ import json
 import re
 import uuid
 
+from .echo_loop import receipts_from_messages, merge_receipts
+
 
 COMMAND = re.compile(r"^\s*<echo>(.*?)</echo>\s*$", re.S)
 INSTRUCTIONS = """ECHO is your persistent context. Most history is idle on disk.
@@ -87,6 +89,10 @@ class LiveTranscript:
         self.last_answer_sha256 = saved.get("last_answer_sha256")
         self.compacted_tool_ids = [value for value in saved.get('compacted_tool_ids', [])
                                    if isinstance(value, str) and 0 < len(value) <= 256][-4096:]
+        # Exact fingerprints stay independent of the model-visible excerpts.
+        # Legacy transcripts fall back to their older exact checkpoint receipts.
+        self.compacted_tool_receipts = (merge_receipts([], saved['compacted_tool_receipts'])
+                                       if 'compacted_tool_receipts' in saved else None)
         self.virtual_memory = saved.get("virtual_memory", {})
         self.model_fingerprint = saved.get("model_fingerprint")
 
@@ -230,6 +236,7 @@ class LiveTranscript:
         self.question, self.open = question, True
         self.last_answer_sha256 = None
         self.compacted_tool_ids = []
+        self.compacted_tool_receipts = []
         self.turn_id = uuid.uuid4().hex
         self.append({"role": "user", "content": question if content is None else content}, count_tokens, self.TURN)
 
@@ -356,15 +363,16 @@ class LiveTranscript:
             text = header + '\n'.join(json.dumps(item, ensure_ascii=False) for item in candidate)
             if self.cost({'role': 'user', 'content': text}, count_tokens) <= budget:
                 selected = candidate
-        if not selected:
-            record = records[-1]
-            shortened = {}
-            for key, limit in (('id', 48), ('tool', 80), ('arguments', 160), ('result', 160)):
-                value = str(record.get(key, ''))
-                shortened[key] = value[:limit] + ' [truncated]' if len(value) > limit else value
-            text = header + json.dumps(shortened, ensure_ascii=False)
-            if self.cost({'role': 'user', 'content': text}, count_tokens) <= budget:
-                selected = [shortened]
+            elif not selected:
+                # Prefer the latest target/outcome over an older smaller receipt.
+                # Keep the exact call ID so the excerpt still links to its result.
+                shortened = {'id': record['id']}
+                for key, limit in (('tool', 80), ('arguments', 160), ('result', 160)):
+                    value = str(record.get(key, ''))
+                    shortened[key] = value[:limit] + ' [truncated]' if len(value) > limit else value
+                text = header + json.dumps(shortened, ensure_ascii=False)
+                if self.cost({'role': 'user', 'content': text}, count_tokens) <= budget:
+                    selected = [shortened]
         if not selected:
             return None
         text = header + '\n'.join(json.dumps(item, ensure_ascii=False) for item in selected)
@@ -434,6 +442,8 @@ class LiveTranscript:
                          for call in entry['message'].get('tool_calls') or []]
         completed_ids = [value for value in completed_ids if isinstance(value, str) and 0 < len(value) <= 256]
         self.compacted_tool_ids = list(dict.fromkeys(self.compacted_tool_ids + completed_ids))[-4096:]
+        moved_receipts = receipts_from_messages([entry['message'] for entry in task_moved])
+        self.compacted_tool_receipts = merge_receipts(self.compacted_tool_receipts or [], moved_receipts)
         archived_refs = ", ".join(hashes[-4:]) or "existing exact ECHO archive records"
         guidance = ("Use current task evidence below; consult the archive if details are missing or truncated. "
                     if task_checkpoint else "Search or load their source records before reusing earlier details. ")
@@ -458,6 +468,8 @@ class LiveTranscript:
                  "compactions": self.compactions, "prompt_tokens": self.prompt_tokens,
                  "offloaded_messages": self.offloaded_messages, "turn_id": self.turn_id,
                  "last_answer_sha256": self.last_answer_sha256, "compacted_tool_ids": self.compacted_tool_ids}
+        if self.compacted_tool_receipts is not None:
+            state['compacted_tool_receipts'] = self.compacted_tool_receipts
         with self.archive._lock:
             self.archive.db.execute("INSERT OR REPLACE INTO echo_live_transcript VALUES (?,?)",
                                     (self.conversation, json.dumps(state, ensure_ascii=False)))

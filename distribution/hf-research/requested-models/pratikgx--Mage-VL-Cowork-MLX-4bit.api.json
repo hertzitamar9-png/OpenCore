@@ -1,0 +1,283 @@
+{
+  "_id": "6ae567f3dbd1928cb06b072f",
+  "id": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "mlx",
+  "tags": [
+    "mlx",
+    "safetensors",
+    "mage_vl",
+    "mlx-vlm",
+    "computer-use",
+    "vision-language",
+    "apple-silicon",
+    "image-text-to-text",
+    "conversational",
+    "base_model:microsoft/Mage-VL-Cowork",
+    "base_model:quantized:microsoft/Mage-VL-Cowork",
+    "license:apache-2.0",
+    "4-bit",
+    "region:us"
+  ],
+  "downloads": 277,
+  "likes": 3,
+  "modelId": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+  "author": "pratikgx",
+  "sha": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+  "lastModified": "2026-11-01T01:33:26.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "MageVLForConditionalGeneration"
+    ],
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "generation_config": {
+      "_from_model_config": true,
+      "bos_token_id": 151643,
+      "eos_token_id": 151645,
+      "transformers_version": "4.57.3"
+    },
+    "image_token_id": 151655,
+    "model_type": "mage_vl",
+    "quantization": {
+      "group_size": 64,
+      "bits": 4,
+      "mode": "affine"
+    },
+    "quantization_config": {
+      "group_size": 64,
+      "bits": 4,
+      "mode": "affine"
+    },
+    "text_config": {
+      "_name_or_path": "Qwen/Qwen3-4B-Instruct-2507",
+      "architectures": [
+        "LlavaOnevision2ForConditionalGeneration"
+      ],
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "bos_token_id": 151643,
+      "dtype": "bfloat16",
+      "eos_token_id": 151645,
+      "head_dim": 128,
+      "hidden_act": "silu",
+      "hidden_size": 2560,
+      "initializer_range": 0.02,
+      "intermediate_size": 9728,
+      "layer_types": [
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention"
+      ],
+      "max_position_embeddings": 262144,
+      "max_window_layers": 36,
+      "model_type": "qwen3",
+      "num_attention_heads": 32,
+      "num_hidden_layers": 36,
+      "num_key_value_heads": 8,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": null,
+      "rope_theta": 5000000,
+      "sliding_window": null,
+      "use_cache": true,
+      "use_sliding_window": false,
+      "vocab_size": 151936
+    },
+    "tie_word_embeddings": false,
+    "transformers_version": "4.57.3",
+    "video_token_id": 151656,
+    "vision_config": {
+      "attention_dropout": 0.0,
+      "frame_windows_size": 4,
+      "hidden_act": "gelu",
+      "hidden_size": 1024,
+      "image_size": 448,
+      "initializer_range": 0.02,
+      "intermediate_size": 4096,
+      "layer_norm_eps": 1e-06,
+      "layer_norm_type": "layer_norm",
+      "model_type": "mage_vl_vision",
+      "num_attention_heads": 16,
+      "num_channels": 3,
+      "num_hidden_layers": 24,
+      "out_hidden_size": 2560,
+      "patch_size": 16,
+      "rope_theta": 10000.0,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 1,
+      "text_hidden_size": 2560,
+      "tokens_per_second": 1,
+      "use_head": false
+    },
+    "vision_end_token_id": 151653,
+    "vision_start_token_id": 151652
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "microsoft/Mage-VL-Cowork",
+    "base_model_relation": "quantized",
+    "library_name": "mlx",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "mlx",
+      "mlx-vlm",
+      "computer-use",
+      "vision-language",
+      "apple-silicon"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "06b4fdd830430f8a74c54a949fefbf5caed8f2ce",
+      "size": 3607
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "86f15c4d151abb9277362a9dd5a9c89a802b97e9",
+      "size": 706
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+      "size": 5365
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "b8b0167745ae4b6db3bce2303f7cadd298542942",
+      "size": 3509
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "a811a763dedb8d7dfd07cd05e3f177c1a1473beb",
+      "size": 121
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "5b42726d4f325cbfd7ae8759b29bb81e2ca6be66",
+      "size": 3142599841,
+      "lfs": {
+        "sha256": "227dc83aefc5ee5ffefc1a261e1d8c59fc835c64b09f219e32b76a0f8362dea5",
+        "size": 3142599841,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "a08b680cbd7117a6420c64adf7c447c0687a32b0",
+      "size": 101325
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "7a667b9175ab2c09f317ddbec52e00f6faa67631",
+      "size": 778
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "5d8b31cad06c4edda35dad405cdd3480a5448148",
+      "size": 627
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "799fd9f1151d246b5c605fb92a13c3bb2c162e23",
+      "size": 384
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "c7afbed2efcdf019f88ab0572ec29d3bf595dfe2",
+      "size": 11422650,
+      "lfs": {
+        "sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+        "size": 11422650,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "96f36659de4edf87629064e69d95ddea9a920bca",
+      "size": 734
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "91a1fed79814ff965c6cc505fba882feaf13e152",
+      "size": 911
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-31T04:00:51.000Z",
+  "safetensors": {
+    "parameters": {
+      "U32": 4411228160,
+      "BF16": 330565632
+    },
+    "total": 4741793792
+  },
+  "usedStorage": 3154022491
+}

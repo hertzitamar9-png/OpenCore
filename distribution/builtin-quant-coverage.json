@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 574,
-  "withFive": 230,
+  "families": 576,
+  "withFive": 231,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5612,6 +5612,20 @@
       ]
     },
     {
+      "id": "publisher-mage-vl-cowork",
+      "label": "Microsoft Mage VL Cowork",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Hansda/Mage-VL-Cowork-GGUF",
+        "infosave/Mage-VL-Cowork-cmf",
+        "microsoft/Mage-VL-Cowork",
+        "pratikgx/Mage-VL-Cowork-MLX-4bit"
+      ]
+    },
+    {
       "id": "publisher-mano-cua-2-0-4b",
       "label": "Mano-CUA 2.0 4B",
       "category": "computer-use",
@@ -5700,6 +5714,17 @@
       "source": "bundled packages",
       "repositories": [
         "ccore/Qwen3.5-4B-3D-Coder"
+      ]
+    },
+    {
+      "id": "publisher-qwen35-4b-glb-3d-coder",
+      "label": "CCORE Qwen3.5 4B GLB 3D Coder",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "ccore/Qwen3.5-4B-GLB-3D-Coder"
       ]
     },
     {

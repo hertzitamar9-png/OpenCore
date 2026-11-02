@@ -22,19 +22,24 @@ def supports_text_generation(model, info=None):
     if model.get('supportsTextChat') is False or model.get('computerRuntime')=='gui-jepa-v1':return False
     category=model.get('category','text')
     if category in ('text','brain'):return True
-    if category in ('speech','tts','ocr','embedding','image','video','3d','policy'):return False
+    if category in ('speech','tts','voice-cloning','music','embedding','classification','image','video','3d','2d-animation','3d-animation','policy'):return False
     if (info.get('pipeline_tag') or model.get('task')) in ('text-generation','text2text-generation','image-text-to-text'):return True
-    return category in ('omni','computer-use') and 'text' in model.get('inputModalities',[]) and 'text' in model.get('outputModalities',[])
+    return category in ('omni','computer-use','ocr') and 'text' in model.get('inputModalities',[]) and 'text' in model.get('outputModalities',[])
 
 def descriptors(model, info=None):
     info=info or {};published=published_context_tokens(info) or positive(model.get('publishedContextTokens'))
     # Existing supported context is a conservative fallback, not evidence for 1M.
     available=published or positive(model.get('contextTokens'))
+    runtime_cap=positive(model.get('supportedContextTokens'))
+    if runtime_cap:available=min(available,runtime_cap) if available else runtime_cap
     runtime=model.get('runtime') or {}
     supported=bool(runtime.get('adapter') or model.get('backend')=='gguf' or model.get('preparedRuntime')) and model.get('runtimeReady') is not False
     if 'runtime' in model:supported=bool(runtime.get('adapter'))
-    return published,[{'id':mode,'targetContextTokens':target,'contextTokens':(positive(model.get('echoWorkingWindowTokens')) if mode=='echo' else None) or (min(target,available) if available else None),'supported':supported}
-        for mode,target in (('native',NATIVE_TARGET),('echo',ECHO_TARGET))]
+    choices=[]
+    for mode,target in (('native',NATIVE_TARGET),('echo',ECHO_TARGET)):
+        known=[value for value in (available,positive(model.get('echoWorkingWindowTokens')) if mode=='echo' else None) if value]
+        choices.append({'id':mode,'targetContextTokens':target,'contextTokens':min(target,*known) if known else None,'supported':supported})
+    return published,choices
 
 def apply_operating_modes(models, metadata=lambda _:{}):
     for model in models:
@@ -53,7 +58,7 @@ def mode_context(entry, mode=None):
         if choice['id']==mode and positive(choice.get('contextTokens')):return choice['contextTokens']
     target=ECHO_TARGET if mode=='echo' else NATIVE_TARGET
     supported=positive(entry.get('publishedContextTokens')) or positive(entry.get('contextTokens')) or ECHO_TARGET
-    return min(target,supported)
+    return min(target,supported,positive(entry.get('supportedContextTokens')) or supported)
 
 def snapshot_metadata(root):
     root=Path(root);cache={}
@@ -110,8 +115,13 @@ def native_mode_aliases(catalog):
             # checkpoint. Both modes now derive their limits from one policy.
             published=next((positive(m.get('publishedContextTokens')) for m in variants if positive(m.get('publishedContextTokens'))),None)
             available=published or max((positive(m.get('contextTokens')) or 0 for m in variants),default=0)
+            caps=[positive(m.get('supportedContextTokens')) for m in variants if positive(m.get('supportedContextTokens'))]
+            if caps:available=min(available,*caps) if available else min(caps)
             modes=copy.deepcopy(base['operatingModes'])
-            for choice in modes:choice['contextTokens']=min(choice['targetContextTokens'],available) if available else None
+            for choice in modes:
+                limits=[available] if available else []
+                if choice['id']=='echo':limits.extend(positive(m.get('echoWorkingWindowTokens')) for m in variants if positive(m.get('echoWorkingWindowTokens')))
+                choice['contextTokens']=min(choice['targetContextTokens'],*limits) if limits else None
             for model in variants:
                 model['operatingModes']=copy.deepcopy(modes)
                 if published:model['publishedContextTokens']=published

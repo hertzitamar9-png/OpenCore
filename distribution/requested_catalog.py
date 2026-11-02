@@ -61,7 +61,7 @@ def append_requested(entries, manifest, snapshots):
                 variants = []
                 for package in source['packages']:
                     pins = [_pin(repository, metadata['sha'], item,
-                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx')) or re.search(r'\.onnx_data(?:_\d+)?$', item['rfilename']) else 'support')
+                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx', '.cmf')) or re.search(r'\.onnx_data(?:_\d+)?$', item['rfilename']) else 'support')
                             for item in metadata['siblings'] if any(fnmatch.fnmatchcase(item['rfilename'], pattern) for pattern in package['files'])]
                     if not pins or any(not pin['pinned'] for pin in pins):
                         raise ValueError('Incomplete curated package: ' + repository)
@@ -104,11 +104,22 @@ def append_requested(entries, manifest, snapshots):
                         if (path.name in ('quantization_config.json', 'video_preprocessor_config.json')
                                 and str(path.parent) in ('.', entry['subdirectory']) and str(path) not in selected):
                             entry['files'].append(_pin(repository, metadata['sha'], item, 'support'))
+                for filename in source.get('supportFiles', []):
+                    item = next((item for item in metadata['siblings'] if item['rfilename'] == filename), None)
+                    if item is None:
+                        raise ValueError('Required publisher support file is absent: ' + filename)
+                    if not any(pin['filename'] == filename for pin in entry['files']):
+                        entry['files'].append(_pin(repository, metadata['sha'], item, 'support'))
                 entry['bytes'] = sum(pin['bytes'] for pin in entry['files'])
                 entry.update(familyId=row['familyId'], familyLabel=row['label'], originalRepository=row['repository'],
                              builtIn=True, nativeModelIds=[], libraryCategory=row['category'],
                              builtInDescription=row['description'], contextTokens=echo_context_tokens(original) if entry['category']=='text' else 8192, quantization=quant,
                              license=(original.get('cardData') or {}).get('license', 'Publisher terms'))
+                if 'supportedContextTokens' in row:
+                    limit = row['supportedContextTokens']
+                    if type(limit) is not int or not 0 < limit <= 16 * 1048576:
+                        raise ValueError('Invalid reviewed execution context limit')
+                    entry['supportedContextTokens'] = limit
                 entry['name'] = row['label'] + ' · ' + quant
                 if entry['category']=='text':
                     entry['memoryMode']='echo'

@@ -111314,6 +111314,1023 @@
       "publishedContextTokens": 1048576
     },
     {
+      "id": "hf-c340b848d18286fa767044e9",
+      "repository": "Hansda/Mage-VL-Cowork-GGUF",
+      "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+      "variantKey": "gguf:Mage-VL-Cowork-Q2_K.gguf",
+      "name": "Microsoft Mage VL Cowork · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2458578556,
+      "files": [
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "Mage-VL-Cowork-Q2_K.gguf",
+          "bytes": 1797135456,
+          "sha256": "74e1deaac772d0e41e951e2fdaee3ae150fa452b747653552af32465c7dd24c2",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "mmproj-Mage-VL-Cowork-F16.gguf",
+          "bytes": 661433504,
+          "sha256": "ecb04d0b0403ad6cc2b31eb523fde7e00b509b3f7ecbfe0e4a0c9e3780a3b9a9",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "MAGE_HYBRID_SYSTEM_PROMPT.txt",
+          "bytes": 4231,
+          "sha256": null,
+          "gitBlobSha1": "2a7dba0ee4e8909c4281a282b532ab4cd9c2f38c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "chat_template.jinja",
+          "bytes": 5365,
+          "sha256": null,
+          "gitBlobSha1": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Mage-VL GGUF conversion with its original Mage-ViT projector and prompt contract. Vision requires the experimental Mage-VL-enabled llama.cpp fork; stock projector support is unmerged. This custom vision/action adapter is not integrated, and text-only generation is unverified. Active window: 32,768 tokens."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Hansda/Mage-VL-Cowork-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-8ba1d950226da1cedee74f59",
+      "repository": "Hansda/Mage-VL-Cowork-GGUF",
+      "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+      "variantKey": "gguf:Mage-VL-Cowork-Q3_K_M.gguf",
+      "name": "Microsoft Mage VL Cowork · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2904200316,
+      "files": [
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "Mage-VL-Cowork-Q3_K_M.gguf",
+          "bytes": 2242757216,
+          "sha256": "5b8a57e44280a3c829e52479ff64cfcd9cde9c9262c90286c736769c19f69ad6",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "mmproj-Mage-VL-Cowork-F16.gguf",
+          "bytes": 661433504,
+          "sha256": "ecb04d0b0403ad6cc2b31eb523fde7e00b509b3f7ecbfe0e4a0c9e3780a3b9a9",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "MAGE_HYBRID_SYSTEM_PROMPT.txt",
+          "bytes": 4231,
+          "sha256": null,
+          "gitBlobSha1": "2a7dba0ee4e8909c4281a282b532ab4cd9c2f38c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "chat_template.jinja",
+          "bytes": 5365,
+          "sha256": null,
+          "gitBlobSha1": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Mage-VL GGUF conversion with its original Mage-ViT projector and prompt contract. Vision requires the experimental Mage-VL-enabled llama.cpp fork; stock projector support is unmerged. This custom vision/action adapter is not integrated, and text-only generation is unverified. Active window: 32,768 tokens."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Hansda/Mage-VL-Cowork-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-3a2e2e6a5901705d85eb3171",
+      "repository": "Hansda/Mage-VL-Cowork-GGUF",
+      "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+      "variantKey": "gguf:Mage-VL-Cowork-Q4_K_M.gguf",
+      "name": "Microsoft Mage VL Cowork · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3377521276,
+      "files": [
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "Mage-VL-Cowork-Q4_K_M.gguf",
+          "bytes": 2716078176,
+          "sha256": "f7e456c897ce3419ef68c3b658080b7d69808d12432cbd3270c2f758b8688781",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "mmproj-Mage-VL-Cowork-F16.gguf",
+          "bytes": 661433504,
+          "sha256": "ecb04d0b0403ad6cc2b31eb523fde7e00b509b3f7ecbfe0e4a0c9e3780a3b9a9",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "MAGE_HYBRID_SYSTEM_PROMPT.txt",
+          "bytes": 4231,
+          "sha256": null,
+          "gitBlobSha1": "2a7dba0ee4e8909c4281a282b532ab4cd9c2f38c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "chat_template.jinja",
+          "bytes": 5365,
+          "sha256": null,
+          "gitBlobSha1": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Mage-VL GGUF conversion with its original Mage-ViT projector and prompt contract. Vision requires the experimental Mage-VL-enabled llama.cpp fork; stock projector support is unmerged. This custom vision/action adapter is not integrated, and text-only generation is unverified. Active window: 32,768 tokens."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Hansda/Mage-VL-Cowork-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-185b97e3882b27b04bb40efc",
+      "repository": "Hansda/Mage-VL-Cowork-GGUF",
+      "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+      "variantKey": "gguf:Mage-VL-Cowork-Q6_K.gguf",
+      "name": "Microsoft Mage VL Cowork · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 4286779516,
+      "files": [
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "Mage-VL-Cowork-Q6_K.gguf",
+          "bytes": 3625336416,
+          "sha256": "ac5e706330a31021bfdb88e0f46baf844aa21a14b002cad4f352adc145a34bfb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "mmproj-Mage-VL-Cowork-F16.gguf",
+          "bytes": 661433504,
+          "sha256": "ecb04d0b0403ad6cc2b31eb523fde7e00b509b3f7ecbfe0e4a0c9e3780a3b9a9",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "MAGE_HYBRID_SYSTEM_PROMPT.txt",
+          "bytes": 4231,
+          "sha256": null,
+          "gitBlobSha1": "2a7dba0ee4e8909c4281a282b532ab4cd9c2f38c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "chat_template.jinja",
+          "bytes": 5365,
+          "sha256": null,
+          "gitBlobSha1": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Mage-VL GGUF conversion with its original Mage-ViT projector and prompt contract. Vision requires the experimental Mage-VL-enabled llama.cpp fork; stock projector support is unmerged. This custom vision/action adapter is not integrated, and text-only generation is unverified. Active window: 32,768 tokens."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Hansda/Mage-VL-Cowork-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-2fbefbe06a1d925f25139137",
+      "repository": "Hansda/Mage-VL-Cowork-GGUF",
+      "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+      "variantKey": "gguf:Mage-VL-Cowork-Q8_0.gguf",
+      "name": "Microsoft Mage VL Cowork · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 5355123836,
+      "files": [
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "Mage-VL-Cowork-Q8_0.gguf",
+          "bytes": 4693680736,
+          "sha256": "4a5651887fc0bfd741e5ce1e7c3922c5480980e13130969620b73e36b5d85592",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "mmproj-Mage-VL-Cowork-F16.gguf",
+          "bytes": 661433504,
+          "sha256": "ecb04d0b0403ad6cc2b31eb523fde7e00b509b3f7ecbfe0e4a0c9e3780a3b9a9",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "MAGE_HYBRID_SYSTEM_PROMPT.txt",
+          "bytes": 4231,
+          "sha256": null,
+          "gitBlobSha1": "2a7dba0ee4e8909c4281a282b532ab4cd9c2f38c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "revision": "90c433e3d9ca1e6e0e8bf4bf3928a3a55a0b4a35",
+          "filename": "chat_template.jinja",
+          "bytes": 5365,
+          "sha256": null,
+          "gitBlobSha1": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Mage-VL GGUF conversion with its original Mage-ViT projector and prompt contract. Vision requires the experimental Mage-VL-enabled llama.cpp fork; stock projector support is unmerged. This custom vision/action adapter is not integrated, and text-only generation is unverified. Active window: 32,768 tokens."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Hansda/Mage-VL-Cowork-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-92fb96d80b52183a95ab60da",
+      "variantKey": "cmf:mage-vl-cowork-q4tp.cmf",
+      "repository": "infosave/Mage-VL-Cowork-cmf",
+      "revision": "72b9401c8aa2668fbf6aa4bd8ae94b985c1b4f18",
+      "format": "cmf",
+      "quantization": "Q4TP",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "infosave/Mage-VL-Cowork-cmf",
+          "revision": "72b9401c8aa2668fbf6aa4bd8ae94b985c1b4f18",
+          "filename": "mage-vl-cowork-q4tp.cmf",
+          "bytes": 2977659838,
+          "sha256": "aedc066d74bdb0f570541b2c53a74452b5f99e3fc39b364b223a8f0b351ead1f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "infosave/Mage-VL-Cowork-cmf",
+          "revision": "72b9401c8aa2668fbf6aa4bd8ae94b985c1b4f18",
+          "filename": "mage-vl-cowork-q4tp.cmf.sha256",
+          "bytes": 90,
+          "sha256": null,
+          "gitBlobSha1": "9b4ca56033cc4d3d82a567473602d643d0b74130",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 2977659928,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/infosave/Mage-VL-Cowork-cmf",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Complete CMF package with quantized language weights and 16-bit vision. Requires cortiq 0.8.51 or later and the Mage tool harness; OpenCore has no integrated CMF/cortiq runtime. Active window: 32,768 tokens."
+      },
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "contextTokens": 32768,
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "name": "Microsoft Mage VL Cowork · Q4TP",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-dbdca906e80b866d7b0db0ff",
+      "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+      "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+      "variantKey": "safetensors:.",
+      "name": "Microsoft Mage VL Cowork · MLX 4-bit",
+      "quantization": "MLX 4-bit",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3156913784,
+      "files": [
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "model.safetensors",
+          "bytes": 3142599841,
+          "sha256": "227dc83aefc5ee5ffefc1a261e1d8c59fc835c64b09f219e32b76a0f8362dea5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "added_tokens.json",
+          "bytes": 706,
+          "sha256": null,
+          "gitBlobSha1": "86f15c4d151abb9277362a9dd5a9c89a802b97e9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "chat_template.jinja",
+          "bytes": 5365,
+          "sha256": null,
+          "gitBlobSha1": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "config.json",
+          "bytes": 3509,
+          "sha256": null,
+          "gitBlobSha1": "b8b0167745ae4b6db3bce2303f7cadd298542942",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "generation_config.json",
+          "bytes": 121,
+          "sha256": null,
+          "gitBlobSha1": "a811a763dedb8d7dfd07cd05e3f177c1a1473beb",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "model.safetensors.index.json",
+          "bytes": 101325,
+          "sha256": null,
+          "gitBlobSha1": "a08b680cbd7117a6420c64adf7c447c0687a32b0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "preprocessor_config.json",
+          "bytes": 778,
+          "sha256": null,
+          "gitBlobSha1": "7a667b9175ab2c09f317ddbec52e00f6faa67631",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "processor_config.json",
+          "bytes": 627,
+          "sha256": null,
+          "gitBlobSha1": "5d8b31cad06c4edda35dad405cdd3480a5448148",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "special_tokens_map.json",
+          "bytes": 384,
+          "sha256": null,
+          "gitBlobSha1": "799fd9f1151d246b5c605fb92a13c3bb2c162e23",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "tokenizer.json",
+          "bytes": 11422650,
+          "sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "tokenizer_config.json",
+          "bytes": 734,
+          "sha256": null,
+          "gitBlobSha1": "96f36659de4edf87629064e69d95ddea9a920bca",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "revision": "97e4f26e5febf74eccdf42c651d67dadc95f588a",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 911,
+          "sha256": null,
+          "gitBlobSha1": "91a1fed79814ff965c6cc505fba882feaf13e152",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "mage_vl",
+      "architectures": [
+        "MageVLForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Community MLX 4-bit language weights with BF16 Mage-ViT vision, requiring Apple Silicon and mlx-vlm 0.7.11 or later with mage_vl support. No Windows MLX adapter is integrated. Active window: 32,768 tokens."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/pratikgx/Mage-VL-Cowork-MLX-4bit",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-4fce88a27e43e8d4d45a4942",
+      "variantKey": "cmf:mage-vl-cowork-q8_2f.cmf",
+      "repository": "infosave/Mage-VL-Cowork-cmf",
+      "revision": "72b9401c8aa2668fbf6aa4bd8ae94b985c1b4f18",
+      "format": "cmf",
+      "quantization": "Q8_2F",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "infosave/Mage-VL-Cowork-cmf",
+          "revision": "72b9401c8aa2668fbf6aa4bd8ae94b985c1b4f18",
+          "filename": "mage-vl-cowork-q8_2f.cmf",
+          "bytes": 5096045502,
+          "sha256": "ca71b28811318523ff0b9742c0c1f0be5590f7bcfc10815cb0054f92dd170b88",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "infosave/Mage-VL-Cowork-cmf",
+          "revision": "72b9401c8aa2668fbf6aa4bd8ae94b985c1b4f18",
+          "filename": "mage-vl-cowork-q8_2f.cmf.sha256",
+          "bytes": 91,
+          "sha256": null,
+          "gitBlobSha1": "f2ee41e258e270490a467a2f5709b6c5af11b084",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 5096045593,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/infosave/Mage-VL-Cowork-cmf",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Complete CMF package with quantized language weights and 16-bit vision. Requires cortiq 0.8.51 or later and the Mage tool harness; OpenCore has no integrated CMF/cortiq runtime. Active window: 32,768 tokens."
+      },
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "contextTokens": 32768,
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "name": "Microsoft Mage VL Cowork · Q8_2F",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-4b272e534c7a6502dea04a2d",
+      "repository": "microsoft/Mage-VL-Cowork",
+      "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+      "variantKey": "safetensors:.",
+      "name": "Microsoft Mage VL Cowork · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 9499619480,
+      "files": [
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "model-00001-of-00002.safetensors",
+          "bytes": 4563695792,
+          "sha256": "86424086d1a35e416ae6475248856b517933aaf87b8e2418b63e74ac0f920241",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "model-00002-of-00002.safetensors",
+          "bytes": 4919972344,
+          "sha256": "3ec6ed805a4664b0e39f57615f02e81989fbe08ae95ac96e3be6af309115e048",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "added_tokens.json",
+          "bytes": 706,
+          "sha256": null,
+          "gitBlobSha1": "86f15c4d151abb9277362a9dd5a9c89a802b97e9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "chat_template.jinja",
+          "bytes": 5365,
+          "sha256": null,
+          "gitBlobSha1": "22df6e49aae2e5ef16d6c3316f76fb5ace4e7ce9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "config.json",
+          "bytes": 2730,
+          "sha256": null,
+          "gitBlobSha1": "7133342548cb4935eb720de73c2f7f9d7235a7a8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "generation_config.json",
+          "bytes": 121,
+          "sha256": null,
+          "gitBlobSha1": "a811a763dedb8d7dfd07cd05e3f177c1a1473beb",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "merges.txt",
+          "bytes": 1671839,
+          "sha256": null,
+          "gitBlobSha1": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "model.safetensors.index.json",
+          "bytes": 58017,
+          "sha256": null,
+          "gitBlobSha1": "5bb7170eef26c3a5635aa5f685bef55e66909f44",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "preprocessor_config.json",
+          "bytes": 827,
+          "sha256": null,
+          "gitBlobSha1": "e0d9867de15d3a5675e26495969daf0cd37a4fd0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "special_tokens_map.json",
+          "bytes": 384,
+          "sha256": null,
+          "gitBlobSha1": "799fd9f1151d246b5c605fb92a13c3bb2c162e23",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "tokenizer.json",
+          "bytes": 11422654,
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "tokenizer_config.json",
+          "bytes": 10957,
+          "sha256": null,
+          "gitBlobSha1": "c186cc500eda1f65da5b2add871bbce2ea35045c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "revision": "6fbe7f91da477c1c73790dbb1f08d001b8626be1",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 911,
+          "sha256": null,
+          "gitBlobSha1": "91a1fed79814ff965c6cc505fba882feaf13e152",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "llava_onevision2",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Custom llava_onevision2 / Mage-ViT BF16 checkpoint. Requires the publisher Transformers/SGLang implementation with reviewed custom modeling code and a computer-use tool harness; this adapter is not integrated. The active trained/inference window is 32,768 tokens."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/microsoft/Mage-VL-Cowork",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mage-vl-cowork",
+      "familyLabel": "Microsoft Mage VL Cowork",
+      "originalRepository": "microsoft/Mage-VL-Cowork",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 32768,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
       "id": "hf-96549e02786077ceed35b033",
       "repository": "mradermacher/Mano-CUA-2.0-4B-GGUF",
       "revision": "639f9a5263a7cd54f240f8d15ed1184867ab2cf7",
@@ -114070,6 +115087,160 @@
       "libraryCategory": "text",
       "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the updated publisher Q4_K_M and Q8_0 GGUF checkpoints and original FP16 weights.",
       "license": "apache-2.0",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-5f9ce968ee56f1204ef91a33",
+      "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+      "revision": "64c3a6158fceede37b90c418c697606f10517e47",
+      "variantKey": "gguf:Qwen3.5-4B-GLB-3D-Coder-Q4_K_M.gguf",
+      "name": "CCORE Qwen3.5 4B GLB 3D Coder · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3384372896,
+      "files": [
+        {
+          "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+          "revision": "64c3a6158fceede37b90c418c697606f10517e47",
+          "filename": "Qwen3.5-4B-GLB-3D-Coder-Q4_K_M.gguf",
+          "bytes": 2708804128,
+          "sha256": "91328e3f6d0aff4c05c59168fe455d98cf3952c888f322693566192b230a661f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+          "revision": "64c3a6158fceede37b90c418c697606f10517e47",
+          "filename": "mmproj-Qwen3.5-4B-BF16.gguf",
+          "bytes": 675568768,
+          "sha256": "ae08d9d7eceb8f2d0672d61b5e6aa78b611f2942b55ed71d21414980cc454b91",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ccore/Qwen3.5-4B-GLB-3D-Coder",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-qwen35-4b-glb-3d-coder",
+      "familyLabel": "CCORE Qwen3.5 4B GLB 3D Coder",
+      "originalRepository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "ccore/Qwen3.5-4B-GLB-3D-Coder: the exact updated preview coding checkpoint for Three.js scenes and GLB export. Both published Q4_K_M and Q8_0 GGUFs use the same optional BF16 vision projector. The managed text runtime supports Native and ECHO; image input and autonomous asset creation are unverified. Full safetensors weights are not published at the pinned revision.",
+      "license": "apache-2.0",
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-faae60cd9124dc32252a009c",
+      "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+      "revision": "64c3a6158fceede37b90c418c697606f10517e47",
+      "variantKey": "gguf:Qwen3.5-4B-GLB-3D-Coder-Q8_0.gguf",
+      "name": "CCORE Qwen3.5 4B GLB 3D Coder · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 5157971616,
+      "files": [
+        {
+          "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+          "revision": "64c3a6158fceede37b90c418c697606f10517e47",
+          "filename": "Qwen3.5-4B-GLB-3D-Coder-Q8_0.gguf",
+          "bytes": 4482402848,
+          "sha256": "901f7eabc4612120908aa922c4fa8d2a3559bf186bfb1bbddcf631687778eb56",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+          "revision": "64c3a6158fceede37b90c418c697606f10517e47",
+          "filename": "mmproj-Qwen3.5-4B-BF16.gguf",
+          "bytes": 675568768,
+          "sha256": "ae08d9d7eceb8f2d0672d61b5e6aa78b611f2942b55ed71d21414980cc454b91",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ccore/Qwen3.5-4B-GLB-3D-Coder",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-qwen35-4b-glb-3d-coder",
+      "familyLabel": "CCORE Qwen3.5 4B GLB 3D Coder",
+      "originalRepository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "ccore/Qwen3.5-4B-GLB-3D-Coder: the exact updated preview coding checkpoint for Three.js scenes and GLB export. Both published Q4_K_M and Q8_0 GGUFs use the same optional BF16 vision projector. The managed text runtime supports Native and ECHO; image input and autonomous asset creation are unverified. Full safetensors weights are not published at the pinned revision.",
+      "license": "apache-2.0",
+      "managedEngine": "flint-cpu-v1",
       "catalogOrder": 0,
       "echoWorkingWindowTokens": 32768,
       "supportsTextGeneration": true,

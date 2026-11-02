@@ -15,6 +15,53 @@ from echo_server import ArchiveSet, EchoState  # noqa: E402
 
 
 class EchoMemoryContinuityTests(unittest.TestCase):
+    def test_large_exact_receipt_fingerprints_survive_repeated_trim_and_restart(self):
+        from echo_server import codex_checkpoint_tool_cycle
+        with ExitStack() as stack:
+            temporary=stack.enter_context(tempfile.TemporaryDirectory())
+            archive=EchoArchive(Path(temporary)/'archive.db');stack.callback(archive.close)
+            count=lambda text:max(1,len(text)//4)
+            live=LiveTranscript(archive,'large-receipts');live.start_turn('Repair the game.',count)
+            for index in range(3):
+                call={'id':str(index),'type':'function','function':{
+                    'name':'Read','arguments':'{"path":"games/snake.html"}'}}
+                live.append({'role':'assistant','content':'','tool_calls':[call]},count)
+                live.append({'role':'tool','tool_call_id':str(index),'content':'source '*1000},count)
+                live.append_generated({'role':'assistant','content':'Keep working.'},count)
+                self.assertGreater(live.compact(600,count),0)
+                live.save();live=LiveTranscript(archive,'large-receipts')
+            self.assertTrue(codex_checkpoint_tool_cycle(live))
+            live.append({'role':'assistant','tool_calls':[{'id':'repair','function':{
+                'name':'Write','arguments':'{"path":"games/snake.html"}'}}]},count)
+            live.append({'role':'tool','tool_call_id':'repair','content':'{"ok":true}'},count)
+            self.assertFalse(codex_checkpoint_tool_cycle(live))
+            live.append_generated({'role':'assistant','content':'analysis '*1000},count)
+            live.append_generated({'role':'assistant','content':'Retest the repair.'},count)
+            self.assertGreater(live.compact(600,count),0)
+            live.save();live=LiveTranscript(archive,'large-receipts')
+            self.assertFalse(codex_checkpoint_tool_cycle(live))
+
+    def test_checkpoint_preserves_latest_failed_action_when_older_small_receipt_fits(self):
+        with ExitStack() as stack:
+            temporary=stack.enter_context(tempfile.TemporaryDirectory())
+            archive=EchoArchive(Path(temporary)/'archive.db');stack.callback(archive.close)
+            count=lambda text:max(1,len(text)//4)
+            live=LiveTranscript(archive,'latest-state');live.start_turn('Repair the game.',count)
+            for call_id,args,result in [
+                ('old','{"path":"old.txt"}','old result'),
+                ('latest','{"action":"edit","path":"games/snake.html","oldText":"'+('x'*1000)+'"}',
+                 'Permission denied; file not written. '+('details '*500))]:
+                call={'id':call_id,'function':{'name':'workspace','arguments':args}}
+                live.append({'role':'assistant','tool_calls':[call]},count)
+                live.append({'role':'tool','tool_call_id':call_id,'content':result},count)
+            live.append_generated({'role':'assistant','content':'old analysis '*1000},count)
+            live.append_generated({'role':'assistant','content':'Resolve the permission error next.'},count)
+            self.assertGreater(live.compact(600,count),0)
+            active='\n'.join(str(m.get('content') or '') for m in live.messages)
+            self.assertIn('games/snake.html',active)
+            self.assertIn('Permission denied; file not written.',active)
+            self.assertIn('latest',active)
+
     def test_compaction_keeps_completed_current_task_tool_evidence(self):
         with ExitStack() as stack:
             temporary = stack.enter_context(tempfile.TemporaryDirectory())

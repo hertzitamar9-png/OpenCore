@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AgentLoopGuard, forwardGuardedAgent, guardedToolResult } from './agent-loop-guard.mjs';
+import { AgentLoopGuard, forwardGuardedAgent, guardedToolResult, guardedToolUse } from './agent-loop-guard.mjs';
 
 const assistant = (id, text) => ({type:'assistant',message:{id,content:[{type:'text',text}]}});
 
@@ -84,4 +84,68 @@ test('the real tool hook requests a stop after unchanged repeated searches',()=>
   const result=guardedToolResult(guard,event,value=>visible.push(value));
   assert.equal(result.continue,false);
   assert.ok(visible.some(value=>value.kind==='fatal'&&/repeating the same tool/i.test(value.error)));
+});
+
+test('four distinct unchanged inspections cannot bypass the no-progress guard',()=>{
+  const guard=new AgentLoopGuard();let issue;
+  for(let i=0;i<12;i++)issue=guard.observeToolResult('Read',{file_path:`file-${i%4}`},{content:`unchanged-${i%4}`});
+  assert.equal(issue?.kind,'repeated-tool');
+});
+
+test('identical failed mutations are stopped even through an MCP result wrapper',()=>{
+  const guard=new AgentLoopGuard();let issue;
+  for(let i=0;i<3;i++)issue=guard.observeToolResult('mcp__opencore__dev',
+    {action:'edit',path:'game.html',explanation:`attempt ${i}`},
+    {isError:true,content:[{type:'text',text:'{"error":"File hash changed; no edit applied"}'}]});
+  assert.equal(issue?.kind,'repeated-tool');
+  assert.match(issue.message,/failed/i);
+});
+
+test('SDK failure events stop repeated failed commands without a successful PostToolUse',()=>{
+  const guard=new AgentLoopGuard(),visible=[];let stop;
+  for(let i=0;i<3;i++)stop=guardedToolResult(guard,{hook_event_name:'PostToolUseFailure',
+    tool_name:'Bash',tool_input:{command:'npm test'},error:'Test process exited with code 1'},value=>visible.push(value));
+  assert.equal(stop?.continue,false);
+  assert.match(visible.at(-1).error,/failed/i);
+});
+
+test('a failed cycle does not suppress a repaired action or a new failure',()=>{
+  const guard=new AgentLoopGuard();
+  for(let i=0;i<2;i++)assert.equal(guard.observeToolResult('Bash',{command:'npm test'},{exitCode:1,stderr:'old failure'}),null);
+  assert.equal(guard.observeToolResult('Edit',{file_path:'game.html'},{ok:true}),null);
+  assert.equal(guard.observeToolResult('Bash',{command:'npm test'},{exitCode:1,stderr:'old failure'}),null);
+  assert.equal(guard.observeToolResult('Bash',{command:'npm test'},{exitCode:1,stderr:'new failure'}),null);
+  assert.equal(guard.observeToolResult('Bash',{command:'npm test'},{exitCode:0,stdout:'passed'}),null);
+});
+
+test('new large file reads remain useful work and unchanged large results still expose cycles',()=>{
+  const guard=new AgentLoopGuard();
+  for(let i=0;i<150;i++)assert.equal(guard.observeToolResult('Read',{file_path:`module-${i}`},{content:'x'.repeat(210000)}),null);
+  let issue;
+  for(let i=0;i<3;i++)issue=guard.observeToolResult('Read',{file_path:'same-module'},{content:'x'.repeat(210000)});
+  assert.equal(issue?.kind,'repeated-tool');
+});
+
+test('the action hook blocks a known stalled action and permits a different repair',()=>{
+  const guard=new AgentLoopGuard(),visible=[];
+  for(let i=0;i<3;i++)guard.observeToolResult('Bash',{command:'npm test'},{exitCode:1,stderr:'same error'});
+  const stop=guardedToolUse(guard,{tool_name:'Bash',tool_input:{command:'npm test'}},value=>visible.push(value));
+  assert.equal(stop?.continue,false);
+  assert.equal(stop.hookSpecificOutput.permissionDecision,'deny');
+  assert.equal(guardedToolUse(guard,{tool_name:'Edit',tool_input:{file_path:'game.html'}},value=>visible.push(value)),null);
+  guard.observeToolResult('Edit',{file_path:'game.html'},{ok:true});
+  assert.equal(guardedToolUse(guard,{tool_name:'Bash',tool_input:{command:'npm test'}},value=>visible.push(value)),null);
+});
+
+test('duplicate delivery of one completed tool event is not repeated execution',()=>{
+  const guard=new AgentLoopGuard();
+  const event={tool_use_id:'one-execution',tool_name:'Read',tool_input:{file_path:'game.html'},tool_response:{content:'same'}};
+  for(let i=0;i<5;i++)assert.equal(guardedToolResult(guard,event,()=>{}),null);
+});
+
+test('a change from failed to successful result does not count as unchanged evidence',()=>{
+  const guard=new AgentLoopGuard();
+  const wrapped=failed=>({isError:failed,content:[{type:'text',text:'same text'}]});
+  for(let i=0;i<2;i++)assert.equal(guard.observeToolResult('Read',{file_path:'game.html'},wrapped(true)),null);
+  assert.equal(guard.observeToolResult('Read',{file_path:'game.html'},wrapped(false)),null);
 });

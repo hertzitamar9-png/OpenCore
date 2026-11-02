@@ -11,9 +11,47 @@ sys.path.insert(0, str(ROOT))
 from requested_catalog import append_requested
 from bundled_catalog import coverage
 from hf_download import validate_entry
+from model_modes import apply_operating_modes, snapshot_metadata
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_glb_coder_has_exactly_the_two_published_decoders_and_the_shared_projector(self):
+        entries = self.family('qwen35-4b-glb-3d-coder')
+        self.assertEqual(len(entries), 2)
+        self.assertEqual({entry['quantization'] for entry in entries}, {'Q4_K_M', 'Q8_0'})
+        for entry in entries:
+            self.assertEqual(entry['originalRepository'], 'ccore/Qwen3.5-4B-GLB-3D-Coder')
+            self.assertEqual(entry['revision'], '64c3a6158fceede37b90c418c697606f10517e47')
+            self.assertEqual(entry['runtime']['adapter'], 'gguf')
+            self.assertEqual(sum(pin['role'] == 'model' for pin in entry['files']), 1)
+            self.assertEqual(next(pin['filename'] for pin in entry['files'] if pin['role'] == 'companion'), 'mmproj-Qwen3.5-4B-BF16.gguf')
+            self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+
+    def test_mage_preserves_all_verified_formats_and_explicit_custom_runtime_limits(self):
+        entries = copy.deepcopy(self.family('mage-vl-cowork'))
+        self.assertEqual(len(entries), 9)
+        self.assertEqual({(entry['format'], entry['quantization']) for entry in entries}, {
+            ('safetensors', 'BF16'), ('safetensors', 'MLX 4-bit'),
+            ('gguf', 'Q2_K'), ('gguf', 'Q3_K_M'), ('gguf', 'Q4_K_M'), ('gguf', 'Q6_K'), ('gguf', 'Q8_0'),
+            ('cmf', 'Q4TP'), ('cmf', 'Q8_2F')})
+        apply_operating_modes(entries, snapshot_metadata(ROOT / 'hf-research'))
+        for entry in entries:
+            self.assertEqual(entry['originalRepository'], 'microsoft/Mage-VL-Cowork')
+            self.assertTrue(entry['supportsTextGeneration'])
+            self.assertEqual([mode['contextTokens'] for mode in entry['operatingModes']], [32768, 32768])
+            self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+            self.assertIsNone(entry['runtime']['adapter'])
+            self.assertFalse(any(mode['supported'] for mode in entry['operatingModes']))
+            self.assertFalse(any(pin['filename'].endswith('.py') for pin in entry['files']))
+            self.assertTrue(any(pin['role'] == 'model' for pin in entry['files']))
+            if entry['format'] == 'gguf':
+                self.assertIn('Mage-VL', entry['runtime']['reason'])
+                self.assertEqual(sum(pin['role'] == 'companion' for pin in entry['files']), 1)
+                self.assertIn('MAGE_HYBRID_SYSTEM_PROMPT.txt', {pin['filename'] for pin in entry['files']})
+        original = next(entry for entry in entries if entry['quantization'] == 'BF16')
+        self.assertEqual(sum(pin['role'] == 'model' for pin in original['files']), 2)
+        self.assertEqual(original['revision'], '6fbe7f91da477c1c73790dbb1f08d001b8626be1')
+
     def test_iquest_family_keeps_all_fourteen_editions_with_their_actual_runtimes(self):
         families={row['familyId'] for row in self.rows if row['repository'].startswith('IQuestLab/IQuest-Coder-V1-')}
         self.assertEqual(len(families),14)
@@ -373,7 +411,7 @@ class RequestedCatalogTests(unittest.TestCase):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 31)
+        self.assertEqual(report['withFive'], 32)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

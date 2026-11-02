@@ -1,5 +1,7 @@
 export function installModelModes(React, catalog, service) {
   const h=React.createElement,byId=new Map(catalog.models.map(model=>[model.id,model])),byProfile=new Map();
+  const positive=value=>Number.isInteger(value)&&value>0?value:null;
+  const text=model=>model.supportsTextGeneration??(model.supportsTextChat!==false&&model.computerRuntime!=='gui-jepa-v1'&&(['text','brain'].includes(model.category)||['omni','computer-use','ocr'].includes(model.category)&&model.inputModalities?.includes('text')&&model.outputModalities?.includes('text')));
   const keyFor=model=>{
     let current=byId.get(model.id)||model,seen=new Set();
     while(current.variantOf&&byId.has(current.variantOf)&&!seen.has(current.id)){seen.add(current.id);current=byId.get(current.variantOf);}
@@ -16,9 +18,10 @@ export function installModelModes(React, catalog, service) {
   }}
   // The legacy catalog is sufficient for a conservative first paint. New
   // descriptors arrive once over the app's authenticated loopback service.
-  for(const model of byId.values())if((model.category==='text'||model.category==='brain')&&model.supportsTextChat!==false){
+  for(const model of byId.values())if(text(model)){
     model.supportsTextGeneration=true;
-    model.operatingModes=[{id:'native',contextTokens:Math.min(model.contextTokens||32768,1048576)},{id:'echo',contextTokens:Math.min(model.contextTokens||32768,32768)}];
+    const limits=[model.publishedContextTokens,model.contextTokens,model.supportedContextTokens].map(positive).filter(Boolean);
+    model.operatingModes||=(['native','echo'].map(id=>({id,contextTokens:limits.length?Math.min(...limits,id==='echo'?32768:1048576):null})));
   }
   reindex();
   const ready=service.request('/runtime/modes').then(data=>{
@@ -32,7 +35,9 @@ export function installModelModes(React, catalog, service) {
   };
   const context=(model,selected=mode(model))=>{
     const item=(policy(model)?.operatingModes||[]).find(item=>item.id===selected);
-    return item?.contextTokens||Math.min(model.contextTokens||32768,selected==='echo'?32768:1048576);
+    if(item)return positive(item.contextTokens);
+    const limits=[model.publishedContextTokens,model.contextTokens,model.supportedContextTokens].map(positive).filter(Boolean);
+    return limits.length?Math.min(...limits,selected==='echo'?32768:1048576):null;
   };
   function augment(library){
     const groups=new Map(),rest=[];
@@ -56,7 +61,7 @@ export function installModelModes(React, catalog, service) {
   }
   function entry(value){
     if(!value||value.nativeProfile)return value;
-    if(!(value.supportsTextGeneration||value.category==='text'))return value;
+    if(!text(value))return value;
     const selected=mode(value),proof=value.runtimePreparations?.[selected]||((value.runtimePreparation?.operatingMode||'echo')===selected?value.runtimePreparation:null);
     return {...value,operatingMode:selected,runtimePreparation:proof||{},runtimeReady:!!value.runtimeReady&&(value.operatingMode||'echo')===selected||!!(value.status==='installed'&&proof?.runtimeReady&&proof.receiptRevision===value.revision)};
   }
@@ -65,7 +70,7 @@ export function installModelModes(React, catalog, service) {
     if(snapshot.activeConversationIds?.length||['starting','stopping'].includes(snapshot.runtime?.status))throw Error('Wait for the current model request before changing operating mode.');
   }
   async function ensure(value){
-    if(!value||value.nativeProfile||!(value.supportsTextGeneration||value.category==='text'))return value;
+    if(!value||value.nativeProfile||!text(value))return value;
     const selected=mode(value);
     if((value.operatingMode||'echo')===selected)return value;
     await idle();return service.request('/runtime/mode',{id:value.id,operatingMode:selected});
@@ -88,7 +93,7 @@ export function installModelModes(React, catalog, service) {
   async function before(command,args){
     if(command==='send_chat_message'&&args.request){
       const snapshot=await service.invoke('get_snapshot',{}),info=profileInfo(snapshot?.runtime?.profile);
-      if(info?.mode==='native'&&[undefined,27852,200000].includes(args.request.compactAtTokens))args.request.compactAtTokens=Math.floor(info.contextTokens*.85);
+      if(info?.mode==='native'&&info.contextTokens&&[undefined,27852,200000].includes(args.request.compactAtTokens))args.request.compactAtTokens=Math.floor(info.contextTokens*.85);
     }
     if(['select_profile','start_profile','model_removal_plan','uninstall_model'].includes(command)){
       const selected=args.profile||args.request?.profile||args.id,meta=byId.get(selected)||byProfile.get(selected);
@@ -102,7 +107,7 @@ export function installModelModes(React, catalog, service) {
     React.useEffect(()=>setSelected(mode(model)),[model.id,model.operatingMode]);
     const [,refresh]=React.useState(0);
     React.useEffect(()=>{const update=()=>refresh(value=>value+1);listeners.add(update);return()=>listeners.delete(update);},[]);
-    if(!(meta?.supportsTextGeneration||model.supportsTextGeneration||model.category==='text'&&!model.specialist))return null;
+    if(!(meta?.supportsTextGeneration||text(model)))return null;
     const cap=context(model,selected),target=selected==='native'?1048576:32768;
     async function change(next){
       if(busy)return;setBusy(true);setError('');
@@ -116,7 +121,8 @@ export function installModelModes(React, catalog, service) {
       h('label',{className:'model-quantization-picker'},'Operating mode',h('select',{'aria-label':'Operating mode',value:selected,disabled:disabled||busy||!initialized,onChange:event=>void change(event.target.value)},
         h('option',{value:'echo'},'ECHO · 32K working window'),h('option',{value:'native'},'Native · 1M target'))),
       h('small',{style:{display:'block',color:'var(--theme-muted)'}},(selected==='echo'?'ECHO keeps archived history beyond the active window. ':'Native uses the model context directly. ')+
-        'Supported window: '+cap.toLocaleString()+' tokens'+(cap<target?' · below the '+target.toLocaleString()+' target.':'.')+' The loaded window also depends on available memory.'),
+        (cap?'Supported window: '+cap.toLocaleString()+' tokens'+(cap<target?' · below the '+target.toLocaleString()+' target.':'.'):'The supported context window is unknown.')+' The loaded window also depends on available memory.'+
+        (meta?.operatingModes?.find(item=>item.id===selected)?.supported===false?' This format needs an integrated text runtime.':'')),
       error?h('p',{role:'alert'},error):null);
   }
   const api={augment,entry,mode,context,ensure,activate,policy,profileInfo,before,Control,ready};

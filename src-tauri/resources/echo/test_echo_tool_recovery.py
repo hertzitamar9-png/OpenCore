@@ -16,6 +16,33 @@ from evoagent.echo_context import LiveTranscript
 
 
 class ToolRecoveryTests(unittest.TestCase):
+    def test_internal_memory_cycles_stop_with_a_specific_incomplete_reason(self):
+        for queries,expected_calls in [(['one','two','three','four'],12),([''],3)]:
+            with self.subTest(queries=queries), ExitStack() as stack:
+                root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
+                archives=ArchiveSet(root,idle_seconds=60);stack.callback(archives.close)
+                state=EchoState(archives,'http://127.0.0.1:1',0,4,False);stack.callback(state.memory_controller.close)
+                state._ctx_size=32768;state.count_tokens=lambda text:max(1,len(str(text))//4)
+                state._memory_adapter=adapter_for({'architecture':'qwen','revision':'fixture'},state.count_tokens)
+                state.memory_adapter=lambda:state._memory_adapter;state.backend_session_metrics=lambda *_:{}
+                handler=Handler.__new__(Handler);handler.state=state;handler.headers={}
+                requests=[]
+                def generate(body,phase):
+                    query=queries[len(requests)%len(queries)];requests.append(copy.deepcopy(body))
+                    return {'choices':[{'message':{'role':'assistant','content':
+                        '<echo>'+json.dumps({'op':'search','query':query})+'</echo>'},'finish_reason':'stop'}]}
+                handler._generate_live=generate;handler._send_json=lambda code,value:(code,value)
+                code,result=handler._controlled_context_serial({'messages':[{'role':'user',
+                    'content':'Find the earlier project decision.'}],'max_tokens':512,'echo_max_calls':16},
+                    'memory-cycle','off',archive_input=False)
+                self.assertEqual(code,422)
+                self.assertEqual(result['echo'].get('stop_reason'),'repeated_memory_command')
+                self.assertEqual(len(requests),expected_calls)
+                self.assertIn('incomplete',result['error']['message'].lower())
+                if queries==['']:
+                    self.assertTrue(any('query is required' in str(message.get('content'))
+                                        for message in requests[1]['messages']))
+
     def test_repeated_read_guard_retains_history_across_compaction(self):
         with ExitStack() as stack:
             root=Path(stack.enter_context(tempfile.TemporaryDirectory()))
@@ -268,7 +295,7 @@ class ToolRecoveryTests(unittest.TestCase):
                 call={'id':str(index),'type':'function','function':{'name':name,'arguments':json.dumps({'action':'status'})}}
                 history.extend([{'role':'assistant','content':'','tool_calls':[call]},
                                 {'role':'tool','tool_call_id':str(index),'content':json.dumps({'workspace':'game','files':[]})}])
-            with self.assertRaisesRegex(ValueError,'same inspection with unchanged results'):
+            with self.assertRaisesRegex(ValueError,'tool action with unchanged results.*task is incomplete'):
                 handler._controlled_context_serial({'messages':history,'tools':[tool],'max_tokens':1024,'stream':False},'fixture','off')
             self.assertEqual(requests[0]['reasoning_budget_tokens'],0)
             self.assertTrue(any('repeated the same inspection' in str(m.get('content','')) for m in requests[0]['messages']))

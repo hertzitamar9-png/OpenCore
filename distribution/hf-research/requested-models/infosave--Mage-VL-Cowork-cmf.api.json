@@ -1,0 +1,120 @@
+{
+  "_id": "6ae5ee84374cab20b17e6071",
+  "id": "infosave/Mage-VL-Cowork-cmf",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "cortiq",
+  "tags": [
+    "cortiq",
+    "cmf",
+    "quantized",
+    "q8_2f",
+    "q4tp",
+    "computer-use",
+    "gui-agent",
+    "vision",
+    "vulkan",
+    "metal",
+    "image-text-to-text",
+    "en",
+    "ru",
+    "zh",
+    "base_model:microsoft/Mage-VL-Cowork",
+    "base_model:quantized:microsoft/Mage-VL-Cowork",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 37,
+  "likes": 1,
+  "modelId": "infosave/Mage-VL-Cowork-cmf",
+  "author": "infosave",
+  "sha": "72b9401c8aa2668fbf6aa4bd8ae94b985c1b4f18",
+  "lastModified": "2026-10-31T16:19:11.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "library_name": "cortiq",
+    "base_model": "microsoft/Mage-VL-Cowork",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "cmf",
+      "cortiq",
+      "quantized",
+      "q8_2f",
+      "q4tp",
+      "computer-use",
+      "gui-agent",
+      "vision",
+      "vulkan",
+      "metal"
+    ],
+    "language": [
+      "en",
+      "ru",
+      "zh"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a5e2a60ffd0ddc380fbe3bcee1104bbf9ba23794",
+      "size": 1640
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "359d61b3b241775ad566fd9aebc8d4099cb45af6",
+      "size": 10318
+    },
+    {
+      "rfilename": "mage-vl-cowork-q4tp.cmf",
+      "blobId": "36b87e3518f5565ea6b6b0d5180d25769db17879",
+      "size": 2977659838,
+      "lfs": {
+        "sha256": "aedc066d74bdb0f570541b2c53a74452b5f99e3fc39b364b223a8f0b351ead1f",
+        "size": 2977659838,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mage-vl-cowork-q4tp.cmf.sha256",
+      "blobId": "9b4ca56033cc4d3d82a567473602d643d0b74130",
+      "size": 90
+    },
+    {
+      "rfilename": "mage-vl-cowork-q8_2f.cmf",
+      "blobId": "6a653c45a15b917067d017b2ae22665f6d5172e1",
+      "size": 5096045502,
+      "lfs": {
+        "sha256": "ca71b28811318523ff0b9742c0c1f0be5590f7bcfc10815cb0054f92dd170b88",
+        "size": 5096045502,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mage-vl-cowork-q8_2f.cmf.sha256",
+      "blobId": "f2ee41e258e270490a467a2f5709b6c5af11b084",
+      "size": 91
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-31T13:35:00.000Z",
+  "usedStorage": 8073705340
+}

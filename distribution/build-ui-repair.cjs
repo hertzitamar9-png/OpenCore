@@ -141,18 +141,16 @@ app+='\nconst $menuScrollStyle=document.createElement("style");$menuScrollStyle.
 app+='\nconst $railHoverStyle=document.createElement("style");$railHoverStyle.textContent=".conversation-app-rail .nav-item:hover:not(:disabled),.conversation-app-rail .nav-item:focus-visible{background:color-mix(in srgb,var(--theme-accent,#6dacf5) 22%,var(--theme-panel,#10283d))!important;box-shadow:inset 0 0 0 1px var(--theme-accent,#6dacf5);color:var(--theme-ink,#fff)!important}";document.head.appendChild($railHoverStyle);\n';
 app+='\nfunction $OpenCoreUpdateProgress(){return i.jsx("div",{className:"app-update-overlay",role:"status","aria-live":"polite",children:i.jsxs("div",{className:"app-update-card",children:[i.jsx("h2",{children:"Updating OpenCore"}),i.jsx("p",{children:"Preparing and downloading the update…"}),i.jsx("progress",{"aria-label":"Update download in progress"}),i.jsx("small",{children:"Keep your PC on. An installation window will show the next step, then OpenCore will reopen."})]})})}\n';
 app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
-app += '\n' + fs.readFileSync(path.join(root, 'install-coordinator.js'), 'utf8');
+const coordinatorSource=fs.readFileSync(path.join(root,'install-coordinator.js'),'utf8'),coordinatorBoundary=coordinatorSource.indexOf('const $installCoordinator =');
+if(coordinatorBoundary<0)throw Error('Missing install coordinator entry');
+app += '\nimport{createInstallCoordinator}from"./model-catalog-B8SfuDgQ.js";\n'+coordinatorSource.slice(coordinatorBoundary);
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';
 
 (async () => {
   const report = [];
-  const catalog=JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8'));
-  // Runtime mode descriptors are served once by the owned local service. Keep
-  // its complete source catalog out of this fixed-size native JavaScript slot.
-  catalog.models=catalog.models.filter(model=>!model.modeAliasOf).map(model=>{
-    const result={...model};for(const key of ['operatingModes','publishedContextTokens','supportsTextGeneration','modeProfiles','modeAliasOf'])delete result[key];return result;
-  });
-  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource();
+  const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
+  const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
+  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+coordinatorCode;
   for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,

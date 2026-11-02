@@ -165,6 +165,58 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(self.manager.local('worker/poll',{'busy':True})['jobs'],[])
         self.assertEqual(item['approvalMode'],'ask-every-time')
 
+    def test_worker_status_uses_its_authenticated_lease_outside_the_display_window(self):
+        item=self.start_job();task=item['task'];lease={'connectionId':item['connectionId'],'taskId':task['id'],'leaseToken':task['leaseToken']}
+        view=self.manager.local('view',{'id':self.group});agent=view['agents'][0]['id']
+        for index in range(50):
+            self.manager.local('message',{'id':self.group,'text':'Later '+str(index),'requestId':'later-'+str(index),'agentIds':[agent]})
+        self.assertNotIn(task['id'],[job['id'] for job in self.manager.local('view',{'id':self.group})['tasks']])
+        self.assertEqual(self.manager.local('worker/status',lease)['status'],'running')
+
+    def test_owner_only_agent_configuration_and_project_bindings_are_never_advertised(self):
+        project=self.manager.local('project-save',{'id':self.group,'name':'Website'})['project']
+        shared=self.manager.local('sharing',{'id':self.group,'enabled':True,'models':[{
+            'id':'api:vendor','key':'reviewer','label':'API Reviewer','name':'Reviewer','instructions':'LOCAL INSTRUCTIONS',
+            'projectBindings':{project['id']:'local-project'},'apiKey':'NEVER SEND'}],
+            'projectBindings':{project['id']:'default-local-project'}})
+        connection=self.manager._connection(self.group)
+        public=self.manager.store.request(self.group,connection['token'],'view',{})
+        self.assertNotIn('LOCAL INSTRUCTIONS',json.dumps(public))
+        self.assertNotIn('local-project',json.dumps(public))
+        self.assertNotIn('NEVER SEND',self.manager.path.read_text())
+        channel=self.manager.local('channel-save',{'id':self.group,'name':'Project','projectId':project['id']})['channel']
+        self.manager.local('message',{'id':self.group,'channelId':channel['id'],'requestId':'local-binding','text':'Review',
+                                     'agentIds':[shared['agents'][0]['id']]})
+        job=self.manager.local('worker/poll',{})['jobs'][0]
+        self.assertEqual(job['localProjectId'],'local-project')
+        self.assertEqual(job['instructions'],'LOCAL INSTRUCTIONS')
+
+    def test_new_native_conversation_is_bound_locally_instead_of_trusting_host_chat_id(self):
+        item=self.start_job();task=item['task']
+        lease={'connectionId':item['connectionId'],'taskId':task['id'],'leaseToken':task['leaseToken']}
+        fresh='a'*32
+        self.manager.local('worker/register',{**lease,'conversationId':fresh,'createdConversation':True})
+        self.assertTrue((self.root/'contexts'/(fresh+'.json')).is_file())
+        self.assertFalse((self.root/'contexts'/(task['conversationId']+'.json')).exists())
+        with self.assertRaises(PermissionError):
+            self.manager.local('worker/register',{**lease,'conversationId':'b'*32,'createdConversation':True})
+
+    def test_advanced_execution_controls_are_saved_locally_and_validated(self):
+        body={'id':self.group,'enabled':True,'models':[{'id':'model-a','key':'builder','name':'Builder',
+            'prepareIfMissing':True,'catalogId':'model-a','reasoningEffort':'high','approvalMode':'ask-every-time',
+            'subagentsEnabled':False,'maxSubagents':2,'skills':['browser-use'],'historyMessages':4,
+            'priority':8,'allowDelegation':False,'acceptDelegation':False}]}
+        result=self.manager.local('sharing',body)
+        saved=result['sharing']['models'][0]
+        self.assertEqual(saved['reasoningEffort'],'high');self.assertEqual(saved['skills'],['browser-use'])
+        self.assertFalse(saved['subagentsEnabled']);self.assertTrue(saved['prepareIfMissing'])
+        public=result['agents'][0]
+        self.assertNotIn('reasoningEffort',public);self.assertNotIn('skills',public)
+        self.assertEqual(public['historyMessages'],4);self.assertEqual(public['priority'],8)
+        for key,value in [('historyMessages',101),('reasoningEffort','not-real'),('skills',['untrusted-command']),('priority',True)]:
+            with self.subTest(key=key),self.assertRaises(ValueError):
+                self.manager.local('sharing',{**body,'models':[{**body['models'][0],key:value}]})
+
     def test_disabling_sharing_revokes_running_task_capability_immediately(self):
         item=self.start_job();task=item['task'];lease={'connectionId':item['connectionId'],'taskId':task['id'],'leaseToken':task['leaseToken']}
         self.manager.local('worker/register',{**lease,'conversationId':task['conversationId']})
@@ -198,6 +250,23 @@ class ManagerTests(unittest.TestCase):
         self.manager.local('sharing',{'id':self.group,'enabled':True,'models':[{'id':'model-a','label':'Model A'}]})
         self.assertEqual(self.manager.local('worker/poll',{})['jobs'],[])
         self.assertEqual(self.manager.local('view',{'id':self.group})['tasks'][0]['status'],'cancelled')
+
+    def test_offline_access_narrowing_revokes_active_local_capability(self):
+        for field,value in [('allowedMembers',['another-member']),('allowedChannels',['another-channel'])]:
+            with self.subTest(field=field):
+                self.group=self.manager.local('create',{'name':'Offline scope','displayName':'Owner'})['id']
+                item=self.start_job();task=item['task'];lease={'connectionId':item['connectionId'],'taskId':task['id'],'leaseToken':task['leaseToken']}
+                self.manager.local('worker/register',{**lease,'conversationId':task['conversationId']})
+                context=self.root/'contexts'/(task['conversationId']+'.json')
+                rpc=self.manager._rpc
+                def offline(*args,**kwargs):raise OSError('Host offline')
+                self.manager._rpc=offline
+                try:
+                    result=self.manager.local('sharing',{'id':self.group,'enabled':True,'models':[{'id':'model-a','label':'Model A',field:value}]})
+                finally:
+                    self.manager._rpc=rpc
+                self.assertTrue(result['localOnly']);self.assertFalse(context.exists());self.assertFalse(self.manager.active)
+                self.manager.local('sharing',{'id':self.group,'enabled':False,'models':[]})
 
     def test_invite_parser_rejects_missing_duplicate_or_unsafe_fields(self):
         good={'url':'https://127.0.0.1:12345','pin':'ab'*32,'group':'group','code':'x'*32}

@@ -73,6 +73,56 @@ class LoopGuardTests(unittest.TestCase):
                              {'role':'tool','tool_call_id':str(index),'content':str(index%2)}])
         self.assertEqual(len(codex_repeated_tool_cycle(messages,0)),2)
 
+    def test_codex_four_action_cycle_is_detected_without_limiting_distinct_work(self):
+        messages=[{'role':'user','content':'Inspect the project.'}]
+        for index in range(150):
+            call={'id':str(index),'function':{'name':'Read','arguments':json.dumps({'path':str(index)})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':'same source'}])
+        self.assertFalse(codex_repeated_tool_cycle(messages,0))
+        for index in range(12):
+            call={'id':'cycle-'+str(index),'function':{'name':'Read','arguments':json.dumps({'path':str(index%4)})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':call['id'],'content':'same source'}])
+        self.assertEqual(len(codex_repeated_tool_cycle(messages,0)),4)
+
+    def test_codex_identical_failed_writes_are_detected(self):
+        messages=[{'role':'user','content':'Repair the file.'}]
+        for index in range(3):
+            call={'id':str(index),'function':{'name':'mcp__opencore__dev','arguments':json.dumps(
+                {'action':'edit','path':'game.html','explanation':'attempt '+str(index)})}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                {'role':'tool','tool_call_id':str(index),'content':json.dumps(
+                    {'isError':True,'content':[{'type':'text','text':'{"error":"Hash mismatch; no edit applied"}'}]})}])
+        self.assertTrue(codex_repeated_tool_cycle(messages,0))
+
+    def test_codex_large_unchanged_tool_results_do_not_disable_loop_detection(self):
+        messages=[{'role':'user','content':'Inspect the file.'}]
+        for index in range(3):
+            call={'id':str(index),'function':{'name':'Read','arguments':'{"path":"game.html"}'}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':'x'*210000}])
+        self.assertTrue(codex_repeated_tool_cycle(messages,0))
+
+    def test_malformed_or_unlinked_calls_break_inference_without_crashing(self):
+        messages=[{'role':'user','content':'Inspect the file.'}]
+        for index in range(2):
+            call={'id':str(index),'function':{'name':'Read','arguments':'{"path":"game.html"}'}}
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':str(index),'content':'same'}])
+        messages.extend([{'role':'assistant','tool_calls':[{'id':'invalid','function':['malformed']}]},
+                         {'role':'tool','tool_call_id':'invalid','content':'same'},
+                         {'role':'tool','tool_call_id':'unknown','content':'same'}])
+        self.assertFalse(codex_repeated_tool_cycle(messages,0))
+
+    def test_replayed_tool_ids_do_not_count_as_new_executions(self):
+        messages=[{'role':'user','content':'Inspect the file.'}]
+        call={'id':'one','function':{'name':'Read','arguments':'{"path":"game.html"}'}}
+        for _ in range(5):
+            messages.extend([{'role':'assistant','tool_calls':[call]},
+                             {'role':'tool','tool_call_id':'one','content':'same'}])
+        self.assertFalse(codex_repeated_tool_cycle(messages,0))
+
     def test_codex_history_resets_after_a_real_tool_result(self):
         plan="I'll build the polished snake game after I inspect its current workspace."
         messages=[{'role':'user','content':'Build a snake game.'}]

@@ -81,7 +81,7 @@ class ModelModePolicyTests(unittest.TestCase):
         self.assertTrue(supports_text_generation({'category': 'text', 'libraryCategory': 'ocr', 'runtime': {'adapter': 'gguf'}}))
         excluded = [
             {'category': 'speech', 'outputModalities': ['text']},
-            {'category': 'ocr', 'inputModalities': ['text', 'image'], 'outputModalities': ['text']},
+            {'category': 'ocr', 'inputModalities': ['image'], 'outputModalities': ['text']},
             {'category': 'omni', 'inputModalities': ['audio'], 'outputModalities': ['text']},
             {'category': 'text', 'supportsTextChat': False},
             {'category': 'computer-use', 'computerRuntime': 'gui-jepa-v1'},
@@ -91,6 +91,38 @@ class ModelModePolicyTests(unittest.TestCase):
             self.assertFalse(supports_text_generation(model), model)
             apply_operating_modes([model], lambda _: {})
             self.assertEqual(model['operatingModes'], [])
+
+    def test_generative_ocr_gets_both_modes_without_changing_its_specialist_category(self):
+        for row, info in [
+            ({'category': 'ocr'}, {'pipeline_tag': 'image-text-to-text'}),
+            ({'category': 'ocr', 'inputModalities': ['image', 'text'], 'outputModalities': ['text']}, {}),
+            ({'category': 'computer-use'}, {'pipeline_tag': 'text-generation'}),
+        ]:
+            apply_operating_modes([row], lambda _: info)
+            self.assertTrue(row['supportsTextGeneration'])
+            self.assertEqual([mode['id'] for mode in row['operatingModes']], ['native', 'echo'])
+            self.assertFalse(any(mode['supported'] for mode in row['operatingModes']), 'A generative task does not establish an execution adapter')
+        self.assertEqual(row['category'], 'computer-use')
+
+    def test_runtime_and_echo_limits_cannot_exceed_the_checkpoint_or_mode_target(self):
+        row = {'category': 'text', 'backend': 'gguf', 'supportedContextTokens': 32768,
+               'echoWorkingWindowTokens': 65536, 'contextTokens': 8192}
+        apply_operating_modes([row], lambda _: {'config': {'max_position_embeddings': 262144}})
+        self.assertEqual(row['publishedContextTokens'], 262144)
+        self.assertEqual([mode['contextTokens'] for mode in row['operatingModes']], [32768, 32768])
+        row.pop('supportedContextTokens')
+        apply_operating_modes([row], lambda _: {'config': {'max_position_embeddings': 4096}})
+        self.assertEqual([mode['contextTokens'] for mode in row['operatingModes']], [4096, 4096])
+
+    def test_native_aliases_preserve_the_reviewed_execution_cap(self):
+        row = {'id': 'mage', 'label': 'Mage', 'category': 'text', 'backend': 'gguf',
+               'memoryMode': 'echo', 'precision': 'Q4', 'artifacts': ['weights'],
+               'contextTokens': 32768, 'supportedContextTokens': 32768}
+        apply_operating_modes([row], lambda _: {'config': {'max_position_embeddings': 262144}})
+        catalog = {'models': [row]}
+        native_mode_aliases(catalog)
+        self.assertEqual([mode['contextTokens'] for mode in row['operatingModes']], [32768, 32768])
+        self.assertEqual([model['contextTokens'] for model in catalog['models']], [32768, 32768])
 
     def test_published_limit_uses_text_architecture_not_vision_limits_or_boolean_values(self):
         self.assertEqual(published_context_tokens({'config': {'max_position_embeddings': 512, 'text_config': {'max_position_embeddings': 131072}}}), 131072)

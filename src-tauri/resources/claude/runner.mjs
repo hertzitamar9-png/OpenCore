@@ -7,7 +7,7 @@ import { mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { contextBudgetEnvironment, deriveContextBudget } from './context-budget.mjs';
 import { CodingVerification, codingBoundaryGuidance, toolFailed } from './coding-verification.mjs';
-import { AgentLoopGuard, forwardGuardedAgent, guardedToolResult } from './agent-loop-guard.mjs';
+import { AgentLoopGuard, forwardGuardedAgent, guardedToolResult, guardedToolUse } from './agent-loop-guard.mjs';
 const write = value => process.stdout.write(JSON.stringify(value) + '\n');
 function privateAgentExecutable() {
   if (process.platform !== 'win32') throw new Error('The bundled OpenCore agent is unavailable on this platform.');
@@ -130,6 +130,8 @@ async function run(config) {
     permissionMode: 'bypassPermissions', strictMcpConfig: true,
     mcpServers: mcpTools.length ? { opencore: createSdkMcpServer({ name: 'opencore', version: '1.0.0', tools: mcpTools }) } : {},
     hooks: { PreToolUse: [{ hooks: [async data => {
+      const stop = guardedToolUse(loopGuard, data, write);
+      if (stop) return stop;
       if (groupTools?.hasTool(data.tool_name)) return {hookSpecificOutput: {hookEventName: 'PreToolUse',
         permissionDecision: groupTools.available() ? 'allow' : 'deny', permissionDecisionReason: 'Conversation-scoped approved group task'}};
       const allow = await rpc('permission', { name: data.tool_name, args: data.tool_input });
@@ -150,6 +152,7 @@ async function run(config) {
         }
         return {};
       }] }],
+      PostToolUseFailure: [{ hooks: [async data => guardedToolResult(loopGuard, data, write) || {}] }],
       Stop: [{ hooks: [async data => {
         const result = verification.beforeStop(data);
         if (result.decision === 'block') write({ kind: 'diagnostic', text: 'Coding verification: requesting one execution-backed check/repair pass.' });

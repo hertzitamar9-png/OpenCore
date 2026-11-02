@@ -1,14 +1,35 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const catalog=JSON.parse(fs.readFileSync(path.join(__dirname,'../src-tauri/resources/runtime-setup/hf-extension/native-model-bindings.json'),'utf8'));
-async function fixture(initial=new Map(),active=[]){
+async function fixture(initial=new Map(),active=[],source=catalog,metadata=source){
   const calls=[],requests=[],saved=initial,context=vm.createContext({console,Map,Set,localStorage:{getItem:key=>saved.get(key),setItem:(key,value)=>saved.set(key,value)}});
-  const React={createElement:()=>{},useState:()=>{},useEffect:()=>{}};
+  const React={createElement:(type,props,...children)=>({type,props,children}),useState:value=>[typeof value==='function'?value():value,()=>{}],useEffect:()=>{}};
   const service={invoke:async(command,args)=>{calls.push({command,args});return {activeConversationIds:active,runtime:{status:'stopped'}};},
-    request:async(route,body)=>{requests.push({route,body});return route==='/runtime/modes'?catalog:{profileId:catalog.models.find(m=>m.id===body.id).modeProfiles[body.operatingMode]};},changed:async()=>{},catalog:()=>[]};
-  context.React=React;context.catalog=structuredClone(catalog);context.service=service;
+    request:async(route,body)=>{requests.push({route,body});return route==='/runtime/modes'?metadata:{profileId:source.models.find(m=>m.id===body.id).modeProfiles[body.operatingMode]};},changed:async()=>{},catalog:()=>[]};
+  context.React=React;context.catalog=structuredClone(source);context.service=service;
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/model-modes.js'),'utf8').replace('export function ','function ')+';globalThis.modeApi=installModelModes(React,catalog,service);',context);
   await context.modeApi.ready;return {api:context.modeApi,saved,calls,requests};
 }
+
+test('first paint includes conversational VL and OCR categories while preserving unavailable runtime status',async()=>{
+  for(const category of ['omni','ocr','computer-use']){
+    const model={id:'specialist-'+category,category,inputModalities:['text','image'],outputModalities:['text'],backend:'external',runtimeReady:false,contextTokens:0};
+    const f=await fixture(new Map(),[],{models:[model]},{models:[]});
+    assert.equal(f.api.policy(model).supportsTextGeneration,true,category);
+    assert.equal(f.api.context(model),null,'An unknown checkpoint window is not presented as a supported 32K allocation');
+    const control=f.api.Control({model});
+    assert.equal(control.type,'section',category+' retains its separate mode control');
+    assert.equal(f.api.augment({models:[model]}).models[0].runtimeReady,false);
+  }
+});
+
+test('catalog descriptors retain reviewed caps before the runtime metadata response',async()=>{
+  const model={id:'capped',category:'text',contextTokens:262144,supportsTextGeneration:true,
+    operatingModes:[{id:'native',contextTokens:32768,supported:false},{id:'echo',contextTokens:8192,supported:false}]};
+  const f=await fixture(new Map(),[],{models:[model]},{models:[]});
+  assert.equal(f.api.context(model,'native'),32768);
+  assert.equal(f.api.context(model,'echo'),8192);
+  assert.equal(f.api.policy({...model,operatingModes:undefined}).operatingModes[0].supported,false);
+});
 
 test('all native text quant profiles collapse to one row with identical file identities and quant choices in both modes',async()=>{
   const f=await fixture(),models=catalog.models.map(m=>({...m,installed:!m.modeAliasOf,selectable:true,runtimeReady:true}));

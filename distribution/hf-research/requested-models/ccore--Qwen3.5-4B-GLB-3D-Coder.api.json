@@ -1,0 +1,207 @@
+{
+  "_id": "6ae7bd6977871850526a09cb",
+  "id": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "qwen3_5",
+    "code",
+    "threejs",
+    "3d",
+    "glb",
+    "godot",
+    "preview",
+    "text-generation",
+    "en",
+    "base_model:Qwen/Qwen3.5-4B",
+    "base_model:finetune:Qwen/Qwen3.5-4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 381,
+  "likes": 62,
+  "modelId": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+  "author": "ccore",
+  "sha": "64c3a6158fceede37b90c418c697606f10517e47",
+  "lastModified": "2026-11-02T04:52:44.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "base_model": "Qwen/Qwen3.5-4B",
+    "base_model_relation": "finetune",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "gguf",
+      "qwen3_5",
+      "code",
+      "threejs",
+      "3d",
+      "glb",
+      "godot",
+      "preview"
+    ]
+  },
+  "gguf": {
+    "total": 4205751296,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 2708804128
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "066652271fea8e86470435777babc0358e8fa5b1",
+      "size": 2764
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f938136e3adacfd92be087f6e113b5d6d97f678f",
+      "size": 11544
+    },
+    {
+      "rfilename": "Qwen3.5-4B-GLB-3D-Coder-Q4_K_M.gguf",
+      "blobId": "06b8697dcbfe3a93bdd44efc869bba0d52c3f079",
+      "size": 2708804128,
+      "lfs": {
+        "sha256": "91328e3f6d0aff4c05c59168fe455d98cf3952c888f322693566192b230a661f",
+        "size": 2708804128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.5-4B-GLB-3D-Coder-Q8_0.gguf",
+      "blobId": "71b8171ab4a71d549eb30b53d6b0c1febfe056e2",
+      "size": 4482402848,
+      "lfs": {
+        "sha256": "901f7eabc4612120908aa922c4fa8d2a3559bf186bfb1bbddcf631687778eb56",
+        "size": 4482402848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "1c718aa58cccbfb37838cff5b470186c68262bd0",
+      "size": 8805
+    },
+    {
+      "rfilename": "images/blue-goblin-brute.png",
+      "blobId": "8929aa26d88e30ac69d3f1169cc703a2860ef2a5",
+      "size": 185120,
+      "lfs": {
+        "sha256": "c61df21158b4868846ac477508a7d0bbe92263c532e5231000a98d8a6757454d",
+        "size": 185120,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/godot-imported-assets-01.png",
+      "blobId": "3cdb6b07934b58256cbc82561bd9a3006a6c182b",
+      "size": 515248,
+      "lfs": {
+        "sha256": "3f3400aaf9b43ec98379e3620c3eba4795fa3941dee99175109f865700bc0b35",
+        "size": 515248,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/godot-imported-assets-02.png",
+      "blobId": "bb429f5021989823f60702f6036b4d761f69574e",
+      "size": 442597,
+      "lfs": {
+        "sha256": "998c668be22db461db8aef0104e9d4621020e75057ba2328743302ee26e65e2c",
+        "size": 442597,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/jungle-siege-platform.png",
+      "blobId": "20f30233f9004e33985594ca095b73a2fac92cb8",
+      "size": 231611,
+      "lfs": {
+        "sha256": "cbb42618209ec2474f8370ae063adf042748c489be30a471b9632459e1790be2",
+        "size": 231611,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/mountain-command-post-01.png",
+      "blobId": "65bd40f9b776cb40e970706e42ce698e9b629242",
+      "size": 248301,
+      "lfs": {
+        "sha256": "0d9cda73d6e887a033269a38749308a9f380d61f5c4dd5d941e6abad7e927ed4",
+        "size": 248301,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/mountain-command-post-02.png",
+      "blobId": "e5120dd73ad32cf2d6ef8007abc1f0ff888c3c51",
+      "size": 231502,
+      "lfs": {
+        "sha256": "c66b309c995d17cfbc9af4d7561ef8717e4d01f9f4a56f7c1564b613aa8f5b81",
+        "size": 231502,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/red-orc-leader.png",
+      "blobId": "5c36a886b32e471bcce41dea11c943df2c7559c1",
+      "size": 123587,
+      "lfs": {
+        "sha256": "eecd917e914b4cd0a03b7f33f8457c8e10ee7009d5dc1856d81aff9dbbf45b93",
+        "size": 123587,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/snow-siege-platform.png",
+      "blobId": "75980fde822a8f18f2fbca8520f9dbf2e8e293a9",
+      "size": 212846,
+      "lfs": {
+        "sha256": "8138b66aec69aafa166ef2028a28ca5ef18574661218e9bc7f0759e100c42600",
+        "size": 212846,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "mmproj-Qwen3.5-4B-BF16.gguf",
+      "blobId": "79f05f601bf1ea80e366df72e7fcc21218dbd988",
+      "size": 675568768,
+      "lfs": {
+        "sha256": "ae08d9d7eceb8f2d0672d61b5e6aa78b611f2942b55ed71d21414980cc454b91",
+        "size": 675568768,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "fastgpu/vram-and-gpu-cost-calculator"
+  ],
+  "createdAt": "2026-11-01T22:30:01.000Z",
+  "usedStorage": 15062508434
+}

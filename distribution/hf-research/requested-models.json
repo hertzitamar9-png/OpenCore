@@ -2405,6 +2405,69 @@
         }
       ],
       "reuseFamily": true
+    },
+    {
+      "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder",
+      "familyId": "publisher-qwen35-4b-glb-3d-coder",
+      "label": "CCORE Qwen3.5 4B GLB 3D Coder",
+      "category": "text",
+      "description": "ccore/Qwen3.5-4B-GLB-3D-Coder: the exact updated preview coding checkpoint for Three.js scenes and GLB export. Both published Q4_K_M and Q8_0 GGUFs use the same optional BF16 vision projector. The managed text runtime supports Native and ECHO; image input and autonomous asset creation are unverified. Full safetensors weights are not published at the pinned revision.",
+      "sources": [
+        {
+          "repository": "ccore/Qwen3.5-4B-GLB-3D-Coder"
+        }
+      ]
+    },
+    {
+      "repository": "microsoft/Mage-VL-Cowork",
+      "familyId": "publisher-mage-vl-cowork",
+      "label": "Microsoft Mage VL Cowork",
+      "category": "text",
+      "supportedContextTokens": 32768,
+      "description": "microsoft/Mage-VL-Cowork: the exact Microsoft hybrid vision-language computer-use checkpoint. Original BF16, five exact-lineage GGUF quants, MLX 4-bit and CMF Q4TP/Q8_2F packages are pinned separately. Native and ECHO share each selected package and the published active 32K window; the 262K architectural limit is not validated. Custom Mage-ViT vision, tool execution and these runtime adapters are not integrated in OpenCore.",
+      "sources": [
+        {
+          "repository": "microsoft/Mage-VL-Cowork",
+          "runtimeReason": "Custom llava_onevision2 / Mage-ViT BF16 checkpoint. Requires the publisher Transformers/SGLang implementation with reviewed custom modeling code and a computer-use tool harness; this adapter is not integrated. The active trained/inference window is 32,768 tokens."
+        },
+        {
+          "repository": "Hansda/Mage-VL-Cowork-GGUF",
+          "supportFiles": [
+            "MAGE_HYBRID_SYSTEM_PROMPT.txt",
+            "chat_template.jinja"
+          ],
+          "runtimeReason": "Mage-VL GGUF conversion with its original Mage-ViT projector and prompt contract. Vision requires the experimental Mage-VL-enabled llama.cpp fork; stock projector support is unmerged. This custom vision/action adapter is not integrated, and text-only generation is unverified. Active window: 32,768 tokens."
+        },
+        {
+          "repository": "pratikgx/Mage-VL-Cowork-MLX-4bit",
+          "quantization": "MLX 4-bit",
+          "runtimeReason": "Community MLX 4-bit language weights with BF16 Mage-ViT vision, requiring Apple Silicon and mlx-vlm 0.7.11 or later with mage_vl support. No Windows MLX adapter is integrated. Active window: 32,768 tokens."
+        },
+        {
+          "repository": "infosave/Mage-VL-Cowork-cmf",
+          "runtimeReason": "Complete CMF package with quantized language weights and 16-bit vision. Requires cortiq 0.8.51 or later and the Mage tool harness; OpenCore has no integrated CMF/cortiq runtime. Active window: 32,768 tokens.",
+          "packages": [
+            {
+              "key": "cmf:mage-vl-cowork-q4tp.cmf",
+              "format": "cmf",
+              "quantization": "Q4TP",
+              "files": [
+                "mage-vl-cowork-q4tp.cmf",
+                "mage-vl-cowork-q4tp.cmf.sha256"
+              ]
+            },
+            {
+              "key": "cmf:mage-vl-cowork-q8_2f.cmf",
+              "format": "cmf",
+              "quantization": "Q8_2F",
+              "files": [
+                "mage-vl-cowork-q8_2f.cmf",
+                "mage-vl-cowork-q8_2f.cmf.sha256"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }
