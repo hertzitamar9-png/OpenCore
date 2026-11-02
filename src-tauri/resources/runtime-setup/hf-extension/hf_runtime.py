@@ -475,6 +475,18 @@ class RuntimeManager:
         echo_message = echo_choices[0].get('message', {}) if echo_choices else {}
         if not (echo_message.get('content') or echo_message.get('reasoning_content')):
             raise RuntimeError('The ECHO endpoint did not return an actual generated reply')
+        if media_probe:
+            kind,request=media_probe
+            self.on_progress(stage='verifying-multimodal-echo',detail='Verifying '+kind+' survives ECHO chat routing')
+            echo_request={**request,'conversation_id':'installation-media-check-'+uuid.uuid4().hex,
+                          'echo_max_total_tokens':128}
+            with self._request(echo_url+'/v1/chat/completions',echo_request,key,timeout=180) as response:
+                echo_media_result=json.load(response)
+            choices=echo_media_result.get('choices',[])
+            message=choices[0].get('message',{}) if choices else {}
+            text=message.get('content') or message.get('reasoning_content')
+            if not isinstance(text,str) or not text.strip() or echo_media_result.get('error'):
+                raise RuntimeError('ECHO did not preserve the '+kind+' input for text generation')
         proof=self._runtime_proof(entry,plan,files,proof_result,sample,context_verified,log_path)
         if media_verified:proof['verifiedInputModality']=media_verified
         (run_dir / 'inference-receipt.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
