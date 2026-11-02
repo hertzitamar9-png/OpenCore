@@ -169,7 +169,7 @@ class Engine:
                 report['status']='baseline_complete';report['decision']='Text-only baseline measured; no weights were modified.'
             else:
                 workspace=OwnedWorkspace(output);best=None
-                for index,(name,mapping,damped) in enumerate(repeat_variants(source.block_count,s.max_variants,s.experimental_damping)):
+                for index,(name,mapping,damped) in enumerate(source.propose_variants(s.max_variants,s.experimental_damping)):
                     self.check();path=workspace.path/(uuid.uuid4().hex+'.gguf')
                     record={'name':name,'mapping':mapping,'experimentalDamping':damped,'status':'building'}
                     report['variants'].append(record);self.emit('candidate-start',stage='building',candidate=name,completed=index,total=s.max_variants)
