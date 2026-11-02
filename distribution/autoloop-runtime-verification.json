@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "testKind": "real isolated Windows CPU integration experiment",
+  "qualityImprovementClaimed": false,
+  "source": {
+    "bytes": 88201792,
+    "mtimeNs": 1793516969330360500,
+    "sha256": "55aa88ddac43adce6af0e9be8d6cdff2337a3835cd9b50bbcd7a894eb66dfc75"
+  },
+  "architecture": "llama",
+  "publishedContextTokens": 8192,
+  "evaluation": {
+    "contextTokens": 2048,
+    "maxTokens": 48,
+    "requestedContextTokens": 2048,
+    "seed": 1234,
+    "temperature": 0
+  },
+  "result": "rejected",
+  "decision": "No candidate established sufficient development improvement; original retained.",
+  "baselineScores": {
+    "development": {
+      "total": 31,
+      "correct": 1
+    },
+    "holdout": {
+      "total": 17,
+      "correct": 0
+    }
+  },
+  "candidatesTested": 1,
+  "authenticatedOwnedRuntimeSessions": 3,
+  "allSessionsAuthenticated": true,
+  "sourceUnchanged": true,
+  "candidateWeightsRemaining": 0,
+  "rawAnswersSha256": "4611f62dafd83abe5dadfa723644d20fbb07d56d882ef2533cb6e133106b0ecb",
+  "normalPromotionProofUsesActualRuntimeFieldContract": true,
+  "realImprovedModelPromotionObserved": false
+}

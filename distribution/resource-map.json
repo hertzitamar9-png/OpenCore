@@ -246,5 +246,17 @@
   "runtime-setup/hf-extension/gui_jepa_vendor/__init__.py": "src-tauri/resources/runtime-setup/hf-extension/gui_jepa_vendor/__init__.py",
   "runtime-setup/hf-extension/computer-models.json": "src-tauri/resources/runtime-setup/hf-extension/computer-models.json",
   "runtime-setup/hf-extension/hf_computer_runtime.py": "src-tauri/resources/runtime-setup/hf-extension/hf_computer_runtime.py",
-  "runtime-setup/hf-extension/hf_computer_worker.py": "src-tauri/resources/runtime-setup/hf-extension/hf_computer_worker.py"
+  "runtime-setup/hf-extension/hf_computer_worker.py": "src-tauri/resources/runtime-setup/hf-extension/hf_computer_worker.py",
+  "runtime-setup/hf-extension/autoloop_manager.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_manager.py",
+  "runtime-setup/hf-extension/autoloop_vendor/__init__.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/__init__.py",
+  "runtime-setup/hf-extension/autoloop_vendor/benchmarks.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/benchmarks.py",
+  "runtime-setup/hf-extension/autoloop_vendor/engine.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/engine.py",
+  "runtime-setup/hf-extension/autoloop_vendor/errors.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/errors.py",
+  "runtime-setup/hf-extension/autoloop_vendor/gguf.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/gguf.py",
+  "runtime-setup/hf-extension/autoloop_vendor/identity.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/identity.py",
+  "runtime-setup/hf-extension/autoloop_vendor/provenance.json": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/provenance.json",
+  "runtime-setup/hf-extension/autoloop_vendor/README.md": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/README.md",
+  "runtime-setup/hf-extension/autoloop_vendor/runner.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/runner.py",
+  "runtime-setup/hf-extension/autoloop_vendor/scaling.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/scaling.py",
+  "runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md"
 }

@@ -28,3 +28,29 @@ export async function learningCommand<T = Record<string, unknown>>(args: Record<
   if (['query','read','search'].includes(String(args.action))) return {records: [], total: 0, nextCursor: null} as T;
   throw new Error('Learning Studio needs the OpenCore desktop app for local records and training.');
 }
+
+async function learningBridge() {
+  const probe=await invoke<{hubBridge?:{available:boolean;url:string;secret:string;authHeader?:string}}>('runtime_setup_probe');
+  const bridge=probe.hubBridge;
+  if(!bridge?.available)throw new Error('OpenCore’s local model helper is not available.');
+  const url=new URL(bridge.url);
+  if(url.protocol!=='http:'||url.hostname!=='127.0.0.1'||!url.port||!bridge.secret)throw new Error('The local model helper has an invalid address.');
+  return bridge;
+}
+export async function autoLoopRequest(path:string,body?:Record<string,unknown>):Promise<unknown> {
+  const bridge=await learningBridge();
+  const response=await fetch(bridge.url+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',[bridge.authHeader||'X-OpenCore-Hub-Secret']:bridge.secret},...(body?{body:JSON.stringify(body)}:{})});
+  const value=await response.json();
+  if(!response.ok)throw new Error(value.error||'The AutoLoop request failed.');
+  return value;
+}
+export async function registerAutoLoop(entry:unknown):Promise<string> {
+  const model=entry as {id:string;familyLabel:string;quantization:string;contextTokens:number;providerId?:string};
+  const bridge=await learningBridge();
+  let provider=await invoke<{id:string;models:{id:string;profileId:string}[]}>('api_provider_save',{input:{...(model.providerId?{id:model.providerId}:{}),name:model.familyLabel,baseUrl:bridge.url+'/v1',model:model.id,contextTokens:model.contextTokens,apiKey:bridge.secret}});
+  provider=await invoke('api_provider_model',{id:provider.id,model:model.id,enabled:true,manual:true});
+  const profile=provider.models.find(value=>value.id===model.id);
+  if(!profile)throw new Error('The verified model could not be registered for chat.');
+  await autoLoopRequest('/catalog/profile',{id:model.id,providerId:provider.id,profileId:profile.profileId});
+  return profile.profileId;
+}

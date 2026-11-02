@@ -44,6 +44,27 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_autoloop_routes_are_owner_authenticated_and_never_accept_runtime_overrides(self):
+        from unittest.mock import Mock
+        manager=Mock()
+        manager.status.return_value={'runs':[],'activeRunId':None}
+        manager.models.return_value={'models':[]}
+        manager.inspect.return_value={'supported':False,'reason':'unsupported architecture'}
+        manager.start.return_value={'id':'a'*32,'status':'running'}
+        manager.cancel.return_value={'cancelling':True}
+        manager.report.return_value={'status':'rejected'}
+        with patch.object(self.state,'_autoloop_helper',return_value=manager):
+            self.assertEqual(self.request('GET','/api/autoloop/status',secret=None)[0],401)
+            self.assertEqual(self.request('POST','/api/autoloop/start',{'modelPath':'ignored'},secret=None)[0],401)
+            manager.start.assert_not_called()
+            self.assertEqual(self.request('GET','/api/autoloop/status')[2],{'runs':[],'activeRunId':None})
+            self.assertEqual(self.request('GET','/api/autoloop/models')[2],{'models':[]})
+            self.assertFalse(self.request('POST','/api/autoloop/inspect',{'modelPath':'model.gguf'})[2]['supported'])
+            self.assertEqual(self.request('POST','/api/autoloop/start',{'modelPath':'model.gguf'})[0],202)
+            self.assertTrue(self.request('POST','/api/autoloop/cancel',{'runId':'a'*32})[2]['cancelling'])
+            self.assertEqual(self.request('POST','/api/autoloop/report',{'runId':'a'*32})[2]['status'],'rejected')
+            self.assertEqual(self.request('POST','/api/autoloop/unknown',{})[0],404)
+
     def test_empty_project_cleanup_requires_auth_and_preserves_shared_groups(self):
         appdata=self.root/'appdata';directory=appdata/'ai.opencore.control-center';directory.mkdir(parents=True)
         with closing(sqlite3.connect(directory/'control-center.sqlite3')) as db,db:

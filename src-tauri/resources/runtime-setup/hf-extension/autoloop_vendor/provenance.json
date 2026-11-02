@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "source": "User-provided AutoLoop v0.2 ZIP",
+  "archiveName": "AutoLoop_v0.2.zip",
+  "archiveBytes": 37953,
+  "archiveSha256": "e34f881f7d0d2f87704d11f23905f1f80b4f3d02a40b71bb097ca0ee908baf72",
+  "licenseNotice": "No standalone LICENSE or copyright notice was supplied in the provided archive. Original source docstrings and README are retained; no license is invented.",
+  "upstreamFiles": {
+    "autoloop/__init__.py": "1c1d08035413841244ba9da81fc9369aa9c7bc938151da3dd0f0dcc7a0789e36",
+    "autoloop/__main__.py": "5745352ce55a17ebe9232aa80b06caab04d162ba962c0622582e3bc2678c64ad",
+    "autoloop/benchmarks.py": "070c09c7de86b8e748dbbb2553831ff23963ccb93a541debdb2d6d03c70d6260",
+    "autoloop/discovery.py": "d9ca6ca5b3678056f0f29180b2a0e5f33d8661ab813a75e24f8c8b8ba9eb5c0a",
+    "autoloop/engine.py": "46d60a05324c4d8d46e5d02f101e39d723a8b16d962ddc92a424829cc9b39811",
+    "autoloop/gguf.py": "13183852b547f2babe12083f94e909cfec3fcba4a64473663ea6d0f7d1d8f2e6",
+    "autoloop/runner.py": "b31d12daf0ba88d39962f41ca3f2384eb328792a19d0b62b3cf261a0b6901088",
+    "autoloop/scaling.py": "a7d7601df7d28910de5d0752a5a252623c51fcf2624285796de18db5a670c293",
+    "autoloop/ui.py": "2d932d3e5729ad6fc3d12ad189d42617023ba330c850c2e582431a44f3232d90",
+    "example-benchmark.json": "518f0c9aa26447a1c723b446239ca1aaa1addffe084cefab1bfffcd0e079e929",
+    "README.md": "473cab408698e72887ff2d8964696c33e3107702f1492eb7533173a1e68ea0cc",
+    "Start_AutoLoop_Mac_Linux.sh": "e0828c06f57f8e539cfcd60ef480b39f5d82f1b61a5612c614c2891cda79ad23",
+    "Start_AutoLoop_Windows.bat": "c98e568d0abed63fd37eac459334b2a9e2439c7aa67293f3fbc3f1bfec02d9a6",
+    "tests/conftest.py": "4f24f6c71ab2341659958bd9b471cb24588e98cfd1a8fd6f60946bc9ceeb816e",
+    "tests/test_benchmarks.py": "0cb33e2ec6d07f09c345a2beb9a4373c4f874e993afd015f109e5a256caae580",
+    "tests/test_discovery.py": "d81b65f3f66eded0522ed1ce9acfec80bc367f073bc8c5b6ae3c6593ac4f6af6",
+    "tests/test_engine.py": "657323970881ddd7c6ac257a140e4022a7cfb7bde3e078ec36d2fc433a0cbdb6",
+    "tests/test_gguf.py": "e700474e33121fe7962edc736e749848f68fd4d4ef8bca293efab1b84310a98f",
+    "tests/test_runner.py": "ea8702a61cfbb4a7436558a912bc3a224bb106565166a3d811902258f026834a",
+    "tests/test_scaling.py": "b77b77608a594a7aca84d05d99cdccca09372cdfa245458cc501db468d4d45b1",
+    "tests/test_ui_helpers.py": "fc82e6c7a72a2de0ac0546da8481a0f8a675dea1d7af89e30e255a25c3f3f162"
+  },
+  "modifications": "OpenCore integration hardening, ownership-safe cleanup, immutable identity seals, exact paired holdout gate, explicit private runner and capability checks. See README.md."
+}

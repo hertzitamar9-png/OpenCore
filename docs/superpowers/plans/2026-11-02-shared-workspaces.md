@@ -79,7 +79,7 @@
 
 - [x] Run focused and full required test suites; review shared changes and compression sizes.
 - [x] Build the exact Windows frontend and patched executable from the pinned baseline.
-- [ ] Commit reviewed explicit files to main and publish via the existing verified workflow.
+- [x] Commit reviewed explicit files to main and publish via the existing verified workflow.
 - [ ] Verify isolated install/startup, changed-file updater, signed public assets and latest feed; do not change/restart the user's current app.
 
 Final review corrections: worker submission rechecks its exact active lease after model loading; failed tasks retain earlier tool progress; lease heartbeats query authoritative task state instead of the newest UI task page. All three have red/green regressions. Packaged Native/ECHO cards, Chat Core desktop/phone workflow and all catalog preset checks passed against the final 0.3.255 candidate.

@@ -105,7 +105,19 @@
       "resources/lfm/serve_lfm.py": "lfm/serve_lfm.py",
       "resources/lfm/native/fusioncore.dll": "lfm/native/fusioncore.dll",
         "resources/lfm/native/fusioncore-v2.dll": "lfm/native/fusioncore-v2.dll",
-      "resources/lfm/native/build-info.json": "lfm/native/build-info.json"
+      "resources/lfm/native/build-info.json": "lfm/native/build-info.json",
+      "resources/runtime-setup/hf-extension/autoloop_manager.py": "runtime-setup/hf-extension/autoloop_manager.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/__init__.py": "runtime-setup/hf-extension/autoloop_vendor/__init__.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/benchmarks.py": "runtime-setup/hf-extension/autoloop_vendor/benchmarks.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/engine.py": "runtime-setup/hf-extension/autoloop_vendor/engine.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/errors.py": "runtime-setup/hf-extension/autoloop_vendor/errors.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/gguf.py": "runtime-setup/hf-extension/autoloop_vendor/gguf.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/identity.py": "runtime-setup/hf-extension/autoloop_vendor/identity.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/provenance.json": "runtime-setup/hf-extension/autoloop_vendor/provenance.json",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/README.md": "runtime-setup/hf-extension/autoloop_vendor/README.md",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/runner.py": "runtime-setup/hf-extension/autoloop_vendor/runner.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/scaling.py": "runtime-setup/hf-extension/autoloop_vendor/scaling.py",
+      "resources/runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md": "runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md"
     },
     "windows": {
       "nsis": {

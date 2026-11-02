@@ -94,6 +94,7 @@ class BridgeState:
         self.owner, self.remote, self.private, self.groups = None, None, None, None
         self.memory_repair = None
         self.prompt_assistant = None
+        self.autoloop = None
         self._memory_lock = threading.RLock()
         self.pause_event, self.closed = threading.Event(), False
         self._load_catalog()
@@ -114,6 +115,13 @@ class BridgeState:
                 self.runtime = RuntimeManager(self.root, self.resources)
             except ImportError:
                 self.runtime = RuntimeUnavailable()
+
+    def _autoloop_helper(self):
+        with self.lock:
+            if self.autoloop is None:
+                from autoloop_manager import AutoLoopManager
+                self.autoloop = AutoLoopManager(self.root, self.resources, self)
+            return self.autoloop
 
     def _memory_helper(self):
         # Construction opens no database; receipts also work with no model loaded.
@@ -454,6 +462,8 @@ class BridgeState:
             if self.images.operation.locked():raise Conflict('Wait for the current image operation before installing another model')
             if self.computer.operation.locked():raise Conflict('Wait for the current computer-use prediction before installing another model')
             entry = self.entry(model_id, installed=kind == "prepare")
+            if kind == 'download' and entry.get('origin') == 'autoloop':
+                raise ValueError('AutoLoop checkpoints are generated locally, not downloaded. Run a new verified experiment in Learning Studio.')
             validate_entry(entry)
             self.pause_event = threading.Event()
             self.progress = {"jobId": secrets.token_hex(16), "id": model_id, "kind": kind, "status": "running",
@@ -650,6 +660,7 @@ class BridgeState:
             if folder.is_dir():shutil.rmtree(folder)
             self.entries[model_id].pop('runtimePreparation',None)
             self.entries[model_id].pop('specialistPreparation',None)
+            if entry.get('origin') == 'autoloop': self.entries.pop(model_id,None)
             self.receipt_cache.pop(model_id,None)
             self.persist_catalog()
             return {'uninstalled':True,'id':model_id}
@@ -658,6 +669,7 @@ class BridgeState:
         if self.closed:
             return
         if self.groups: self.groups.close()
+        if self.autoloop: self.autoloop.close()
         if self.remote: self.remote.shutdown()
         if self.private: self.private.shutdown()
         self.closed = True
@@ -838,6 +850,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.tokens.status())
             elif route == '/connectors/status':
                 self._send(200, state.connectors.status())
+            elif route == '/autoloop/status':
+                self._send(200, state._autoloop_helper().status())
+            elif route == '/autoloop/models':
+                self._send(200, state._autoloop_helper().models())
             elif route == '/runtime/modes':
                 source=state.resources/'runtime-setup/hf-extension/native-model-bindings.json'
                 data=_read_json(source,16*1024*1024)
@@ -876,6 +892,14 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif route.startswith('/groups/'):
             self._send(200, state.groups.local(route[len('/groups/'):], body,
                 base_url='http://127.0.0.1:' + str(self.server.server_port)))
+        elif route.startswith('/autoloop/'):
+            manager = state._autoloop_helper()
+            action = route[len('/autoloop/'):]
+            if action == 'inspect': self._send(200, manager.inspect(body))
+            elif action == 'start': self._send(202, manager.start(body))
+            elif action == 'cancel': self._send(200, manager.cancel(body.get('runId')))
+            elif action == 'report': self._send(200, manager.report(body.get('runId')))
+            else: self._send(404, {'error':'Unknown AutoLoop action'})
         elif route=='/prompts/improve':
             runtime=state._memory_runtime(body.get('runtime'))
             with state._memory_lock:
