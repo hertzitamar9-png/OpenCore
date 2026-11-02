@@ -15,7 +15,7 @@ sys.path.insert(0,str(ROOT))
 def load(directory,context,precision='auto',device_preference='auto',experimental_fast=False):
     import psutil
     import torch
-    from transformers import AutoConfig,AutoTokenizer,AutoModelForCausalLM,AutoModelForImageTextToText
+    from transformers import AutoConfig,AutoTokenizer,AutoProcessor,AutoModelForCausalLM,AutoModelForImageTextToText
     torch.set_num_threads(2)
     directory=Path(directory)
     raw=json.loads((directory/'config.json').read_text(encoding='utf-8'))
@@ -63,7 +63,14 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
     if device=='cpu' and psutil.virtual_memory().available<required:
         raise RuntimeError(f'Not enough available RAM for this checkpoint: approximately {required/1e9:.2f} GB including preparation headroom. Disk offload is disabled.')
     dtype={'fp32':torch.float32,'bf16':torch.bfloat16,'fp16':torch.float16}.get(precision,'auto')
-    tokenizer=AutoTokenizer.from_pretrained(directory,local_files_only=True,trust_remote_code=False)
+    if cls is AutoModelForImageTextToText:
+        # Load the full trusted Transformers processor, not just a text
+        # tokenizer: image-language models need vision tokens and pixel inputs.
+        tokenizer=AutoProcessor.from_pretrained(directory,local_files_only=True,trust_remote_code=False)
+        if not getattr(tokenizer,'tokenizer',None):
+            raise RuntimeError('Vision-language checkpoint lacks a supported local tokenizer/processor pair')
+    else:
+        tokenizer=AutoTokenizer.from_pretrained(directory,local_files_only=True,trust_remote_code=False)
     if raw.get('model_type')=='edgerock':
         tokenizer.chat_template=(ROOT/'edgerock/chat_template.jinja').read_text(encoding='utf-8')
         tokenizer._opencore_edgerock=True
@@ -77,7 +84,96 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
     return model,tokenizer,context,device
 
 
+def text_tokenizer(tokenizer):
+    return getattr(tokenizer,'tokenizer',None) or tokenizer
+
+
+def has_multimodal_parts(payload):
+    if not isinstance(payload.get('messages'),list):
+        return False
+    return any(isinstance(message,dict) and isinstance(message.get('content'),list) and
+               any(isinstance(part,dict) and part.get('type') not in ('text',) for part in message['content'])
+               for message in payload['messages'])
+
+
+def _read_data_image(value):
+    """Read a bounded inline image only; no network, filesystem or remote URL."""
+    import base64
+    import io
+    from PIL import Image, UnidentifiedImageError
+    if isinstance(value,dict):
+        value=value.get('url')
+    if not isinstance(value,str) or not value.startswith(('data:image/png;base64,','data:image/jpeg;base64,','data:image/webp;base64,')):
+        raise ValueError('Vision inputs require an inline PNG, JPEG, or WebP data URL; remote URLs are disabled')
+    encoded=value.split(',',1)[1]
+    if len(encoded)>8*1024*1024:
+        raise ValueError('Inline image exceeds the 6 MiB encoded limit')
+    try:
+        raw=base64.b64decode(encoded,validate=True)
+        if not raw or len(raw)>6*1024*1024:
+            raise ValueError('Image exceeds the 6 MiB decoded limit')
+        with Image.open(io.BytesIO(raw)) as original:
+            if original.width < 1 or original.height < 1 or original.width*original.height>16_000_000:
+                raise ValueError('Image dimensions exceed the supported limit')
+            if original.format not in ('PNG','JPEG','WEBP'):
+                raise ValueError('Unsupported input image format')
+            return original.convert('RGB')
+    except (ValueError,UnidentifiedImageError,OSError) as error:
+        raise ValueError('Invalid or oversized inline image') from error
+
+
+def multimodal_messages(payload):
+    """Normalize image and sampled-video-frame inputs for local HF processors."""
+    messages=payload.get('messages')
+    if not isinstance(messages,list) or not messages or len(messages)>128:
+        raise ValueError('Supply bounded multimodal chat messages')
+    output=[]
+    frames=0
+    for message in messages:
+        if not isinstance(message,dict) or message.get('role') not in ('system','developer','user','assistant','tool'):
+            raise ValueError('Unsupported multimodal message role')
+        parts=message.get('content','')
+        if isinstance(parts,str):
+            parts=[{'type':'text','text':parts}]
+        if not isinstance(parts,list) or len(parts)>64:
+            raise ValueError('Unsupported multimodal message content')
+        clean=[]
+        for part in parts:
+            if not isinstance(part,dict):
+                raise ValueError('Invalid multimodal message part')
+            kind=part.get('type')
+            if kind=='text':
+                if not isinstance(part.get('text'),str):
+                    raise ValueError('Invalid multimodal text part')
+                clean.append({'type':'text','text':part['text']})
+            elif kind in ('image_url','input_image'):
+                frames+=1
+                if frames>12:
+                    raise ValueError('A chat can include at most twelve image frames')
+                clean.append({'type':'image','image':_read_data_image(part.get('image_url') or part.get('image'))})
+            elif kind in ('video','input_video'):
+                samples=part.get('frames')
+                if not isinstance(samples,list) or not 1<=len(samples)<=12:
+                    raise ValueError('Video inputs must contain one to twelve sampled inline image frames')
+                for item in samples:
+                    if not isinstance(item,dict):
+                        raise ValueError('Invalid video frame')
+                    frames+=1
+                    if frames>12:
+                        raise ValueError('A chat can include at most twelve image frames')
+                    stamp=item.get('timestamp',0)
+                    if type(stamp) not in (int,float) or not 0<=stamp<=86400:
+                        raise ValueError('Invalid video frame timestamp')
+                    clean.append({'type':'text','text':f'Video frame at {stamp:.2f} seconds:'})
+                    clean.append({'type':'image','image':_read_data_image(item.get('image_url') or item.get('image'))})
+            else:
+                raise ValueError('This worker supports image/video-frame-to-text only; audio needs a dedicated backend')
+        output.append({'role':'system' if message['role']=='developer' else message['role'],'content':clean})
+    return output
+
+
 def messages_prompt(tokenizer,payload):
+    tokenizer=text_tokenizer(tokenizer)
     if isinstance(payload.get('prompt'),str):return payload['prompt']
     messages=payload.get('messages')
     if not isinstance(messages,list) or not messages:raise ValueError('Supply messages or a text prompt')
@@ -102,8 +198,20 @@ def generation_inputs(model,tokenizer,context,payload,stop):
     from transformers import StoppingCriteria,StoppingCriteriaList
     class Cancelled(StoppingCriteria):
         def __call__(self,input_ids,scores,**kwargs):return stop.is_set()
-    prompt=messages_prompt(tokenizer,payload)
-    encoded=tokenizer(prompt,return_tensors='pt')
+    if has_multimodal_parts(payload):
+        if not hasattr(tokenizer,'tokenizer') or not callable(getattr(tokenizer,'apply_chat_template',None)):
+            raise ValueError('This checkpoint has no verified vision-language processor; use a compatible image-to-text runtime')
+        messages=multimodal_messages(payload)
+        try:
+            encoded=tokenizer.apply_chat_template(messages,tokenize=True,add_generation_prompt=True,
+                                                   return_dict=True,return_tensors='pt')
+        except (TypeError,ValueError,KeyError) as error:
+            raise ValueError('This local processor does not support the requested image/video-frame input format') from error
+        if not isinstance(encoded,dict) or 'input_ids' not in encoded:
+            raise ValueError('The vision-language processor did not return token inputs')
+    else:
+        prompt=messages_prompt(tokenizer,payload)
+        encoded=text_tokenizer(tokenizer)(prompt,return_tensors='pt')
     length=encoded['input_ids'].shape[-1]
     if length>=context:raise ValueError(f'The prompt has {length} tokens; the configured window is {context}')
     maximum=min(max(1,int(payload.get('max_tokens',payload.get('n_predict',512)))),context-length,8192)
@@ -126,7 +234,7 @@ def verify(model,tokenizer,context,model_id,pin):
         if not torch.isfinite(forward.logits[:,-1]).all():raise RuntimeError('The installed model produced non-finite logits')
         output=model.generate(**args)
     generated=output.shape[-1]-count
-    sample=tokenizer.decode(output[0,count:],skip_special_tokens=True)
+    sample=text_tokenizer(tokenizer).decode(output[0,count:],skip_special_tokens=True)
     if generated<1 or not sample.strip():raise RuntimeError('The installed model produced no visible test output')
     return {'modelId':model_id,'sourcePin':pin,'executionVerified':True,'generatedTokens':generated,
             'device':str(model.device),'contextTokens':context,'sample':sample}
@@ -179,13 +287,13 @@ def serve(model,tokenizer,context,model_id,port,source_pin=''):
                 chat=self.path=='/v1/chat/completions';request_id='chatcmpl-'+uuid.uuid4().hex;created=int(time.time())
                 if not payload.get('stream'):
                     with torch.inference_mode():output=model.generate(**args)
-                    tokens=output[0,prompt_tokens:];text=tokenizer.decode(tokens,skip_special_tokens=True)
+                    tokens=output[0,prompt_tokens:];text=text_tokenizer(tokenizer).decode(tokens,skip_special_tokens=True)
                     choice={'index':0,'finish_reason':'stop',**({'message':{'role':'assistant','content':text}} if chat else {'text':text})}
                     result={'id':request_id,'object':'chat.completion' if chat else 'text_completion','created':created,'model':model_id,'choices':[choice],
                             'usage':{'prompt_tokens':prompt_tokens,'completion_tokens':len(tokens),'total_tokens':prompt_tokens+len(tokens)}}
                     if self.path=='/completion':result.update(content=text,tokens_predicted=len(tokens),tokens_evaluated=prompt_tokens,stop=True)
                     self.send_json(200,result);return
-                streamer=MeasuredStreamer(tokenizer,skip_prompt=True,skip_special_tokens=True,timeout=120)
+                streamer=MeasuredStreamer(text_tokenizer(tokenizer),skip_prompt=True,skip_special_tokens=True,timeout=120)
                 failure=[]
                 def generate():
                     try:
