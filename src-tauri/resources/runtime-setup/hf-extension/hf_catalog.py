@@ -302,6 +302,18 @@ def build_plan(metadata):
                 task in ('image-to-text', 'visual-question-answering', 'document-question-answering') and
                 any(pin.get('role') == 'companion' for pin in pins)):
             runtime_kind = 'gguf'
+        # Safetensors image/video-to-text uses the built-in offline processor
+        # only for recognized conditional-generation architectures with pinned
+        # processor config files. Actual media generation must pass preflight.
+        if (runtime_kind is None and format_name == 'safetensors' and
+                task in ('image-to-text','image-text-to-text',
+                         'visual-question-answering','document-question-answering',
+                         'video-text-to-text') and
+                any('ConditionalGeneration' in str(value) for value in config.get('architectures',[])) and
+                any(pin.get('role') == 'support' and
+                    PurePosixPath(pin['filename']).name in ('processor_config.json','preprocessor_config.json')
+                    for pin in pins)):
+            runtime_kind = 'transformers'
         if category=='image' and format_name=='diffusers':runtime_kind='diffusers'
         is_adapter = (adapter_only and format_name != 'gguf') or format_name == 'lora'
         if is_adapter:
