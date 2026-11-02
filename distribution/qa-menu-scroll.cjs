@@ -6,6 +6,9 @@ if(original.indexOf(marker)<0)throw Error('Missing packaged chat fixture');
 let fixture=original.slice(0,original.indexOf(marker));
 const profiles=['echo','nim-2-coder-7b','frognano-4b','ornith-1-5-9b-mtp','oxcoder-9b','neohorse-1-9b','gmcoder','nanbeige-bf16','nanbeige-bf16-echo','native1m','doucode','swift-27b'];
 const modelList=profiles.map(id=>({id,label:id==='echo'?'ECHO 3T':id,description:'Downloaded text model with its supported runtime.',category:'text',installed:true,selectable:true,backend:'gguf',precision:'Q4_K_M'}));
+// Mode deduplication shortens the real profile list. Keep an explicitly long
+// fixture so this regression still exercises wheel overflow in both pickers.
+modelList.push(...Array.from({length:24},(_,index)=>({id:'scroll-fixture-'+index,label:'Scroll fixture '+index,category:'text',installed:true,selectable:true,backend:'gguf',precision:'Q4_K_M'})));
 fixture=fixture.replace('window.fixture={','const short=new URL(location.href).searchParams.has("short");window.fixture={');
 fixture=fixture.replace("const models=['moss-image-sft-int8-convrot','qwen-image-21-uc-nvfp4']","const models=(short?[]:['moss-image-sft-int8-convrot','qwen-image-21-uc-nvfp4'])");
 fixture=fixture.replace("models:[...models,{id:'echo',label:'ECHO 3T',category:'text',installed:true,selectable:true}]",'models:[...models,...(short?'+JSON.stringify(modelList.slice(0,1))+':'+JSON.stringify(modelList)+')]');
