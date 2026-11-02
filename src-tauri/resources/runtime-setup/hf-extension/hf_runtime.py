@@ -116,7 +116,7 @@ def visual_text_probe(entry):
 
     width=height=224
     scanline=b'\x00'+(b'\x32\x66\x99'*width)
-    png=(b'\x89PNG\\r\\n\x1a\\n'+chunk(b'IHDR',struct.pack('>2I5B',width,height,8,2,0,0,0))+
+    png=(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>2I5B',width,height,8,2,0,0,0))+
          chunk(b'IDAT',zlib.compress(scanline*height))+chunk(b'IEND',b''))
     data='data:image/png;base64,'+base64.b64encode(png).decode('ascii')
     if 'video' in inputs:
