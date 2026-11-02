@@ -326,7 +326,7 @@ class BridgeState:
         result['operatingMode']=mode
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
         if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
-        if result['runtimeReady'] and supports_text_generation(entry) and mode=='echo' and preparation.get('echoMode')!='main-context-v1':
+        if result['runtimeReady'] and entry.get('category') in ('text','brain','omni','ocr','computer-use') and supports_text_generation(entry) and mode=='echo' and preparation.get('echoMode')!='main-context-v1':
             result['runtimeReady']=False
         if result['runtimeReady']:
             from managed_engines import engine_for, definition
