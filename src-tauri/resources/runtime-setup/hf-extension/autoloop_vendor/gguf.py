@@ -21,7 +21,7 @@ V3 = 3
 SCALAR = {0:'<B',1:'<b',2:'<H',3:'<h',4:'<I',5:'<i',6:'<f',7:'<?',10:'<Q',11:'<q',12:'<d'}
 GGUF_STRING = 8
 GGUF_ARRAY = 9
-SUPPORTED = {'llama','qwen2','qwen3','mistral','gemma2','phi3','gemma3'}
+SUPPORTED = {'llama','qwen2','qwen3','mistral','gemma2','phi3','gemma3','qwen35','dory'}
 BLOCK_RE = re.compile(r'^blk\.(\d+)\.(.+)$')
 MAX_STRING = 256 * 1024 * 1024
 MAX_ENTRIES = 3_000_000
@@ -186,29 +186,140 @@ class GGUFModel:
                 sizes[t.name] = end - t.offset
             self.tensors = [Tensor(t.name,t.shape,t.type_id,t.offset,sizes[t.name]) for t in infos]
 
+    def metadata_value(self, key):
+        """Read a declared metadata field without decoding large token arrays."""
+        entry = next((item for item in self.metadata if item.key == key), None)
+        if entry is None:
+            return None
+        with self.path.open('rb') as stream:
+            stream.seek(entry.offset)
+            return _parse_value(stream, entry.type_id, True)
+
+    def _groups(self):
+        groups = {}
+        for tensor in self.tensors:
+            match = BLOCK_RE.fullmatch(tensor.name)
+            if match:
+                group = groups.setdefault(int(match[1]), {})
+                group[match[2]] = tensor.shape
+        if set(groups) != set(range(self.block_count)):
+            raise GGUFError('Incomplete/unsupported blk.N tensor groups')
+        return groups
+
+    def _structured_layout(self, groups):
+        """Recognize supported mixed block *patterns*, not just an architecture label."""
+        n = self.block_count
+        if self.architecture == 'qwen35':
+            tail = self.metadata_value('qwen35.nextn_predict_layers') or 0
+            if type(tail) is not int or tail not in (0, 1) or (n-tail) < 8 or (n-tail) % 4:
+                raise GGUFError('Qwen3.5 layout needs complete 3-recurrent/1-attention groups and at most one terminal MTP block')
+            base = n - tail
+            for index in range(base):
+                suffixes = set(groups[index])
+                if index % 4 < 3:
+                    required = {'ssm_a', 'ssm_conv1d.weight', 'ssm_out.weight', 'attn_qkv.weight'}
+                    if not required.issubset(suffixes) or 'attn_q.weight' in suffixes:
+                        raise GGUFError(f'Qwen3.5 recurrent layout mismatch at layer {index}')
+                else:
+                    required = {'attn_q.weight', 'attn_k.weight', 'attn_v.weight', 'attn_output.weight'}
+                    if not required.issubset(suffixes) or 'ssm_a' in suffixes:
+                        raise GGUFError(f'Qwen3.5 attention layout mismatch at layer {index}')
+            if tail and not any(key.startswith('nextn.') for key in groups[n-1]):
+                raise GGUFError('Qwen3.5 MTP tail not identified; cannot safely move it')
+            if not tail and any(key.startswith('nextn.') for group in groups.values() for key in group):
+                raise GGUFError('Undeclared Qwen3.5 MTP tensors')
+            flags = self.metadata_value('qwen35.attention.recurrent_layers')
+            if flags is not None:
+                if (not isinstance(flags, tuple) or len(flags[1]) != n or
+                    any(bool(flags[1][i]) != (i % 4 < 3) for i in range(base))):
+                    raise GGUFError('Qwen3.5 recurrent layer metadata disagrees with tensors')
+            return {'size': 4, 'start': 0, 'stop': base, 'tail': tail}
+        if self.architecture == 'dory':
+            prefix = self.metadata_value('dory.input_layer_count')
+            middle = self.metadata_value('dory.recurrent_layer_count')
+            suffix = self.metadata_value('dory.output_layer_count')
+            pattern = self.metadata_value('dory.layer_pattern')
+            if (any(type(v) is not int or v < 0 or v % 8 for v in (prefix,middle,suffix))
+                or prefix + middle + suffix != n or middle < 8):
+                raise GGUFError('Dory stage counts do not describe aligned eight-block recurrent loops')
+            tokens = pattern.strip('-').split('-') if isinstance(pattern,str) else []
+            if len(tokens) != n//2 or not all(tokens[i:i+4] == tokens[:4] for i in range(0,len(tokens),4)):
+                raise GGUFError('Dory per-pair layer pattern is not a uniform four-pair cycle')
+            if self.metadata_value('dory.recurrent_kv_cache_mode') != 'per_loop':
+                raise GGUFError('Dory recurrent cache mode requires a separately verified adapter')
+            for index in range(n):
+                names = set(groups[index])
+                if index % 2 == 0:
+                    if not {'attn_q.weight','attn_output.weight'}.issubset(names) or 'ffn_down.weight' in names:
+                        raise GGUFError(f'Dory attention layer mismatch at {index}')
+                elif not {'ffn_down.weight','ffn_up.weight'}.issubset(names) or 'attn_q.weight' in names:
+                    raise GGUFError(f'Dory feedforward layer mismatch at {index}')
+            return {'size':8,'start':prefix,'stop':prefix+middle,'tail':0}
+        raise GGUFError('No structural adapter for this architecture')
+
     def validate_for_surgery(self):
         if self.architecture not in SUPPORTED:
             raise GGUFError(f'Architecture {self.architecture!r} not in tested compatibility allowlist; no modification made')
-        if self.has_experts:raise GGUFError('Mixture-of-experts metadata requires a separately validated surgery adapter')
-        groups = {}
-        for t in self.tensors:
-            m = BLOCK_RE.fullmatch(t.name)
-            if m:
-                suffix = m[2]
-                if any(value in suffix.lower() for value in ('exps', 'shexp', 'expert', 'gate_inp', 'ssm', 'time_mix', 'delta_net')):
-                    raise GGUFError('MoE or hybrid/recurrent blocks need a separately validated surgery adapter')
-                groups.setdefault(int(m[1]), {})[suffix] = t.shape
-        if set(groups) != set(range(self.block_count)):
-            raise GGUFError('Incomplete/unsupported blk.N tensor groups')
+        if self.has_experts:
+            raise GGUFError('Mixture-of-experts metadata requires a separately validated surgery adapter')
+        groups = self._groups()
+        if self.architecture in ('qwen35','dory'):
+            self._structured_layout(groups)
+            return True
+        for group in groups.values():
+            if any(value in name.lower() for name in group for value in
+                   ('exps','shexp','expert','gate_inp','ssm','time_mix','delta_net')):
+                raise GGUFError('MoE or hybrid/recurrent blocks need a separately validated surgery adapter')
         pattern = groups[0]
-        if len(pattern) < 3 or any(s != pattern for s in groups.values()):
+        if len(pattern) < 3 or any(group != pattern for group in groups.values()):
             raise GGUFError('Heterogeneous layer tensors: not safe for generic block surgery')
         return True
+
+    def _mapping_info(self, mapping):
+        n = self.block_count
+        if self.architecture in ('qwen35','dory'):
+            layout = self._structured_layout(self._groups())
+            size = layout['size']
+            if len(mapping) != n + size:
+                raise GGUFError(f'{self.architecture} requires a complete {size}-block pattern repeat')
+            for pos in range(layout['start'],layout['stop']-size+1,size):
+                if self.architecture == 'qwen35' and pos == 0:
+                    continue
+                expected = list(range(n))
+                expected[pos+size:pos+size] = list(range(pos,pos+size))
+                if mapping == expected:
+                    return {'start':pos,'size':size}
+            raise GGUFError(f'{self.architecture} repeat must preserve complete contiguous layer patterns')
+        compact = [block for i,block in enumerate(mapping) if i==0 or block!=mapping[i-1]]
+        if compact != list(range(n)):
+            raise GGUFError('Mapping may only repeat existing blocks in their original order')
+        return None
+
+    def propose_variants(self, maximum=3, experimental_damping=False):
+        """Use architecture-specific complete motifs instead of arbitrary single layers."""
+        self.validate_for_surgery()
+        if self.architecture not in ('qwen35','dory'):
+            return repeat_variants(self.block_count,maximum,experimental_damping)
+        layout = self._structured_layout(self._groups())
+        size = layout['size']
+        positions = list(range(layout['start'],layout['stop']-size+1,size))
+        if self.architecture == 'qwen35':
+            positions = [x for x in positions if x != 0]
+        if not positions:
+            return []
+        center=(layout['start']+layout['stop']-size)//2
+        positions.sort(key=lambda pos:(abs(pos-center),pos))
+        results=[]
+        for position in positions[:maximum]:
+            mapping=list(range(self.block_count))
+            mapping[position+size:position+size]=list(range(position,position+size))
+            results.append((f'{self.architecture}-whole-pattern-{position}',mapping,False))
+        return results
 
     def describe(self) -> dict:
         try:
             self.validate_for_surgery()
-            supported, reason = True, 'Eligible homogeneous decoder blocks; actual runtime and quality verification are still required.'
+            supported, reason = True, ('Eligible architecture-aware full-pattern repetition; runtime loading and quality confirmation remain required.' if self.architecture in ('qwen35', 'dory') else 'Eligible homogeneous decoder blocks; actual runtime and quality verification are still required.')
         except GGUFError as error:
             supported, reason = False, str(error)
         return {'file':str(self.path), 'bytes':self.file_size,'architecture':self.architecture,
@@ -225,10 +336,10 @@ class GGUFModel:
             raise GGUFError('Mapping must add between 1 and 8 duplicate blocks')
         if not mapping or any(not (0 <= n < self.block_count) for n in mapping):
             raise GGUFError('Invalid source block indices')
-        # Preserve original order, allowing repetitions directly after their source.
-        compact = [n for i,n in enumerate(mapping) if i == 0 or n != mapping[i-1]]
-        if compact != list(range(self.block_count)):
-            raise GGUFError('Mapping may only repeat existing blocks in their original order')
+        # Structural adapters accept only one complete motif after that motif.
+        mapping_info = self._mapping_info(mapping)
+        if damped and self.architecture in ('qwen35','dory'):
+            raise GGUFError('Damping hybrid/recurrent architectures is not validated')
         output = Path(destination).resolve()
         if output == self.path:
             raise GGUFError('Never overwrite the source model')
@@ -282,6 +393,17 @@ class GGUFModel:
             raise GGUFError(f'Not enough free disk space (need about {estimated/2**30:.2f} GiB)')
         replacement_meta = {}
         replacement_meta[self.block_key] = len(mapping)
+        if self.architecture == 'dory':
+            if not mapping_info:
+                raise GGUFError('Dory recurrent loop mapping was not validated')
+            old_count = self.metadata_value('dory.recurrent_layer_count')
+            old_pattern = self.metadata_value('dory.layer_pattern')
+            tokens = old_pattern.strip('-').split('-')
+            start_pair = mapping_info['start'] // 2
+            end_pair = start_pair + mapping_info['size'] // 2
+            tokens[end_pair:end_pair] = tokens[start_pair:end_pair]
+            replacement_meta['dory.recurrent_layer_count'] = old_count + mapping_info['size']
+            replacement_meta['dory.layer_pattern'] = '-'.join(tokens) + '-'
         # Architecture per-block arrays: remap elements alongside the block indices.
         # All other metadata (tokenizer, templates, etc.) is copied byte-for-byte.
         with self.path.open('rb') as src:
