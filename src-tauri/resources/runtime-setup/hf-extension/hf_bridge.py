@@ -37,6 +37,7 @@ from hf_chat_media import ChatMedia, saved_conversations_page, delete_empty_proj
 from hf_connectors import ConnectorProfiles
 from hf_telemetry import LiveTelemetry
 from hf_computer_runtime import ComputerManager, supports as supports_computer
+from model_modes import apply_operating_modes, supports_text_generation, mode_context
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -90,7 +91,7 @@ class BridgeState:
         self.images=ImageRuntimeManager(self.root,self.resources)
         self.connectors = ConnectorProfiles(self.root)
         self.computer = ComputerManager(self.root, self.resources, self.downloader)
-        self.owner, self.remote, self.private = None, None, None
+        self.owner, self.remote, self.private, self.groups = None, None, None, None
         self.memory_repair = None
         self.prompt_assistant = None
         self._memory_lock = threading.RLock()
@@ -264,7 +265,7 @@ class BridgeState:
             existing = self.entries.get(value['id'])
             entry = copy.deepcopy(value)
             if existing and existing['revision'] == value['revision']:
-                for key in ('providerId', 'profileId', 'runtimePreparation', 'specialistPreparation'):
+                for key in ('providerId', 'profileId', 'runtimePreparation', 'runtimePreparations', 'operatingMode', 'specialistPreparation'):
                     if key in existing:
                         entry[key] = copy.deepcopy(existing[key])
             if existing != entry:
@@ -310,15 +311,19 @@ class BridgeState:
         if supports_computer(entry):
             result['specialist'] = 'computer'
             result['specialistReady'] = self.computer.ready(result, entry.get('specialistPreparation'))
-        preparation = entry.get("runtimePreparation") or {}
+        mode=entry.get('operatingMode','echo')
+        preparation = (entry.get('runtimePreparations') or {}).get(mode) or entry.get("runtimePreparation") or {}
+        if preparation.get('operatingMode','echo')!=mode:preparation={}
+        result['runtimePreparation']=copy.deepcopy(preparation)
+        result['operatingMode']=mode
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
         if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
-        if result['runtimeReady'] and entry.get('category')=='text' and preparation.get('echoMode')!='main-context-v1':
+        if result['runtimeReady'] and entry.get('category')=='text' and mode=='echo' and preparation.get('echoMode')!='main-context-v1':
             result['runtimeReady']=False
         if result['runtimeReady']:
             from managed_engines import engine_for, definition
             selected = engine_for(entry)
-            if selected and (preparation.get('engineArchiveSha256') != definition(selected)['sha256'] or preparation.get('echoMode') != 'main-context-v1'):
+            if selected and (preparation.get('engineArchiveSha256') != definition(selected)['sha256'] or mode=='echo' and preparation.get('echoMode') != 'main-context-v1'):
                 result['runtimeReady'] = False
         if receipt:
             result.update(localDirectory=receipt["localDirectory"], receiptPath=receipt["receiptPath"], installReceipt=copy.deepcopy(receipt))
@@ -377,6 +382,7 @@ class BridgeState:
                     entry['modelType'] = family['modelType']
             elif entry['format'] == 'gguf':
                 entry['managedEngine'] = 'flint-cpu-v1'
+        apply_operating_modes(plan['variants'],lambda _:metadata)
         plan['originalRepository'] = canonical
         plan['planId'] = hashlib.sha256(json.dumps(plan['variants'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
         with self.lock:
@@ -458,6 +464,25 @@ class BridgeState:
             self.worker.start()
             return initial
 
+    def runtime_mode(self, model_id, mode):
+        with self.lock:
+            if mode not in ('native','echo'):raise ValueError('Choose Native or ECHO')
+            entry=self.entry(model_id)
+            if not supports_text_generation(entry):raise ValueError('This is not a text-generation model')
+            if self.progress and self.progress.get('status') in ACTIVE:raise Conflict('Wait for model installation before changing operating mode')
+            if entry.get('operatingMode','echo')!=mode:
+                change=getattr(self.runtime,'change_mode',None)
+                if change:
+                    try:change(entry,mode)
+                    except RuntimeError as error:raise Conflict(str(error)) from error
+                saved=self.entries[model_id]
+                old=saved.get('runtimePreparation')
+                if old:saved.setdefault('runtimePreparations',{})[old.get('operatingMode','echo')]=copy.deepcopy(old)
+                saved['operatingMode']=mode
+                saved['runtimePreparation']=copy.deepcopy(saved.get('runtimePreparations',{}).get(mode,{}))
+                self.persist_catalog()
+            return self.entry(model_id)
+
     def _work(self, entry, kind, pause):
         last_saved = [0.0]
         def report(value):
@@ -506,7 +531,9 @@ class BridgeState:
                     if not isinstance(result,dict) or result.get('runtimeReady') is not True:
                         raise ValueError('The runtime did not confirm this model is ready')
                     with self.lock:
-                        self.entries[entry['id']]['runtimePreparation']={**result,'receiptRevision':entry['revision']}
+                        proof={**result,'receiptRevision':entry['revision']}
+                        self.entries[entry['id']]['runtimePreparation']=proof
+                        self.entries[entry['id']].setdefault('runtimePreparations',{})[entry.get('operatingMode','echo')]=copy.deepcopy(proof)
                         self.persist_catalog()
                     final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
             elif supports_computer(entry):
@@ -529,6 +556,7 @@ class BridgeState:
                     raise Paused("Runtime preparation stopped")
                 with self.lock:
                     self.entries[entry["id"]]["runtimePreparation"] = {**result, "receiptRevision": entry["revision"]}
+                    self.entries[entry['id']].setdefault('runtimePreparations',{})[entry.get('operatingMode','echo')]=copy.deepcopy(self.entries[entry['id']]['runtimePreparation'])
                     self.persist_catalog()
                 final = {"status": "ready", "stage": "ready", "bytesDone": entry["bytes"]}
             report({**final, "finishedAt": time.time()})
@@ -627,10 +655,11 @@ class BridgeState:
             return {'uninstalled':True,'id':model_id}
 
     def close(self):
-        if self.remote: self.remote.shutdown()
-        if self.private: self.private.shutdown()
         if self.closed:
             return
+        if self.groups: self.groups.close()
+        if self.remote: self.remote.shutdown()
+        if self.private: self.private.shutdown()
         self.closed = True
         self.pause_event.set()
         self.ocr.stop()
@@ -761,6 +790,20 @@ class BridgeHandler(BaseHTTPRequestHandler):
         return body
 
     def _dispatch(self):
+        # A group runner has a single-task capability, never the desktop secret.
+        # Admit only this narrow loopback route before normal instance auth.
+        if self.path == '/api/groups/agent/tool':
+            if (self.command != 'POST' or self.headers.get('Origin') is not None
+                    or self.headers.get('Host') != '127.0.0.1:' + str(self.server.server_port)
+                    or self.client_address[0] != '127.0.0.1'):
+                return self._send(403, {'error':'Only the local group task runner may use this endpoint'})
+            manager = self.server.state.groups
+            if manager is None:
+                return self._send(403, {'error':'No active group task'})
+            body = self._body(256 * 1024)
+            if body is not None:
+                self._send(200, manager.agent_tool(self.headers.get('Authorization'), body))
+            return
         if not self._authorize():
             return
         path = urlsplit(self.path).path
@@ -768,10 +811,14 @@ class BridgeHandler(BaseHTTPRequestHandler):
             raise ValueError("Query parameters are not accepted")
         route = path[4:] if path.startswith("/api/") else path
         state = self.server.state
-        if (route.startswith('/remote/') or route.startswith('/mobile/host/')) and state.remote is None:
+        if (route.startswith('/remote/') or route.startswith('/mobile/host/') or route.startswith('/groups/')) and state.remote is None:
             from remote_access import RemoteAccess
             with state.lock:
                 if state.remote is None: state.remote = RemoteAccess(state.root, state.resources, state.owner)
+        if route.startswith('/groups/') and state.groups is None:
+            from group_chats import GroupManager
+            with state.lock:
+                if state.groups is None: state.groups = GroupManager(state.root, state.remote)
         if route.startswith('/private/') and state.private is None:
             from private_chat import PrivateChats
             with state.lock:
@@ -791,6 +838,11 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.tokens.status())
             elif route == '/connectors/status':
                 self._send(200, state.connectors.status())
+            elif route == '/runtime/modes':
+                source=state.resources/'runtime-setup/hf-extension/native-model-bindings.json'
+                data=_read_json(source,16*1024*1024)
+                fields=('id','variantOf','memoryMode','modeProfiles','modeAliasOf','contextTokens','publishedContextTokens','operatingModes','supportsTextGeneration','category','artifacts','precision')
+                self._send(200,{'models':[{key:model[key] for key in fields if key in model} for model in data['models']]})
             elif route == '/remote/status':
                 self._send(200, state.remote.status())
             elif route == '/specialist/ocr/status':
@@ -814,13 +866,16 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.command == "DELETE" and route == "/token":
             self._send(200, state.tokens.clear())
             return
-        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 256 * 1024)
+        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 512 * 1024 if route.startswith('/groups/') else 256 * 1024)
         if body is None:
             return
         if self.command == "PUT" and route == "/token":
             self._send(200, state.tokens.save(body.get("token"), state.client))
         elif self.command != "POST":
             self._send(405, {"error": "Method not allowed"})
+        elif route.startswith('/groups/'):
+            self._send(200, state.groups.local(route[len('/groups/'):], body,
+                base_url='http://127.0.0.1:' + str(self.server.server_port)))
         elif route=='/prompts/improve':
             runtime=state._memory_runtime(body.get('runtime'))
             with state._memory_lock:
@@ -896,6 +951,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.connectors.disconnect(body.get('id')))
         elif route == '/connectors/reconnect':
             self._send(200, state.connectors.reconnect(body.get('id')))
+        elif route == '/connectors/history-enable':
+            self._send(200, state.connectors.enable_history(body.get('id')))
+        elif route == '/runtime/mode':
+            self._send(200, state.runtime_mode(body.get('id'),body.get('operatingMode',body.get('mode'))))
+        elif route == '/runtime/native-profile':
+            from native_modes import activate
+            self._send(200,activate(state.root,state.resources,body.get('id'),body.get('operatingMode')))
         elif route == "/catalog/add":
             self._send(200, state.add(body.get("planId"), body.get("variantIds")))
         elif route == "/catalog/profile":
@@ -1010,6 +1072,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(409, {"error": str(error)})
         except HubError as error:
             self._send(403 if error.status in (401, 403, 404) else 502, {"error": str(error), "authRequired": error.status in (401, 403, 404)})
+        except PermissionError as error:
+            self._send(403, {"error": str(error)[:1000]})
         except ValueError as error:
             self._send(400, {"error": str(error)[:1000]})
         except (BrokenPipeError, ConnectionError, socket.timeout):

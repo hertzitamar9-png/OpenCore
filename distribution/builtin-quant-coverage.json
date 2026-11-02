@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 580,
+  "families": 574,
   "withFive": 230,
   "models": [
     {
@@ -232,29 +232,11 @@
       "repositories": []
     },
     {
-      "id": "native1m",
-      "label": "1M extended",
-      "category": "text",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
-    },
-    {
       "id": "doucode",
       "label": "DuoCore",
       "category": "text",
       "quantizations": 1,
       "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
-    },
-    {
-      "id": "nanbeige-bf16",
-      "label": "Nanbeige BF16",
-      "category": "text",
-      "quantizations": 24,
-      "readyToInstallChoices": true,
       "source": "native catalog",
       "repositories": []
     },
@@ -268,35 +250,8 @@
       "repositories": []
     },
     {
-      "id": "dualcore-kv",
-      "label": "DualCore KV",
-      "category": "text",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
-    },
-    {
       "id": "dualcore-echo",
       "label": "DualCore ECHO",
-      "category": "text",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
-    },
-    {
-      "id": "fusioncore-kv",
-      "label": "FusionCore KV",
-      "category": "text",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
-    },
-    {
-      "id": "fusioncore-echo",
-      "label": "FusionCore ECHO",
       "category": "text",
       "quantizations": 1,
       "readyToInstallChoices": false,
@@ -671,29 +626,11 @@
       ]
     },
     {
-      "id": "echo-native",
-      "label": "ECHO 3T \u00b7 Native",
+      "id": "nanbeige-bf16",
+      "label": "Nanbeige BF16 \u00b7",
       "category": "text",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
-    },
-    {
-      "id": "native1m-native",
-      "label": "1M extended \u00b7 Native",
-      "category": "text",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
-    },
-    {
-      "id": "doucode-native",
-      "label": "DuoCore \u00b7 Native",
-      "category": "text",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
+      "quantizations": 23,
+      "readyToInstallChoices": true,
       "source": "native catalog",
       "repositories": []
     },
@@ -5194,6 +5131,15 @@
         "gbuzhf/Sage-A1.5-Sangreal-ICE",
         "mradermacher/Sage-A1.5-GGUF"
       ]
+    },
+    {
+      "id": "jev-computer-use",
+      "label": "JEV Computer Use",
+      "category": "computer-use",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
     },
     {
       "id": "flint",

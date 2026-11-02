@@ -15,6 +15,10 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+if __name__ == '__main__':
+    # -I workers resolve only these installed, app-owned sibling modules.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+from model_modes import mode_context, NATIVE_TARGET, ECHO_TARGET
 
 
 def _hash(path, cancel=None):
@@ -104,7 +108,7 @@ def runtime_plan(entry, root, resources):
     models = [folder / f['filename'] for f in entry.get('files', []) if f.get('role') == 'model']
     if not models:
         raise ValueError('No model weights are present for the runtime adapter')
-    context = min(int(entry.get('contextTokens') or 32768), 32768)
+    context = mode_context(entry)
     if context < 8192:
         raise ValueError('This model has less than the 8,192-token context required by the chat agent. Its downloaded files are retained.')
     if fmt == 'gguf':
@@ -146,7 +150,9 @@ def runtime_plan(entry, root, resources):
         command = [_python(root), '-I', str(Path(__file__).resolve()), '--worker', 'text',
                    '--resources', str(resources), '--model-dir', str(directory), '--model-id', entry['id'],
                    '--context', str(context), '--port', '{port}']
-    return {'command': command, 'context': context, 'format': fmt, 'folder': str(folder),
+    return {'command': command, 'context': context, 'operatingMode':entry.get('operatingMode','echo'),
+            'requestedContextTokens':NATIVE_TARGET if entry.get('operatingMode')=='native' else ECHO_TARGET,
+            'format': fmt, 'folder': str(folder),
             **({'publisherEngine': publisher_engine} if fmt == 'gguf' and publisher_engine else {})}
 
 
@@ -176,6 +182,17 @@ class RuntimeManager:
             url,key=active['url'],active['key']
         from urllib.parse import quote,urlsplit
         def read():
+            if active.get('mode')=='native':
+                metrics=active.get('usage',{})
+                value={'modelContextTokens':active['proof']['contextTokens'],'modelActiveTokens':metrics.get('prompt_tokens'),
+                       'modelOutputTokens':metrics.get('completion_tokens',0),'contextMode':'native','modelSessionActive':self._generation.locked()}
+                try:
+                    with self._request(url+'/slots',key=key,timeout=.8) as response:slots=json.load(response)
+                    if isinstance(slots,list) and slots:
+                        value['modelActiveTokens']=slots[0].get('n_past') or slots[0].get('n_prompt_tokens') or value['modelActiveTokens']
+                        if type(slots[0].get('n_decoded')) is int:value['modelOutputTokens']=slots[0]['n_decoded']
+                except (OSError,RuntimeError,ValueError):pass
+                return value
             with self._request(url+'/echo/context?conversation='+quote(conversation,safe=''),key=key,timeout=.8) as response:
                 raw=response.read(256*1024+1)
             if len(raw)>256*1024:raise ValueError('Context sample too large')
@@ -210,7 +227,7 @@ class RuntimeManager:
     def models(self, catalog):
         values = catalog.get('models', []) if isinstance(catalog, dict) else catalog
         return {'object': 'list', 'data': [{'id': e['id'], 'object': 'model', 'owned_by': 'local-huggingface',
-            'context_length': max(1, min(int((e.get('runtimePreparation') or {}).get('contextTokens') or e.get('contextTokens') or 32768), 32768))} for e in values
+            'context_length': max(1, int((e.get('runtimePreparation') or {}).get('contextTokens') or mode_context(e)))} for e in values
             if e.get('category','text')=='text' and e.get('status') == 'installed' and (e.get('runtimeReady') or e.get('runtimePreparation', {}).get('runtimeReady'))]}
 
     def set_context(self, model_id, conversation_id, request_id):
@@ -318,15 +335,26 @@ class RuntimeManager:
         finally:
             self._preparation.release()
 
+    def change_mode(self, entry, mode):
+        if mode not in ('native','echo'):raise ValueError('Choose Native or ECHO')
+        with self._state_lock:
+            if self._generation.locked() or self._preparation.locked() or self._context:
+                raise RuntimeError('Wait for the active model request before changing operating mode')
+            if self._active and self._active['id']==entry['id'] and self._active.get('mode','echo')!=mode:
+                self.stop()
+        return {'operatingMode':mode}
+
     def _prepare(self, entry):
         if self._generation.locked():
             raise RuntimeError('Wait for the current local response to finish')
-        if self._active and self._active['id'] == entry['id'] and all(child.poll() is None for child in self._children):
+        if self._active and self._active['id'] == entry['id'] and self._active.get('mode','echo')==entry.get('operatingMode','echo') and all(child.poll() is None for child in self._children):
             return self._active['proof']
         self.stop(clear_context=False)
         self._cancel.clear()
         self._stop_reason = ''
         plan = runtime_plan(entry, self.root, self.resources)
+        plan.setdefault('operatingMode',entry.get('operatingMode','echo'))
+        plan.setdefault('requestedContextTokens',NATIVE_TARGET if plan['operatingMode']=='native' else ECHO_TARGET)
         self.on_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
         files = checked_model_files(entry, self.root, self._cancel)
         available = _available_memory()
@@ -374,6 +402,11 @@ class RuntimeManager:
         sample = message.get('content') or message.get('reasoning_content') or message.get('reasoning')
         if not sample or proof_result.get('error'):
             raise RuntimeError('The runtime did not return a real generated response')
+        if plan['operatingMode']=='native':
+            proof=self._runtime_proof(entry,plan,files,proof_result,sample,context_verified,log_path)
+            (run_dir/'inference-receipt.json').write_text(json.dumps(proof,indent=2),encoding='utf-8')
+            self._active={'id':entry['id'],'url':upstream,'upstream':upstream,'key':key,'proof':proof,'mode':'native','usage':{}}
+            return proof
         echo = self.resources / 'echo/echo_server.py'
         if not echo.is_file():
             raise RuntimeError('The installed ECHO runtime is missing')
@@ -387,7 +420,7 @@ class RuntimeManager:
         self.on_progress(stage='verifying-echo', detail='Checking a generated reply through the ECHO endpoint')
         with self._request(echo_url + '/v1/chat/completions', {
                 'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
-                'max_tokens': 16, 'echo_max_total_tokens': 16, 'temperature': 0, 'stream': False,
+                'max_tokens': 512, 'echo_max_total_tokens': 512, 'temperature': 0, 'stream': False,
                 'conversation_id': 'installation-check-' + uuid.uuid4().hex,
                 'chat_template_kwargs': {'enable_thinking': False}}, key, timeout=180) as response:
             echo_result = json.load(response)
@@ -395,10 +428,17 @@ class RuntimeManager:
         echo_message = echo_choices[0].get('message', {}) if echo_choices else {}
         if not (echo_message.get('content') or echo_message.get('reasoning_content')):
             raise RuntimeError('The ECHO endpoint did not return an actual generated reply')
+        proof=self._runtime_proof(entry,plan,files,proof_result,sample,context_verified,log_path)
+        (run_dir / 'inference-receipt.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
+        self._active = {'id': entry['id'], 'url': echo_url, 'upstream': upstream, 'key': key, 'proof': proof,'mode':'echo'}
+        return proof
+
+    def _runtime_proof(self,entry,plan,files,proof_result,sample,context_verified,log_path):
         stats = [{'filename': str(path.relative_to(Path(plan['folder']))), 'bytes': path.stat().st_size,
                   'modifiedNs': path.stat().st_mtime_ns} for path in files]
-        proof = {'runtimeReady': True, 'inferenceVerified': True, 'echoReady': True, 'contextTokens': plan['context'],
-                 'echoMode': 'main-context-v1', 'contextVerified': context_verified,
+        proof = {'runtimeReady': True, 'inferenceVerified': True, 'echoReady': plan['operatingMode']=='echo', 'contextTokens': plan['context'],
+                 'operatingMode':plan['operatingMode'],'requestedContextTokens':plan['requestedContextTokens'],
+                 'echoMode': 'main-context-v1' if plan['operatingMode']=='echo' else None, 'contextVerified': context_verified,
                  'verifiedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'repository': entry['repository'],
                  'revision': entry['revision'], 'receiptSha256': _hash(entry['receiptPath']),
                  'generatedTokens': proof_result.get('usage', {}).get('completion_tokens'),
@@ -407,12 +447,10 @@ class RuntimeManager:
             from managed_engines import definition
             proof['engineId'] = plan['publisherEngine']
             proof['engineArchiveSha256'] = definition(plan['publisherEngine'])['sha256']
-        (run_dir / 'inference-receipt.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
-        self._active = {'id': entry['id'], 'url': echo_url, 'upstream': upstream, 'key': key, 'proof': proof}
         return proof
 
     def chat(self, entry, payload):
-        if not self._active or self._active['id'] != entry['id'] or any(child.poll() is not None for child in self._children):
+        if not self._active or self._active['id'] != entry['id'] or self._active.get('mode','echo')!=entry.get('operatingMode','echo') or any(child.poll() is not None for child in self._children):
             self.prepare(entry)
         if not self._generation.acquire(blocking=False):
             raise RuntimeError('The local model is already generating a response')
@@ -421,6 +459,13 @@ class RuntimeManager:
                 selected = self._context if self._context and self._context['modelId'] == entry['id'] else None
                 conversation = selected['conversationId'] if selected else 'hub-direct-' + uuid.uuid4().hex
             body = {**payload, 'conversation_id': conversation}
+            if self._active.get('mode')=='native':
+                self._active['usage']={}
+                for field in list(body):
+                    if field.startswith('echo_'):body.pop(field,None)
+                maximum=self._active['proof']['contextTokens']
+                if body.get('max_tokens') is not None:body['max_tokens']=max(1,min(int(body['max_tokens']),maximum-1))
+                if body.get('stream'):body['stream_options']={**(body.get('stream_options') or {}),'include_usage':True}
             response=self._request(self._active['url'] + '/v1/chat/completions', body, self._active['key'], timeout=600,
                                extra={'X-Echo-Conversation': conversation})
             if payload.get('stream'):
@@ -433,6 +478,11 @@ class RuntimeManager:
                                 if not chunk:break
                                 total+=len(chunk)
                                 if total>64*1024*1024:raise RuntimeError('The local response exceeded its stream limit')
+                                if self._active.get('mode')=='native' and chunk.startswith(b'data:'):
+                                    try:
+                                        usage=json.loads(chunk[5:].strip()).get('usage')
+                                        if isinstance(usage,dict):self._active['usage']=usage
+                                    except (ValueError,AttributeError):pass
                                 yield chunk
                     finally:
                         self._generation.release()
@@ -443,6 +493,9 @@ class RuntimeManager:
                 data = response.read(64 * 1024 * 1024 + 1)
                 if len(data) > 64 * 1024 * 1024:
                     raise RuntimeError('The local response exceeded the bounded response buffer')
+                if self._active.get('mode')=='native':
+                    try:self._active['usage']=json.loads(data).get('usage',{})
+                    except (ValueError,AttributeError):pass
                 return data, response.headers.get('Content-Type', 'application/json')
         finally:
             if locals().get('release',True):self._generation.release()

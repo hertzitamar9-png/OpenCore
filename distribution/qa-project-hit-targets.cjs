@@ -37,6 +37,9 @@ fixture+=String.raw`
         await page.getByRole('menu',{name:'Move conversation to project'}).waitFor();
         await page.keyboard.press('Escape');
         await page.getByRole('menu',{name:'Move conversation to project'}).waitFor({state:'hidden'});
+        const focus=await project.evaluate(button=>{const style=getComputedStyle(button);return {offset:parseFloat(style.outlineOffset),width:parseFloat(style.outlineWidth),style:style.outlineStyle};});
+        assert.notEqual(focus.style,'none','Keyboard focus must remain visible');
+        assert.ok(focus.offset+focus.width<=0,'The visible focus outline must not extend beyond the clickable area');
         await page.mouse.move(1,1);
       }
       console.log(JSON.stringify({width,targets:result.length,hitAreasMatch:true}));

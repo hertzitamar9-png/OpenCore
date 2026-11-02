@@ -87,6 +87,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-mobile-host.cjs test-hub-reconnect.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test test-connector-consent.cjs test-model-admission.cjs test-model-modes.cjs test-group-worker.cjs ../src-tauri/resources/agent/group-tools.test.mjs ../src-tauri/resources/agent/group-runners.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test ../tests/task-progress.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs test-echo-profiles.cjs context-activity.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install --disable-pip-version-check Pillow==11.3.0 aiohttp==3.11.8
@@ -137,6 +141,16 @@ jobs:
           node qa-chat-image-picker.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-project-hit-targets.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-slash-menu.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-catalog-admission.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-model-modes.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-task-progress.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-groups.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-menu-scroll.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

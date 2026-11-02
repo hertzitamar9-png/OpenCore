@@ -1,0 +1,11 @@
+# Shared agent groups
+
+The user wants private groups where friends and named models share a conversation and a visible task plan. Each agent runs on a participant's chosen PC. Several PCs can work concurrently; a PC queues work when its local runtime is busy. Participants may mention agents, change the models they share, and let an agent delegate a bounded task to another shared agent.
+
+The chosen approach extends OpenCore's existing direct TLS remote server. A group's host stores its shared messages and tasks locally. Invitations carry a one-time membership capability and the host certificate fingerprint. They grant group access only, never the phone UI's access to all chats or desktop commands. Joined PCs keep membership credentials locally and reconnect without joining again. This avoids a new central account or cloud message service. A PC must remain reachable through the existing remote connection or a private VPN; no unrestricted internet reachability is promised.
+
+Every PC starts with model sharing off. Its owner explicitly chooses the models to advertise and its local approval mode. Guests cannot change those settings or approve actions on another PC. The existing native chat agent runs a group task in a separate conversation and retains its normal computer, browser, file and tool approval checks. Group progress shares only this task's conversation. Arbitrary native commands and unrelated chats are never exposed by group membership.
+
+The group interface contains a group list, shared timeline, members and agents, message composer with mentions, task board, invitation controls, and local sharing controls. Messages and task updates have stable IDs. Repeated network delivery must not execute the same task twice. Agent-to-agent delegation is explicit, has a bounded depth and per-request budget, and cannot create automatic mention loops.
+
+Existing ECHO corrections, focus/hit-target corrections, the slash menu, connector opt-in, and Orca/JEV catalog changes are retained. The permanent setup bytes remain unchanged. Publication requires exact signed public artifacts and the group flow requires actual multi-client transport tests; a simulated view alone is insufficient.

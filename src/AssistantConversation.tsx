@@ -33,6 +33,8 @@ import { messageUrlTransform, parseArtifactLink, studioLinkCategory } from "./ar
 import { sanitizeMessageMarkdown } from "./message-markdown";
 import { localFilePath } from "./local-file-links";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, availableComposerSkills, exactSlashSkill, type ComposerSkillId } from "./composer-skills";
+import { SlashMenu } from "./slash-menu.js";
+import "./slash-menu.css";
 import { formatMessageTimestamp } from "./message-time";
 import { removePersistedOptimisticDuplicates, retainUnchangedTimeline } from "./visible-entries";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
@@ -939,7 +941,7 @@ export const AssistantConversation = memo(function AssistantConversation({
       <ImageGenerationPanel conversationId={conversationId} onConversationId={onConversationId} onNotice={onNotice} onRefresh={onRefresh} onStateChange={setImageChat} embedded={embedded}/>
       <ChatMemoryStatus conversationId={conversationId} entries={entries} runtime={runtimeSnapshot} active={sending||backendActive} onRefresh={onRefresh}/>
       <PromptAssistantTools prompt={draft} onPrompt={setDraft} conversationId={conversationId}/>
-      {matchingSkills.length > 0 ? <div className="composer-skill-menu" role="listbox" aria-label="Skills">{matchingSkills.map((skill) => <button type="button" role="option" aria-selected={selectedSkills.includes(skill.id)} key={skill.id} onClick={() => selectSkill(skill.id)}><strong>/{skill.id}</strong><small>{skill.description}</small></button>)}</div> : null}
+      {matchingSkills.length > 0 ? <SlashMenu items={matchingSkills} input={draftInput} onSelect={selectSkill} onClose={() => setSkillPickerOpen(false)} /> : null}
       {queue.length > 0 && <div className="prompt-queue">
         <div className="queue-heading"><strong>Queued</strong><span>{queue.length}</span></div>
         {queue.map((item, index) => <div className="queue-item" key={item.id}>
@@ -999,10 +1001,8 @@ export const AssistantConversation = memo(function AssistantConversation({
           value={draft}
           onChange={(event) => { setDraft(event.target.value); setSkillPickerOpen(event.target.value.startsWith("/")); }}
           onKeyDown={(event) => {
-            if (event.key === "Escape" && skillPickerOpen) { event.preventDefault(); setSkillPickerOpen(false); return; }
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
-              if (matchingSkills.length) { selectSkill(matchingSkills[0].id); return; }
               submit();
             }
           }}

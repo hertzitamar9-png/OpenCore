@@ -1,7 +1,9 @@
 import importlib.util
+from contextlib import closing
 import os
 from pathlib import Path
 import subprocess
+import sqlite3
 import tempfile
 import unittest
 
@@ -10,6 +12,44 @@ qa=importlib.util.module_from_spec(spec);spec.loader.exec_module(qa)
 
 
 class StartupQaTests(unittest.TestCase):
+    def test_fresh_startup_check_rejects_imported_external_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory)/'app.sqlite3'
+            with closing(sqlite3.connect(database)) as connection:
+                connection.executescript('CREATE TABLE conversations(id TEXT,client TEXT); CREATE TABLE timeline(content TEXT); CREATE TABLE operations(kind TEXT);')
+                connection.execute("INSERT INTO conversations VALUES ('native','OpenCore')")
+                connection.commit()
+            qa.assert_no_automatic_history(database)
+            with closing(sqlite3.connect(database)) as connection:
+                connection.execute("INSERT INTO conversations VALUES ('codex:fixture','Codex')")
+                connection.commit()
+            with self.assertRaisesRegex(RuntimeError, 'imported external history'):
+                qa.assert_no_automatic_history(database)
+
+    def test_fresh_startup_check_rejects_sync_even_before_the_first_imported_row(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory)/'app.sqlite3'
+            with closing(sqlite3.connect(database)) as connection:
+                connection.executescript('CREATE TABLE conversations(id TEXT,client TEXT); CREATE TABLE timeline(content TEXT); CREATE TABLE operations(kind TEXT);')
+                connection.execute("INSERT INTO operations VALUES ('history_sync')")
+                connection.commit()
+            with self.assertRaisesRegex(RuntimeError, 'history sync'):
+                qa.assert_no_automatic_history(database)
+
+    def test_external_fixture_is_real_source_history_and_new_profile_writes_are_detected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)/'home'
+            before = qa.seed_external_sources(home)
+            self.assertIn('.claude/projects/consent-fixture/claude-consent.jsonl', before)
+            self.assertIn('.codex/sessions/2026/10/01/codex-consent.jsonl', before)
+            self.assertIn('.claude/plugins/installed_plugins.json', before)
+            self.assertIn(b'OpenCore startup consent fixture', before['.claude/projects/consent-fixture/claude-consent.jsonl'])
+            self.assertIn(b'"type": "response_item"', before['.codex/sessions/2026/10/01/codex-consent.jsonl'])
+            qa.assert_sources_preserved(home, before)
+            (home/'.claude/opencore-settings.json').write_text('{}')
+            with self.assertRaisesRegex(RuntimeError, 'changed external client files'):
+                qa.assert_sources_preserved(home, before)
+
     def test_launcher_exit_zero_is_followed_to_the_live_relaunched_app(self):
         process=type('Process',(),{'pid':101,'poll':lambda self:0})()
         self.assertEqual(qa.wait_for_relaunched_app(process,lambda:{202},lambda:'[setup] Tauri setup completed',timeout=1),{202})

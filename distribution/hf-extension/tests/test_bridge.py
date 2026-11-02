@@ -312,6 +312,44 @@ class BridgeTests(unittest.TestCase):
         self.request("POST", "/api/context/release", {"requestId": "request-1"})
         self.assertIsNone(self.runtime.context)
 
+    def test_modes_persist_with_separate_proofs_and_never_download_the_checkpoint_again(self):
+        entry=self.seed();entry['category']='text';entry['contextTokens']=131072
+        self.request('POST','/api/install',{'id':entry['id']});self.wait_job()
+        files=list((self.root/'models/hub'/entry['id']).rglob('*.gguf'))
+        before={str(file):file.read_bytes() for file in files}
+        def proof(selected):
+            mode=selected.get('operatingMode','echo')
+            return {'runtimeReady':True,'inferenceVerified':True,'operatingMode':mode,'echoMode':'main-context-v1' if mode=='echo' else None,
+                    'contextTokens':32768 if mode=='echo' else 131072}
+        with patch.object(self.runtime,'prepare',side_effect=proof),patch.object(self.runtime,'change_mode',create=True) as change:
+            self.request('POST','/api/prepare',{'id':entry['id']});self.wait_job()
+            self.assertTrue(self.state.entry(entry['id'])['runtimeReady'])
+            body={'id':entry['id'],'operatingMode':'native'}
+            self.assertEqual(self.request('POST','/api/runtime/mode',body,secret=None)[0],401)
+            changed=self.request('POST','/api/runtime/mode',body)
+            self.assertEqual(changed[0],200);self.assertFalse(changed[2]['runtimeReady'])
+            change.assert_called_once()
+            self.request('POST','/api/prepare',{'id':entry['id']});self.wait_job()
+            native=self.state.entry(entry['id'])
+            self.assertEqual(native['runtimePreparation']['contextTokens'],131072)
+            self.assertTrue(native['runtimeReady'])
+            changed=self.request('POST','/api/runtime/mode',{'id':entry['id'],'operatingMode':'echo'})
+            self.assertTrue(changed[2]['runtimeReady'])
+            self.assertEqual(changed[2]['runtimePreparation']['contextTokens'],32768)
+        second=bridge.BridgeState(self.root,self.root,client=self.state.client,runtime=FakeRuntime())
+        self.addCleanup(second.close)
+        restored=second.entry(entry['id'])
+        self.assertEqual(restored['operatingMode'],'echo')
+        self.assertEqual(set(restored['runtimePreparations']),{'native','echo'})
+        self.assertEqual({str(file):file.read_bytes() for file in files},before)
+        self.assertEqual(self.request('POST','/api/runtime/mode',{'id':entry['id'],'operatingMode':'fake'})[0],400)
+
+    def test_mode_failure_retains_selection_and_pinned_downloads(self):
+        entry=self.seed();entry['category']='text'
+        with patch.object(self.runtime,'change_mode',side_effect=RuntimeError('active request'),create=True):
+            self.assertEqual(self.request('POST','/api/runtime/mode',{'id':entry['id'],'operatingMode':'native'})[0],409)
+        self.assertEqual(self.state.entry(entry['id'])['operatingMode'],'echo')
+
     def test_pause_job_and_shutdown_stop_runtime(self):
         self.hub.slow = True
         entry = self.seed()

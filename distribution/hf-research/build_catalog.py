@@ -17,6 +17,7 @@ sys.path.insert(0,str(ROOT.parent))
 sys.path.insert(0,str(ROOT.parents[1]/'src-tauri/resources/runtime-setup/hf-extension'))
 from echo_catalog import native_echo_coverage
 from hf_catalog import echo_context_tokens
+from model_modes import apply_operating_modes, snapshot_metadata, native_mode_aliases, native_catalog
 SLOT_BYTES = 5256247
 REQUESTED = [
     'RecursiveSI/flint', 'ornith-ai/Ornith-1.5-122B',
@@ -34,6 +35,33 @@ COMPANIONS = [
 
 def read_json(path):
     return json.loads(path.read_text(encoding='utf-8'))
+
+
+def source_only_jev(metadata):
+    """Expose the exact requested repository without inventing a model package."""
+    repository = 'Jommarn/JEV-Computer-Use'
+    if metadata.get('id') != repository:
+        raise ValueError('JEV publisher identity requires review')
+    filenames = {item['rfilename'] for item in metadata.get('siblings', [])}
+    if filenames != {'README.md', '.gitattributes'}:
+        raise ValueError('JEV repository contents changed; review its published packages and runtime before admission')
+    revision = metadata['sha']
+    if not re.fullmatch('[0-9a-f]{40}', revision):
+        raise ValueError('JEV publisher revision requires review')
+    return {
+        'id': 'jev-computer-use', 'label': 'JEV Computer Use',
+        'description': 'Jommarn/JEV-Computer-Use: candidate-slot decision-agent research for computer and browser use.',
+        'precision': 'No published weights', 'contextTokens': 0, 'artifacts': [],
+        'license': (metadata.get('cardData') or {}).get('license', 'Publisher terms'),
+        'experimental': True, 'category': 'computer-use', 'backend': 'external',
+        'memoryMode': 'native', 'runtimeReady': False, 'installable': False, 'selectable': False,
+        'vramWeightMultiplier': 1,
+        'sourceUrl': 'https://huggingface.co/' + repository + '/tree/' + revision,
+        'setupUrl': 'https://huggingface.co/' + repository,
+        'note': 'No weights or quantizations are published in this exact repository at the pinned revision; it contains only a README and Git attributes. '
+                'The publisher describes candidate-slot action decisions and links training/inference code, but a runnable checkpoint, '
+                'model configuration and reviewed OpenCore Windows adapter are unavailable. Local inference and autonomous computer control are unverified.',
+    }
 
 
 def repository_from_url(url):
@@ -128,6 +156,8 @@ def validate_catalog(catalog):
 def build_catalog(include_official_companions=True):
     catalog = copy.deepcopy(read_json(ROOT / 'native-catalog.recovered.json'))
     original_ids = {m['id'] for m in catalog['models']}
+    jev = read_json(ROOT / 'requested-models/Jommarn--JEV-Computer-Use.api.json')
+    catalog['models'].append(source_only_jev(jev))
     pins = read_json(ROOT / 'support-pins.json')
     info_by_repo = {repo: read_json(ROOT / (repo.replace('/', '--') + '.api.json'))
                     for repo in REQUESTED + (COMPANIONS if include_official_companions else [])}
@@ -307,11 +337,17 @@ def build_catalog(include_official_companions=True):
 
     catalog['models'], aliases = deduplicate_generic_models(catalog['models'], catalog['artifacts'])
     echo_coverage=native_echo_coverage(catalog,ROOT,echo_context_tokens)
+    apply_operating_modes(catalog['models'],snapshot_metadata(ROOT))
+    mode_alias_count=native_mode_aliases(catalog)
     validate_catalog(catalog)
     raw = json.dumps(catalog, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
-    if len(raw) > SLOT_BYTES:
+    native_raw=json.dumps(native_catalog(catalog),ensure_ascii=False,separators=(',',':')).encode('utf-8')
+    if len(native_raw) > SLOT_BYTES:
         raise ValueError('Expanded catalog exceeds the existing embedded slot')
     report = {'echoCoverage':echo_coverage,'requestedRepositories': REQUESTED,
+              'sourceOnlyRequestedRepositories': [{'repository': jev['id'], 'revision': jev['sha'],
+                                                   'publishedFiles': sorted(item['rfilename'] for item in jev['siblings']),
+                                                   'publishedWeightPackages': 0}],
               'officialCompanionRepositories': COMPANIONS if include_official_companions else [],
               'companionEvidence': 'Official publisher repositories and matching model/base-model identity; main README files do not enumerate every companion.',
               'coverage': {repo: sorted(names) for repo, names in sorted(coverage.items())},
@@ -319,7 +355,8 @@ def build_catalog(include_official_companions=True):
               'updatedModelIds': sorted(updated),
               'addedModelIds': sorted(m['id'] for m in catalog['models'] if m['id'] not in original_ids),
               'artifactCount': len(catalog['artifacts']), 'modelCount': len(catalog['models']),
-              'compactBytes': len(raw), 'embeddedSlotBytes': SLOT_BYTES, 'remainingSlotBytes': SLOT_BYTES - len(raw),
+              'compactBytes': len(raw), 'nativeCatalogBytes':len(native_raw),'operatingProfileAliases':mode_alias_count,
+              'embeddedSlotBytes': SLOT_BYTES, 'remainingSlotBytes': SLOT_BYTES - len(native_raw),
               'catalogSha256': hashlib.sha256(raw).hexdigest(),
               'runtimeReadiness': 'Existing native-text/managed-transformers adapter patterns only; no requested weights downloaded or executed.',
               'accessObservation': {repo: {'private': info.get('private'), 'gated': info.get('gated'), 'revision': info['sha']}

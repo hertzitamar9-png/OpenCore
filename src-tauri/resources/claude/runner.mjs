@@ -34,7 +34,14 @@ input.on('line', line => {
 
 async function run(config) {
   mkdirSync(config.cwd, { recursive: true });
-  const devAvailable = (config.tools ?? []).some(spec => spec.function?.name === 'dev');
+  let groupTools;
+  try {
+    const helper = await import('../agent/group-tools.mjs');
+    groupTools = helper.loadGroupTools(config.conversationId, {emit: write, warn: text => write({kind: 'diagnostic', text})});
+  } catch { write({kind: 'diagnostic', text: 'Optional group tools are unavailable for this conversation.'}); }
+  const nativeTools = (config.tools ?? []).filter(spec => !/^group_(plan|message|delegate|context)$/.test(spec.function?.name));
+  const toolDefinitions = [...nativeTools, ...(groupTools?.definitions ?? [])];
+  const devAvailable = nativeTools.some(spec => spec.function?.name === 'dev');
   const verification = new CodingVerification(config.cwd, { devAvailable });
   const loopGuard = new AgentLoopGuard();
   const verificationGuidance = devAvailable
@@ -44,10 +51,11 @@ async function run(config) {
   const maxSubagents = config.subagentsEnabled ? Math.max(1, Math.min(1000, Number(config.maxSubagents) || 3)) : 0;
   let spawnedSubagents = 0, backgroundHandoff;
   mkdirSync(config.configDir, { recursive: true });
-  const mcpTools = (config.tools ?? []).map(spec => {
+  const mcpTools = toolDefinitions.map(spec => {
     const f = spec.function;
     const shape = z.fromJSONSchema(f.parameters).shape;
     return tool(f.name, f.description, shape, async args => {
+      if (groupTools?.hasTool(f.name)) return groupTools.callTool(f.name, args, {signal: abortController.signal});
       if (backgroundHandoff) return {content:[{type:'text',text:'A background job is already queued. Open its studio.'}],isError:true};
       const value = await rpc('tool', { name: f.name, args });
       if ((f.name === 'music_generate' || f.name === 'background_wait' || (f.name === 'studio_use' && args.action === 'generate'))
@@ -92,7 +100,7 @@ async function run(config) {
     // exact timeline in ECHO and makes it searchable after each compact boundary.
     // Disabling SDK compaction would let long sessions overrun the model window.
     settingSources: [], settings: { autoCompactEnabled: true },
-    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\n${verificationGuidance} Use the project's existing tests or compiler. Read real failures, repair their cause, and rerun the relevant check; retain test assertions and existing behavior.\n${codingBoundaryGuidance}\nCall the actual tool when an action is needed; a plan or reasoning is not a tool result. For dev writes, start with a complete file under 3,000 characters, then extend it with small edits using the current file hash. Do not claim a tool ran without its result.\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
+    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\n${verificationGuidance} Use the project's existing tests or compiler. Read real failures, repair their cause, and rerun the relevant check; retain test assertions and existing behavior.\n${codingBoundaryGuidance}\nCall the actual tool when an action is needed; a plan or reasoning is not a tool result. For dev writes, start with a complete file under 3,000 characters, then extend it with small edits using the current file hash. Do not claim a tool ran without its result.\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.${groupTools ? '\n'+groupTools.guidance : ''}` },
     // Keep the official Claude Code tool surface as the default. OpenCore MCP
     // tools are added below; subagent policy and approval still pass through
     // OpenCore's existing limit and permission bridge.
@@ -122,6 +130,8 @@ async function run(config) {
     permissionMode: 'bypassPermissions', strictMcpConfig: true,
     mcpServers: mcpTools.length ? { opencore: createSdkMcpServer({ name: 'opencore', version: '1.0.0', tools: mcpTools }) } : {},
     hooks: { PreToolUse: [{ hooks: [async data => {
+      if (groupTools?.hasTool(data.tool_name)) return {hookSpecificOutput: {hookEventName: 'PreToolUse',
+        permissionDecision: groupTools.available() ? 'allow' : 'deny', permissionDecisionReason: 'Conversation-scoped approved group task'}};
       const allow = await rpc('permission', { name: data.tool_name, args: data.tool_input });
       if (!allow) return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: 'Denied by OpenCore' } };
       if (data.tool_name === 'Agent' || data.tool_name === 'Task') {
@@ -146,8 +156,12 @@ async function run(config) {
         return result;
       }] }],
     },
-    canUseTool: async (name, args) => (await rpc('permission', { name, args }))
-      ? { behavior: 'allow', updatedInput: args } : { behavior: 'deny', message: 'Denied by OpenCore' },
+    canUseTool: async (name, args) => {
+      if (groupTools?.hasTool(name)) return groupTools.available()
+        ? {behavior: 'allow', updatedInput: args} : {behavior: 'deny', message: 'The approved group task expired or was revoked'};
+      return (await rpc('permission', { name, args }))
+        ? { behavior: 'allow', updatedInput: args } : { behavior: 'deny', message: 'Denied by OpenCore' };
+    },
     stderr: text => write({ kind: 'diagnostic', text }),
   };
   async function* prompt() { yield { type: 'user', message: { role: 'user', content: config.content }, parent_tool_use_id: null, session_id: config.resume ?? '' }; }

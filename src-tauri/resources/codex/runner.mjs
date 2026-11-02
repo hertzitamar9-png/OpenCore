@@ -166,7 +166,13 @@ async function run(config) {
   const scratchDir = mkdtempSync(path.join(tmpdir(), 'opencore-codex-'));
   let turnCompleted = false, finalError = null;
   try {
-    const toolDefinitions = Array.isArray(config.tools) ? config.tools : [];
+    let groupTools;
+    try {
+      const helper = await import('../agent/group-tools.mjs');
+      groupTools = helper.loadGroupTools(config.conversationId, {emit: write, warn: text => write({kind: 'diagnostic', text})});
+    } catch { write({kind: 'diagnostic', text: 'Optional group tools are unavailable for this conversation.'}); }
+    const nativeTools = (Array.isArray(config.tools) ? config.tools : []).filter(spec => !/^group_(plan|message|delegate|context)$/.test(spec.function?.name));
+    const toolDefinitions = [...nativeTools, ...(groupTools?.definitions ?? [])];
     const definitionsFile = path.join(scratchDir, 'tools.json');
     writeFileSync(definitionsFile, JSON.stringify(toolDefinitions), { encoding: 'utf8', mode: 0o600 });
     mkdirSync(config.codexHome, { recursive: true });
@@ -175,7 +181,7 @@ async function run(config) {
     const permissions = agentPermissions(config.approvalMode);
     const mcpServerScript = path.join(config.resourcesDir, 'mcp-server.mjs');
     const nodeExecutable = config.nodeExecutable;
-    const bridge = await startBridge(createOpenCoreToolDispatcher({
+    const dispatchNativeTool = createOpenCoreToolDispatcher({
       rpc: pendingRpc,
       emit: event => {
         if (event.kind === 'handoff') {
@@ -185,7 +191,9 @@ async function run(config) {
         } else write(event);
       },
       onToolResult: (name, args, value) => verification.recordMcp(name, args, value),
-    }));
+    });
+    const bridge = await startBridge((name, args) => groupTools?.hasTool(name)
+      ? groupTools.callTool(name, args, {signal: currentAbort?.signal}) : dispatchNativeTool(name, args));
     const profile = buildCodexConfiguration({
       gatewayUrl: config.gatewayUrl,
       conversationId: config.conversationId,
@@ -193,7 +201,8 @@ async function run(config) {
       contextWindowTokens: config.contextWindowTokens,
       compactAtTokens: config.compactAtTokens,
       developerInstructions: (config.instructions || '') + '\n' + codingGuidance(toolDefinitions) + '\n' + codingBoundaryGuidance
-        + '\nPreserve OpenCore tool approvals. Use its MCP tools for browser, computer, ECHO, music, image, and 3D actions. A queued long-running studio task must be handed off so the chat model releases its compute.',
+        + '\nPreserve OpenCore tool approvals. Use its MCP tools for browser, computer, ECHO, music, image, and 3D actions. A queued long-running studio task must be handed off so the chat model releases its compute.'
+        + (groupTools ? '\n'+groupTools.guidance : ''),
       workspace: config.workspace,
       nodeExecutable,
       mcpServerScript,

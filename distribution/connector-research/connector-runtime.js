@@ -12,7 +12,7 @@ const $connectorClearEvent = "opencore-connector-clear-changed";
 const $connectorClearJobs = new Map();
 const $connectorClearFeedback = new Map();
 const $connectorSyncWatches = new Map();
-let $connectorProfiles = {loaded:false, disconnected:{}};
+let $connectorProfiles = {loaded:false, disconnected:{'claude-code':true,codex:true,hermes:true,opencode:true}, historyEnabled:{}};
 const $connectorProfileListeners = new Set();
 const $connectorDisconnectJobs = new Map();
 

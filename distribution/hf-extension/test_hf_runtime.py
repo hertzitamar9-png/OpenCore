@@ -11,6 +11,12 @@ from hf_runtime import RuntimeManager, checked_model_files, conversation_key, ru
 
 
 class RuntimeSafetyTests(unittest.TestCase):
+    def test_owned_worker_can_start_with_isolated_python_imports(self):
+        import subprocess,sys,hf_runtime
+        result=subprocess.run([sys.executable,'-I',hf_runtime.__file__,'--help'],capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertIn('--worker',result.stdout)
+
     def test_live_metrics_read_only_the_active_managed_model_without_exposing_its_key(self):
         from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
         import threading
@@ -100,6 +106,71 @@ class RuntimeSafetyTests(unittest.TestCase):
         command=plan['command']
         self.assertEqual(command[command.index('--parallel')+1],'1')
 
+    def test_native_requests_the_published_window_without_clamping_to_echo(self):
+        self.entry['operatingMode']='native'
+        self.entry['publishedContextTokens']=1048576
+        plan=runtime_plan(self.entry,self.root,self.resources)
+        self.assertEqual(plan['context'],1048576)
+        self.assertEqual(plan['command'][plan['command'].index('--ctx-size')+1],'1048576')
+        self.assertEqual(plan['requestedContextTokens'],1048576)
+        self.assertEqual(admitted_context(1048576,{'default_generation_settings':{'n_ctx':131072}}),(131072,True))
+        self.entry['publishedContextTokens']=65536
+        self.assertEqual(runtime_plan(self.entry,self.root,self.resources)['context'],65536)
+        self.entry['operatingMode']='echo'
+        self.assertEqual(runtime_plan(self.entry,self.root,self.resources)['context'],32768)
+
+    def test_native_generation_is_verified_directly_without_an_echo_worker(self):
+        self.entry['operatingMode']='native'
+        runtime=RuntimeManager(self.root,self.resources)
+        spawned=[];calls=[]
+        runtime._spawn=lambda command,*args,**kwargs:spawned.append(command) or types.SimpleNamespace(poll=lambda:None)
+        runtime._wait_health=lambda *args,**kwargs:None
+        def request(url,payload=None,key=None,**kwargs):
+            calls.append((url,payload))
+            value={'n_ctx':131072} if url.endswith('/props') else {'choices':[{'message':{'content':'Hello'}}],'usage':{'completion_tokens':1}}
+            return io.BytesIO(json.dumps(value).encode())
+        runtime._request=request
+        before=self.path.stat()
+        with patch('hf_runtime._available_memory',return_value=None):proof=runtime.prepare(self.entry)
+        self.assertEqual(len(spawned),1)
+        self.assertEqual(proof['operatingMode'],'native')
+        self.assertEqual(proof['contextTokens'],131072)
+        self.assertTrue(proof['inferenceVerified'])
+        self.assertFalse(proof['echoReady'])
+        self.assertIsNone(proof['echoMode'])
+        self.assertEqual(runtime._active['url'],runtime._active['upstream'])
+        self.assertEqual(self.path.stat().st_mtime_ns,before.st_mtime_ns)
+        self.assertEqual(len(list(self.folder.glob('*.gguf'))),1)
+        self.assertFalse(any(payload and payload.get('conversation_id') for _,payload in calls))
+        runtime.stop()
+
+    def test_operating_mode_cannot_interrupt_generation_or_a_context_lease(self):
+        runtime=RuntimeManager(self.root,self.resources)
+        runtime._generation.acquire()
+        with self.assertRaisesRegex(RuntimeError,'active'):runtime.change_mode(self.entry,'native')
+        runtime._generation.release()
+        runtime.set_context(self.entry['id'],'chat-1','request-1')
+        with self.assertRaisesRegex(RuntimeError,'active'):runtime.change_mode(self.entry,'native')
+        runtime.release_context('request-1')
+        runtime._active={'id':self.entry['id'],'mode':'echo'}
+        self.assertEqual(runtime.change_mode(self.entry,'native'),{'operatingMode':'native'})
+        self.assertIsNone(runtime._active)
+
+    def test_native_stream_retains_actual_final_token_usage_for_live_metrics(self):
+        runtime=RuntimeManager(self.root,self.resources);self.entry['operatingMode']='native'
+        runtime._active={'id':self.entry['id'],'mode':'native','url':'http://127.0.0.1:1234','key':'private-test','proof':{'contextTokens':65536},'usage':{}}
+        seen=[]
+        def request(url,payload=None,*args,**kwargs):
+            seen.append(payload)
+            return io.BytesIO(b'data: {"choices":[{"delta":{"content":"BLUE"}}]}\n\ndata: {"choices":[],"usage":{"prompt_tokens":15,"completion_tokens":37}}\n\ndata: [DONE]\n\n')
+        runtime._request=request
+        chunks,kind=runtime.chat(self.entry,{'messages':[{'role':'user','content':'Say BLUE'}],'stream':True,'echo_max_total_tokens':512})
+        self.assertEqual(kind,'text/event-stream');self.assertIn(b'BLUE',b''.join(chunks))
+        self.assertEqual(runtime._active['usage'],{'prompt_tokens':15,'completion_tokens':37})
+        self.assertTrue(seen[0]['stream_options']['include_usage'])
+        self.assertNotIn('echo_max_total_tokens',seen[0])
+        self.assertFalse(runtime._generation.locked())
+
     def test_echo_uses_the_actual_single_slot_context_and_rejects_too_small_models(self):
         self.assertEqual(admitted_context(32768,{'default_generation_settings':{'n_ctx':16384}}),(16384,True))
         self.assertEqual(admitted_context(32768,{'n_ctx':8192}),(8192,True))
@@ -132,7 +203,7 @@ class RuntimeSafetyTests(unittest.TestCase):
         self.assertTrue(proof['echoReady'])
         self.assertTrue(proof['contextVerified'])
         self.assertEqual(proof['contextTokens'],8192)
-        self.assertTrue(any(payload and payload.get('echo_max_total_tokens')==16 for _,payload in calls))
+        self.assertTrue(any(payload and payload.get('echo_max_total_tokens')==512 for _,payload in calls))
         runtime.stop()
 
     def test_transformers_runtime_also_uses_its_actual_reported_context(self):

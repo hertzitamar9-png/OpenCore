@@ -1031,6 +1031,10 @@ class RemoteHandler(BaseHTTPRequestHandler):
         if self.headers.get('Origin') or len(self.path) > 4096: raise PermissionError('Native paired clients only')
         state, parsed = self.server.state, urlsplit(self.path)
         if parsed.query or parsed.fragment: raise ValueError('Query parameters are not accepted')
+        if self.command == 'POST' and parsed.path in ('/groups/join', '/groups/request'):
+            manager = getattr(state, 'groups', None)
+            if manager is None: raise PermissionError('Open the invited group on its hosting PC')
+            return self.send(200, manager.remote_request(parsed.path, self.headers.get('Authorization'), self.body(512 * 1024)))
         if self.command == 'POST' and parsed.path == '/pair':
             body = self.body(); return self.send(200, state.pair(body.get('code'), body.get('name', 'Android phone'), self.client_address[0], body.get('deviceKey')))
         device = state.authorize(self.headers.get('Authorization'))

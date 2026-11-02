@@ -10,6 +10,7 @@ EXTENSION = HERE.parent / 'src-tauri/resources/runtime-setup/hf-extension'
 sys.path.insert(0, str(EXTENSION))
 from hf_catalog import build_plan, stable_id
 from hf_download import validate_entry
+from model_modes import apply_operating_modes, snapshot_metadata, native_model_bindings
 
 
 def build():
@@ -102,6 +103,7 @@ def build():
     from echo_catalog import publisher_echo_policy
     from hf_catalog import echo_context_tokens
     publisher_echo_policy(entries,HERE/'hf-research',echo_context_tokens)
+    apply_operating_modes(entries,snapshot_metadata(HERE/'hf-research'))
     entries.sort(key=lambda e: (e['familyId'], e.get('catalogOrder', 0), e['format'] != 'gguf', e['bytes'], e['id']))
     return {'schema': 1, 'entries': entries}
 
@@ -121,6 +123,7 @@ if __name__ == '__main__':
     outputs = {EXTENSION / 'publisher-models.json': json.dumps(result, ensure_ascii=False, indent=2) + '\n',
                HERE / 'builtin-quant-coverage.json': json.dumps(coverage(catalog, result['entries']), indent=2) + '\n'}
     outputs[EXTENSION/'computer-models.json'] = json.dumps(computer_catalog, indent=2)+'\n'
+    outputs[EXTENSION/'native-model-bindings.json'] = json.dumps(native_model_bindings(catalog),ensure_ascii=False,separators=(',',':'))+'\n'
     for target, source in outputs.items():
         if args.check:
             if not target.is_file() or target.read_text(encoding='utf-8') != source:

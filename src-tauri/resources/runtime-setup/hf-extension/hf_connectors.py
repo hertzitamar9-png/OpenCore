@@ -1,4 +1,4 @@
-"""Disable only OpenCore-owned client profiles; preserve source transcripts and logins."""
+"""Keep client profiles and transcript imports opt-in; preserve source files and logins."""
 import json
 import os
 from pathlib import Path
@@ -108,13 +108,49 @@ class ConnectorProfiles:
         self.path = self.root/'connectors'/'disconnected.json'
         self.lock = threading.RLock()
 
+    def _state(self):
+        try:
+            checked(self.path)
+            value = json.loads(self.path.read_text(encoding='utf-8'))
+        except FileNotFoundError:
+            value = {}
+        if not isinstance(value, dict):
+            raise ValueError('Invalid connector consent settings')
+        state = {'schema': 2}
+        for name in ('disconnected', 'enabled', 'historyEnabled'):
+            entries = value.get(name, {})
+            if not isinstance(entries, dict):
+                raise ValueError('Invalid connector consent settings')
+            state[name] = {identity: True for identity, allowed in entries.items()
+                           if identity in IDS and allowed is True}
+        return state
+
+    @staticmethod
+    def _status(state):
+        # An absent record and a detected/generated external profile are not consent.
+        # Older disconnect files did not record enables, so only explicit enable
+        # markers can restore that permission. Existing transcripts stay intact.
+        return {'disconnected': {identity: True for identity in sorted(IDS)
+                                 if not state['enabled'].get(identity) or state['disconnected'].get(identity)},
+                'historyEnabled': dict(state['historyEnabled'])}
+
     def status(self):
         with self.lock:
-            try:
-                checked(self.path)
-                value = json.loads(self.path.read_text(encoding='utf-8'))
-                return {'disconnected': {key: row for key, row in value.get('disconnected', {}).items() if key in IDS}}
-            except FileNotFoundError: return {'disconnected': {}}
+            return self._status(self._state())
+
+    def enable_history(self, identity):
+        """Record an explicit Import history action, independently of client profiles."""
+        if identity not in IDS: raise ValueError('Unknown agent connector')
+        with self.lock:
+            state = self._state()
+            state['historyEnabled'][identity] = True
+            checked(self.path); atomic_json(self.path, state)
+            return self._status(state)
+
+    def history_enabled(self, identity):
+        if identity not in IDS: raise ValueError('Unknown agent connector')
+        with self.lock:
+            return self._state()['historyEnabled'].get(identity, False)
 
     def _hermes_root(self):
         env = self.environ
@@ -183,8 +219,10 @@ class ConnectorProfiles:
     def disconnect(self, identity):
         if identity not in IDS: raise ValueError('Unknown agent connector')
         with self.lock:
-            state = self.status()
-            if identity in state['disconnected']: return {**state, 'message': 'Already disconnected'}
+            state = self._state()
+            if (identity in state['disconnected'] and identity not in state['enabled']
+                    and identity not in state['historyEnabled']):
+                return {**self._status(state), 'message': 'Already disconnected'}
             changes, applied = self._changes(identity), []
             try:
                 for path, raw, replacement in changes:
@@ -200,15 +238,18 @@ class ConnectorProfiles:
                         finally: temporary.unlink(missing_ok=True)
                     applied.append((path, raw))
                 state['disconnected'][identity] = True
+                state['enabled'].pop(identity, None)
+                state['historyEnabled'].pop(identity, None)
                 checked(self.path); atomic_json(self.path, state)
             except Exception:
                 for path, raw in reversed(applied): path.write_bytes(raw)
                 raise
-            return {**state, 'message': 'Disconnected. Imported conversations can be deleted separately.'}
+            return {**self._status(state), 'message': 'Disconnected. Imported conversations can be deleted separately.'}
 
     def reconnect(self, identity):
         if identity not in IDS: raise ValueError('Unknown agent connector')
         with self.lock:
-            state = self.status(); state['disconnected'].pop(identity, None)
+            state = self._state(); state['disconnected'].pop(identity, None)
+            state['enabled'][identity] = True
             checked(self.path); atomic_json(self.path, state)
-            return state
+            return self._status(state)

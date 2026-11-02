@@ -1,6 +1,7 @@
 {
   "agent-platform/TENCENT-MEMORY-LICENSE.txt": "src-tauri/resources/agent-platform/TENCENT-MEMORY-LICENSE.txt",
   "agent/browser-check.mjs": "src-tauri/resources/agent/browser-check.mjs",
+  "agent/group-tools.mjs": "src-tauri/resources/agent/group-tools.mjs",
   "agent/coding-verification.mjs": "src-tauri/resources/agent/coding-verification.mjs",
   "chrome-extension/background.js": "chrome-extension/background.js",
   "chrome-extension/icons/opencore-128.png": "chrome-extension/icons/opencore-128.png",
@@ -47,6 +48,10 @@
   "echo/echo_import.py": "src-tauri/resources/echo/echo_import.py",
   "runtime-setup/hf-extension/hf_chat_media.py": "src-tauri/resources/runtime-setup/hf-extension/hf_chat_media.py",
   "runtime-setup/hf-extension/hf_connectors.py": "src-tauri/resources/runtime-setup/hf-extension/hf_connectors.py",
+  "runtime-setup/hf-extension/group_chats.py": "src-tauri/resources/runtime-setup/hf-extension/group_chats.py",
+  "runtime-setup/hf-extension/native-model-bindings.json": "src-tauri/resources/runtime-setup/hf-extension/native-model-bindings.json",
+  "runtime-setup/hf-extension/model_modes.py": "src-tauri/resources/runtime-setup/hf-extension/model_modes.py",
+  "runtime-setup/hf-extension/native_modes.py": "src-tauri/resources/runtime-setup/hf-extension/native_modes.py",
   "echo/echo_salience.py": "src-tauri/resources/echo/echo_salience.py",
   "echo/echo_server.py": "src-tauri/resources/echo/echo_server.py",
   "echo/echo_summarize.py": "src-tauri/resources/echo/echo_summarize.py",

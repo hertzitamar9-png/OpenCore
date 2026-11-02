@@ -33,6 +33,29 @@ class CatalogBuildTests(unittest.TestCase):
         self.assertEqual(len(self.models), len(self.catalog['models']))
         self.assertEqual(len(self.artifacts), len(self.catalog['artifacts']))
 
+    def test_jev_exact_repository_is_visible_without_inventing_unpublished_weights(self):
+        model = self.models['jev-computer-use']
+        snapshot = json.loads((ROOT / 'requested-models/Jommarn--JEV-Computer-Use.api.json').read_text(encoding='utf-8'))
+        self.assertEqual(snapshot['sha'], '7de840a70076d9748bbec23448e31df47e589f6e')
+        self.assertEqual({item['rfilename'] for item in snapshot['siblings']}, {'README.md', '.gitattributes'})
+        self.assertEqual(model['sourceUrl'], 'https://huggingface.co/Jommarn/JEV-Computer-Use/tree/' + snapshot['sha'])
+        self.assertEqual(model['category'], 'computer-use')
+        self.assertEqual(model['backend'], 'external')
+        self.assertFalse(model['runtimeReady'])
+        self.assertFalse(model['selectable'])
+        self.assertFalse(model['installable'])
+        self.assertEqual(model['artifacts'], [])
+        self.assertEqual(model['precision'], 'No published weights')
+        self.assertIn('No weights or quantizations', model['note'])
+        self.assertIn('candidate', model['description'])
+        self.assertEqual(len(self.family('jev-computer-use')), 1)
+
+    def test_source_only_admission_rejects_an_unreviewed_published_checkpoint(self):
+        snapshot = json.loads((ROOT / 'requested-models/Jommarn--JEV-Computer-Use.api.json').read_text(encoding='utf-8'))
+        snapshot['siblings'].append({'rfilename': 'model.safetensors'})
+        with self.assertRaisesRegex(ValueError, 'review'):
+            self.builder.source_only_jev(snapshot)
+
     def test_every_selectable_text_weight_package_has_an_echo_profile(self):
         groups={}
         for model in self.catalog['models']:

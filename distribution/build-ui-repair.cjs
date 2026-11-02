@@ -121,6 +121,10 @@ app = require('./connector-research/connector-patches.cjs').applyConnectorPatche
 app = require('./hub-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./image-ui-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./context-activity-patches.cjs')(app,{editFunction,replaceOnce});
+app = require('./slash-menu-patches.cjs')(app,{editFunction,replaceOnce});
+app = require('./group-ui-patches.cjs')(app,{editFunction,replaceOnce});
+app = require('./task-progress-patches.cjs')(app,{replaceOnce});
+app = require('./model-mode-patches.cjs')(app,{editFunction,replaceOnce});
 app=editFunction(app,'yj',text=>{
   text=replaceOnce(text,'J=p.useCallback(async(se=!0)=>','J=p.useCallback(async(se=!1)=>');
   text=replaceOnce(text,'p.useEffect(()=>{J()},[J,$shared.terminal,$shared.receiptsRevision,$hub.catalog])',
@@ -143,7 +147,12 @@ app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+
 (async () => {
   const report = [];
   const catalog=JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8'));
-  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource();
+  // Runtime mode descriptors are served once by the owned local service. Keep
+  // its complete source catalog out of this fixed-size native JavaScript slot.
+  catalog.models=catalog.models.filter(model=>!model.modeAliasOf).map(model=>{
+    const result={...model};for(const key of ['operatingModes','publishedContextTokens','supportsTextGeneration','modeProfiles','modeAliasOf'])delete result[key];return result;
+  });
+  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource();
   for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,

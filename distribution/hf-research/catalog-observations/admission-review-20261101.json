@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "checkedAt": "2026-11-01T19:14:02Z",
+  "weightsDownloaded": false,
+  "publisherCodeExecuted": false,
+  "inferenceVerified": false,
+  "jev": {
+    "repository": "Jommarn/JEV-Computer-Use",
+    "revision": "7de840a70076d9748bbec23448e31df47e589f6e",
+    "apiSnapshot": "../requested-models/Jommarn--JEV-Computer-Use.api.json",
+    "readmeSnapshot": "../requested-models/Jommarn--JEV-Computer-Use.README.md",
+    "publishedWeightPackages": 0,
+    "publishedQuantizations": 0,
+    "hubSearch": {
+      "query": "JEV-Computer-Use",
+      "results": ["Jommarn/JEV-Computer-Use"]
+    },
+    "publisherCodeLink": "https://github.com/pidsana42-lgtm/JEV-Computer-Use",
+    "publisherCodeLinkAnonymousApiStatus": 404,
+    "admission": "Reference card only. The exact Hub repository contains README.md and .gitattributes, with no model weights or model configuration. No execution adapter or autonomous-computer-use capability is asserted."
+  },
+  "orcacyber": {
+    "repository": "orcarouter/OrcaCyber-Nano-1.0",
+    "currentRevision": "97140f3ff7e2034feaef16e04f417f9a69619a7f",
+    "apiSnapshot": "orcarouter--OrcaCyber-Nano-1.0.api.json",
+    "gated": "auto",
+    "anonymousReadmeStatus": 401,
+    "keptPackageRevision": "1af1635aa22b97e965450c2d69525761d9bd463f",
+    "currentFilesMatchKeptPins": true,
+    "mainQuantizations": ["Mix 13G", "Mix 15.7G"],
+    "projector": "mmproj-OrcaCyber-Nano-1.0-AI-Defense-F16.gguf",
+    "excludedDraft": "OrcaCyber-Nano-1.0-AI-Defense-DFlash2-Q8_0.gguf",
+    "localDiagnosticObservation": {
+      "failedNativeSetupJobs": 6,
+      "targetId": "orcacyber-nano-1-mix-15-7g",
+      "recipeId": "managed-gguf-v1",
+      "lastObservedError": "OrcaCyber Nano 1.0 · ECHO is not installed. Open Models and choose Install.",
+      "downloadedBytes": 0,
+      "activeInstallStateChanged": false
+    },
+    "repair": "Uninstalled native overlap no longer suppresses equivalent pinned managed packages. Existing native/ECHO descendants join one family, and legacy install aliases resolve the exact precision to the managed installer. Installed native profiles retain their existing files and runtime route."
+  }
+}

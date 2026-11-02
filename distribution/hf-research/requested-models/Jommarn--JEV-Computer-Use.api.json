@@ -1,0 +1,70 @@
+{
+  "_id": "6ae6dc63374cab20b1b6dd1c",
+  "id": "Jommarn/JEV-Computer-Use",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "computer-use",
+    "gui-grounding",
+    "reinforcement-learning",
+    "grpo",
+    "qwen",
+    "playwright",
+    "browser-agent",
+    "text-generation",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 0,
+  "modelId": "Jommarn/JEV-Computer-Use",
+  "author": "Jommarn",
+  "sha": "7de840a70076d9748bbec23448e31df47e589f6e",
+  "lastModified": "2026-11-01T06:31:03.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "tags": [
+      "computer-use",
+      "gui-grounding",
+      "reinforcement-learning",
+      "grpo",
+      "qwen",
+      "playwright",
+      "browser-agent"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "0514fc8b3a8fc81fff758444ed20b398fc560832",
+      "size": 1446
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-01T06:29:55.000Z",
+  "usedStorage": 0
+}

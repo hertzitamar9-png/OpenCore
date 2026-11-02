@@ -1,13 +1,13 @@
 /* Managed Hub imports use the installed model library and installation admission. */
 const $hubListeners = new Set();
-let $hubDescriptor = null, $hubConnecting = null, $hubStatusPending = null, $hubStatusAt = 0, $hubNativeLibrary=null;
+let $hubDescriptor = null, $hubConnecting = null, $hubStatusPending = null, $hubStatusAt = 0, $hubNativeLibrary=null,$connectorProfilesPending=null;
 let $hubState = {catalog: [], progress: null, available: false, loaded: false, error: '', tokenConfigured: false};
 let $hubTimer = null;
 const $hubProviderSync=new Set();
-function $hubContext(entry){return Math.min(entry.runtimePreparation?.contextTokens||entry.echoWorkingWindowTokens||entry.contextTokens||32768,32768);}
+function $hubContext(entry){const mode=entry.operatingMode||'echo';return Math.min(entry.runtimePreparation?.contextTokens||entry.operatingModes?.find(item=>item.id===mode)?.contextTokens||entry.contextTokens||32768,mode==='native'?1048576:32768);}
 function $hubPublish(value) {
   if(value.connectorProfiles&&typeof $publishConnectorProfiles==='function'&&JSON.stringify(value.connectorProfiles.disconnected)!==JSON.stringify($connectorProfiles.disconnected))$publishConnectorProfiles(value.connectorProfiles);
-  if(value.catalog)globalThis.__opencoreHubEchoProfiles=new Set(value.catalog.filter(entry=>entry.profileId&&(entry.category||entry.libraryCategory||'text')==='text').map(entry=>entry.profileId));
+  if(value.catalog)globalThis.__opencoreHubEchoProfiles=new Set(value.catalog.filter(entry=>entry.profileId&&entry.operatingMode!=='native'&&(entry.category||entry.libraryCategory||'text')==='text').map(entry=>entry.profileId));
   if (Object.entries(value).some(([key,item])=>item!==$hubState[key]&&JSON.stringify(item)!==JSON.stringify($hubState[key]))) {
     $hubState = {...$hubState,...value}; $hubListeners.forEach(fn => fn());
   }
@@ -80,32 +80,61 @@ function $hubProgress() {
 }
 function $hubModel(entry) {
   return {id:entry.id,label:entry.familyLabel||entry.repository.split('/').at(-1),description:entry.repository,precision:entry.quantization,
-    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:(entry.category||entry.libraryCategory||'text')==='text'&&entry.runtime?.adapter?'echo':'native',backend:'hub',hubModel:true,hubEntry:entry,
+    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:entry.category==='text'&&entry.runtime?.adapter?entry.operatingMode||'echo':'native',backend:'hub',hubModel:true,hubEntry:entry,
     selectable:(entry.category||entry.libraryCategory||'text')==='text'&&!!entry.runtimeReady&&!!entry.profileId,installed:entry.status==='installed',runtimeReady:!!entry.runtimeReady,installable:entry.installable,
     category:entry.libraryCategory||entry.category||'text',contextTokens:$hubContext(entry),totalBytes:entry.bytes,downloadBytes:entry.status==='installed'?0:entry.bytes,
     weightBytes:entry.files.filter(f=>f.role==='model').reduce((n,f)=>n+f.bytes,0),experimental:false,sourceUrl:entry.sourceUrl,
     note:'Hugging Face checkpoint. Download, runtime preparation and actual generation are verified separately.',license:entry.license||'Publisher terms'};
 }
+function $hubPrecision(value){return String(value||'').toUpperCase().replace(/^FP16$/,'F16').replace(/^FP32$/,'F32').replace(/[\s_-]+/g,'');}
+function $hubNativeFamilies(models,catalog=$hubState.catalog){
+  const families=new Map(),byId=new Map(models.map(model=>[model.id,model]));
+  for(const entry of catalog)for(const id of entry.nativeModelIds||[])families.set(id,entry.familyId||entry.repository.toLowerCase());
+  for(const model of models){
+    let current=model;const seen=new Set();
+    while(current&&!seen.has(current.id)){
+      seen.add(current.id);
+      if(families.has(current.id)){families.set(model.id,families.get(current.id));break;}
+      current=byId.get(current.variantOf);
+    }
+  }
+  return families;
+}
+function $hubInstallEntry(id){
+  const exact=$hubState.catalog.find(entry=>entry.id===id);if(exact)return exact;
+  const models=$hubNativeLibrary?.models||[],family=$hubNativeFamilies(models).get(id);
+  const candidates=$hubState.catalog.filter(entry=>family?(entry.familyId||entry.repository.toLowerCase())===family:entry.nativeModelIds?.includes(id));
+  if(!candidates.length)return null;
+  const native=models.find(model=>model.id===id);
+  if(native?.installed)return null;
+  const matches=native?candidates.filter(entry=>$hubPrecision(entry.quantization)===$hubPrecision(native.precision)&&entry.installable):[];
+  if(native&&!matches.length)return null;
+  if(matches.length!==1)throw Error('Refresh Models and choose an exact published quantization before installing this package.');
+  return matches[0];
+}
 function $hubAugment(library) {
   if(!library?.models)return library;
-  const families=new Map(),nativeFamilies=new Map();
-  for(const entry of $hubState.catalog){const family=entry.familyId||entry.repository.toLowerCase();if(!families.has(family))families.set(family,[]);families.get(family).push(entry);for(const id of entry.nativeModelIds||[])nativeFamilies.set(id,family);}
+  library=globalThis.__opencoreModelModes?.augment(library)||library;
+  const families=new Map(),nativeFamilies=$hubNativeFamilies(library.models);
+  for(const entry of $hubState.catalog){const family=entry.familyId||entry.repository.toLowerCase();if(!families.has(family))families.set(family,[]);families.get(family).push(entry);}
   const imported=new Set($hubState.catalog.map(entry=>entry.repository.toLowerCase())),parents=new Set(library.models.map(model=>model.variantOf).filter(Boolean));
   const models=library.models.filter(model=>{if(nativeFamilies.has(model.id))return false;
     if(model.backend==='external'&&!model.installed&&!parents.has(model.id)){try{const url=new URL(model.sourceUrl||model.setupUrl);if(['huggingface.co','hf.co'].includes(url.hostname)&&imported.has(url.pathname.split('/').filter(Boolean).slice(0,2).join('/').toLowerCase()))return false;}catch{}}
     return true;}).map(model=>{const adapter=$hubBuiltInAdapter(model);return adapter?{...model,hubModel:true,hubEntry:adapter}:model;});
-  const precision=value=>String(value||'').toUpperCase().replace(/^FP16$/,'F16').replace(/^FP32$/,'F32');
+  const precision=$hubPrecision;
   for(const [family,entries] of families){
     const packaged=library.models.filter(model=>nativeFamilies.get(model.id)===family&&(model.installed||model.id===globalThis.__opencoreHubSelectedProfile||model.totalBytes>0||model.weightBytes>0));
-    const nativeQuants=new Set(packaged.filter(model=>model.installed||(model.runtimeReady!==false&&model.installable!==false)).map(model=>precision(model.precision)));
+    // Preserve installed native profiles. Uninstalled catalog rows must not
+    // replace the managed package with a legacy install/verification path.
+    const nativeQuants=new Set(packaged.filter(model=>model.installed).map(model=>precision(model.precision)));
     const variants=entries.filter(entry=>!nativeQuants.has(precision(entry.quantization))).map($hubModel);
     const hubQuants=new Set(variants.map(model=>precision(model.precision)));
     for(const native of packaged.filter(model=>model.installed||!hubQuants.has(precision(model.precision)))){
-      const first=entries[0],entry={id:native.id,nativeProfile:true,familyLabel:first.familyLabel,repository:first.originalRepository||first.repository,
+      const first=entries[0],selectedMode=globalThis.__opencoreModelModes?.mode(first)||native.memoryMode||'native',entry={id:native.id,nativeProfile:true,familyId:family,familyLabel:first.familyLabel,repository:first.originalRepository||first.repository,
         name:native.label,quantization:native.precision,bytes:native.totalBytes||native.weightBytes||0,status:native.installed?'installed':'not-installed',
-        installable:native.installable!==false&&native.runtimeReady!==false,runtimeReady:!!native.installed&&native.selectable!==false&&native.runtimeReady!==false&&(!native.preparedRuntime||native.preparedReady!==false),profileId:native.id,
+        installable:native.installable!==false&&native.runtimeReady!==false,runtimeReady:!!native.installed&&native.selectable!==false&&native.runtimeReady!==false&&(!native.preparedRuntime||native.preparedReady!==false),profileId:native.modeProfiles?.[selectedMode]||native.operatingProfileId||native.id,
         runtime:{adapter:native.runtimeReady===false?null:'native',reason:native.note||'Existing installed OpenCore profile'},category:native.category||'text'};
-      variants.push({...native,hubModel:true,hubEntry:entry});
+      variants.push({...native,operatingProfileId:entry.profileId,memoryMode:selectedMode,hubModel:true,hubEntry:entry});
     }
     if(!variants.length)continue;
     for(const [index,model] of variants.entries()){if(index)model.variantOf=variants[0].id;else delete model.variantOf;models.push(model);}
@@ -125,13 +154,16 @@ async function $hubRegister(entry) {
   await $hubRefresh(true);return profile.profileId;
 }
 async function $hubInvoke(command,args,run) {
+  await globalThis.__opencoreModelModes?.before(command,args);
   const historyPath=command==='list_saved_conversations'?'/conversations/list':command==='delete_empty_projects'?'/projects/delete-empty':null;
   if(historyPath)return $hubRequest(historyPath,args);
   if(command==='get_snapshot'){
     const snapshot=globalThis.__opencoreImageConversationInvoke?await globalThis.__opencoreImageConversationInvoke(command,args,run):await run();
+    if(typeof $connectorProfiles!=='undefined'&&!$connectorProfiles.loaded&&!$connectorProfilesPending)$connectorProfilesPending=$hubRequest('/connectors/status').then($publishConnectorProfiles).catch(()=>{}).finally(()=>{$connectorProfilesPending=null;});
     if(snapshot?.connectors&&typeof $connectorView==='function')return {...snapshot,connectors:snapshot.connectors.map(row=>$connectorView(row,$connectorProfiles))};
     return snapshot;
   }
+  if(command==='start_history_sync')$publishConnectorProfiles(await $hubRequest('/connectors/history-enable',{id:args.id}));
   if(command==='send_chat_message'&&args.request?.generationSettings){
     const {generationSettings,...request}=args.request;args.request=request;
     await $hubRequest('/generation/settings',{conversationId:request.conversationId,modelId:generationSettings.modelId,parameters:generationSettings.parameters});
@@ -149,8 +181,19 @@ async function $hubInvoke(command,args,run) {
     const native=await run();if($hubDescriptor)await $hubRefresh().catch(()=>{});
     const hub=$hubProgress();return native&&['preparing','downloading','verifying','uninstalling'].includes(native.phase)?native:hub||native;
   }
-  if(command==='install_model'&&$hubState.catalog.some(e=>e.id===args.id)){
-    const value=await $hubRequest('/install',{id:args.id});await $hubRefresh(true);return value;
+  if(command==='install_model'||command==='runtime_setup_start'){
+    if(!$hubState.loaded)await $hubRefresh().catch(()=>{});
+    const selected=command==='runtime_setup_start'?args.targetId:args.id;
+    if(!$hubNativeLibrary?.models?.some(model=>model.id===selected)&&$hubState.catalog.some(entry=>entry.nativeModelIds?.includes(selected))){
+      const library=await window.__TAURI_INTERNALS__.invoke('list_model_library',{});
+      if(!Array.isArray(library?.models))throw Error('Cannot resolve the selected native quantization. Refresh Models and retry.');
+      $hubNativeLibrary=library;
+    }
+    const entry=$hubInstallEntry(selected);
+    if(entry){
+      const value=await $hubRequest(command==='runtime_setup_start'&&args.options?.installWeights===false?'/prepare':'/install',{id:entry.id});
+      await $hubRefresh(true);return value;
+    }
   }
   if(command==='hub_prepare_model'){
     const value=await $hubRequest('/prepare',{id:args.id});await $hubRefresh(true);return value;
@@ -381,7 +424,7 @@ function $hubChosenAdapterPath(entry) {
 }
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,selectedProfile}) {
   const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
-  const model=group.variants.find(v=>v.id===choice)||group.variants[0],entry=state.catalog.find(v=>v.id===model.id)||model.hubEntry;
+  const model=group.variants.find(v=>v.id===choice)||group.variants[0],rawEntry=state.catalog.find(v=>v.id===model.id)||model.hubEntry,entry=globalThis.__opencoreModelModes?.entry(rawEntry)||rawEntry;
   const active=shared.active?.modelId===entry.id,locked=disabled||!!shared.active||busy;
   const adapter=!entry.computerRuntime&&(entry.packageKind==='adapter'||entry.format==='lora');
   const bases=adapter?$hubBaseModels(entry):[];
@@ -452,13 +495,14 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   function findBase(repository){const preferred=repository||(entry.repository?.startsWith('Muapi/ltx-2-2.3-')?'Lightricks/LTX-2.3':entry.baseRepository);if(!preferred)return;window.dispatchEvent(new CustomEvent('opencore-hub-find-base',{detail:{repository:preferred}}));}
 
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
-  async function prepare(){setError('');try{await Ue(entry.nativeProfile?'install_model':'hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
-  async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const profile=entry.nativeProfile?entry.id:await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function prepare(){setError('');try{await globalThis.__opencoreModelModes?.ensure(rawEntry);await Ue(entry.nativeProfile?'install_model':'hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
+  async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const prepared=await globalThis.__opencoreModelModes?.ensure(rawEntry)||entry;const profile=entry.nativeProfile?await globalThis.__opencoreModelModes?.activate(entry.id,globalThis.__opencoreModelModes.mode(entry))||entry.id:await $hubRegister(prepared);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   function askRemove(){setError('');onNativeRemove?.(model);}
   return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady||entry.specialistReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
-    h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='computer'?'Computer-use · Action prediction':entry.specialist==='ocr'?'OCR · Image to text':entry.category==='image'?'Image model':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
+    h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,entry.gated?h('p',null,'Publisher-gated: accept the repository access terms on Hugging Face and save an authorized token in Settings before installing.'):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='computer'?'Computer-use · Action prediction':entry.specialist==='ocr'?'OCR · Image to text':entry.category==='image'?'Image model':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
-    h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.specialist==='computer'?(entry.specialistReady?'Local action prediction verified':'Computer-use runtime prepares after download'):entry.specialistReady?'Local OCR verified':entry.specialist==='ocr'?'OCR runtime prepares after download':entry.nativeProfile&&entry.runtimeReady?'Installed native runtime':entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
+    globalThis.__opencoreModelModes?h(globalThis.__opencoreModelModes.Control,{model:entry,disabled:locked,onChanged}):null,
+    h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.specialist==='computer'?(entry.specialistReady?'Local action prediction verified':'Computer-use runtime prepares after download'):entry.specialistReady?'Local OCR verified':entry.specialist==='ocr'?'OCR runtime prepares after download':entry.nativeProfile&&entry.runtimeReady?'Installed native runtime':entry.runtimeReady?'Generation verified · '+(entry.operatingMode==='native'?'Native context':'ECHO connected'):entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
     adapter?h('section',{className:'hub-base-picker','aria-label':'Compatible base model'},
       h('strong',null,'Base model and quantization'),
       h('p',null,entry.baseRepository?'Publisher base: '+entry.baseRepository:'The publisher did not declare a base model. Automatic compatibility cannot be verified.'),

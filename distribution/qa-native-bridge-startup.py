@@ -13,6 +13,67 @@ import tempfile
 import time
 
 
+HISTORY_MARKER = 'OpenCore startup consent fixture'
+
+
+def source_inventory(home):
+    home = Path(home)
+    return {path.relative_to(home).as_posix(): path.read_bytes()
+            for name in ('.claude', '.codex') for path in (home/name).rglob('*') if path.is_file()}
+
+
+def seed_external_sources(home):
+    """Create valid synthetic client transcripts in a disposable test home."""
+    home = Path(home)
+    project = home/'consent-project'
+    project.mkdir(parents=True)
+    claude = [
+        {'type': 'user', 'timestamp': '2026-10-01T00:00:00Z', 'cwd': str(project),
+         'message': {'role': 'user', 'content': HISTORY_MARKER+' Claude user'}},
+        {'type': 'assistant', 'timestamp': '2026-10-01T00:00:01Z',
+         'message': {'role': 'assistant', 'content': [{'type': 'text', 'text': HISTORY_MARKER+' Claude reply'}]}}]
+    codex = [
+        {'type': 'session_meta', 'payload': {'id': 'codex-consent', 'cwd': str(project)}},
+        {'timestamp': '2026-10-01T00:00:00Z', 'type': 'response_item',
+         'payload': {'type': 'message', 'role': 'user', 'content': [{'type': 'input_text', 'text': HISTORY_MARKER+' Codex user'}]}},
+        {'timestamp': '2026-10-01T00:00:01Z', 'type': 'response_item',
+         'payload': {'type': 'message', 'role': 'assistant', 'content': [{'type': 'output_text', 'text': HISTORY_MARKER+' Codex reply'}]}}]
+    files = {
+        '.claude/projects/consent-fixture/claude-consent.jsonl': ''.join(json.dumps(row)+'\n' for row in claude),
+        '.codex/sessions/2026/10/01/codex-consent.jsonl': ''.join(json.dumps(row)+'\n' for row in codex),
+        '.claude/settings.json': json.dumps({'enabledPlugins': {'unrelated@publisher': True}}),
+        '.claude/plugins/installed_plugins.json': json.dumps({'version': 2, 'plugins': {'unrelated@publisher': [
+            {'scope': 'user', 'installPath': str(home/'.claude/plugins/cache/publisher/unrelated/1.0.0'), 'version': '1.0.0'}]}}),
+        '.codex/config.toml': 'model="cloud-model"\n',
+        '.codex/auth.json': '{"syntheticCredential":"preserve-fixture"}',
+        '.claude/plugins/cache/publisher/unrelated/1.0.0/.claude-plugin/plugin.json':
+            json.dumps({'name': 'unrelated', 'version': '1.0.0'}),
+        '.claude/plugins/cache/publisher/unrelated/1.0.0/skills/consent-fixture/SKILL.md':
+            '---\nname: consent-fixture\ndescription: Optional plugin must not be imported automatically.\n---\n'+HISTORY_MARKER,
+    }
+    for relative, content in files.items():
+        path = home/relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding='utf-8')
+    return source_inventory(home)
+
+
+def assert_sources_preserved(home, before):
+    if source_inventory(home) != before:
+        raise RuntimeError('Startup changed external client files or created a client profile')
+
+
+def assert_no_automatic_history(database):
+    with closing(sqlite3.connect(Path(database).as_uri()+'?mode=ro', uri=True, timeout=5)) as connection:
+        imports = connection.execute("SELECT count(*) FROM conversations WHERE lower(client) LIKE '%claude%' OR lower(client) LIKE '%codex%' OR id LIKE 'claude:%' OR id LIKE 'codex:%'").fetchone()[0]
+        copied_content = connection.execute('SELECT count(*) FROM timeline WHERE instr(content,?)>0', (HISTORY_MARKER,)).fetchone()[0]
+        syncs = connection.execute("SELECT count(*) FROM operations WHERE kind='history_sync'").fetchone()[0]
+    if imports or copied_content:
+        raise RuntimeError('Startup imported external history without an explicit import action')
+    if syncs:
+        raise RuntimeError('Startup began a history sync without an explicit import action')
+
+
 def wait_for_relaunched_app(process, matching, read_log, timeout=60):
     """The initial process exits successfully after launching a shell-owned child."""
     deadline=time.monotonic()+timeout
@@ -75,17 +136,21 @@ def main():
         raise RuntimeError('This fresh-profile launch check runs only on an isolated Windows GitHub runner')
     exe=(args.root/'OpenCore.exe').resolve(strict=True)
     app_data=Path(os.environ['APPDATA'])/'ai.opencore.control-center'
+    database=app_data/'control-center.sqlite3'
     bridge_paths=[app_data/'claude-bridge',app_data/'claude-marketplace']
-    if any(p.exists() for p in bridge_paths):raise RuntimeError('The test runner is not a fresh OpenCore profile')
+    if database.exists() or (app_data/'control-center.recovered.sqlite3').exists() or any(p.exists() for p in bridge_paths):
+        raise RuntimeError('The test runner is not a fresh OpenCore profile')
     if _windows_processes(exe):raise RuntimeError('The test executable is already running')
     log=Path(os.environ['LOCALAPPDATA'])/'OpenCore/logs/startup.log'
     offset=log.stat().st_size if log.exists() else 0
     startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW;startup.wShowWindow=0
     with tempfile.TemporaryDirectory(prefix='opencore-bridge-policy-') as directory:
-        config=Path(directory)/'claude';config.mkdir()
-        settings=config/'settings.json';baseline={'enabledPlugins':{'unrelated@publisher':True}}
-        settings.write_text(json.dumps(baseline),encoding='utf-8')
-        env=dict(os.environ,CLAUDE_CONFIG_DIR=str(config));env.pop('OPENCORE_DESKTOP_RELAUNCH',None)
+        home=Path(directory)/'home'
+        source_files=seed_external_sources(home)
+        config=home/'.claude'
+        settings=config/'settings.json';baseline=json.loads(settings.read_text(encoding='utf-8'))
+        env=dict(os.environ,USERPROFILE=str(home),CLAUDE_CONFIG_DIR=str(config),CODEX_HOME=str(home/'.codex'))
+        env.pop('OPENCORE_DESKTOP_RELAUNCH',None)
         process=subprocess.Popen([str(exe)],cwd=str(exe.parent),env=env,startupinfo=startup,
                                  creationflags=subprocess.CREATE_NO_WINDOW)
         try:
@@ -99,13 +164,13 @@ def main():
             if not children.intersection(_windows_processes(exe)):
                 raise RuntimeError('The relaunched app exited during the bridge observation')
             if any(p.exists() for p in bridge_paths):raise RuntimeError('Startup created legacy Claude bridge files')
-            database=app_data/'control-center.sqlite3'
             if not database.is_file():raise RuntimeError('The fresh app database was not created at the expected location')
             with closing(sqlite3.connect(database.as_uri()+'?mode=ro',uri=True,timeout=5)) as connection:
                 count=connection.execute("SELECT count(*) FROM settings WHERE key='claude_bridge_token_v1'").fetchone()[0]
             if count:raise RuntimeError('Startup created a legacy Claude bridge token')
             if json.loads(settings.read_text(encoding='utf-8'))!=baseline:raise RuntimeError('Startup changed the unrelated Claude setting')
-            if (config/'plugins').exists():raise RuntimeError('Startup created an external Claude plugin registry')
+            assert_no_automatic_history(database)
+            assert_sources_preserved(home,source_files)
         except Exception:
             print(json.dumps({'launcherExit':process.poll(),'matchingProcesses':sorted(_windows_processes(exe)),
                               'startupLog':new_log()[-4000:]}),flush=True)
@@ -117,7 +182,9 @@ def main():
             _windows_processes(exe,terminate=True)
     with exe.open('rb') as source:app_hash=hashlib.file_digest(source,'sha256').hexdigest()
     result={'passed':True,'freshProfile':True,'appStartupObserved':True,'automaticClaudeBridgeCreated':False,'appExeSha256':app_hash,
-            'bridgeTokenPresent':False,'externalPluginRegistryCreated':False,'unrelatedSettingPreserved':True}
+            'bridgeTokenPresent':False,'externalPluginRegistryCreated':False,'unrelatedSettingPreserved':True,
+            'syntheticClaudeAndCodexHistoriesPresent':True,'externalHistoryImported':False,
+            'automaticHistorySyncStarted':False,'externalProfilesAndCredentialsPreserved':True}
     args.output.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result))
 

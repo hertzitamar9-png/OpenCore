@@ -36,6 +36,20 @@ export function projectCodexEvent(event, { emit, previousText = new Map(), compl
   }
   const item = event?.item;
   if (!item) return;
+  if (item.type === 'todo_list' && ['item.started','item.updated','item.completed'].includes(event.type)) {
+    const todos = (item.items ?? []).filter(value => typeof value?.text === 'string' && typeof value.completed === 'boolean')
+      .map(value => ({ content: value.text, status: value.completed ? 'completed' : 'pending' }));
+    const key = 'opencore-todo:' + item.id, snapshot = JSON.stringify(todos);
+    if (previousText.get(key) === snapshot) return;
+    const sequence = Number(previousText.get(key + ':sequence') ?? 0) + 1;
+    previousText.set(key, snapshot); previousText.set(key + ':sequence', String(sequence));
+    const id = key + ':' + sequence;
+    // Item completion ends this SDK item, not every step in its task list.
+    // Use the existing native tool timeline contract and preserve each boolean.
+    emit({ kind: 'tool_call', name: 'TodoWrite', args: { todos }, id });
+    emit({ kind: 'tool_result', name: 'TodoWrite', args: { todos }, value: { newTodos: todos }, id });
+    return;
+  }
   if (item.type === 'agent_message' || item.type === 'reasoning') {
     const id = item.id ?? `${item.type}:active`;
     const text = String(item.text ?? '');

@@ -10,6 +10,72 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]/'src-tauri/resources/
 from hf_connectors import ConnectorProfiles, without_codex_profile
 
 
+class ConnectorConsentTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.home = Path(self.temporary.name)/'home'
+        self.home.mkdir()
+        self.root = Path(self.temporary.name)/'OpenCore'
+        self.manager = ConnectorProfiles(self.root, home=self.home, environ={})
+
+    def test_fresh_install_keeps_every_connector_off_even_when_client_profiles_exist(self):
+        for relative, content in {
+            '.claude/settings.json': '{"theme":"dark"}',
+            '.claude/projects/source/chat.jsonl': 'original claude history',
+            '.codex/config.toml': '[profiles.opencore]\nmodel_provider="opencore"\n',
+            '.codex/auth.json': '{"token":"keep"}',
+            '.codex/sessions/source.jsonl': 'original codex history',
+        }.items():
+            path = self.home/relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding='utf-8')
+        before = {path.relative_to(self.home): path.read_bytes() for path in self.home.rglob('*') if path.is_file()}
+        self.assertEqual(self.manager.status()['disconnected'],
+                         {'claude-code': True, 'codex': True, 'hermes': True, 'opencode': True})
+        self.assertFalse(self.root.exists(), 'Reading connector state must not create profiles or consent')
+        self.assertEqual({path.relative_to(self.home): path.read_bytes() for path in self.home.rglob('*') if path.is_file()}, before)
+
+    def test_explicit_profile_enable_survives_restart_for_only_the_selected_client(self):
+        self.manager.reconnect('codex')
+        restarted = ConnectorProfiles(self.root, home=self.home, environ={})
+        self.assertEqual(restarted.status()['disconnected'],
+                         {'claude-code': True, 'hermes': True, 'opencode': True})
+        self.assertEqual(restarted.status()['historyEnabled'], {})
+        self.assertEqual(list(self.home.iterdir()), [], 'Consent does not create an external profile')
+
+    def test_legacy_disconnect_file_or_generated_profile_is_not_enable_consent(self):
+        self.manager.path.parent.mkdir(parents=True)
+        self.manager.path.write_text('{"disconnected":{"hermes":true}}', encoding='utf-8')
+        self.assertEqual(self.manager.status()['disconnected'],
+                         {'claude-code': True, 'codex': True, 'hermes': True, 'opencode': True})
+
+    def test_identifiable_explicit_enable_state_is_retained(self):
+        self.manager.path.parent.mkdir(parents=True)
+        self.manager.path.write_text('{"enabled":{"codex":true,"hermes":"true"},"historyEnabled":{"claude-code":true},"disconnected":{}}', encoding='utf-8')
+        self.assertEqual(self.manager.status()['disconnected'],
+                         {'claude-code': True, 'hermes': True, 'opencode': True})
+        self.assertEqual(self.manager.status()['historyEnabled'], {'claude-code': True})
+
+    def test_explicit_history_import_does_not_enable_or_create_a_client_profile(self):
+        self.manager.enable_history('claude-code')
+        restarted = ConnectorProfiles(self.root, home=self.home, environ={})
+        self.assertEqual(restarted.status()['disconnected'],
+                         {'claude-code': True, 'codex': True, 'hermes': True, 'opencode': True})
+        self.assertTrue(restarted.history_enabled('claude-code'))
+        self.assertFalse(restarted.history_enabled('codex'))
+        self.assertEqual(list(self.home.iterdir()), [])
+
+    def test_disconnect_revokes_the_selected_history_and_profile_permissions(self):
+        self.manager.reconnect('codex')
+        self.manager.enable_history('codex')
+        self.manager.enable_history('claude-code')
+        self.manager.disconnect('codex')
+        self.assertTrue(self.manager.status()['disconnected']['codex'])
+        self.assertFalse(self.manager.history_enabled('codex'))
+        self.assertTrue(self.manager.history_enabled('claude-code'))
+
+
 class ConnectorDisconnectTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -40,7 +106,7 @@ class ConnectorDisconnectTests(unittest.TestCase):
         self.assertEqual(next(path.parent.glob('*.bak')).read_text(), raw)
         restarted = ConnectorProfiles(self.manager.root, home=self.home, environ={})
         self.assertTrue(restarted.status()['disconnected']['codex'])
-        self.assertEqual(restarted.reconnect('codex')['disconnected'], {})
+        self.assertNotIn('codex', restarted.reconnect('codex')['disconnected'])
 
     def test_table_like_text_in_multiline_toml_is_preserved(self):
         text = 'note = """\n[profiles.opencore]\nnot a profile\n"""\n[profiles.work]\nmodel="safe"\n'
@@ -52,7 +118,7 @@ class ConnectorDisconnectTests(unittest.TestCase):
             path = self.file('.codex/config.toml', text)
             with self.assertRaises(ValueError): self.manager.disconnect('codex')
             self.assertEqual(path.read_text(), text)
-            self.assertEqual(self.manager.status()['disconnected'], {})
+            self.assertFalse(self.manager.path.exists(), 'A failed disconnect must not persist consent')
 
     def test_claude_disconnect_preserves_account_settings_and_imported_source_files(self):
         path = self.file('.claude/opencore-settings.json', json.dumps({'env': {'ANTHROPIC_BASE_URL': 'http://127.0.0.1:8812',
@@ -92,7 +158,7 @@ class ConnectorDisconnectTests(unittest.TestCase):
         with patch('hf_connectors.atomic_json', side_effect=OSError('disk full')):
             with self.assertRaises(OSError): self.manager.disconnect('claude-code')
         self.assertEqual(path.read_bytes(), raw)
-        self.assertEqual(self.manager.status()['disconnected'], {})
+        self.assertFalse(self.manager.path.exists(), 'A failed state save must not persist consent')
 
     def test_unknown_ids_and_profile_links_are_rejected(self):
         with self.assertRaises(ValueError): self.manager.disconnect('../../anywhere')

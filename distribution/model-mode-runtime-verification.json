@@ -1,0 +1,50 @@
+{
+  "model": "NeoHorse-1-9B-Q4_K_M",
+  "userChatsTouched": false,
+  "weightsDownloaded": false,
+  "cloudClientsStarted": false,
+  "modes": [
+    {
+      "mode": "native",
+      "contextTokens": 65536,
+      "contextVerified": true,
+      "sample": "BLUE",
+      "usage": {
+        "completion_tokens": 37,
+        "prompt_tokens": 15,
+        "total_tokens": 52,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "elapsedSeconds": 10.52,
+      "sameFile": true
+    },
+    {
+      "mode": "echo",
+      "contextTokens": 32768,
+      "contextVerified": true,
+      "sample": "BLUE",
+      "usage": {
+        "completion_tokens": 35,
+        "prompt_tokens": 713,
+        "total_tokens": 748,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 31
+        }
+      },
+      "elapsedSeconds": 12.84,
+      "sameFile": true
+    }
+  ],
+  "checkpointPreserved": true,
+  "passed": true,
+  "modelSha256": "a412add5457474d898ef0bf0cdbc057f7ffc3ea5cedba997c5123d36f116a957",
+  "modelBytes": 5629109056,
+  "scope": "Isolated managed runtime; actual local generations. The Native trial requests 65,536 tokens, not a 1M hardware-fit certification.",
+  "verifiedAt": "2026-11-02",
+  "echoProbeTotalTokenLimit": 512
+}

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { handleMcpMessage, MCP_PROTOCOL_VERSION } from '../src-tauri/resources/codex/mcp-protocol.mjs';
+import { projectCodexEvent } from '../src-tauri/resources/codex/codex-events.mjs';
 
 const definitions = [{ type: 'function', function: { name: 'test_action', description: 'Return a deterministic test result.', parameters: {
   type: 'object', properties: { value: { type: 'string' } }, required: ['value'], additionalProperties: false,
@@ -38,4 +39,23 @@ test('unknown MCP tools fail without calling the OpenCore bridge', async () => {
   assert.equal(called, false);
   assert.equal(result.result.isError, true);
   assert.match(result.result.content[0].text, /Unknown OpenCore tool/);
+});
+
+test('Codex SDK todo snapshots enter the existing native tool timeline without inventing completed steps', () => {
+  const events = [], previousText = new Map(), completedItems = new Set();
+  const emit = event => projectCodexEvent(event, { emit: value => events.push(value), previousText, completedItems });
+  const item = { id: 'sdk-todo-1', type: 'todo_list', items: [{ text: 'Inspect', completed: true }, { text: 'Verify', completed: false }] };
+  emit({ type: 'item.started', item });
+  emit({ type: 'item.updated', item });
+  emit({ type: 'item.completed', item });
+  assert.equal(events.length, 2, 'Unchanged lifecycle notifications must not duplicate the same task snapshot');
+  assert.equal(events[0].kind, 'tool_call');
+  assert.equal(events[1].kind, 'tool_result');
+  assert.equal(events[0].name, 'TodoWrite');
+  assert.equal(events[0].id, events[1].id, 'Native pairing requires the same event identity');
+  assert.deepEqual(events[1].value.newTodos, [{ content: 'Inspect', status: 'completed' }, { content: 'Verify', status: 'pending' }]);
+  emit({ type: 'item.updated', item: { ...item, items: item.items.map(task => ({ ...task, completed: true })) } });
+  assert.notEqual(events[2].id, events[0].id, 'Changed SDK snapshots must survive native duplicate-event protection');
+  emit({ type: 'item.completed', item: { id: 'message', type: 'agent_message', text: 'Actual final output' } });
+  assert.ok(events.some(event => event.kind === 'assistant' && event.text === 'Actual final output'));
 });
