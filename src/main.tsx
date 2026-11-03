@@ -8,6 +8,7 @@ import { installMenuScrollGuard } from "./menu-scroll.js";
 import "./styles.css";
 import "./historic-dark.css";
 import "./menu-scroll.css";
+import "./navigation-rail.css";
 
 installExternalLinkGuard(openUrl);
 installMenuScrollGuard();

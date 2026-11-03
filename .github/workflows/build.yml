@@ -162,6 +162,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-groups.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-navigation-rail.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-group-workspace.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-menu-scroll.cjs
