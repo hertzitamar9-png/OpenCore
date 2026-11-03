@@ -6,7 +6,7 @@ code=code.replace('Up as TestProfiles','Up as TestProfiles,r8 as TestRail');
 code=code.replace('TestModels,TestHubSettings}from','TestModels,TestHubSettings,TestRail}from');
 code=code.replace("if(name==='/assets/'+entryName)","if(name==='/opencore-logo.png'){res.setHeader('Content-Type','image/png');return res.end(fs.readFileSync(path.join(__dirname,'../public/opencore-logo.png')));}if(name==='/assets/'+entryName)");
 code=code.replace('React.createElement(React.Fragment,null,React.createElement(TestModels,{selectedProfile:\'none\',onSelect:id=>window.selected=id,runtimeActive:false,onNotice:message=>window.notice=message}),React.createElement(TestHubSettings))',
-  'React.createElement("div",{className:"conversation-focus-shell"},React.createElement(TestRail,{active:"conversations",compact:true,onChange:id=>window.selected=id,onAccount:()=>window.selected="account"}),React.createElement("main",{style:{gridColumn:"2 / -1",padding:"16px"}},React.createElement("h1",null,"Conversations")),React.createElement("footer",{className:"conversation-statusbar"},"OpenCore"))');
+  'React.createElement("div",{className:"opencore-shell"},React.createElement(TestRail,{active:"conversations",compact:true,onChange:id=>window.selected=id,onAccount:()=>window.selected="account"}),React.createElement("main",{style:{gridColumn:"2 / -1",padding:"16px"}},React.createElement("h1",null,"Conversations")),React.createElement("footer",{className:"statusbar"},"OpenCore"))');
 code=code.replace('<div id=root></div>','<style>html,body,#root{width:100%;height:100%;margin:0}#root{height:100dvh;overflow:hidden}.conversation-focus-shell{grid-template-rows:minmax(0,1fr) 28px}main{min-width:0}h1{font-size:18px}</style><div id=root></div>');
 code+=String.raw`
 (async()=>{
@@ -15,17 +15,20 @@ code+=String.raw`
  const browser=await chromium.launch({headless:true,args:['--mute-audio']});
  const out=process.env.OPENCORE_RAIL_QA_DIR||path.join(__dirname,'.output/navigation-rail');fs.mkdirSync(out,{recursive:true});
  const samples=[],errors=[];
- try{for(const [width,height] of [[1366,900],[1366,700],[1000,720],[800,600]]){
+ try{for(const [width,height,expanded=false] of [[1366,900],[1366,700],[1000,720],[800,600],[700,600],[1366,900,true],[1000,720,true],[800,600,true]]){
   const page=await browser.newPage({viewport:{width,height}});page.on('pageerror',error=>errors.push(error.message));
+  if(expanded)await page.addInitScript(()=>document.addEventListener('DOMContentLoaded',()=>document.documentElement.dataset.windowExpanded='true'));
   await page.goto('http://127.0.0.1:'+server.address().port);await page.getByRole('button',{name:'Open Chat Core',exact:true}).waitFor();
   const sample=await page.evaluate(()=>{
    const rail=document.querySelector('.conversation-app-rail'),nav=rail.querySelector('nav'),buttons=[...nav.querySelectorAll('button')];
    const rect=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {x:r.x,y:r.y,width:r.width,height:r.height,flex:s.flex,overflowY:s.overflowY}};
    return{width:innerWidth,height:innerHeight,rail:rect(rail),nav:{...rect(nav),scrollHeight:nav.scrollHeight,clientHeight:nav.clientHeight},buttons:buttons.map(button=>({label:button.getAttribute('aria-label')||button.title,...rect(button),svg:rect(button.querySelector('svg'))}))};
-  });samples.push(sample);
-  await page.screenshot({path:path.join(out,'rail-'+width+'x'+height+'.png')});
+  });sample.expanded=expanded;samples.push(sample);
+  await page.screenshot({path:path.join(out,'rail-'+width+'x'+height+(expanded?'-expanded':'')+'.png')});
   if(!process.argv.includes('--before')){
-   for(const item of sample.buttons){if(item.height!==44||item.width<44)throw Error(item.label+' has uneven size '+item.width+'x'+item.height+' at '+width+'x'+height);if(item.svg.width!==22||item.svg.height!==22)throw Error('Squashed icon: '+item.label);}
+   const expectedHeight=expanded?(width<=900?64:48):44,expectedRail=expanded?(width<=900?96:184):64;
+   if(sample.rail.width!==expectedRail)throw Error('The packaged shell rail width is '+sample.rail.width+', expected '+expectedRail);
+   for(const item of sample.buttons){if(item.height!==expectedHeight||item.width<44)throw Error(item.label+' has uneven size '+item.width+'x'+item.height+' at '+width+'x'+height);if(item.svg.width!==22||item.svg.height!==22)throw Error('Squashed icon: '+item.label);}
    const hitTargets=await page.evaluate(()=>[...document.querySelectorAll('.conversation-app-rail nav button')].every(button=>{
     button.scrollIntoView({block:'center'});const r=button.getBoundingClientRect();return [[2,r.height/2],[r.width-2,r.height/2],[r.width/2,2],[r.width/2,r.height-2]].every(([x,y])=>button.contains(document.elementFromPoint(r.x+x,r.y+y)));
    }));if(!hitTargets)throw Error('A visible navigation target has obstructed edges');
