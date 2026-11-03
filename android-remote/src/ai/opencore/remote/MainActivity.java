@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** First-run pairing screen. The paired OpenCore app itself runs in MobileActivity. */
+/** Optional PC pairing. A normal launch defaults to the independent phone runtime. */
 public final class MainActivity extends Activity {
     static final int SCAN_PAIRING = 30;
     final ExecutorService actions = Executors.newSingleThreadExecutor();
@@ -53,7 +53,7 @@ public final class MainActivity extends Activity {
         getWindow().setStatusBarColor(0xff0b1118);
         getWindow().setNavigationBarColor(0xff0b1118);
         try { connection = Connection.load(this); } catch (Exception ignored) { connection = null; }
-        if (connection != null && getIntent().getData() == null) { openApp(); return; }
+        if (getIntent().getData() == null && !getIntent().getBooleanExtra("pair-pc",false)) { DeviceRouting.route(this); return; }
         pairingScreen();
         acceptPairingLink(getIntent());
     }
@@ -78,12 +78,13 @@ public final class MainActivity extends Activity {
         content.addView(logo, logoParams);
         TextView heading = label("OpenCore on your phone"); heading.setTextSize(24); heading.setTextColor(0xffeef6ff);
         heading.setGravity(android.view.Gravity.CENTER); content.addView(heading);
-        TextView intro = label("Use the same chats, models, tools, settings, and generated files. OpenCore runs the work on your PC; this phone shows the app in a mobile layout.");
+        TextView intro = label("Pair a PC to make its chats, models, tools and generated files available. You can keep running models on this phone or choose the PC in Settings.");
         intro.setTextSize(15); intro.setLineSpacing(dp(4), 1); content.addView(intro);
         content.addView(label("1  On your PC, open OpenCore → Settings → Remote access, then choose Reveal QR code."));
         content.addView(label("2  Tap Scan QR code and point your camera at the code. Check the PC name and approve the connection."));
         content.addView(label("3  OpenCore saves this PC on your phone. It reconnects when the PC is online."));
         content.addView(button("Check for app updates",()->AppUpdates.check(this,true)));
+        content.addView(button("Keep using this phone",()->DeviceRouting.select(this,"phone")));
         AppUpdates.check(this,false);
         content.addView(button("Scan QR code", () -> startActivityForResult(new Intent(this, ScannerActivity.class), SCAN_PAIRING)));
         TextView fallback = label("If you can’t scan, paste the pairing code from OpenCore on your PC.");
@@ -138,7 +139,7 @@ public final class MainActivity extends Activity {
                 ready.name = paired.optString("name", "OpenCore PC");
                 try { ready.save(this); connection = ready; }
                 catch (Exception error) { try { ready.json("/unpair", new JSONObject()); } catch (Exception ignored) { } throw error; }
-                runOnUiThread(() -> openApp());
+                runOnUiThread(() -> { DeviceRouting.settings(this); finish(); });
             } catch (Exception error) {
                 String detail = error instanceof javax.net.ssl.SSLException ? "The PC identity did not match. Reveal a new QR code on the PC."
                     : error instanceof java.net.SocketTimeoutException || error instanceof java.net.ConnectException || error instanceof java.net.UnknownHostException
@@ -150,9 +151,7 @@ public final class MainActivity extends Activity {
     }
 
     void openApp() {
-        if (connection == null) return;
-        startActivity(new Intent(this, MobileActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-        finish();
+        DeviceRouting.route(this);
     }
 
     @Override protected void onActivityResult(int request, int result, Intent data) {

@@ -30,9 +30,21 @@
   }
   globalThis.__opencoreCheckAppUpdates=()=>request({kind:'phone-app-update'});
   globalThis.__opencoreDisconnectPhone=()=>request({kind:'phone-disconnect'});
+  globalThis.__opencoreExecutionSettings=()=>request({kind:'phone-execution-settings'});
+  function executionSettings(){
+    if(!document.createElement)return;
+    const page=document.querySelector('.settings-page');
+    if(!page||page.querySelector('[data-phone-execution]'))return;
+    const card=document.createElement('section');card.className='phone-execution-card';card.dataset.phoneExecution='true';
+    const title=document.createElement('h2');title.textContent='Execution device';
+    const description=document.createElement('p');description.textContent='Models currently run on your paired PC. You can switch to this phone at any time; each device keeps its own chats and models.';
+    const button=document.createElement('button');button.type='button';button.textContent='Choose Phone or Paired PC';button.onclick=()=>globalThis.__opencoreExecutionSettings().catch(()=>{});
+    card.append(title,description,button);page.prepend(card);
+  }
   function checkAppReady(){
+    executionSettings();
     if(!port||appReady||!document.getElementById('root')?.querySelector('.opencore-shell .section-header'))return;
-    appReady=true;rootObserver?.disconnect();
+    appReady=true;
     port.postMessage(JSON.stringify({id:'phone-ready',kind:'phone-ready'}));
   }
   rootObserver=new MutationObserver(checkAppReady);

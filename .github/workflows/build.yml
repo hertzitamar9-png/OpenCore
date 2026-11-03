@@ -135,6 +135,14 @@ jobs:
         run: python distribution/prepare.py --inputs distribution/.output/inputs
       - name: Install the rendered-test browser
         run: npx playwright install chromium
+      - name: Verify the independent Android phone runtime and explicit PC routing
+        run: |
+          python -m unittest discover -s android-remote/tests -p test_*.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test android-remote/tests/mobile-shim.test.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node android-remote/tests/phone-ui.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify rendered downloads, connectors, footer and manual updates
         working-directory: distribution
         env:

@@ -36,7 +36,7 @@ final class AppUpdates {
             try(InputStream input=c.getInputStream()){release=new JSONObject(new String(MobileActivity.read(input,128*1024),java.nio.charset.StandardCharsets.UTF_8));}finally{c.disconnect();}
             long current=version(a.getPackageManager().getPackageInfo(a.getPackageName(),0));
             if(!a.getPackageName().equals(release.getString("package"))||release.getInt("bytes")<=0||release.getInt("bytes")>16*1024*1024||!release.getString("sha256").matches("[a-f0-9]{64}"))throw new IOException("Invalid update description.");
-            a.runOnUiThread(()->{if(!alive(a))return;if(release.optLong("versionCode")<=current){if(force)Toast.makeText(a,"Up to date. PC interface updates load automatically.",Toast.LENGTH_LONG).show();return;}
+            a.runOnUiThread(()->{if(!alive(a))return;if(release.optLong("versionCode")<=current){if(force)Toast.makeText(a,"OpenCore Android is up to date.",Toast.LENGTH_LONG).show();return;}
                 new AlertDialog.Builder(a).setTitle("OpenCore Remote update ready").setMessage("Version "+release.optString("version")+" is available. Update this installation to keep your PC pairing and settings. No uninstall is needed.")
                     .setNegativeButton("Later",null).setPositiveButton("Download update",(d,w)->download(a,release)).show();});
         }catch(Exception e){if(force)a.runOnUiThread(()->error(a,"Couldn’t check for updates",e));}finally{checking=false;}});

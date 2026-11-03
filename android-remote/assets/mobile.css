@@ -29,6 +29,8 @@ body{touch-action:pan-x pan-y}
 .section-main :is(input,textarea,select){font-size:16px!important;scroll-margin-bottom:180px}
 .remote-guide,.hub-browser{min-width:0;max-width:100%;box-sizing:border-box}
 .remote-guide :is(button,input){min-height:42px}
+.phone-execution-card{padding:16px;border:1px solid var(--theme-border,#34404c);border-radius:12px;background:var(--theme-panel,#111923);margin-bottom:16px}
+.phone-execution-card h2{margin:0 0 8px;font-size:18px}.phone-execution-card p{font-size:14px;line-height:1.5;margin:0 0 12px}.phone-execution-card button{min-height:44px}
 .workspace-visible .unified-workspace{max-width:100vw!important}
 @media(max-width:420px){
   .opencore-shell{grid-template-rows:minmax(0,1fr) 62px 25px!important}

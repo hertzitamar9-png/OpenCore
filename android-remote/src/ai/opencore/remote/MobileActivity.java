@@ -70,7 +70,7 @@ public final class MobileActivity extends Activity {
         });
         FrameLayout stage=new FrameLayout(this);root.addView(stage,new LinearLayout.LayoutParams(-1,0,1));
         web=new WebView(this);web.setBackgroundColor(0xff0b1118);stage.addView(web,new FrameLayout.LayoutParams(-1,-1));
-        connectionPanel=new ConnectionPanel(this,connection.name,new String[]{"Secure PC connection","Latest app interface","Your chats and tools"},()->connect(),()->finish(),()->removePc());stage.addView(connectionPanel,new FrameLayout.LayoutParams(-1,-1));
+        connectionPanel=new ConnectionPanel(this,connection.name,new String[]{"Secure PC connection","Latest app interface","Your chats and tools"},()->connect(),()->finish(),()->DeviceRouting.settings(this));connectionPanel.change.setText("Phone or PC");stage.addView(connectionPanel,new FrameLayout.LayoutParams(-1,-1));
         status=label("");status.setTextSize(12);status.setVisibility(View.GONE);root.addView(status);
         WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);settings.setAllowContentAccess(true);settings.setJavaScriptCanOpenWindowsAutomatically(false);
@@ -135,6 +135,7 @@ public final class MobileActivity extends Activity {
         try{
             JSONObject value=new JSONObject(raw);String id=value.getString("id"),kind=value.getString("kind");
             if(kind.equals("phone-app-update")){AppUpdates.check(this,true);ok(id,null,targetGeneration);return;}
+            if(kind.equals("phone-execution-settings")){ok(id,null,targetGeneration);DeviceRouting.settings(this);return;}
             if(kind.equals("phone-disconnect")){ok(id,null,targetGeneration);removePc();return;}
             if(kind.equals("phone-ready")){connectionPanel.setVisibility(View.GONE);status("");return;}
             if(kind.equals("phone-startup-error")){connectionPanel.showError("Your PC is connected","The workspace did not respond yet. Press Retry now to reopen it.",2);return;}
@@ -381,7 +382,7 @@ public final class MobileActivity extends Activity {
         connection=null;session=null;getSharedPreferences("paired-pc",MODE_PRIVATE).edit().clear().apply();
         runOnUiThread(()->{if(!destroyed){startActivity(new Intent(this,MainActivity.class));finish();}});
     }
-    @Override public void onResume(){super.onResume();resumed=true;nextInfoAt=0;AppUpdates.resume(this);AppUpdates.check(this,false);}
+    @Override public void onResume(){super.onResume();if(DeviceRouting.target(this).equals("phone")){DeviceRouting.route(this);return;}resumed=true;nextInfoAt=0;AppUpdates.resume(this);AppUpdates.check(this,false);}
     @Override public void onPause(){resumed=false;super.onPause();}
     @Override public void onDestroy(){destroyed=true;remoteSession.cancel();imageCache.clear();if(port!=null)port.close();polling.shutdownNow();io.shutdownNow();if(web!=null)web.destroy();super.onDestroy();}
     @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}

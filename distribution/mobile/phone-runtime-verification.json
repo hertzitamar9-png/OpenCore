@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "androidVersion": "3.0",
+  "nativeRuntimeRevision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
+  "androidArm64BinaryVerified": true,
+  "android16KbPagesVerified": true,
+  "apkSigningIdentityPreserved": true,
+  "packagedSourcesMatchReviewedSources": true,
+  "freshInstallDefault": "phone",
+  "automaticPcFallback": false,
+  "browserWidthsVerified": [
+    360,
+    393,
+    430
+  ],
+  "hostNativeInference": {
+    "platform": "Windows x86_64 JVM using identical JNI worker source",
+    "model": "bartowski/SmolLM2-135M-Instruct-GGUF",
+    "revision": "09816acd5d99df7be770d85ea30822623dab342c",
+    "filename": "SmolLM2-135M-Instruct-Q4_K_M.gguf",
+    "sha256": "2e8040ceae7815abe0dcb3540b9995eaa1fa0d2ca9e797d0a635ae4433c68c2d",
+    "generatedTokens": 31,
+    "streamCallbacks": 32,
+    "stopVerified": true,
+    "contextOverflowExplicit": true,
+    "unloadVerified": true
+  },
+  "physicalPhoneVerified": false,
+  "limitations": [
+    "Standalone text GGUF architectures supported by the bundled runtime and fitting phone memory",
+    "No universal safetensors, image diffusion, projector, split-model or LoRA-only Android runtime",
+    "Phone and PC chats and models remain separate",
+    "No physical Android throughput or thermal claim"
+  ]
+}

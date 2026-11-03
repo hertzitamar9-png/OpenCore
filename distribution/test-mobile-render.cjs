@@ -110,6 +110,8 @@ const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false,
     await page.locator('.section-header').getByText('Models',{exact:true}).waitFor({timeout:10000});
     await nav.getByRole('button',{name:'Settings'}).click();
     await page.locator('.section-header').getByText('Settings',{exact:true}).waitFor({timeout:10000});
+    await page.getByRole('button',{name:'Choose Phone or Paired PC',exact:true}).click();
+    await page.waitForFunction(()=>fixture.calls.some(item=>item.kind==='phone-execution-settings'));
     await nav.getByRole('button',{name:'More'}).click();
     await page.getByRole('dialog',{name:'All OpenCore sections'}).waitFor({timeout:10000});
     if(process.env.OPENCORE_MOBILE_TRACE) console.log('More sections:',await page.getByRole('dialog',{name:'All OpenCore sections'}).getByRole('button').allTextContents());

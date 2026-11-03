@@ -1,0 +1,12 @@
+{
+  "runtime": "llama.cpp",
+  "repository": "https://github.com/ggml-org/llama.cpp",
+  "revision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
+  "archiveSha256": "d5d0ee4797fa7605d8efad0f25e22389f145d244f8b3ad88313a0fc6ae3a7c36",
+  "ndk": "27.2.12479018",
+  "androidApi": 26,
+  "abis": ["arm64-v8a"],
+  "backend": "CPU",
+  "license": "MIT",
+  "documentation": "https://github.com/ggml-org/llama.cpp/blob/master/docs/android.md"
+}

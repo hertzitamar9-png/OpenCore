@@ -3,13 +3,14 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import zipfile
 
 HERE = Path(__file__).resolve().parent
 
 
 def source_hashes(root):
     files = sorted(path for path in (root / 'android-remote').rglob('*') if path.is_file()
-                   and '__pycache__' not in path.parts and path.suffix in ('.java', '.py', '.xml', '.md', '.jar', '.txt', '.js', '.css'))
+                   and '__pycache__' not in path.parts and path.suffix in ('.java', '.py', '.xml', '.md', '.jar', '.txt', '.js', '.css', '.html', '.cpp', '.so', '.json'))
     files.append(root / 'src-tauri/icons/icon.png')
     return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')
             if path.suffix not in ('.png', '.jar') else path.read_bytes()).hexdigest() for path in files}
@@ -22,6 +23,9 @@ def prepare(folder):
     if (source_hashes(HERE.parent) != receipt['sources'] or apk.stat().st_size != receipt['bytes'] or
             hashlib.sha256(apk.read_bytes()).hexdigest() != receipt['sha256']):
         raise ValueError('Rebuild and verify the signed Android client after changing its sources')
+    with zipfile.ZipFile(apk) as packaged:
+        if json.loads(packaged.read('assets/phone/build-sources.json')) != receipt['sources']:
+            raise ValueError('The signed APK was not built from these reviewed Android sources')
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
     result = []

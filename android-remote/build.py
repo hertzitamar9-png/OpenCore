@@ -34,6 +34,26 @@ def main():
     for name in ('classes', 'dex', 'generated', 'res/drawable'): (build / name).mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT.parent / 'src-tauri/icons/icon.png', build / 'res/drawable/opencore.png')
     shutil.copytree(ROOT/'assets', build/'assets/phone')
+    shutil.copyfile(ROOT.parent/'public/opencore-logo.png',build/'assets/phone/opencore-logo.png')
+    from phone_catalog import build as build_phone_catalog
+    resources=ROOT.parent/'src-tauri/resources'
+    phone_catalog=build_phone_catalog(json.loads((resources/'model-catalog.json').read_text(encoding='utf-8')),
+                                     json.loads((resources/'runtime-setup/hf-extension/publisher-models.json').read_text(encoding='utf-8')))
+    (build/'assets/phone/catalog.json').write_text(json.dumps(phone_catalog,separators=(',',':'))+'\n',encoding='utf-8')
+    sys.path.insert(0,str(ROOT.parent/'distribution'))
+    from mobile_client import source_hashes
+    (build/'assets/phone/build-sources.json').write_text(json.dumps(source_hashes(ROOT.parent),sort_keys=True)+'\n',encoding='utf-8')
+    runtime=json.loads((ROOT/'native/runtime.json').read_text(encoding='utf-8'))
+    native_receipt=json.loads((ROOT/'native/binaries.json').read_text(encoding='utf-8'))
+    if native_receipt['revision'] != runtime['revision']:raise ValueError('Native Android runtime source pin changed; rebuild it')
+    for relative,sha in native_receipt['sources'].items():
+        if hashlib.sha256((ROOT/'native'/relative).read_bytes().replace(b'\r\n',b'\n')).hexdigest()!=sha:raise ValueError('Android runtime code changed; rebuild it: '+relative)
+    for relative,record in native_receipt['files'].items():
+        native=ROOT/'native'/relative
+        if not native.is_file() or native.stat().st_size!=record['bytes'] or hashlib.sha256(native.read_bytes()).hexdigest()!=record['sha256']:
+            raise ValueError('Missing or unverified bundled Android inference library: '+relative)
+    (build/'assets/phone/runtime.json').write_text(json.dumps(runtime,indent=2)+'\n',encoding='utf-8')
+    shutil.copyfile(ROOT/'vendor/LLAMA-LICENSE.txt',build/'assets/phone/LLAMA-LICENSE.txt')
     environment = dict(os.environ, JAVA_HOME=str(java))
     def run(command):
         result = subprocess.run([str(value) for value in command], capture_output=True, text=True, env=environment,
@@ -52,6 +72,7 @@ def main():
     shutil.copyfile(build/'resources.apk', build/'unsigned.apk')
     with zipfile.ZipFile(build/'unsigned.apk', 'a', zipfile.ZIP_DEFLATED) as archive:
         for file in (build/'dex').glob('*.dex'): archive.write(file, file.name)
+        for relative in native_receipt['files']:archive.write(ROOT/'native'/relative,'lib/'+relative)
     run([tools/'zipalign.exe', '-f', '4', build/'unsigned.apk', build/'aligned.apk'])
     args.keys.mkdir(parents=True, exist_ok=True)
     keystore, protected = args.keys/'opencore-remote.jks', args.keys/'opencore-remote-password.dpapi'

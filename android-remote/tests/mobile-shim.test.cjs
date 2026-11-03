@@ -87,3 +87,10 @@ test('a lost PC connection rejects pending and new commands instead of leaving t
   assert.equal(result, 'PC disconnected. Reconnecting…');
   await assert.rejects(client.scope.__TAURI_INTERNALS__.invoke('get_snapshot'), /PC disconnected/);
 });
+
+test('execution settings use a phone-native action and never a forwarded PC command', async () => {
+  const client=phone();const pending=client.scope.__opencoreExecutionSettings();await Promise.resolve();
+  const outgoing=client.outgoing.find(item=>item.kind==='phone-execution-settings');
+  assert.ok(outgoing);assert.equal(outgoing.command,undefined);
+  client.port.onmessage({data:JSON.stringify({type:'result',id:outgoing.id,ok:true,value:null})});await pending;
+});
