@@ -13,7 +13,7 @@ class PhoneRuntimeTests(unittest.TestCase):
         sources = ROOT / 'src/ai/opencore/remote'
         with tempfile.TemporaryDirectory(prefix='opencore-phone-tests-') as output:
             result = subprocess.run([str(java/'javac.exe'), '--release', '8', '-encoding', 'UTF-8', '-d', output,
-                                     str(sources/'ExecutionPolicy.java'), str(sources/'GgufMetadata.java'),
+                                     str(sources/'ExecutionPolicy.java'), str(sources/'GgufMetadata.java'), str(sources/'PhoneOperationGate.java'),
                                      str(ROOT/'tests/PhoneRuntimeTest.java')], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             result = subprocess.run([str(java/'java.exe'), '-cp', output, 'ai.opencore.remote.PhoneRuntimeTest'],

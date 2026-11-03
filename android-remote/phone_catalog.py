@@ -37,7 +37,18 @@ def build(native,publisher):
         key=matched or by_repo.get(repo.lower()) or 'native-'+hashlib.sha256((repo or row.get('variantOf') or row['id']).lower().encode()).hexdigest()[:20]
         label=re.sub(r'\s*·\s*(?:ECHO|Native).*$', '',row.get('label',row['id']),flags=re.I)
         current=family(key,label,repo,row.get('category','model'),text_capable(row))
-        for value in files:current['files'][value['id']]=value
+        standalone=[value for value in files if not re.search(r'(?i)(?:mmproj|projector|lora|adapter|-\d{5}-of-\d{5}\.gguf$)',value['filename'])]
+        for value in files:
+            previous=current['files'].get(value['id'],{})
+            profiles={item['id']:item for item in previous.get('profiles',[])}
+            # Profile names must retain their desktop identity. A standalone
+            # phone file is still downloaded once when Native/ECHO share it.
+            if text_capable(row) and len(standalone)==1 and value['id']==standalone[0]['id']:
+                profiles[row['id']]=dict(id=row['id'],label=row.get('label',row['id']),memoryMode=row.get('memoryMode','native'),
+                                        contextTokens=row.get('contextTokens',2048),precision=row.get('precision','GGUF'),
+                                        modeFamilyKey=row.get('familyId') or row.get('variantOf') or row['id'])
+            if profiles:value['profiles']=list(profiles.values())
+            current['files'][value['id']]=value
     result=[]
     for value in families.values():
         value['files']=sorted(value['files'].values(),key=lambda item:item['filename'].lower());result.append(value)

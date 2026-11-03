@@ -38,6 +38,7 @@ export function applyImageGenerationOptions(modelId,settings){
   return result;
 }
 export function GenerationSettings({modelId='echo',conversationId,image=false,defaults={},supported=true,disabled=false}){
+  supported=supported||globalThis.__OPENCORE_PHONE__===true;
   const h=React.createElement,[open,setOpen]=React.useState(false),dialog=React.useRef(null);
   const saved=useGenerationSettings(modelId);
   const base=image?{steps:defaults.steps||30,guidanceScale:defaults.guidance??4.5,width:modelId.startsWith('qwen-image-21')?2048:1024,height:modelId.startsWith('qwen-image-21')?2048:1024,seed:''}:

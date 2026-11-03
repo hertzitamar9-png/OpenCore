@@ -64,10 +64,7 @@ public final class MobileActivity extends Activity {
         try{connection=Connection.load(this);}catch(Exception ignored){}
         if(connection==null){finish();startActivity(new Intent(this,MainActivity.class));return;}
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(0xff0b1118);setContentView(root);
-        root.setOnApplyWindowInsetsListener((view,insets)->{
-            if(Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());view.setPadding(bars.left,bars.top,bars.right,bars.bottom);}
-            else view.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;
-        });
+        SystemInsets.apply(this,root);
         FrameLayout stage=new FrameLayout(this);root.addView(stage,new LinearLayout.LayoutParams(-1,0,1));
         web=new WebView(this);web.setBackgroundColor(0xff0b1118);stage.addView(web,new FrameLayout.LayoutParams(-1,-1));
         connectionPanel=new ConnectionPanel(this,connection.name,new String[]{"Secure PC connection","Latest app interface","Your chats and tools"},()->connect(),()->finish(),()->DeviceRouting.settings(this));connectionPanel.change.setText("Phone or PC");stage.addView(connectionPanel,new FrameLayout.LayoutParams(-1,-1));
@@ -186,7 +183,7 @@ public final class MobileActivity extends Activity {
                         String html=new String(data,StandardCharsets.UTF_8);
                         String preferenceJson=preferencesSeed==null?"{}":preferencesSeed.toString().replace("<","\\u003c");
                         String injection="<head><meta name=\"opencore-native-nonce\" content=\""+nonce+"\"><script nonce=\""+nonce+"\">window.__OPENCORE_PC_PREFS__="+preferenceJson+";</script><script src=\"/phone/mobile-shim.js\"></script><link rel=\"stylesheet\" href=\"/phone/mobile.css\">";
-                        if(!html.contains("<head>"))return denied();data=html.replaceFirst("<head>",injection).getBytes(StandardCharsets.UTF_8);
+                        if(!html.contains("<head>"))return denied();data=html.replace("<head>",injection).getBytes(StandardCharsets.UTF_8);
                     }
                 }
                 if(mime.equals("image/png"))encoding=null;

@@ -2,6 +2,7 @@
 (()=>{
   'use strict';
   globalThis.__OPENCORE_MOBILE__=true;
+  globalThis.__OPENCORE_PHONE__=document.querySelector('meta[name="opencore-execution"]')?.content==='phone';
   let port,sequence=0,callbackSequence=0,connectionError=null,appReady=false,rootObserver;
   const nonce=document.querySelector('meta[name="opencore-native-nonce"]')?.content;
   const waiting=new Map(),callbacks=new Map(),listeners=new Map(),streams=new Map();
@@ -37,7 +38,7 @@
     if(!page||page.querySelector('[data-phone-execution]'))return;
     const card=document.createElement('section');card.className='phone-execution-card';card.dataset.phoneExecution='true';
     const title=document.createElement('h2');title.textContent='Execution device';
-    const description=document.createElement('p');description.textContent='Models currently run on your paired PC. You can switch to this phone at any time; each device keeps its own chats and models.';
+    const description=document.createElement('p');description.textContent=globalThis.__OPENCORE_PHONE__?'Models currently run on this phone. You can choose the paired PC at any time; the OpenCore interface stays the same.':'Models currently run on your paired PC. You can choose this phone at any time; the OpenCore interface stays the same.';
     const button=document.createElement('button');button.type='button';button.textContent='Choose Phone or Paired PC';button.onclick=()=>globalThis.__opencoreExecutionSettings().catch(()=>{});
     card.append(title,description,button);page.prepend(card);
   }

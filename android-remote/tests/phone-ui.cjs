@@ -1,56 +1,89 @@
 'use strict';
-// Browser proof of bundled phone UI behavior. Native inference has a separate real-model check.
-const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
-const {chromium}=require(process.env.OPENCORE_PLAYWRIGHT||'playwright');
-const root=path.join(__dirname,'../assets/local'),output=path.join(__dirname,'../../distribution/.output/phone-ui');
-const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://localhost').pathname;const file=name==='/opencore-logo.png'?path.join(__dirname,'../../public/opencore-logo.png'):path.join(root,name==='/'?'index.html':name.slice(1));if(!fs.existsSync(file)){res.statusCode=404;res.end();return;}res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':'text/html');res.end(fs.readFileSync(file));});
-const fixture=()=>{
- document.addEventListener('DOMContentLoaded',()=>{
-  const channel=new MessageChannel();window.phoneFixture={calls:[],messages:[],chats:[],models:[],loadedId:'',generating:false};const f=window.phoneFixture;
-  const settings={device:'phone',paired:true,pcName:'Test PC',context:2048,maxTokens:512,temperature:.7,tokenConfigured:false};
-  const model={id:'a'.repeat(64),filename:'Starter-Q4.gguf',bytes:105454432,architecture:'llama',runtimeReady:false};
-  const state=()=>({models:f.models,chats:f.chats,loadedId:f.loadedId,generating:f.generating,downloading:!!f.downloading,generation:{},download:{},settings,runtime:'Fixture CPU',runtimeAvailable:true,availableMemory:4e9,freeDisk:20e9});
-  const emit=(event,value)=>channel.port1.postMessage(JSON.stringify({event,value}));
-  f.emit=emit;f.model=model;f.state=state;
-  channel.port1.onmessage=async event=>{
-   const p=JSON.parse(event.data);f.calls.push(p);let value=null;
-   try{
-    if(p.action==='state')value=state();
-    else if(p.action==='catalog')value={items:Array.from({length:100},(_,i)=>({id:'builtin-'+i,label:'Built-in '+i,category:'text',files:5})),page:p.args.page||0,pages:9,total:900};
-    else if(p.action==='chat.create'){await new Promise(r=>setTimeout(r,40));const chat={id:'chat-'+f.chats.length,title:'Phone conversation'};f.chats.push(chat);value={id:chat.id};}
-    else if(p.action==='chat.get')value=f.messages;
-    else if(p.action==='chat.delete'){f.chats=f.chats.filter(c=>c.id!==p.args.chat);f.messages=[];}
-    else if(p.action==='hub.search'){value={items:Array.from({length:100},(_,i)=>({id:'publisher/Model-'+(p.args.cursor?i+100:i),downloads:1000})),nextCursor:p.args.cursor?'':'/api/models?cursor=page2'};}
-    else if(p.action==='hub.inspect')value={repo:p.args.repo,note:'Verified fixture files',files:[{...model,problem:''},{...model,id:'c'.repeat(64),filename:'Starter-Q8.gguf',problem:''},{id:'b'.repeat(64),filename:'model.safetensors',bytes:30e9,problem:'This format needs the paired PC runtime.'}]};
-    else if(p.action==='download'){f.downloading=true;if(!f.holdDownload)setTimeout(()=>{f.models=[model];f.downloading=false;emit('state',state());emit('download',{phase:'Downloaded · verified weights',total:105454432,received:105454432});},30);else emit('download',{phase:'Downloading',total:105454432,received:1000});}
-    else if(p.action==='download.cancel'){f.downloading=false;emit('download',{phase:'Stopped'});emit('state',state());}
-    else if(p.action==='send'){f.generating=true;f.loadedId=model.id;f.messages.push({id:'user',role:'user',content:p.args.text,status:'completed',metrics:{}},{id:'assistant',role:'assistant',content:'',status:'running',metrics:{}});value={assistant:'assistant'};}
-    else if(p.action==='cancel'){f.generating=false;emit('generation',{chat:p.args.chat||'chat-0',assistant:'assistant',stage:'Stopped',running:false,status:'stopped',content:'Partial native output',metrics:{promptTokens:16,completionTokens:4,elapsedMs:1500,context:2048,tokensPerSecond:2.6}});emit('state',state());}
-    else if(p.action==='unload'){f.loadedId='';emit('state',state());}
-    else if(p.action==='settings.save'){Object.assign(settings,p.args);delete settings.token;settings.tokenConfigured=!!p.args.token;value=settings;}
-    channel.port1.postMessage(JSON.stringify({id:p.id,ok:true,value}));
-   }catch(error){channel.port1.postMessage(JSON.stringify({id:p.id,ok:false,error:error.message}));}
-  };channel.port1.start();window.postMessage('opencore-phone:__OPENCORE_NONCE__',location.origin,[channel.port2]);
+// Loads the actual desktop React bundle and production phone bridge/CSS.
+// Fixture browser evidence is separate from physical Android/JNI evidence.
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),vm=require('node:vm');
+const {chromium}=require(process.env.OPENCORE_PLAYWRIGHT||'playwright'),ts=require('typescript'),fixture=require('./shared-ui-fixture.cjs');
+const repo=path.resolve(__dirname,'../..'),output=path.resolve(process.env.OPENCORE_UI_OUTPUT||path.join(repo,'distribution/.output/ui-285'));
+const dist=path.basename(output)==='candidate-dist'?output:path.join(output,'candidate-dist'),evidence=path.resolve(process.env.OPENCORE_PHONE_QA_OUTPUT||path.join(output,'phone-shared-ui-qa'));
+assert.ok(fs.existsSync(path.join(dist,'index.html')),'Build desktop UI first; OPENCORE_UI_OUTPUT must contain candidate-dist/index.html');
+const values={exports:{},Date};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(repo,'src/mock.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,values);
+const preview=JSON.parse(JSON.stringify(values.exports));
+const server=http.createServer((req,res)=>{
+ const url=new URL(req.url,'http://localhost'),name=decodeURIComponent(url.pathname);
+ if(name==='/'||name==='/index.html'){res.setHeader('Content-Type','text/html');res.end(fs.readFileSync(path.join(dist,'index.html'),'utf8').replace('<head>',`<head><meta name="opencore-execution" content="${url.searchParams.get('mode')==='pc'?'pc':'phone'}"><meta name="opencore-native-nonce" content="fixture"><script src="/phone/mobile-shim.js"></script><link rel="stylesheet" href="/phone/mobile.css">`));return;}
+ const base=name.startsWith('/phone/')?path.join(repo,'android-remote/assets'):dist;
+ const file=name==='/opencore-logo.png'?path.join(repo,'public/opencore-logo.png'):path.resolve(base,'.'+(name.startsWith('/phone/')?name.slice(6):name));
+ if((!file.startsWith(base+path.sep)&&name!=='/opencore-logo.png')||!fs.existsSync(file)||!fs.statSync(file).isFile()){res.statusCode=404;res.end();return;}
+ res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'image/png');res.end(fs.readFileSync(file));
+});
+async function layout(page,label){
+ await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
+ const g=await page.locator('.chat-composer').evaluate(el=>{
+  const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
+  return {composer:rect(el),buttons:[...el.querySelectorAll('button')].filter(e=>e.offsetParent!==null).map(e=>({name:e.getAttribute('aria-label')||e.textContent.trim(),...rect(e)})),nav:rect(document.querySelector('nav[aria-label="OpenCore sections"]')),width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth};
  });
-};
+ assert.ok(g.buttons.length>=6,label+': shared composer controls');
+ for(const b of g.buttons){assert.ok(b.width>=44&&b.height>=44,label+': 44px target '+JSON.stringify(b));assert.ok(b.x>=0&&b.right<=g.width+1&&b.y>=0&&b.bottom<=g.height,label+': control within usable viewport '+JSON.stringify(b));}
+ for(let a=0;a<g.buttons.length;a++)for(let b=a+1;b<g.buttons.length;b++){const r=g.buttons[a],s=g.buttons[b];assert.ok(r.right<=s.x+1||s.right<=r.x+1||r.bottom<=s.y+1||s.bottom<=r.y+1,label+': overlap '+r.name+' / '+s.name);}
+ assert.ok(g.composer.bottom<=g.nav.y+1&&g.nav.bottom<=g.height+1,label+': composer/navigation above usable viewport bottom '+JSON.stringify(g));
+ assert.ok(g.scrollWidth<=g.width,label+': no horizontal overflow');
+}
+async function controls(page){
+ const composer=page.locator('.chat-composer');
+ for(const name of [/Add files or choose model/,/Approval:/,/Effort:/,/generation settings/i,/speech|microphone|dictat/i]){const b=composer.getByRole('button',{name});assert.ok(await b.isVisible(),'Original button '+name);assert.ok(await b.locator('svg').first().isVisible(),'Original icon '+name);}
+ await composer.getByRole('button',{name:/Approval:/}).click();await page.getByRole('group',{name:'Approval mode'}).waitFor();await composer.getByRole('button',{name:/Approval:/}).click();
+ await composer.getByRole('button',{name:/Effort:/}).click();await page.getByRole('slider',{name:'Reasoning effort'}).waitFor();await composer.getByRole('button',{name:/Effort:/}).click();
+}
 (async()=>{
- fs.mkdirSync(output,{recursive:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,args:['--mute-audio']});const errors=[];
- try{
-  for(const width of [360,393,430]){
-   const page=await browser.newPage({viewport:{width,height:852},isMobile:true,hasTouch:true});page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());const external=[];page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:'))external.push(r.url());});await page.addInitScript(fixture);await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>phoneFixture.calls.some(p=>p.action==='state'));
-   assert.equal(await page.getByText('On this phone',{exact:true}).isVisible(),true);assert.equal(await page.getByRole('button',{name:'Phone',exact:false}).first().isVisible(),true);assert.equal((await page.evaluate(()=>phoneFixture.calls)).some(p=>/pc|remote|pair/.test(p.action)),false,'First launch must not connect to a PC');
-   await page.getByRole('button',{name:'Models',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('#catalog-results .card').length===100);await page.getByRole('button',{name:'Next 100',exact:true}).click();await page.waitForFunction(()=>phoneFixture.calls.some(p=>p.action==='catalog'&&p.args.page===1));
-   await page.getByRole('button',{name:'Small starter model'}).click();await page.evaluate(()=>phoneFixture.holdDownload=true);await page.getByRole('button',{name:'Download to phone'}).first().click();await page.getByRole('button',{name:'Stop',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#quantizations [data-file-id]').disabled);
-   await page.getByRole('button',{name:'Download to phone'}).first().click();await page.waitForFunction(()=>phoneFixture.calls.filter(p=>p.action==='download').length===2&&phoneFixture.downloading);await page.evaluate(()=>{phoneFixture.downloading=false;phoneFixture.emit('download',{phase:'Download failed',error:'Test interrupted download'});phoneFixture.emit('state',phoneFixture.state());});await page.waitForFunction(()=>!document.querySelector('#quantizations [data-file-id]').disabled);
-   await page.evaluate(()=>phoneFixture.holdDownload=false);await page.getByRole('button',{name:'Download to phone'}).first().click();await page.waitForFunction(()=>phoneFixture.models.length===1);await page.getByRole('button',{name:'Use in chat'}).click();await page.getByRole('textbox',{name:'Message OpenCore'}).fill('A neutral local prompt');
-   await page.locator('#composer').evaluate(form=>{form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
-   await page.waitForFunction(()=>phoneFixture.calls.some(p=>p.action==='send'));assert.equal(await page.evaluate(()=>phoneFixture.calls.filter(p=>p.action==='send').length),1,'Rapid clicks create one generation');assert.equal(await page.evaluate(()=>phoneFixture.calls.filter(p=>p.action==='chat.create').length),1,'Rapid clicks create one chat');
-   await page.evaluate(()=>phoneFixture.emit('generation',{chat:'chat-0',assistant:'assistant',stage:'Generating on this phone',running:true,content:'Real native output appears here <script>window.injected=true</script>',metrics:{promptTokens:16,completionTokens:5,elapsedMs:2000,context:2048,tokensPerSecond:2.5}}));await page.getByText('Real native output appears here <script>window.injected=true</script>',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>window.injected),undefined,'Model output cannot execute JavaScript');await page.getByRole('button',{name:'Stop generation'}).click();await page.getByRole('button',{name:'Unload phone model'}).waitFor();await page.getByRole('button',{name:'Unload phone model'}).click();
-   await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Choose Phone or Paired PC'}).click();await page.waitForFunction(()=>phoneFixture.calls.some(p=>p.action==='device-settings'));await page.getByRole('button',{name:'Save generation settings'}).click();await page.getByRole('button',{name:'Dismiss message'}).click();
-   await page.getByRole('button',{name:'Models',exact:true}).click();await page.getByRole('textbox',{name:'Search model names or enter owner/model'}).fill('Qwen');await page.getByRole('button',{name:'Search',exact:true}).click();await page.getByRole('button',{name:'Next 100 models'}).waitFor();assert.equal(await page.locator('#hub-results .card').count(),100);await page.getByRole('button',{name:'Next 100 models'}).click();await page.waitForFunction(()=>document.querySelectorAll('#hub-results .card').length===200);assert.equal(await page.evaluate(()=>phoneFixture.calls.filter(p=>p.action==='hub.search').at(-1).args.cursor),'/api/models?cursor=page2');
-   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);assert.equal(overflow,false,'No horizontal overflow at '+width);assert.deepEqual(external,[],'Local UI must not use network or PC requests');await page.screenshot({path:path.join(output,'phone-models-'+width+'.png')});
-   await page.getByRole('button',{name:'Chats',exact:true}).click();await page.screenshot({path:path.join(output,'phone-chat-'+width+'.png')});await page.getByRole('button',{name:'Show conversations'}).click();await page.getByRole('button',{name:'Open Phone conversation'}).waitFor();await page.close();
-  }
-  assert.deepEqual(errors,[]);console.log('Bundled phone UI: offline launch, local routing, quant download, single submission, streaming, Stop, unload, settings, 100-result pagination, XSS and 360/393/430px layout passed');
- }finally{await browser.close();server.close();}
-})().catch(e=>{console.error(e);process.exitCode=1;});
+ fs.mkdirSync(evidence,{recursive:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const browser=await chromium.launch({...(process.env.OPENCORE_QA_CHANNEL?{channel:process.env.OPENCORE_QA_CHANNEL}:{}),headless:true,args:['--mute-audio']}),results=[];
+ try{for(const mode of ['phone','pc'])for(const width of [360,393,430]){
+  const page=await browser.newPage({viewport:{width,height:804},isMobile:true,hasTouch:true}),errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requests.push(r.url()));
+  const snapshot=structuredClone(preview.previewSnapshot);snapshot.runtime={...snapshot.runtime,status:mode==='phone'?'stopped':'running',profile:mode==='phone'?'stopped':'echo',error:null};snapshot.activeConversationIds=[];
+  if(mode==='phone'){snapshot.conversations=[];snapshot.projects=[];snapshot.logs=[];snapshot.connectors=[];snapshot.telemetry={...snapshot.telemetry,gpuName:'Phone CPU',vramTotalMib:0};}
+  await page.addInitScript(fixture,{snapshot,timeline:mode==='phone'?[]:preview.previewTimeline,mode});
+  try{
+   await page.goto(`http://127.0.0.1:${server.address().port}/?mode=${mode}`);await page.locator('.opencore-shell').waitFor({timeout:20000});await page.waitForFunction(()=>fixture.calls.some(c=>c.command==='get_snapshot'));
+   assert.equal(await page.evaluate(()=>Object.keys(document.querySelector('#root')).some(k=>k.startsWith('__reactContainer'))),true,'Actual React root mounted');
+   assert.equal(requests.some(url=>/\/local\/(?:app.js|index.html)|\/app.html/.test(url)),false,'No bespoke phone UI');
+   if(mode==='phone'){
+    assert.equal(await page.evaluate(()=>fixture.snapshot.conversations.length),0,'First launch empty real-shape snapshot');
+    assert.equal(await page.getByText('Build a data analysis script',{exact:true}).count(),0,'No desktop preview chat on first launch');
+    await page.evaluate(({populated,timeline})=>fixture.populate(populated,timeline),{populated:{...preview.previewSnapshot,runtime:{...snapshot.runtime,status:'running',profile:'echo'},activeConversationIds:[]},timeline:[]});
+   }
+   const nav=page.getByRole('navigation',{name:'OpenCore sections'});assert.deepEqual(await nav.getByRole('button').allTextContents(),['Chats','Overview','Models','Settings','More']);
+   await page.getByLabel('Message OpenCore',{exact:true}).fill('SHARED_PHONE_FIXTURE_PROMPT');await controls(page);await layout(page,`${mode}-${width}`);
+   // Native Android supplies a content viewport with system navigation insets.
+   // Shrinking its usable height validates layout; it does not emulate JNI.
+   await page.setViewportSize({width,height:540});await layout(page,`${mode}-${width}-short`);await page.setViewportSize({width,height:804});
+   await page.getByRole('button',{name:'Send message',exact:true}).click();await page.waitForFunction(()=>fixture.calls.some(c=>c.command==='send_chat_message'&&c.args.request.text==='SHARED_PHONE_FIXTURE_PROMPT'));
+   await page.getByRole('button',{name:'Stop generation',exact:true}).waitFor();await page.evaluate(()=>fixture.stream('STREAMED_PHONE_OUTPUT <script>window.sharedOutputExecuted=true</script> <img src=x onerror="window.sharedOutputExecuted=true">'));
+   await page.getByText(/STREAMED_PHONE_OUTPUT/).first().waitFor();assert.equal(await page.evaluate(()=>window.sharedOutputExecuted),undefined,'Raw output cannot execute script');await layout(page,`${mode}-${width}-streaming`);
+   await page.evaluate(()=>fixture.complete());await page.getByRole('button',{name:'Stop generation',exact:true}).waitFor({state:'hidden'});await page.getByText(/STREAMED_PHONE_OUTPUT/).first().waitFor();
+   assert.equal(await page.evaluate(()=>fixture.snapshot.activeConversationIds.length),0,'Completion clears active status');
+   assert.equal(await page.getByText('OpenCore is working · press Stop to cancel',{exact:true}).count(),0,'Visible active status stops after completion');
+   await page.getByLabel('Message OpenCore',{exact:true}).fill('CANCEL_FIXTURE_PROMPT');await page.getByRole('button',{name:'Send message',exact:true}).click();await page.getByRole('button',{name:'Stop generation',exact:true}).waitFor();
+   await page.getByRole('button',{name:'Stop generation',exact:true}).click();await page.waitForFunction(()=>fixture.calls.some(c=>c.command==='cancel_chat_message'));await page.getByRole('button',{name:'Stop generation',exact:true}).waitFor({state:'hidden'});
+   await page.screenshot({path:path.join(evidence,`${mode}-chat-${width}.png`)});
+   await nav.getByRole('button',{name:'Chats',exact:true}).click();await page.locator('.conversation-list').waitFor();assert.ok(await page.locator('.conversation-list .conversation-row').count()>=2,'Existing conversations drawer');
+   await page.locator('.conversation-list .conversation-row').filter({hasText:'Generate image prompt ideas'}).first().click();await page.waitForFunction(()=>!document.body.classList.contains('oc-chats-open'));
+   await nav.getByRole('button',{name:'Models',exact:true}).click();await page.getByRole('textbox',{name:'Search models',exact:true}).waitFor();await page.getByText('Fixture native model',{exact:true}).first().waitFor();
+   await page.getByLabel('Hugging Face repository',{exact:true}).fill('fixture');await page.getByText('Page 1 · 100 models',{exact:true}).waitFor();assert.equal(await page.locator('.hub-search-results>button').count(),100);
+   await page.getByRole('button',{name:'Next page',exact:true}).click();await page.getByText('Page 2 · 100 models',{exact:true}).waitFor();assert.equal(await page.locator('.hub-search-results>button').count(),100);
+   assert.equal(await page.evaluate(()=>fixture.calls.filter(c=>c.kind==='hub'&&c.path==='/api/search').at(-1).body.includes('second')),true);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Model/HF page does not overflow');await page.screenshot({path:path.join(evidence,`${mode}-models-${width}.png`)});
+   await nav.getByRole('button',{name:'Settings',exact:true}).click();await page.locator('[data-phone-execution]').waitFor();
+   assert.equal(await page.evaluate(()=>globalThis.__OPENCORE_PHONE__===true),mode==='phone','Execution metadata selects the correct device');
+   const deviceDescription=(await page.locator('[data-phone-execution] p').innerText()).split('.')[0];
+   assert.match(deviceDescription,mode==='phone'?/phone/i:/paired PC/i,'Initial sentence names the current execution device');
+   if(mode==='phone')assert.doesNotMatch(deviceDescription,/paired PC/i,'Phone must not claim execution on PC');
+   await page.getByRole('button',{name:'Choose Phone or Paired PC',exact:true}).click();await page.waitForFunction(()=>fixture.calls.some(c=>c.kind==='phone-execution-settings'));
+   await nav.getByRole('button',{name:'More',exact:true}).click();const more=page.getByRole('dialog',{name:'All OpenCore sections'});await more.waitFor();const sections=await more.getByRole('button').allTextContents();for(const s of ['Chat Core','Overview','Conversations','Jobs','Spaces','Live Context','Memory / ECHO','Runtime & Logs','Models','API','Learning Studio','Music Studio','Game Dev Studio','Media Studio','Connectors','Settings','Troubleshooting'])assert.ok(sections.includes(s),'Full More section '+s);
+   for(const [i,s]of ['Game Dev Studio','Media Studio','Music Studio'].entries()){if(i)await nav.getByRole('button',{name:'More',exact:true}).click();await more.getByRole('button',{name:s,exact:true}).click();await page.locator('.section-header').getByText(s,{exact:true}).waitFor();}
+   assert.deepEqual(errors,[],'No browser runtime errors');assert.equal(requests.some(url=>!url.startsWith(`http://127.0.0.1:${server.address().port}/`)&&!url.startsWith('data:')),false,'Only local bridge fixture requests');
+   results.push({mode,width,normalHeight:804,shortUsableHeight:540,sharedReact:true,streaming:true,completion:true,hfPages:2});console.log(`Shared desktop UI ${mode} ${width}px passed`);
+  }catch(error){console.error(`${mode}-${width}:`,error);console.error('Browser errors:',errors);console.error((await page.locator('body').innerText()).slice(0,5000));await page.screenshot({path:path.join(evidence,`${mode}-${width}-failure.png`)});throw error;}finally{await page.close();}
+ }
+ fs.writeFileSync(path.join(evidence,'results.json'),JSON.stringify({proof:'Browser fixture, not physical Android/JNI',dist,results},null,2));console.log('Shared desktop Phone/Paired PC UI passed. Browser fixtures only; real native inference requires Android evidence.');
+ }finally{await browser.close();await new Promise(r=>server.close(r));}
+})().catch(e=>{console.error(e);server.close();process.exitCode=1;});

@@ -1,5 +1,7 @@
 # Phone and paired-PC model execution
 
+User correction: keep the exact existing desktop interface in both modes. The separate Phone interface introduced in 3.0 is rejected and removed in 3.1. Reuse the desktop bundle, composer, tabs, models/settings screens and existing mobile responsive adaptation; add only execution selection/device wording. Use a phone backend adapter behind the existing IPC protocol. Apply system/IME safe areas to the native outer container to prevent Android navigation covering controls.
+
 The Android app must open without a PC and default to Phone. Pairing remains optional and persistent. Settings must always offer Phone and offer Paired PC after QR approval. Switching never copies phone chats, credentials or models to the PC and never silently changes destination on an error. The existing paired desktop interface remains intact.
 
 Use the current Java/WebView app and signing identity. Add a private on-device chat/model store and a bundled arm64 llama.cpp JNI runtime. A local phone interface exposes chats, models and execution settings, downloads real GGUFs from pinned Hugging Face revisions with size/hash verification, and streams real native tokens with cancellation, context and elapsed-time metrics. The PC interface exposes the same execution settings through the existing native message channel.

@@ -9,6 +9,12 @@ public final class PhoneRuntimeTest {
     static void le(DataOutputStream out,long n,int bytes)throws Exception{for(int i=0;i<bytes;i++)out.write((int)(n >>> (8*i))&255);}
     static void text(DataOutputStream out,String s)throws Exception{byte[] bytes=s.getBytes(StandardCharsets.UTF_8);le(out,bytes.length,8);out.write(bytes);}
     public static void main(String[] args)throws Exception{
+        PhoneOperationGate gate=new PhoneOperationGate();boolean[] prepared={false},cancelled={false};long queued=gate.ticket();
+        gate.cancel(()->cancelled[0]=true);boolean staleRejected=false;
+        try{gate.prepare(queued,()->prepared[0]=true);}catch(InterruptedIOException expected){staleRejected=true;}
+        check(staleRejected&&!prepared[0]&&cancelled[0],"A queued Start must preserve a later Stop");
+        gate.prepare(gate.ticket(),()->{prepared[0]=true;cancelled[0]=false;});
+        check(prepared[0]&&!cancelled[0],"A new explicit Start after Stop prepares the native lifecycle");
         check(ExecutionPolicy.target(null).equals("phone"),"Fresh installs default to Phone, even with an old pairing");
         check(ExecutionPolicy.target("pc").equals("pc"),"An explicitly selected PC is persistent");
         check(ExecutionPolicy.target("cloud").equals("phone"),"Invalid preferences never select an external host");

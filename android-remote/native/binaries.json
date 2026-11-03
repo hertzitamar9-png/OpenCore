@@ -2,13 +2,13 @@
   "revision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
   "files": {
     "arm64-v8a/libopencore_phone.so": {
-      "bytes": 6656112,
-      "sha256": "cdcbb363da05f457ba746f5b18c23f79be48122aff607dc0abf376d1b98b0a94"
+      "bytes": 6656288,
+      "sha256": "821e63b8eb1bc15f0ebc9db3b35ba1ab98617623479f9e5303dac2cd0d8dc312"
     }
   },
   "sources": {
     "CMakeLists.txt": "ece98172ece02a8c6d141f5cd1c4ed305ad7a2792344a3339402f50ecde0c611",
-    "phone_runtime.cpp": "8fcafbe250dc13fd343afd5aae2584619a767e17cd82c3db1a6a26c0eb3dbe57",
+    "phone_runtime.cpp": "b3ca28acc91db7ba076cd230dafb8075d5241e8b96af2d3a05dc52994dd11f55",
     "runtime.json": "66248461c0f711ba35c81b665ddb774e1958aed196ad706da2c77d2eccfb2aa0"
   }
 }

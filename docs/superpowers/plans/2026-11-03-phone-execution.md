@@ -1,5 +1,7 @@
 # Phone execution implementation plan
 
+3.1 correction: replace the standalone 3-tab Phone UI with the same compiled desktop frontend and existing mobile shim/CSS used by Paired PC. Add PhoneAppBridge for local IPC, preserve PhoneStore/installed 3.0 data, and protect the outer viewport with Android system/IME insets. Verify identical original composer controls and all sections across Phone/PC at 360/393/430px and short viewport, then build a same-certificate code-10 update. Original work below is historical; the separate 3.0 UI is superseded.
+
 > Execute inline using superpowers:executing-plans, with test-driven-development. Prior user authorization covers work on main and publishing updates.
 
 **Goal:** make Android usable offline on first install and persist an explicit Phone or Paired PC execution choice.

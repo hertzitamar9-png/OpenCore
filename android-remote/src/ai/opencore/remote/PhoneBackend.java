@@ -26,16 +26,20 @@ final class PhoneBackend {
     final AtomicBoolean generationCancelled=new AtomicBoolean();
     final Handler main=new Handler(Looper.getMainLooper());
     final Object installation=new Object();
+    final PhoneOperationGate operations=new PhoneOperationGate();
     volatile Observer observer;
     volatile JSONObject generation=new JSONObject(),download=new JSONObject();
     volatile HttpsURLConnection downloadConnection;
     volatile String activeChat="",loadedId="";
     volatile int loadedContext;
+    volatile boolean loading;
+    volatile long loadElapsedMs;
+    volatile String loadError="";
     PhoneCatalog catalog;
     PhoneBackend(Context context){app=context;prefs=app.getSharedPreferences("phone-settings",Context.MODE_PRIVATE);store=new PhoneStore(app);store.recoverInterrupted();}
     void watch(Observer value){observer=value;}
     void detach(Observer value){if(observer==value)observer=null;}
-    void emit(String type,JSONObject value){try{JSONObject event=new JSONObject().put("event",type).put("value",value);main.post(()->{Observer selected=observer;if(selected!=null)selected.event(event);});}catch(JSONException ignored){}}
+    void emit(String type,JSONObject value){try{JSONObject event=new JSONObject().put("event",type).put("value",value);Observer origin=observer;main.post(()->{if(origin!=null&&observer==origin)origin.event(event);});}catch(JSONException ignored){}}
     static String message(Throwable error){return error.getMessage()==null?"This phone operation failed.":error.getMessage();}
     long available(){ActivityManager.MemoryInfo info=new ActivityManager.MemoryInfo();((ActivityManager)app.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(info);return Math.max(0,info.availMem-info.threshold);}
     File modelFile(String id)throws IOException{if(!id.matches("[a-f0-9]{64}"))throw new IOException("Invalid phone model identity.");File folder=new File(app.getFilesDir(),"models");if(!folder.isDirectory()&&!folder.mkdirs())throw new IOException("Could not prepare phone model storage.");return new File(folder,id+".gguf");}
@@ -57,7 +61,8 @@ final class PhoneBackend {
         io.execute(()->{if(observer!=origin)return;try{Object result=dispatch(action,args);reply(origin,id,true,result,null);}catch(Throwable error){reply(origin,id,false,null,message(error));}});
     }
     void reply(Observer origin,String id,boolean okay,Object value,String error){try{JSONObject result=new JSONObject().put("id",id).put("ok",okay);if(okay)result.put("value",value==null?JSONObject.NULL:value);else result.put("error",error);main.post(()->{if(observer==origin)origin.event(result);});}catch(JSONException ignored){}}
-    void stop(){generationCancelled.set(true);try{PhoneNative.cancel();}catch(UnsatisfiedLinkError ignored){}}
+    void stop(){operations.cancel(()->{generationCancelled.set(true);try{PhoneNative.cancel();}catch(UnsatisfiedLinkError ignored){}});}
+    void prepare(long ticket)throws InterruptedIOException{operations.prepare(ticket,()->{PhoneNative.prepare();generationCancelled.set(false);});}
     Object dispatch(String action,JSONObject args)throws Exception{
         switch(action){
             case "state":return state();
@@ -99,6 +104,20 @@ final class PhoneBackend {
         }
     }
     synchronized PhoneCatalog catalog()throws Exception{if(catalog==null)catalog=new PhoneCatalog(app);return catalog;}
+    /** Called only on the single inference executor, shared by explicit Start and Send. */
+    void load(String modelId,JSONObject record,int context)throws Exception{
+        int effective=Math.min(context,record.optInt("modelContext",context));if(effective<1)effective=context;
+        if(modelId.equals(loadedId)&&effective==loadedContext)return;
+        if(!arm64())throw new IOException("Phone inference needs a 64-bit ARM Android device.");
+        loading=true;loadError="";long start=SystemClock.elapsedRealtime();emitState();
+        try{
+            PhoneNative.unload();loadedId="";
+            String problem=ExecutionPolicy.fileProblem(record.getString("filename"),record.getLong("bytes"),available());if(!problem.isEmpty())throw new IOException(problem);
+            PhoneNative.load(modelFile(modelId).getAbsolutePath(),effective,Math.max(1,Math.min(4,Runtime.getRuntime().availableProcessors()-1)));
+            loadedId=modelId;loadedContext=effective;record.put("runtimeReady",true);store.putModel(record);
+        }catch(Exception|LinkageError error){loadError=message(error);throw error;}
+        finally{loadElapsedMs=SystemClock.elapsedRealtime()-start;loading=false;emitState();}
+    }
     void emitState(){try{emit("state",state());}catch(Exception ignored){}}
     void install(JSONObject file){
         File partial=null,target=null;boolean published=false,renamed=false;
@@ -134,31 +153,30 @@ final class PhoneBackend {
         if(text.isEmpty()||text.length()>256*1024)throw new IOException("Write a prompt of at most 256 KiB.");
         JSONObject record=store.model(modelId);if(record==null||!modelFile(modelId).isFile())throw new IOException("Download a phone model before sending.");
         if(!store.hasChat(chat))throw new IOException("Select a phone chat first.");
-        if(!generating.compareAndSet(false,true))throw new IOException("A phone generation is already running. Stop it before sending again.");
-        activeChat=chat;
-        generationCancelled.set(false);
+        boolean accepted=false;
         try{
-            PhoneNative.prepare();if(generationCancelled.get())throw new InterruptedIOException("Generation stopped.");
+            synchronized(operations){
+                if(!generating.compareAndSet(false,true))throw new IOException("A phone generation is already running. Stop it before sending again.");
+                accepted=true;activeChat=chat;prepare(operations.ticket());
+            }
+            if(generationCancelled.get())throw new InterruptedIOException("Generation stopped.");
             if(store.messages(chat).length()==0)store.title(chat,text.substring(0,Math.min(text.length(),70)));
-            store.add(chat,"user",text,"completed");String assistant=store.add(chat,"assistant","","loading");
-            int context=prefs.getInt("context",2048),max=prefs.getInt("maxTokens",512);float temperature=prefs.getFloat("temperature",.7f);
-            inference.execute(()->generate(chat,assistant,modelId,record,context,max,temperature));return new JSONObject().put("assistant",assistant);
-        }catch(Exception|LinkageError error){generating.set(false);activeChat="";throw error;}
+            String user=store.add(chat,"user",text,"completed");if(args.has("submissionId"))store.updateMessage(user,text,"completed",new JSONObject().put("submissionId",args.getString("submissionId")));String assistant=store.add(chat,"assistant","","loading");
+            int context=prefs.getInt("context",2048),max=args.optInt("maxTokens",prefs.getInt("maxTokens",512));float temperature=(float)args.optDouble("temperature",prefs.getFloat("temperature",.7f));
+            float topP=(float)args.optDouble("topP",.95),repeatPenalty=(float)args.optDouble("repeatPenalty",1.05);int topK=args.optInt("topK",40);long seed=args.optLong("seed",-1);
+            long started=SystemClock.elapsedRealtime();inference.execute(()->generate(chat,assistant,modelId,record,context,max,temperature,topP,topK,repeatPenalty,seed,started));return new JSONObject().put("assistant",assistant);
+        }catch(Exception|LinkageError error){if(accepted){generating.set(false);activeChat="";}throw error;}
     }
-    void generate(String chat,String assistant,String modelId,JSONObject record,int context,int max,float temperature){
+    void generate(String chat,String assistant,String modelId,JSONObject record,int context,int max,float temperature,float topP,int topK,float repeatPenalty,long seed,long started){
         final String[] output={""};final JSONObject[] metrics={new JSONObject()};final long[] checkpoint={0};String status="failed",detail="";
         try{
             generation=new JSONObject().put("chat",chat).put("assistant",assistant).put("stage","Loading model on this phone").put("content","").put("running",true);emit("generation",generation);
-            if(!modelId.equals(loadedId)||context!=loadedContext){
-                PhoneNative.unload();loadedId="";
-                String problem=ExecutionPolicy.fileProblem(record.getString("filename"),record.getLong("bytes"),available());if(!problem.isEmpty())throw new IOException(problem);
-                PhoneNative.load(modelFile(modelId).getAbsolutePath(),context,Math.max(1,Math.min(4,Runtime.getRuntime().availableProcessors()-1)));loadedId=modelId;loadedContext=context;
-                record.put("runtimeReady",true);store.putModel(record);
-            }
+            load(modelId,record,context);
             if(generationCancelled.get())throw new InterruptedIOException("Generation stopped.");
             JSONArray history=store.messages(chat);ArrayList<String> roles=new ArrayList<>(),contents=new ArrayList<>();
+            String system=prefs.getString("systemPrompt","");if(!system.isEmpty()){roles.add("system");contents.add(system);}
             for(int i=0;i<history.length();i++){JSONObject item=history.getJSONObject(i);if(item.getString("id").equals(assistant))continue;String role=item.getString("role"),content=item.getString("content");if(!content.isEmpty()&&(!role.equals("assistant")||item.getString("status").equals("completed"))){roles.add(role);contents.add(content);}}
-            String reason=PhoneNative.generate(roles.toArray(new String[0]),contents.toArray(new String[0]),max,temperature,(bytes,prompt,completed,elapsed)->{
+            String reason=PhoneNative.generate(roles.toArray(new String[0]),contents.toArray(new String[0]),max,temperature,topP,topK,repeatPenalty,seed,(bytes,prompt,completed,elapsed)->{
                 output[0]=new String(bytes,StandardCharsets.UTF_8);
                 try{
                     metrics[0]=new JSONObject().put("promptTokens",prompt).put("completionTokens",completed).put("elapsedMs",elapsed).put("context",Math.min(context,record.optInt("modelContext",context))).put("tokensPerSecond",completed*1000.0/Math.max(1,elapsed));
@@ -167,10 +185,14 @@ final class PhoneBackend {
                 }catch(JSONException error){throw new IllegalStateException(error);}
             });
             if(!reason.equals("cancelled")&&output[0].trim().isEmpty())throw new IOException("The model returned no answer text. Try a different prompt or quantization.");
-            status=reason.equals("cancelled")?"stopped":"completed";if(reason.equals("length"))detail="Output limit reached; increase Phone output tokens in Settings for a longer answer.";
+            status=reason.equals("cancelled")?"stopped":"completed";if(status.equals("completed")){record.put("inferenceVerified",true);store.putModel(record);}if(reason.equals("length"))detail="Output limit reached; increase Phone output tokens in Settings for a longer answer.";
         }catch(Throwable error){if(generationCancelled.get())status="stopped";detail=message(error);}
         finally{
-            try{metrics[0].put("detail",detail);}catch(JSONException ignored){}store.updateMessage(assistant,output[0],status,metrics[0]);generating.set(false);activeChat="";
+            try{
+                metrics[0].put("detail",detail).put("durationMs",SystemClock.elapsedRealtime()-started);
+                store.updateMessage(assistant,output[0],status,metrics[0]);
+            }catch(Throwable error){status="failed";detail="Could not save the phone response: "+message(error);loadError=detail;try{metrics[0].put("detail",detail);}catch(JSONException ignored){}}
+            finally{generating.set(false);activeChat="";}
             try{generation=new JSONObject().put("chat",chat).put("assistant",assistant).put("stage",status.equals("completed")?"Generation complete":status.equals("stopped")?"Stopped":"Generation failed").put("status",status).put("content",output[0]).put("running",false).put("metrics",metrics[0]).put("detail",detail);emit("generation",generation);}catch(JSONException ignored){}emitState();
         }
     }

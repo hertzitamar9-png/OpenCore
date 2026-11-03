@@ -62,11 +62,11 @@ extern "C" JNIEXPORT void JNICALL Java_ai_opencore_remote_PhoneNative_load(JNIEn
     }catch(const std::exception &error){close_model();if(!env->ExceptionCheck())fail(env,error.what());}
 }
 
-extern "C" JNIEXPORT jstring JNICALL Java_ai_opencore_remote_PhoneNative_generate(JNIEnv *env,jclass,jobjectArray roles,jobjectArray contents,jint max_tokens,jfloat temperature,jobject callback){
+extern "C" JNIEXPORT jstring JNICALL Java_ai_opencore_remote_PhoneNative_generate(JNIEnv *env,jclass,jobjectArray roles,jobjectArray contents,jint max_tokens,jfloat temperature,jfloat top_p,jint top_k,jfloat repeat_penalty,jlong seed,jobject callback){
     std::lock_guard<std::mutex> lock(owner);llama_sampler *sampler=nullptr;
     try{
         if(!context||!model)throw std::runtime_error("Load a phone model before sending a message.");
-        if(max_tokens<1||max_tokens>4096||!std::isfinite(temperature)||temperature<0||temperature>2)throw std::runtime_error("Invalid generation settings.");
+        if(max_tokens<1||max_tokens>32768||!std::isfinite(temperature)||temperature<0||temperature>2||!std::isfinite(top_p)||top_p<.01f||top_p>1||top_k<0||top_k>1000||!std::isfinite(repeat_penalty)||repeat_penalty<.5f||repeat_penalty>2||seed < -1||seed>4294967295LL)throw std::runtime_error("Invalid generation settings.");
         int count=env->GetArrayLength(roles);if(count<1||count>1024||count!=env->GetArrayLength(contents))throw std::runtime_error("Invalid chat history.");
         std::vector<std::string> names,texts;names.reserve(count);texts.reserve(count);size_t bytes=0;
         for(int i=0;i<count;i++){
@@ -99,9 +99,9 @@ extern "C" JNIEXPORT jstring JNICALL Java_ai_opencore_remote_PhoneNative_generat
             if(result!=0){if(stopped)return env->NewStringUTF("cancelled");throw std::runtime_error("Phone model prefill failed. Reduce the context or choose a smaller model.");}
         }
         sampler=llama_sampler_chain_init(llama_sampler_chain_default_params());
-        llama_sampler_chain_add(sampler,llama_sampler_init_penalties(llama_vocab_n_tokens(vocab),64,1.05f,0,0));
+        llama_sampler_chain_add(sampler,llama_sampler_init_penalties(llama_vocab_n_tokens(vocab),64,repeat_penalty,0,0));
         if(temperature==0)llama_sampler_chain_add(sampler,llama_sampler_init_greedy());
-        else{llama_sampler_chain_add(sampler,llama_sampler_init_top_k(40));llama_sampler_chain_add(sampler,llama_sampler_init_top_p(.95f,1));llama_sampler_chain_add(sampler,llama_sampler_init_temp(temperature));llama_sampler_chain_add(sampler,llama_sampler_init_dist(LLAMA_DEFAULT_SEED));}
+        else{llama_sampler_chain_add(sampler,llama_sampler_init_top_k(top_k));llama_sampler_chain_add(sampler,llama_sampler_init_top_p(top_p,1));llama_sampler_chain_add(sampler,llama_sampler_init_temp(temperature));llama_sampler_chain_add(sampler,llama_sampler_init_dist(seed<0?LLAMA_DEFAULT_SEED:(uint32_t)seed));}
         int limit=std::min((int)max_tokens,int(llama_n_ctx(context))-n);std::string reason="length";
         for(int i=0;i<limit;i++){
             if(stopped){reason="cancelled";break;}

@@ -27,9 +27,18 @@ class PhonePackagingTests(unittest.TestCase):
         self.assertIn('"execution-device"',source)
         self.assertNotIn('"opencore.',source)
         phone=(ROOT/'src/ai/opencore/remote/PhoneActivity.java').read_text()
-        self.assertIn("connect-src 'none'",phone)
+        self.assertIn('phone/shared-ui/manifest.json',phone)
+        self.assertIn('SystemInsets.apply(this,root)',phone)
         self.assertNotIn('addJavascriptInterface',phone)
         self.assertNotIn('selected.json("/request"',phone)
+
+    def test_phone_reuses_desktop_assets_and_has_no_replacement_composer(self):
+        manifest=json.loads((ROOT/'shared-ui/manifest.json').read_text())
+        self.assertEqual(set(manifest['files']),{'index.html','assets/index-CD0EH-dA.js','assets/App-kNA9sRUP.js','assets/model-catalog-B8SfuDgQ.js','assets/index-CsoxYKnK.css','assets/App-C9duitZV.css','opencore-logo.png'})
+        for name,record in manifest['files'].items():
+            data=(ROOT/'shared-ui'/name).read_bytes()
+            self.assertEqual(len(data),record['bytes']);self.assertEqual(hashlib.sha256(data).hexdigest(),record['sha256'])
+        self.assertFalse((ROOT/'assets/local').is_dir() and any((ROOT/'assets/local').iterdir()),'The separate redesigned Phone UI must not be shipped')
 
 
 if __name__=='__main__':unittest.main()

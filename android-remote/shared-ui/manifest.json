@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "files": {
+    "index.html": {
+      "bytes": 505,
+      "sha256": "37f44a475667298b155c929ba1289026e1e4d35a02713d2042b6ef3631e77417",
+      "mime": "text/html; charset=utf-8"
+    },
+    "assets/index-CD0EH-dA.js": {
+      "bytes": 289091,
+      "sha256": "325164506412e6509d614c732fb0a6bb51c88eb548357dc744d1cc89fe9ce25e",
+      "mime": "text/javascript; charset=utf-8"
+    },
+    "assets/App-kNA9sRUP.js": {
+      "bytes": 1795584,
+      "sha256": "38c32bcca39bca6fe2ae3e580c6a58a8e0f14a3904caf9e4967f6a54d053e611",
+      "mime": "text/javascript; charset=utf-8"
+    },
+    "assets/model-catalog-B8SfuDgQ.js": {
+      "bytes": 4201300,
+      "sha256": "8f370c7570b94f7729c4e6dae296d3bb2d4831685f0764f2fe79dba783efb22f",
+      "mime": "text/javascript; charset=utf-8"
+    },
+    "assets/index-CsoxYKnK.css": {
+      "bytes": 261148,
+      "sha256": "1c3bd8fcd023d4b2f167fd1b8c2d145234520065868addf7481886197142ecf2",
+      "mime": "text/css; charset=utf-8"
+    },
+    "assets/App-C9duitZV.css": {
+      "bytes": 90174,
+      "sha256": "7d0fa5e9b24af9089ff6788c578db11256077c676c16aa0e4f773a9783485ff4",
+      "mime": "text/css; charset=utf-8"
+    },
+    "opencore-logo.png": {
+      "bytes": 261209,
+      "sha256": "6756be58ddc8540f16d026fa661cea4b3f16a965e2be25b7de63dd1f8a59a527",
+      "mime": "image/png"
+    }
+  }
+}

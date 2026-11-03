@@ -34,6 +34,13 @@ def main():
     for name in ('classes', 'dex', 'generated', 'res/drawable'): (build / name).mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT.parent / 'src-tauri/icons/icon.png', build / 'res/drawable/opencore.png')
     shutil.copytree(ROOT/'assets', build/'assets/phone')
+    shared=ROOT/'shared-ui'
+    shared_manifest=json.loads((shared/'manifest.json').read_text(encoding='utf-8'))
+    for relative,record in shared_manifest['files'].items():
+        source=shared/relative
+        if not source.is_file() or source.stat().st_size!=record['bytes'] or hashlib.sha256(source.read_bytes()).hexdigest()!=record['sha256']:
+            raise ValueError('The bundled desktop UI is missing or changed; regenerate it: '+relative)
+    shutil.copytree(shared,build/'assets/phone/shared-ui')
     shutil.copyfile(ROOT.parent/'public/opencore-logo.png',build/'assets/phone/opencore-logo.png')
     from phone_catalog import build as build_phone_catalog
     resources=ROOT.parent/'src-tauri/resources'

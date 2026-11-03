@@ -1,6 +1,8 @@
-# OpenCore for Android 3.0
+# OpenCore for Android 3.1
 
 Fresh installs open **Phone** mode without a PC or sign-in. Phone chats, model files, execution preferences and encrypted Hugging Face credentials are stored privately on Android. No model downloads or inference run at launch.
+
+Phone and Paired PC use the same original desktop OpenCore interface, tabs, composer, Approval/Effort controls, settings and model browser. There is no separate redesigned Phone interface. Phone ships a verified copy of the desktop frontend for offline use; Paired PC fetches that PC's current frontend. Only the execution backend and device wording differ. Android system bars, display cutouts and the keyboard inset the outer native container rather than cover app controls. The bundled desktop bytes are pinned by `shared-ui/manifest.json`.
 
 In **Models**, browse the bundled OpenCore catalog or search Hugging Face by words or `owner/model`. The catalog and Hub search each have 100-result pages. Download a complete GGUF that fits the device. Each file is pinned to a commit, exact length and publisher SHA-256. The bundled ARM64 llama.cpp CPU runtime validates its architecture/template when it loads and streams native output, context/token counts and elapsed time. Stop interrupts native decoding; unload releases the model. Context/output/temperature settings are persistent. Phone inference currently supports compatible standalone text GGUFs, not arbitrary safetensors, image diffusion, vision projectors, split files or LoRA-only adapters. A model's size and runtime compatibility can require the PC.
 
