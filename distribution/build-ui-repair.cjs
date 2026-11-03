@@ -61,6 +61,10 @@ index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement
 // asset so the fixed native App slot retains room for normal release versions.
 index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
+app=replaceOnce(app,'const Xf=()=>{try{const t=window.localStorage.getItem("opencore.model-profile");if(t&&g2(t))return t}catch{}return"doucode"}',
+  'const Xf=()=>{const e=globalThis.__OPENCORE_PHONE__===true;try{const t=window.localStorage.getItem("opencore.model-profile");if(e)return t||"stopped";if(t&&g2(t))return t}catch{}return e?"stopped":"doucode"}');
+index=editFunction(index,'kp',text=>replaceOnce(text,'if(i==="stopped")throw new Error(',
+  'if(i==="stopped"&&globalThis.__OPENCORE_PHONE__!==true)throw new Error('));
 app=editFunction(app,'Kp',text=>replaceOnce(text,'function Kp(t){','function Kp(t){if(globalThis.__opencoreHubEchoProfiles?.has(t))return true;'));
 app=editFunction(app,'Rp',text=>replaceOnce(text,'return{id:t.id,','return{id:t.hubEntry?.profileId||t.id,'));
 app=editFunction(app,'pk',text=>{

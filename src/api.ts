@@ -247,7 +247,7 @@ export async function startProfile(profile: RuntimeProfile, attachUrl?: string):
 
 export async function selectProfile(profile: RuntimeProfile): Promise<void> {
   if (!desktop()) return;
-  if (profile === "stopped") throw new Error("Choose a model profile before starting the runtime.");
+  if (profile === "stopped" && Reflect.get(globalThis, "__OPENCORE_PHONE__") !== true) throw new Error("Choose a model profile before starting the runtime.");
   await invoke("select_profile", { profile });
 }
 

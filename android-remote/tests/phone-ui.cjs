@@ -41,10 +41,75 @@ async function controls(page){
  await composer.getByRole('button',{name:/Approval:/}).click();await page.getByRole('group',{name:'Approval mode'}).waitFor();await composer.getByRole('button',{name:/Approval:/}).click();
  await composer.getByRole('button',{name:/Effort:/}).click();await page.getByRole('slider',{name:'Reasoning effort'}).waitFor();await composer.getByRole('button',{name:/Effort:/}).click();
 }
+function emptyPhoneSnapshot(){
+ const snapshot=structuredClone(preview.previewSnapshot);
+ snapshot.runtime={...snapshot.runtime,status:'stopped',profile:'stopped',error:null};
+ snapshot.activeConversationIds=[];snapshot.conversations=[];snapshot.projects=[];snapshot.logs=[];snapshot.connectors=[];
+ snapshot.telemetry={...snapshot.telemetry,gpuName:'Phone CPU',vramTotalMib:0};return snapshot;
+}
+async function assertPhoneIdle(page,expected){
+ await page.waitForFunction(()=>fixture.calls.some(c=>c.command==='select_profile'),null,{timeout:10000});
+ await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+ const calls=await page.evaluate(()=>fixture.calls);
+ assert.ok(calls.filter(c=>c.command==='select_profile').every(c=>c.args.profile===expected),'Phone must select only the backend-seeded profile '+expected+': '+JSON.stringify(calls.filter(c=>c.command==='select_profile')));
+ assert.equal(calls.some(c=>/^(start_profile|restart_runtime|install_model|download_model|runtime_setup_start)$/.test(c.command||'')),false,'Opening Phone must not start a runtime, prepare or download a model');
+ assert.equal(calls.some(c=>c.kind==='hub'&&/^\/api\/(install|prepare|download)(?:\/|$)/.test(c.path)),false,'Opening Phone must not start a Hub model download/preparation');
+ assert.equal(calls.some(c=>c.command==='select_profile'&&c.args.profile==='doucode'),false,'Phone must not auto-select desktop DuoCore');
+ assert.equal(await page.locator('.toast').count(),0,'Phone startup must not show a red model-selection error toast');
+ assert.equal(await page.evaluate(()=>localStorage.getItem('opencore.model-profile')),expected,'Native preference remains the selected Phone profile');
+}
+async function phoneStartupRegressions(browser){
+ const fresh=await browser.newPage({viewport:{width:393,height:804},isMobile:true,hasTouch:true}),errors=[];
+ fresh.on('pageerror',e=>errors.push(e.message));
+ try{
+  await fresh.addInitScript(fixture,{snapshot:emptyPhoneSnapshot(),timeline:[],mode:'phone',profileSeed:'stopped',strictPhoneProfiles:true});
+  await fresh.goto(`http://127.0.0.1:${server.address().port}/?mode=phone`);await fresh.locator('.opencore-shell').waitFor();
+  await assertPhoneIdle(fresh,'stopped');
+  assert.equal(await fresh.evaluate(()=>fixture.models.length),0,'Fresh Phone has no installed model');
+  assert.equal(await fresh.evaluate(()=>fixture.snapshot.runtime.status),'stopped','Fresh Phone remains idle without model inference');
+  await fresh.getByRole('navigation',{name:'OpenCore sections',exact:true}).getByRole('button',{name:'More',exact:true}).click();
+  await fresh.getByRole('dialog',{name:'All OpenCore sections'}).getByRole('button',{name:'Chat Core',exact:true}).click();
+  const dialog=fresh.getByRole('dialog',{name:'Chat Core',exact:true});await dialog.waitFor();
+  await fresh.waitForFunction(()=>fixture.calls.some(c=>c.kind==='hub'&&c.path.startsWith('/api/groups/')));
+  assert.equal(await fresh.evaluate(()=>fixture.calls.some(c=>c.path==='/api/groups/capabilities')),true,'Phone Chat Core must check the native capability before listing groups');
+  await dialog.getByText('Chat Core group collaboration requires the paired PC service.',{exact:false}).waitFor();
+  assert.equal(await dialog.getByRole('button',{name:'Create group',exact:true}).count(),0,'Unavailable Phone groups must not offer unsupported actions');
+  await dialog.getByRole('button',{name:'Choose Phone or Paired PC',exact:true}).click();
+  await fresh.waitForFunction(()=>fixture.calls.some(c=>c.kind==='phone-execution-settings'));
+  // The normal workspace polls every two seconds. Observe beyond two periods
+  // to catch a mounted unsupported workspace or a background list retry loop.
+  await fresh.waitForTimeout(4300);
+  const groupCalls=await fresh.evaluate(()=>fixture.calls.filter(c=>c.kind==='hub'&&c.path.startsWith('/api/groups/')));
+  assert.deepEqual(groupCalls.map(c=>c.path),['/api/groups/capabilities'],'Unavailable Phone Chat Core must make one capability request and no list/view/worker polling');
+  await assertPhoneIdle(fresh,'stopped');
+  await fresh.screenshot({path:path.join(evidence,'phone-fresh-stopped-chat-core-capability.png')});assert.deepEqual(errors,[]);
+  console.log('Fresh Phone stopped selection and Chat Core capability/native-action/no-polling regressions passed');
+ }catch(error){console.error('Fresh Phone regression:',error);console.error('Calls:',await fresh.evaluate(()=>fixture.calls.filter(c=>c.command==='select_profile'||c.kind==='hub')));await fresh.screenshot({path:path.join(evidence,'phone-fresh-regression-failure.png')});throw error;}finally{await fresh.close();}
+ const alias='phone-fixture-installed-native',hash='b'.repeat(64);
+ const models=[{id:alias,label:'Fixture downloaded alias model'},{id:hash,label:'Fixture downloaded hash model'}].map(model=>({...model,description:'Installed phone GGUF fixture',installed:true,selectable:true,runtimeReady:true,installable:true,category:'text',backend:'gguf',precision:'Q4_K_M',totalBytes:1048576,weightBytes:1048576,contextTokens:2048,memoryMode:'native',artifacts:[]}));
+ const custom=await browser.newPage({viewport:{width:393,height:804},isMobile:true,hasTouch:true}),customErrors=[];custom.on('pageerror',e=>customErrors.push(e.message));
+ async function modelPicker(){
+  await custom.getByRole('button',{name:'Add files or choose model',exact:true}).click();
+  await custom.getByRole('menu',{name:'Composer actions'}).getByRole('menuitem',{name:/^Model/}).click();
+  return custom.getByRole('group',{name:'Choose model profile',exact:true});
+ }
+ try{
+  await custom.addInitScript(fixture,{snapshot:emptyPhoneSnapshot(),timeline:[],mode:'phone',profileSeed:alias,installedModels:models,strictPhoneProfiles:true,persistPhoneSelection:true});
+  await custom.goto(`http://127.0.0.1:${server.address().port}/?mode=phone`);await custom.locator('.opencore-shell').waitFor();await assertPhoneIdle(custom,alias);
+  let picker=await modelPicker();const initial=picker.getByRole('button',{name:/Fixture downloaded alias model/});await initial.waitFor();assert.equal(await initial.getAttribute('aria-pressed'),'true','Backend-seeded custom alias is selected in the original model picker');
+  await picker.getByRole('button',{name:/Fixture downloaded hash model/}).click();await custom.waitForFunction(id=>fixture.calls.some(c=>c.command==='select_profile'&&c.args.profile===id),hash);
+  assert.equal(await custom.evaluate(()=>fixture.selectedProfile),hash,'Original model picker selects the installed hash ID through native IPC');
+  await custom.reload();await custom.locator('.opencore-shell').waitFor();await assertPhoneIdle(custom,hash);
+  picker=await modelPicker();const reopened=picker.getByRole('button',{name:/Fixture downloaded hash model/});await reopened.waitFor();assert.equal(await reopened.getAttribute('aria-pressed'),'true','Reopened Phone honors the backend-seeded selected hash ID');
+  await custom.screenshot({path:path.join(evidence,'phone-custom-model-reopened.png')});assert.deepEqual(customErrors,[]);
+  console.log('Phone backend-seeded custom alias, original-picker hash selection and reopen regressions passed');
+ }catch(error){console.error('Custom Phone model regression:',error);console.error('Browser errors:',customErrors);console.error('Calls:',await custom.evaluate(()=>fixture.calls.slice(-35)));console.error((await custom.locator('body').innerText()).slice(0,3500));await custom.screenshot({path:path.join(evidence,'phone-custom-model-regression-failure.png')});throw error;}finally{await custom.close();}
+ return {freshStopped:true,noAutomaticRuntimeOrDownload:true,noStartupToast:true,chatCoreCapability:true,chatCoreNativeAction:true,noUnsupportedGroupPolling:true,customAlias:true,customHashReopened:true};
+}
 (async()=>{
- fs.mkdirSync(evidence,{recursive:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ fs.mkdirSync(evidence,{recursive:true});fs.rmSync(path.join(evidence,'results.json'),{force:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const browser=await chromium.launch({...(process.env.OPENCORE_QA_CHANNEL?{channel:process.env.OPENCORE_QA_CHANNEL}:{}),headless:true,args:['--mute-audio']}),results=[];
- try{for(const mode of ['phone','pc'])for(const width of [360,393,430]){
+ try{const startupRegressions=await phoneStartupRegressions(browser);for(const mode of ['phone','pc'])for(const width of [360,393,430]){
   const page=await browser.newPage({viewport:{width,height:804},isMobile:true,hasTouch:true}),errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requests.push(r.url()));
   const snapshot=structuredClone(preview.previewSnapshot);snapshot.runtime={...snapshot.runtime,status:mode==='phone'?'stopped':'running',profile:mode==='phone'?'stopped':'echo',error:null};snapshot.activeConversationIds=[];
   if(mode==='phone'){snapshot.conversations=[];snapshot.projects=[];snapshot.logs=[];snapshot.connectors=[];snapshot.telemetry={...snapshot.telemetry,gpuName:'Phone CPU',vramTotalMib:0};}
@@ -91,6 +156,6 @@ async function controls(page){
    results.push({mode,width,normalHeight:804,shortUsableHeight:540,sharedReact:true,streaming:true,completion:true,hfPages:2});console.log(`Shared desktop UI ${mode} ${width}px passed`);
   }catch(error){console.error(`${mode}-${width}:`,error);console.error('Browser errors:',errors);console.error((await page.locator('body').innerText()).slice(0,5000));await page.screenshot({path:path.join(evidence,`${mode}-${width}-failure.png`)});throw error;}finally{await page.close();}
  }
- fs.writeFileSync(path.join(evidence,'results.json'),JSON.stringify({proof:'Browser fixture, not physical Android/JNI',dist,results},null,2));console.log('Shared desktop Phone/Paired PC UI passed. Browser fixtures only; real native inference requires Android evidence.');
+ fs.writeFileSync(path.join(evidence,'results.json'),JSON.stringify({proof:'Browser fixture, not physical Android/JNI',dist,startupRegressions,results},null,2));console.log('Shared desktop Phone/Paired PC UI passed. Browser fixtures only; real native inference requires Android evidence.');
  }finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

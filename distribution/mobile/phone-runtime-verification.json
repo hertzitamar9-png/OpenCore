@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "androidVersion": "3.2",
+  "androidVersion": "3.3",
   "nativeRuntimeRevision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
   "androidArm64BinaryVerified": true,
   "android16KbPagesVerified": true,
@@ -44,5 +44,10 @@
   "bothExecutionModesBrowserVerified": true,
   "androidJsonStartupVerified": true,
   "missingMetricsStartupVerified": true,
-  "savedDataSnapshotSerializationVerified": true
+  "savedDataSnapshotSerializationVerified": true,
+  "phoneModelSelectionProtocolVerified": true,
+  "customNativePhoneSelectionReopened": true,
+  "phoneGroupsCapabilityGateVerified": true,
+  "nativePhoneGroupTransportAvailable": false,
+  "userConfirmedPhoneStartupVersion": "3.2"
 }

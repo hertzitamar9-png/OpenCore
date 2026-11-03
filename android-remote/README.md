@@ -1,8 +1,10 @@
-# OpenCore for Android 3.2
+# OpenCore for Android 3.3
 
 Fresh installs open **Phone** mode without a PC or sign-in. Phone chats, model files, execution preferences and encrypted Hugging Face credentials are stored privately on Android. No model downloads or inference run at launch.
 
 Version 3.2 fixes startup before native decoding has produced its first speed reading. Missing metrics serialize as zero rather than Android JSON's invalid NaN. The production snapshot serializer is tested against the real Android JSON implementation for fresh startup, saved-data payloads and unchanged real telemetry; no chat or pairing reset is required.
+
+Version 3.3 starts a phone with no downloaded model in an explicit idle state. It does not select the PC's DuoCore default. Validated installed Native aliases and imported model IDs remain selected across reloads; stale or missing files recover to another installed model or idle. Chat Core checks whether its group service is available before opening workspace polls and actions. Its Phone view offers the existing execution-device chooser for the paired PC's real groups; Android does not yet host the group service itself.
 
 Phone and Paired PC use the same original desktop OpenCore interface, tabs, composer, Approval/Effort controls, settings and model browser. There is no separate redesigned Phone interface. Phone ships a verified copy of the desktop frontend for offline use; Paired PC fetches that PC's current frontend. Only the execution backend and device wording differ. Android system bars, display cutouts and the keyboard inset the outer native container rather than cover app controls. The bundled desktop bytes are pinned by `shared-ui/manifest.json`.
 

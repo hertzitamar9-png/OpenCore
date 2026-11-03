@@ -212,12 +212,16 @@ function modelLoaderDetail(snapshot: AppSnapshot): { text: string; loaded: numbe
   return { text, loaded: fraction ? Number(fraction[1]) : null, total: fraction ? Number(fraction[2]) : null };
 }
 
-const readProfilePreference = (): RuntimeProfile => {
+export const readProfilePreference = (): RuntimeProfile => {
+  const phone = Reflect.get(globalThis, "__OPENCORE_PHONE__") === true;
   try {
     const stored = window.localStorage.getItem("opencore.model-profile");
+    // PhoneActivity seeds only an installed Native alias, an imported file ID,
+    // or stopped. Those private phone IDs need not exist in the PC catalog.
+    if (phone) return stored || "stopped";
     if (stored && isSelectableModelProfile(stored)) return stored as RuntimeProfile;
   } catch { /* Use the first-run profile when storage is unavailable. */ }
-  return "doucode";
+  return phone ? "stopped" : "doucode";
 };
 
 function StatusDot({ state }: { state: string }) {

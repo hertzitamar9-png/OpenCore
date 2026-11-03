@@ -36,7 +36,9 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     JSONObject preferences(){
         JSONObject values=new JSONObject();
         try{for(Map.Entry<String,?> row:ui.getAll().entrySet())if(preferenceKey(row.getKey())&&row.getValue() instanceof String)values.put(row.getKey(),row.getValue());
-            String selected=selected();if(!selected.equals("stopped"))values.put("opencore.model-profile",selected);
+            // Seed the real idle state too; omitting it lets the desktop reader
+            // choose its first-run DuoCore profile on a phone with no weights.
+            values.put("opencore.model-profile",selected());
             for(JSONObject file:pinned()){
                 String familyKey="opencore.model-mode."+file.optString("familyId",file.getString("id"));if(!values.has(familyKey))values.put(familyKey,"native");
                 JSONArray profiles=file.optJSONArray("profiles");if(profiles==null)continue;
@@ -129,8 +131,33 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         pinnedFiles=files;return files;
     }
     String selected()throws Exception{
-        String value=ui.getString("selectedProfile","");if(!value.isEmpty())return value;
-        JSONArray installed=backend.store.models();if(installed.length()>0)return nativeProfile(installed.getJSONObject(0));return "stopped";
+        return currentProfile(ui.getString("selectedProfile",""),installedProfileIds());
+    }
+    Map<String,String> installedProfileIds()throws Exception{
+        pinned();JSONArray installed=backend.store.models(),present=new JSONArray();
+        for(int i=0;i<installed.length();i++){JSONObject model=installed.getJSONObject(i);if(backend.modelFile(model.getString("id")).isFile())present.put(model);}
+        return installedProfileIds(present,pinnedById);
+    }
+    static Map<String,String> installedProfileIds(JSONArray installed,Map<String,JSONObject> published)throws JSONException{
+        LinkedHashMap<String,String> profiles=new LinkedHashMap<>();
+        for(int i=0;i<installed.length();i++){
+            JSONObject record=installed.getJSONObject(i);String id=record.getString("id");JSONObject source=published.get(id);if(source==null)source=record;
+            JSONArray aliases=source.optJSONArray("profiles");if(aliases!=null)for(int j=0;j<aliases.length();j++){JSONObject alias=aliases.getJSONObject(j);if(!alias.optString("memoryMode").equals("echo"))profiles.put(alias.getString("id"),id);}
+            profiles.put(id,id);
+        }return profiles;
+    }
+    static String currentProfile(String saved,Map<String,String> installed){
+        if("stopped".equals(saved))return "stopped";
+        if(installed.containsKey(saved))return saved;
+        return installed.isEmpty()?"stopped":installed.keySet().iterator().next();
+    }
+    static String selectProfileRequest(JSONObject args,Map<String,String> installed)throws Exception{
+        String profile=args.getString("profile");if(profile.equals("stopped"))return profile;
+        if(!installed.containsKey(profile))throw modelRequired();return profile;
+    }
+    static IOException modelRequired(){return new IOException("No installed phone model is selected. Open Models, install a compatible text GGUF, then choose Use or select it in the chat model picker.");}
+    void requirePhoneModel(String profile)throws Exception{
+        if(profile.equals("stopped")||!installedProfileIds().containsKey(profile))throw modelRequired();
     }
     String nativeProfile(JSONObject file)throws Exception{
         // Prefer the exact installed desktop Native profile ID when this artifact has one.
@@ -219,6 +246,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         start(profile,backend.operations.ticket());
     }
     void start(String profile,long ticket)throws Exception{
+        requirePhoneModel(profile);
         JSONObject file=selectedFile(profile),record=backend.store.model(file.getString("id"));if(record==null)throw new IOException("Install this quantization on the phone before starting it.");
         Future<?> load;
         synchronized(backend.operations){
@@ -238,7 +266,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     Object send(JSONObject request)throws Exception{
         JSONArray files=request.optJSONArray("files");if(files!=null&&files.length()>0)throw unavailable();
         JSONArray skills=request.optJSONArray("skills");if(skills!=null)for(int i=0;i<skills.length();i++)if(!skills.getString(i).equals("text"))throw unavailable();
-        String profile=selected();JSONObject file=selectedFile(profile);String chat=request.optString("conversationId","");boolean created=chat.isEmpty();
+        String profile=selected();requirePhoneModel(profile);JSONObject file=selectedFile(profile);String chat=request.optString("conversationId","");boolean created=chat.isEmpty();
         if(created)chat=backend.store.createChat("New chat");else if(!backend.store.hasChat(chat))throw new IOException("This phone conversation was not found.");
         try{
             JSONObject meta=metadata(chat).put("profile",profile);metadata(chat,meta);
@@ -282,7 +310,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
             case "get_conversation":return timeline(args.getString("id"));
             case "list_conversations":return conversations();
             case "list_model_library":return library();
-            case "select_profile":{String profile=args.getString("profile");selectedFile(profile);if(backend.generating.get())throw new IOException("Stop generation before changing models.");ui.edit().putString("selectedProfile",profile).commit();return null;}
+            case "select_profile":{String profile=selectProfileRequest(args,installedProfileIds());if(backend.generating.get())throw new IOException("Stop generation before changing models.");ui.edit().putString("selectedProfile",profile).commit();return null;}
             case "start_profile":start(args.getJSONObject("request").getString("profile"));return null;
             case "stop_runtime":stopRuntime();return null;
             case "restart_runtime":{String profile=selected();long ticket=stopRuntime();start(profile,ticket);return null;}
@@ -312,6 +340,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
             case "list_imported_conversations":return object("conversations",new JSONArray(),"total",0,"offset",args.optInt("offset"),"limit",args.optInt("limit",100),"hasMore",false);
             case "browser_bridge_status":return object("port",0,"token","","connected",false,"enabled",false,"extensionPath","");
             case "computer_access":return object("enabled",false,"apps",new JSONArray(),"revision",0);
+            case "set_computer_focus_mode":if(args.optBoolean("keepUserWindowInFront"))throw unavailable();return null;
             case "speech_status":return object("modelId","whisper-large-v3-turbo","installed",false,"enabled",false,"idleMode","cold","workerReady",false,"coldStartMs",null,"warmWakeMs",null,"phase","unavailable","runtimePrecision","bf16","loadingElapsedMs",null,"runtimeDescription","Choose Paired PC for speech.");
             case "claude_bridge_status":return object("installed",false,"connected",false,"active",false,"pluginPath","","launchCommand","","lastSeen",null,"minimumVersion","2.1.287","enabled",false);
             case "music_studio_status":return object("installed",false,"running",false,"owned",false,"url",null,"folder","","modelLoaded",false,"error",null);
@@ -369,6 +398,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     }
     JSONObject accountStatus()throws JSONException{return object("configured",false,"serviceUrl","","user",null,"cloudRecoveryReady",false,"recoveryStatus","Phone chats are stored privately on this device. Account operations require Paired PC.","usage",object("totalTokens",0,"weeklyTokens",0,"models",new JSONArray(),"note","Phone runtime metrics appear on the runtime screen."));}
     JSONObject connectorStatus()throws JSONException{return object("loaded",true,"profiles",new JSONArray(),"connected",new JSONArray(),"disconnected",object("claude-code",true,"codex",true,"hermes",true,"opencode",true),"historyEnabled",new JSONObject());}
+    static JSONObject groupCapabilities()throws JSONException{return object("available",false,"executionDevice","phone","reason","Chat Core group collaboration requires the paired PC service. Choose Paired PC in Execution device settings to use your PC's real groups.","action","phone-execution-settings");}
     JSONArray modes()throws JSONException{return new JSONArray().put(object("id","native","contextTokens",backend.prefs.getInt("context",2048),"supported",true)).put(object("id","echo","contextTokens",null,"supported",false,"reason","Choose Paired PC for ECHO."));}
     static JSONObject validateParameters(JSONObject parameters)throws Exception{
         if(parameters==null)return null;
@@ -393,6 +423,8 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     Object hub(JSONObject packet)throws Exception{
         String path=packet.optString("path"),method=packet.optString("method","GET");JSONObject body=packet.has("body")&&!packet.optString("body").isEmpty()?new JSONObject(packet.getString("body")):new JSONObject();
         if(path.equals("/api/status"))return hubStatus(packet.optString("revision"));
+        if(path.equals("/api/groups/capabilities"))return groupCapabilities();
+        if(path.startsWith("/api/groups/"))throw new IOException(groupCapabilities().getString("reason"));
         if(path.equals("/api/runtime/modes"))return runtimeModes();
         if(path.equals("/api/runtime/native-profile")){
             if(!body.optString("operatingMode","native").equals("native"))throw new IOException("ECHO execution requires Paired PC. Choose Native to execute on this phone.");

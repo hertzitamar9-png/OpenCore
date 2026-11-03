@@ -20,7 +20,7 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     Tester: 'Exercise the requested behavior, record observed results, and report failures with reproduction steps.',
   };
 
-  return function GroupPanel({ close, workerState = {} }) {
+  function WorkspacePanel({ close, workerState = {} }) {
     const saved = React.useRef(read(selectionKey, {}));
     const [groups, setGroups] = React.useState([]), [id, setId] = React.useState(saved.current.id || '');
     const [channelId, setChannelId] = React.useState(saved.current.channels?.[saved.current.id] || 'general');
@@ -268,5 +268,36 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
         h('div', { className: 'gw-content gw-content-' + tab.toLowerCase().replace(/\s/g, '-') }, tab === 'Groups' ? h('div', { className: 'gw-groups-view' }, h('div', { className: 'gw-mobile-rail' }, sidebar), h('section', { className: 'gw-overview' }, mode && mode !== 'project' ? editor : h(React.Fragment, null, h('div', { className: 'gw-overview-mark', 'aria-hidden': true }, '◈'), h('h3', null, id ? 'One workspace. Many ways to work.' : 'Bring your people and agents together.'), h('p', null, id ? 'Choose a channel, start a direct chat, or give shared agents a task. Everyone keeps control of their own PC.' : 'Create a group to host a shared workspace, or join a friend’s invite.'), id ? h('div', { className: 'gw-overview-cards' }, button(h(React.Fragment, null, h('strong', null, channels.filter(item => !item.private).length + ' channels'), h('small', null, 'Projects and team conversations')), () => setTab('Chat')), button(h(React.Fragment, null, h('strong', null, agents.length + ' shared agents'), h('small', null, 'Local and configured API models')), () => setTab('Agents')), button(h(React.Fragment, null, h('strong', null, activeTasks.length + ' active tasks'), h('small', null, 'Plans, tools and progress')), () => setTab('Plan'))) : null)))
           : !data ? h('p', { className: 'gw-empty' }, 'Loading workspace…') : tab === 'Chat' ? chat : tab === 'Team builder' ? teamPanel : tab === 'Agents' ? people : tab === 'Plan' ? activity : tab === 'Projects' ? projectPanel : tab === 'Advanced' ? preferences : sharingPanel))),
       localResult !== null ? h(Dialog, { label: 'Complete local group result', className: 'gw-local-result', close: () => setLocalResult(null) }, h('header', { className: 'gw-header' }, h('h2', null, 'Complete result on this PC'), button('Close', () => setLocalResult(null))), h('pre', null, localResult)) : null);
+  }
+
+  function PhoneGroupPanel(props) {
+    const [capability, setCapability] = React.useState(null);
+    const reason = 'Chat Core needs the paired PC service. Choose Paired PC in Execution device settings to use your PC’s groups.';
+    React.useEffect(() => {
+      let live = true;
+      const check = async () => {
+        try {
+          const value = await service('capabilities', {});
+          if (live) setCapability(value?.available === true ? { available: true } : {
+            available: false, reason: typeof value?.reason === 'string' && value.reason.trim() ? value.reason : reason,
+          });
+        } catch {
+          if (live) setCapability({ available: false, reason });
+        }
+      };
+      check();
+      return () => { live = false; };
+    }, []);
+    if (capability?.available) return h(WorkspacePanel, props);
+    return h(Dialog, { label: 'Chat Core', className: 'group-workspace', close: props.close },
+      h('header', { className: 'gw-header' }, h('div', { className: 'gw-brand' }, h('img', { src: '/opencore-logo.png', alt: 'OpenCore', width: 36, height: 36 }), h('div', null, h('h1', null, 'Chat Core'), h('p', null, 'People, local models and shared roles'))), button('×', props.close, { className: 'gw-close', 'aria-label': 'Close Chat Core' })),
+      h('main', { className: 'gw-main' }, h('div', { className: 'gw-content' }, h('section', { className: 'gw-overview' },
+        h('h2', null, capability ? 'Chat Core runs on your PC' : 'Checking Chat Core availability…'),
+        h('p', { role: 'status' }, capability ? capability.reason : 'Checking the group service for this execution device…'),
+        capability ? h('div', { className: 'gw-actions' }, button('Choose Phone or Paired PC', () => globalThis.__opencoreExecutionSettings?.())) : null))));
+  }
+
+  return function GroupPanel(props) {
+    return h(globalThis.__OPENCORE_PHONE__ === true ? PhoneGroupPanel : WorkspacePanel, props);
   };
 }
