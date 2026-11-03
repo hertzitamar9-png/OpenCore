@@ -10,6 +10,7 @@ code=code.replace("case 'runtime_setup_probe':","case 'learning_command':return{
 code=code.replace('window.fetch=async(url,options={})=>{',String.raw`
 fixture.autoRuns=[];fixture.autoActive=null;fixture.autoModels=[{id:'source',label:'Installed original Q4',modelPath:'C:/models/original.gguf',bytes:100},{id:'unsupported',label:'Hybrid model',modelPath:'C:/models/unsupported.gguf',bytes:100}];
 window.__TAURI_INTERNALS__.transformCallback=()=>1;window.__TAURI_INTERNALS__.unregisterCallback=()=>{};
+window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener(){}};
 window.fetch=async(url,options={})=>{
  const operation=new URL(url).pathname.replace('/api',''),request=options.body?JSON.parse(options.body):{};
  if(operation.startsWith('/autoloop/')){fixture.calls.push({route:operation,body:request});let value={};
