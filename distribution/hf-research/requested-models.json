@@ -2468,6 +2468,42 @@
           ]
         }
       ]
+    },
+    {
+      "repository": "speridlabs/idol",
+      "familyId": "publisher-idol",
+      "label": "Sperid Labs IDOL",
+      "category": "3d",
+      "description": "speridlabs/idol: single-image reconstruction to a 3D Gaussian splat (.ply), with background removal and predicted camera metadata. One publisher checkpoint combines the denoiser, octree decoder, Gaussian decoder and BiRefNet; these components are not separate quantization choices. The gated DINOv3 encoder and FLUX.2 VAE are external dependencies, not included in this download. OpenCore has no integrated or verified IDOL generation adapter.",
+      "sources": [
+        {
+          "repository": "speridlabs/idol",
+          "runtimeReason": "Requires the publisher IDOL SDK, Python 3.10+, PyTorch 2.5+ and compatible image/3D dependencies; the publisher documents NVIDIA CUDA execution. Access to the gated DINOv3 ViT-H+/16 encoder and FLUX.2-dev VAE is also required and their weights are not included here. The OpenCore IDOL image-to-3D Gaussian pipeline is not integrated or inference-verified.",
+          "packages": [
+            {
+              "key": "3d-pipeline:idol",
+              "format": "3d-pipeline",
+              "quantization": "Publisher checkpoint",
+              "files": [
+                "config.json",
+                "denoiser.safetensors",
+                "decoder.safetensors",
+                "decoder_gs.safetensors",
+                "birefnet.safetensors",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "config.json",
+                "denoiser.safetensors",
+                "decoder.safetensors",
+                "decoder_gs.safetensors",
+                "birefnet.safetensors",
+                "README.md"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

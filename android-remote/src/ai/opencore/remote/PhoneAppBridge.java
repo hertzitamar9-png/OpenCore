@@ -205,8 +205,15 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         JSONObject metrics=backend.generation.optJSONObject("metrics");if(metrics==null)metrics=new JSONObject();
         String loaded=backend.loading?selected():loadedProfile();String state=backend.loading?"starting":backend.loadedId.isEmpty()?"stopped":"running";
         JSONObject runtime=object("profile",state.equals("stopped")?"stopped":loaded,"status",state,"gatewayPort",0,"backendPort",0,"echoPort",0,"modelPath",backend.loadedId.isEmpty()?"":backend.modelFile(backend.loadedId).getAbsolutePath(),"archivePath",app.getDatabasePath("opencore-phone.sqlite3").getAbsolutePath(),"contextSize",backend.loadedContext>0?backend.loadedContext:backend.prefs.getInt("context",2048),"attentionKvLocation","Phone RAM","attentionKvType","Native finite context","loadingPhase",backend.loading?"Loading on this phone":state.equals("running")?"Loaded on this phone":"Phone runtime stopped","loadingElapsedMs",backend.loadElapsedMs,"error",backend.loadError.isEmpty()?null:backend.loadError);
-        JSONObject telemetry=object("gpuName","Android CPU · bundled llama.cpp","vramUsedMib",0,"vramTotalMib",0,"gpuUtilization",0,"powerWatts",0,"systemMemoryUsedMib",(memory.totalMem-memory.availMem)/1048576,"systemMemoryTotalMib",memory.totalMem/1048576,"diskFreeGib",app.getFilesDir().getUsableSpace()/1073741824.0,"tokensPerSecond",metrics.optDouble("tokensPerSecond"),"promptTokens",metrics.optInt("promptTokens"),"completionTokens",metrics.optInt("completionTokens"),"activeExperts",new JSONArray());
-        return object("runtime",runtime,"telemetry",telemetry,"conversations",conversations(),"projects",projects(),"logs",new JSONArray(),"connectors",new JSONArray(),"activeConversationIds",backend.generating.get()?new JSONArray().put(backend.activeChat):new JSONArray());
+        return snapshotData(runtime,metrics,memory.totalMem,memory.availMem,app.getFilesDir().getUsableSpace(),conversations(),projects(),backend.generating.get()?new JSONArray().put(backend.activeChat):new JSONArray());
+    }
+    /** Pure serialization boundary, also exercised with Android's real org.json on the JVM. */
+    static JSONObject snapshotData(JSONObject runtime,JSONObject metrics,long totalMemory,long availableMemory,long freeDisk,JSONArray conversations,JSONArray projects,JSONArray active)throws JSONException{
+        // No decoder sample exists after a fresh process start, even when saved
+        // chats/models exist. Android optDouble(key) defaults to NaN, which its
+        // JSONObject.put rejects instead of serializing the initial snapshot.
+        JSONObject telemetry=object("gpuName","Android CPU · bundled llama.cpp","vramUsedMib",0,"vramTotalMib",0,"gpuUtilization",0,"powerWatts",0,"systemMemoryUsedMib",(totalMemory-availableMemory)/1048576,"systemMemoryTotalMib",totalMemory/1048576,"diskFreeGib",freeDisk/1073741824.0,"tokensPerSecond",metrics.optDouble("tokensPerSecond",0),"promptTokens",metrics.optInt("promptTokens"),"completionTokens",metrics.optInt("completionTokens"),"activeExperts",new JSONArray());
+        return object("runtime",runtime,"telemetry",telemetry,"conversations",conversations,"projects",projects,"logs",new JSONArray(),"connectors",new JSONArray(),"activeConversationIds",active);
     }
     void start(String profile)throws Exception{
         start(profile,backend.operations.ticket());

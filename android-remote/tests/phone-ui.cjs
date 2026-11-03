@@ -17,11 +17,18 @@ const server=http.createServer((req,res)=>{
  res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'image/png');res.end(fs.readFileSync(file));
 });
 async function layout(page,label){
+ // The hidden desktop rail and the visible phone tab bar share this label.
+ // Match the visible accessible navigation, as the interaction checks do;
+ // querySelector would depend on their current DOM insertion order.
+ const navigation=page.getByRole('navigation',{name:'OpenCore sections',exact:true});
+ await navigation.waitFor({state:'visible'});
  await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
- const g=await page.locator('.chat-composer').evaluate(el=>{
+ const g=await navigation.evaluate(nav=>{
+  const el=document.querySelector('.chat-composer');
   const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
-  return {composer:rect(el),buttons:[...el.querySelectorAll('button')].filter(e=>e.offsetParent!==null).map(e=>({name:e.getAttribute('aria-label')||e.textContent.trim(),...rect(e)})),nav:rect(document.querySelector('nav[aria-label="OpenCore sections"]')),width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth};
+  return {composer:rect(el),buttons:[...el.querySelectorAll('button')].filter(e=>e.offsetParent!==null).map(e=>({name:e.getAttribute('aria-label')||e.textContent.trim(),...rect(e)})),nav:rect(nav),width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth};
  });
+ assert.ok(g.nav.height>0&&g.nav.width>=g.width-1,label+': visible full-width bottom navigation');
  assert.ok(g.buttons.length>=6,label+': shared composer controls');
  for(const b of g.buttons){assert.ok(b.width>=44&&b.height>=44,label+': 44px target '+JSON.stringify(b));assert.ok(b.x>=0&&b.right<=g.width+1&&b.y>=0&&b.bottom<=g.height,label+': control within usable viewport '+JSON.stringify(b));}
  for(let a=0;a<g.buttons.length;a++)for(let b=a+1;b<g.buttons.length;b++){const r=g.buttons[a],s=g.buttons[b];assert.ok(r.right<=s.x+1||s.right<=r.x+1||r.bottom<=s.y+1||s.bottom<=r.y+1,label+': overlap '+r.name+' / '+s.name);}

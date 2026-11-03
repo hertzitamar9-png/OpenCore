@@ -63,7 +63,8 @@ def append_requested(entries, manifest, snapshots):
                     pins = [_pin(repository, metadata['sha'], item,
                                  'model' if item['rfilename'].endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx', '.cmf')) or re.search(r'\.onnx_data(?:_\d+)?$', item['rfilename']) else 'support')
                             for item in metadata['siblings'] if any(fnmatch.fnmatchcase(item['rfilename'], pattern) for pattern in package['files'])]
-                    if not pins or any(not pin['pinned'] for pin in pins):
+                    selected = {pin['filename'] for pin in pins}
+                    if not pins or any(not pin['pinned'] for pin in pins) or any(filename not in selected for filename in package.get('requiredFiles', [])):
                         raise ValueError('Incomplete curated package: ' + repository)
                     key = package['key']
                     variants.append({'id': stable_id(repository, key), 'variantKey': key, 'repository': repository,

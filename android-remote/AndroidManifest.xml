@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ai.opencore.remote" android:versionCode="10" android:versionName="3.1">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ai.opencore.remote" android:versionCode="11" android:versionName="3.2">
   <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.CAMERA" />

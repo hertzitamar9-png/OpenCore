@@ -93461,6 +93461,103 @@
       "computerBaseBytes": 4357425394
     },
     {
+      "id": "hf-653e70c028fe6df893ba32c0",
+      "variantKey": "3d-pipeline:idol",
+      "repository": "speridlabs/idol",
+      "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+      "format": "3d-pipeline",
+      "quantization": "Publisher checkpoint",
+      "subdirectory": "",
+      "category": "3d",
+      "files": [
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "README.md",
+          "bytes": 7274,
+          "sha256": null,
+          "gitBlobSha1": "026cdc015369dcc594acc28d3075fdca2ce0af36",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "birefnet.safetensors",
+          "bytes": 444466856,
+          "sha256": "44bbc97b041f879975d0d6d538b8e66a25eb04d1f49aab40697544cdd97eaa8e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "config.json",
+          "bytes": 1335,
+          "sha256": null,
+          "gitBlobSha1": "e73c149c65ba2195d9c0ee37f0a9a08194a5cf5a",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "decoder.safetensors",
+          "bytes": 203171696,
+          "sha256": "9da4d7676bfcadb1c3fdfbff796e6257dadf82d26ec05be7717c79b2b13a1c4e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "decoder_gs.safetensors",
+          "bytes": 949083036,
+          "sha256": "3087eb8ee5763206a53e4078acf2a1bf382dab5147d407ec13a2cf39c04cc544",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "denoiser.safetensors",
+          "bytes": 1482258308,
+          "sha256": "ded2cacf671bf3978ebc62729087abdbd318ef4752e6805b4c9fc8ffa51fe716",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 3078988505,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/speridlabs/idol",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires the publisher IDOL SDK, Python 3.10+, PyTorch 2.5+ and compatible image/3D dependencies; the publisher documents NVIDIA CUDA execution. Access to the gated DINOv3 ViT-H+/16 encoder and FLUX.2-dev VAE is also required and their weights are not included here. The OpenCore IDOL image-to-3D Gaussian pipeline is not integrated or inference-verified."
+      },
+      "familyId": "publisher-idol",
+      "familyLabel": "Sperid Labs IDOL",
+      "originalRepository": "speridlabs/idol",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "3d",
+      "builtInDescription": "speridlabs/idol: single-image reconstruction to a 3D Gaussian splat (.ply), with background removal and predicted camera metadata. One publisher checkpoint combines the denoiser, octree decoder, Gaussian decoder and BiRefNet; these components are not separate quantization choices. The gated DINOv3 encoder and FLUX.2 VAE are external dependencies, not included in this download. OpenCore has no integrated or verified IDOL generation adapter.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "Sperid Labs IDOL · Publisher checkpoint",
+      "catalogOrder": 1,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
       "id": "hf-999376125d8d33dee50396b2",
       "repository": "xhxlb/IQuest-Coder-V1-14B-Base-GGUF",
       "revision": "4a87982ecfc01b13787964a0dbcb0aa8c68dfe41",

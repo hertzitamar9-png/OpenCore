@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 576,
+  "families": 577,
   "withFive": 231,
   "models": [
     {
@@ -5313,6 +5313,17 @@
       "source": "bundled packages",
       "repositories": [
         "Hobbylm/hobbylm-1B-computer-use"
+      ]
+    },
+    {
+      "id": "publisher-idol",
+      "label": "Sperid Labs IDOL",
+      "category": "3d",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "speridlabs/idol"
       ]
     },
     {

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "androidVersion": "3.1",
+  "androidVersion": "3.2",
   "nativeRuntimeRevision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
   "androidArm64BinaryVerified": true,
   "android16KbPagesVerified": true,
@@ -41,5 +41,8 @@
   "separatePhoneComposer": false,
   "androidArm64BinarySha256": "821e63b8eb1bc15f0ebc9db3b35ba1ab98617623479f9e5303dac2cd0d8dc312",
   "nativeOuterContainerInsets": true,
-  "bothExecutionModesBrowserVerified": true
+  "bothExecutionModesBrowserVerified": true,
+  "androidJsonStartupVerified": true,
+  "missingMetricsStartupVerified": true,
+  "savedDataSnapshotSerializationVerified": true
 }

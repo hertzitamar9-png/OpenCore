@@ -1,0 +1,250 @@
+{
+  "_id": "6ae21ae5d1255e67c035b8c7",
+  "id": "speridlabs/idol",
+  "private": false,
+  "pipeline_tag": "image-to-3d",
+  "library_name": "idol",
+  "tags": [
+    "idol",
+    "gaussian-splatting",
+    "3d",
+    "image-to-3d",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 10742,
+  "likes": 474,
+  "modelId": "speridlabs/idol",
+  "author": "speridlabs",
+  "sha": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+  "lastModified": "2026-10-29T18:17:36.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "denoiser": {
+      "name": "LatentSeqMMFlowModel",
+      "args": {
+        "q_token_length": 8192,
+        "in_channels": 16,
+        "cam_channels": 5,
+        "model_channels": 1024,
+        "cond_channels": 1280,
+        "cond2_channels": 128,
+        "num_blocks": 24,
+        "num_refiner_blocks": 2,
+        "num_heads": 16,
+        "mlp_ratio": 4
+      }
+    },
+    "decoder": {
+      "name": "OctreeProbabilityFixedlenDecoder",
+      "args": {
+        "model_channels": 1024,
+        "cond_channels": 16,
+        "num_blocks": 4,
+        "num_heads": 16,
+        "mlp_ratio": 4
+      }
+    },
+    "decoder_gs": {
+      "name": "GaussianFixedlenDecoder",
+      "args": {
+        "in_channels": 3,
+        "model_channels": 1024,
+        "cond_channels": 16,
+        "num_blocks": 16,
+        "num_heads": 16,
+        "mlp_ratio": 4,
+        "representation_config": {
+          "num_gaussians": 32,
+          "lr": {
+            "_xyz": 1.0,
+            "_features_dc": 1.0,
+            "_opacity": 1.0,
+            "_scaling": 1.0,
+            "_rotation": 0.1
+          },
+          "perturbe_size": 1.5,
+          "3d_filter_kernel_size": 0.0009,
+          "scaling_bias": 0.004,
+          "opacity_bias": 0.1
+        }
+      }
+    },
+    "image_size": 1024,
+    "max_voxel_level": 8,
+    "image_encoders": {
+      "dinov3": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+      "flux2_vae": "black-forest-labs/FLUX.2-dev"
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "library_name": "idol",
+    "pipeline_tag": "image-to-3d",
+    "tags": [
+      "gaussian-splatting",
+      "3d",
+      "image-to-3d"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0998b21119e61aac3e059d7ecb73c7ab10383eae",
+      "size": 2080
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "026cdc015369dcc594acc28d3075fdca2ce0af36",
+      "size": 7274
+    },
+    {
+      "rfilename": "assets/gallery/armchair.webp",
+      "blobId": "b5b76dae2faf4f10ab49c1bd1ef52ba36cd2d364",
+      "size": 1096250,
+      "lfs": {
+        "sha256": "8c30a0cbed2931aebb7ba5fe9082ccc87a01ab7c24ddf48faceb650921b5b29f",
+        "size": 1096250,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/gallery/avocado.webp",
+      "blobId": "de0c9060388e19bc43f8a674719adabe00c8bd6c",
+      "size": 758042,
+      "lfs": {
+        "sha256": "b7dd1f8863bbca337bd71635ca8f5499cade479aa71faec5a136f13798a9d0ee",
+        "size": 758042,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/gallery/axolotl.webp",
+      "blobId": "7289683c5d8195096eaf18d0f9cb519c22caf3b5",
+      "size": 886468,
+      "lfs": {
+        "sha256": "907d771e241396b47d364f3dd9382dc30d1ed4bb569618f148dac40d67c07fea",
+        "size": 886468,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/gallery/castle.webp",
+      "blobId": "ebeb42b6b1d456a8eb51b9c9a96fc77592ddb68f",
+      "size": 3439788,
+      "lfs": {
+        "sha256": "cfe489be3a09ff5000e238c609d191f065487fe8ef658e1a84b24689fe78b768",
+        "size": 3439788,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/gallery/grandma.webp",
+      "blobId": "ef63ef77962ca56cb9f09a9f7e018facecb216a1",
+      "size": 2703986,
+      "lfs": {
+        "sha256": "9bcdc56b7456abd50ea64c88282cb818452f552c290bca6896d7c1fe8f5e2e25",
+        "size": 2703986,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/gallery/grapes.webp",
+      "blobId": "a3c73be27747b07dc203aa4733063b227ba19f7f",
+      "size": 2518662,
+      "lfs": {
+        "sha256": "b607b625f3c1f2a9a59dc01e3c8530dc134aad096d8cd5baf02d6d1ad4c5ebf6",
+        "size": 2518662,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/gallery/lamp.webp",
+      "blobId": "c100e33f022a555d198ea07c778a6047b47299be",
+      "size": 1491058,
+      "lfs": {
+        "sha256": "184bb44d9abd5590b6b804877e6c32278387d40339150d96eca8a55c782f36d0",
+        "size": 1491058,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/gallery/lollipop.webp",
+      "blobId": "1ba8c27fd0d7ea1ce0dc36b0a87b3623af2820a1",
+      "size": 1833836,
+      "lfs": {
+        "sha256": "43c756f3fe6eb340381f9250f9aa720c6751085095dc7a7912dac79f9456299d",
+        "size": 1833836,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/reel.mp4",
+      "blobId": "067881c8bcff208fad30a2768b2ceacbb1dbaedc",
+      "size": 34672663,
+      "lfs": {
+        "sha256": "f2d3c0f0c85fea617919e74bc8c3ed2212f93ca573d56196f8d458346a297bb5",
+        "size": 34672663,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "birefnet.safetensors",
+      "blobId": "03af65ce6f0e9ac85948085b3302601370d76707",
+      "size": 444466856,
+      "lfs": {
+        "sha256": "44bbc97b041f879975d0d6d538b8e66a25eb04d1f49aab40697544cdd97eaa8e",
+        "size": 444466856,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "e73c149c65ba2195d9c0ee37f0a9a08194a5cf5a",
+      "size": 1335
+    },
+    {
+      "rfilename": "decoder.safetensors",
+      "blobId": "e0c21dd4d1b54b71c86c22be2b11eac206832fee",
+      "size": 203171696,
+      "lfs": {
+        "sha256": "9da4d7676bfcadb1c3fdfbff796e6257dadf82d26ec05be7717c79b2b13a1c4e",
+        "size": 203171696,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "decoder_gs.safetensors",
+      "blobId": "01c99188cdbec7e6fd94497d15ca96abcdf3b291",
+      "size": 949083036,
+      "lfs": {
+        "sha256": "3087eb8ee5763206a53e4078acf2a1bf382dab5147d407ec13a2cf39c04cc544",
+        "size": 949083036,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "denoiser.safetensors",
+      "blobId": "30afc887218d32db210fe5c710b57b30a4990f39",
+      "size": 1482258308,
+      "lfs": {
+        "sha256": "ded2cacf671bf3978ebc62729087abdbd318ef4752e6805b4c9fc8ffa51fe716",
+        "size": 1482258308,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "speridlabs/idol",
+    "cpuai/Idol-Image-to-3D",
+    "Yosun/idol",
+    "fffiloni/idol-commons",
+    "bep40/idol",
+    "Yosun/idol-try",
+    "akhaliq/idol-turbo"
+  ],
+  "createdAt": "2026-10-28T15:55:17.000Z",
+  "usedStorage": 3572854245
+}

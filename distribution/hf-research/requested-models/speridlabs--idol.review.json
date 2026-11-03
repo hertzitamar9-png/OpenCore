@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "repository": "speridlabs/idol",
+  "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+  "pipelineTag": "image-to-3d",
+  "library": "idol",
+  "license": "apache-2.0",
+  "metadataOnly": true,
+  "weightBytesDownloaded": 0,
+  "publisherFiles": [
+    ".gitattributes",
+    "README.md",
+    "assets/gallery/armchair.webp",
+    "assets/gallery/avocado.webp",
+    "assets/gallery/axolotl.webp",
+    "assets/gallery/castle.webp",
+    "assets/gallery/grandma.webp",
+    "assets/gallery/grapes.webp",
+    "assets/gallery/lamp.webp",
+    "assets/gallery/lollipop.webp",
+    "assets/reel.mp4",
+    "birefnet.safetensors",
+    "config.json",
+    "decoder.safetensors",
+    "decoder_gs.safetensors",
+    "denoiser.safetensors"
+  ],
+  "package": {
+    "variantKey": "3d-pipeline:idol",
+    "precisionChoices": [
+      "Publisher checkpoint"
+    ],
+    "weightComponents": [
+      "denoiser.safetensors",
+      "decoder.safetensors",
+      "decoder_gs.safetensors",
+      "birefnet.safetensors"
+    ],
+    "supportFiles": [
+      "config.json",
+      "README.md"
+    ],
+    "bytes": 3078988505,
+    "output": "3D Gaussian splat (.ply), input preprocessing image and predicted camera metadata"
+  },
+  "runtime": {
+    "openCoreAdapter": null,
+    "inferenceVerified": false,
+    "reason": "The custom IDOL SDK pipeline and its gated image encoder dependencies are not integrated into the OpenCore generation worker. SDK code has a CPU fallback, but no CPU/GPU inference was executed in this review.",
+    "externalDependencies": [
+      {
+        "repository": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+        "purpose": "DINOv3 image encoder",
+        "revisionObserved": "c807c9eeea853df70aec4069e6f56b28ddc82acc",
+        "gated": "manual",
+        "includedInPublisherCheckpoint": false
+      },
+      {
+        "repository": "black-forest-labs/FLUX.2-dev",
+        "purpose": "FLUX.2 VAE only",
+        "revisionObserved": "26afe3a78bb242c0a8bb181dcc8937bb16e5c66c",
+        "gated": "auto",
+        "includedInPublisherCheckpoint": false
+      }
+    ]
+  },
+  "primarySources": [
+    {
+      "url": "https://huggingface.co/speridlabs/idol/tree/2731c2291fc65a797c5cb627a5e5526fc1490902",
+      "role": "Exact published file sizes, LFS SHA-256 pins and repository metadata"
+    },
+    {
+      "url": "https://huggingface.co/speridlabs/idol/raw/2731c2291fc65a797c5cb627a5e5526fc1490902/README.md",
+      "role": "Task, PLY output, SDK and external encoder requirements"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/speridlabs/idol-sdk/4702a7f00850e34b6e83a2170cc123c3e9570744/idol/pipeline.py",
+      "sha256": "091fc0fe7d8f66f5f9f63795a91f9b654e12cf879d94bf03624f39c360ddd4a1",
+      "role": "WEIGHT_FILES and strict loading of all four components"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/speridlabs/idol-sdk/4702a7f00850e34b6e83a2170cc123c3e9570744/pyproject.toml",
+      "sha256": "e9c6fdac8860fc7c0aae4d813d9cd8145c6b1bb701984400f3de38f9b34ec5e9",
+      "role": "Python and dependency minimum versions"
+    }
+  ],
+  "excluded": "Gallery previews and reel media are not model precision options or runtime components. No GGUF or quantized variants are published in the exact repository at this revision."
+}
