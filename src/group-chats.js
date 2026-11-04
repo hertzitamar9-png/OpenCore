@@ -375,8 +375,12 @@ export function installGroupFeatures(React, listen, preparation) {
   function GroupEntry({ navigation = false } = {}) {
     const state = useWorker();
     const caption = "Chat Core" + (state.approvals.length ? " · " + state.approvals.length : "");
-    return button(navigation ? h(React.Fragment, null, h("svg", { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true },
-      h("path", { d: "M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9H13a8.5 8.5 0 0 1 8 8z" })), h("span", null, caption)) : caption,
+    return button(navigation ? h(React.Fragment, null, h("svg", { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
+      h("circle", { cx: 12, cy: 7, r: 2.7 }),
+      h("circle", { cx: 4.8, cy: 9, r: 1.8 }),
+      h("circle", { cx: 19.2, cy: 9, r: 1.8 }),
+      h("path", { d: "M7.3 20v-1.1c0-2.5 2.1-4.5 4.7-4.5s4.7 2 4.7 4.5V20" }),
+      h("path", { d: "M1.5 19.5v-.7c0-1.8 1.5-3.2 3.3-3.2.6 0 1.2.2 1.7.4M22.5 19.5v-.7c0-1.8-1.5-3.2-3.3-3.2-.6 0-1.2.2-1.7.4" })), h("span", null, caption)) : caption,
       () => window.dispatchEvent(new Event("opencore-open-groups")),
       { className: navigation ? "nav-item group-nav-entry" : "new-chat-button group-entry", "aria-label": navigation ? "Open Chat Core" : "Chat Core", title: "Chat Core" });
   }
