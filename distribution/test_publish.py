@@ -2,6 +2,7 @@
 import copy
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -40,6 +41,11 @@ class DraftLookupTests(unittest.TestCase):
 
 class ReleasePublicationTests(unittest.TestCase):
     def setUp(self):
+        # These publication fixtures deliberately use the checked-in signed
+        # APK. Real Actions publication must use its separately built artifact.
+        environment = patch.dict(os.environ, {'GITHUB_ACTIONS': 'false', 'OPENCORE_ANDROID_RELEASE_DIR': ''})
+        environment.start()
+        self.addCleanup(environment.stop)
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.folder = Path(self.temporary.name).resolve()
