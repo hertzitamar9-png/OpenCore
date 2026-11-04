@@ -57,13 +57,13 @@ class PhoneStartupTests(unittest.TestCase):
                                 'static final class drawable {static final int opencore=1;}}', encoding='utf-8')
             classpath = os.pathsep.join(map(str, (jar, platform, ROOT/'vendor/zxing-core-3.5.3.jar', *(ROOT/'vendor/litertlm').glob('*.jar'))))
             sources = list((ROOT/'src').rglob('*.java'))
-            tests = [ROOT/'tests/PhoneStartupSnapshotTest.java', ROOT/'tests/PhoneGenerationSettingsTest.java', ROOT/'tests/PhoneProfileSelectionTest.java']
+            tests = [ROOT/'tests/PhoneStartupSnapshotTest.java', ROOT/'tests/PhoneGenerationSettingsTest.java', ROOT/'tests/PhoneProfileSelectionTest.java', ROOT/'tests/PhoneModelOptionsTest.java']
             compiled = subprocess.run([str(java/'javac.exe'), '--release', '8', '-encoding', 'UTF-8',
                                        '-classpath', classpath, '-d', str(output),
                                        *map(str, sources), *map(str, tests), str(resource)],
                                       capture_output=True, text=True)
             self.assertEqual(compiled.returncode, 0, compiled.stderr)
-            for test in ('PhoneStartupSnapshotTest', 'PhoneGenerationSettingsTest', 'PhoneProfileSelectionTest'):
+            for test in ('PhoneStartupSnapshotTest', 'PhoneGenerationSettingsTest', 'PhoneProfileSelectionTest', 'PhoneModelOptionsTest'):
                 result = subprocess.run([str(java/'java.exe'), '-cp', str(output)+os.pathsep+classpath,
                                          'ai.opencore.remote.'+test], capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout+result.stderr)

@@ -98,8 +98,10 @@ const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false,
     await page.waitForFunction(()=>fixture.calls.some(item=>item.command==='send_chat_message'&&item.args?.request?.text==='PHONE_FIXTURE_MESSAGE'),null,{timeout:10000});
     await page.getByText('PHONE_FIXTURE_REPLY').first().waitFor({timeout:10000});
     await nav.getByRole('button',{name:'Chats'}).click();
+    assert.equal(await page.evaluate(()=>document.body.classList.contains('oc-chats-open')),false,'Chats returns to the conversation; the history button opens its list');
+    await page.locator('.section-header .section-heading button').click();
     if(process.env.OPENCORE_MOBILE_TRACE) console.log('Conversation drawer:',await page.locator('.conversation-list').evaluate(e=>{const a=[];for(let p=e;p;p=p.parentElement)a.push({tag:p.tagName,cls:p.className,display:getComputedStyle(p).display});return a;}));
-    assert.ok(await page.locator('.conversation-list').isVisible(),'The Chats tab must show the conversation list');
+    assert.ok(await page.locator('.conversation-list').isVisible(),'The explicit history button must show the conversation list');
     const rows=page.locator('.conversation-list .conversation-row');
     assert.ok(await rows.count()>=2,'The drawer must show multiple conversations');
     await rows.filter({hasText:'Generate image prompt ideas'}).first().click();

@@ -25,6 +25,7 @@ final class PhoneBrowser {
     boolean obscured;long coverRevision;ValueCallback<Uri[]> upload;PermissionRequest permission;String[] permissionResources;
     static final class Tab {final String id;WebView view;boolean wanted,bounded;String error="";Tab(String id){this.id=id;}}
     PhoneBrowser(Activity activity,FrameLayout root,WebView appWeb){this.activity=activity;this.root=root;this.appWeb=appWeb;}
+    void beginPage(){obscured=true;coverRevision=0;for(Tab tab:tabs.values()){tab.wanted=false;tab.bounded=false;visibility(tab);}}
     <T>T onUi(Callable<T> task)throws Exception{
         if(Looper.myLooper()==Looper.getMainLooper())return task.call();
         FutureTask<T> queued=new FutureTask<>(task);main.post(queued);return queued.get(15,TimeUnit.SECONDS);

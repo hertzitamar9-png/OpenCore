@@ -80,7 +80,7 @@ const server = http.createServer((request, response) => {
     record('top progress appears immediately for managed models', await page.locator('.model-install-progress').count());
     await page.evaluate(() => { fixture.holdStart = false; fixture.release(); });
     await page.waitForTimeout(2200);
-    const progress = page.locator('.model-install-progress progress');
+    const progress = page.locator('.model-install-progress').first().locator('progress');
     record('managed download reports bytes in the top panel', await progress.count() && await progress.getAttribute('value') === '30');
     const rejected = await page.evaluate(async () => { try { await invokeForTest('runtime_setup_start', { targetId: 'orca-cyber', options: {} }); return false; } catch { return true; } });
     record('shared guard rejects a second start before native IPC', rejected);
@@ -94,7 +94,7 @@ const server = http.createServer((request, response) => {
     if (await card('OrcaCyber Nano 1.0').getByRole('button', { name: 'Install', exact: true }).isEnabled()) {
       await card('OrcaCyber Nano 1.0').getByRole('button', { name: 'Install', exact: true }).click();
       await page.waitForTimeout(1800);
-      const pause = page.locator('.model-install-progress').getByRole('button', { name: 'Pause installation', exact: true });
+      const pause = page.locator('.model-install-progress').first().getByRole('button', { name: 'Pause installation', exact: true });
       record('Orca has shared progress and Pause', await pause.count());
       if (await pause.count()) {
         await pause.click();
@@ -103,20 +103,20 @@ const server = http.createServer((request, response) => {
         record('paused model does not remain Installing', await card('OrcaCyber Nano 1.0').getByRole('button', { name: 'Installing…', exact: true }).count() === 0);
         await card('Plain GGUF').getByRole('button', { name: 'Install', exact: true }).click();
         await page.waitForTimeout(1200);
-        record('ordinary downloads use the same shared progress', await page.locator('.model-install-progress').innerText().then(text => text.includes('Plain GGUF')));
+        record('ordinary downloads use the same shared progress', await page.locator('.model-install-progress').first().innerText().then(text => text.includes('Plain GGUF')));
         await page.evaluate(() => remountModels());
         await page.waitForTimeout(1200);
-        record('reopening Models retains the active installation', await page.locator('.model-install-progress').innerText().then(text => text.includes('Plain GGUF')));
-        await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();
+        record('reopening Models retains the active installation', await page.locator('.model-install-progress').first().innerText().then(text => text.includes('Plain GGUF')));
+        await page.locator('.model-install-progress').first().getByRole('button',{name:'Pause installation',exact:true}).click();
         await page.waitForTimeout(1100);
         await card('Spark X2.6 4B').getByRole('button',{name:'Install',exact:true}).click();
         await page.waitForTimeout(1100);
-        record('Spark uses the same shared progress',await page.locator('.model-install-progress').innerText().then(text=>text.includes('Spark X2.6 4B')));
+        record('Spark uses the same shared progress',await page.locator('.model-install-progress').first().innerText().then(text=>text.includes('Spark X2.6 4B')));
         await page.evaluate(()=>{const job=fixture.jobs.findLast(j=>j.targetId==='spark-x26');job.status='failed';job.stage='failed';job.error='Fixture setup failure';fixture.activeJobId=null;});
         await page.waitForTimeout(1200);
         record('failed setup unlocks other model installs',await card('Plain GGUF').getByRole('button',{name:'Install',exact:true}).isEnabled());
-        record('failed setup reports the real error',await page.locator('.model-install-progress').innerText().then(text=>text.includes('Fixture setup failure')));
-        await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).click();
+        record('failed setup reports the real error',await page.locator('.model-install-progress').first().innerText().then(text=>text.includes('Fixture setup failure')));
+        await page.locator('.model-install-progress').first().getByRole('button',{name:'Dismiss notification',exact:true}).click();
         await page.waitForTimeout(200);
         record('terminal notification can be dismissed',await page.locator('.model-install-progress').count()===0);
       }
@@ -144,12 +144,12 @@ const server = http.createServer((request, response) => {
     await page.reload();await card('Phonon-2').waitFor();await page.waitForTimeout(1500);
     record('old Phonon success stays hidden after an app page reload',await page.locator('.model-install-progress').count()===0);
     await page.evaluate(async()=>{fixture.holdStart=false;await invokeForTest('install_model',{id:'phonon-2'});});
-    await page.locator('.model-install-progress progress').waitFor();
-    record('a new installation of the same model shows progress after the previous dismissal',await page.locator('.model-install-progress').innerText().then(text=>text.includes('Phonon-2')));
+    await page.locator('.model-install-progress').first().locator('progress').waitFor();
+    record('a new installation of the same model shows progress after the previous dismissal',await page.locator('.model-install-progress').first().innerText().then(text=>text.includes('Phonon-2')));
     await page.evaluate(()=>{fixture.complete('phonon-2');sessionStorage.removeItem('notification-qa-terminal');});
-    await page.locator('.model-install-progress').getByText('ready',{exact:true}).waitFor();
-    record('the new installation can display its own completion notification',await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).count()===1);
-    await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).click();
+    await page.locator('.model-install-progress').first().getByText('Complete',{exact:true}).waitFor();
+    record('the new installation can display its own completion notification',await page.locator('.model-install-progress').first().getByRole('button',{name:'Dismiss notification',exact:true}).count()===1);
+    await page.locator('.model-install-progress').first().getByRole('button',{name:'Dismiss notification',exact:true}).click();
     await page.waitForTimeout(1200);
     record('the new Phonon completion remains dismissed',await page.locator('.model-install-progress').count()===0);
     await page.screenshot({ path: path.join(__dirname, (process.argv[2] || 'baseline') + '-models.png'), fullPage: true });

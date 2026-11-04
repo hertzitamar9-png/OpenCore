@@ -1,4 +1,4 @@
-# OpenCore for Android 3.4
+# OpenCore for Android 3.5
 
 Fresh installs open **Phone** mode without a PC or sign-in. Phone chats, model files, execution preferences and encrypted Hugging Face credentials are stored privately on Android. No model downloads or inference run at launch.
 
@@ -7,6 +7,8 @@ Version 3.2 fixes startup before native decoding has produced its first speed re
 Version 3.3 starts a phone with no downloaded model in an explicit idle state. It does not select the PC's DuoCore default. Validated installed Native aliases and imported model IDs remain selected across reloads; stale or missing files recover to another installed model or idle. Chat Core checks whether its group service is available before opening workspace polls and actions. Its Phone view offers the existing execution-device chooser for the paired PC's real groups; Android does not yet host the group service itself.
 
 Version 3.4 connects the shared chat submission protocol to actual phone inference, including context reservations, new conversation IDs, side-chat history, text attachments, private workspace snapshots and file exports. The Chats tab returns to the current chat; the header history button opens the conversation list. Download progress appears above Models and in the matching card, with measured bytes, rate and ETA. Pause keeps the resumable prefix; Cancel stops the matching worker and removes only its incomplete file.
+
+Version 3.5 labels Q1/TQ1/TQ2 quants correctly and distinguishes all four LiteRT precisions/cache sizes, displaying the actual 2K/4K engine cap. The manual in-app browser stays in Android in Paired PC mode too; model and agent execution requests continue to the PC. Reloading the interface resets the native browser overlay guard and requires fresh panel bounds before showing web content.
 
 Phone web tabs use actual Android WebViews, isolated from the app's command bridge. Address navigation, tabs, history, reload, uploads and permission-controlled microphone/camera use the phone. Native web content is confined to the browser panel and hidden behind app menus and drawers. Android's folder picker imports an explicitly selected bounded copy into the phone workspace; it does not synchronize the original folder. Workspace files can be previewed and shared through Android's chooser.
 
@@ -31,7 +33,7 @@ For access away from the home network, connect the PC and phone to the same priv
 
 The phone app requests camera access only to scan the pairing QR code. It requests microphone access only when voice capture is used. Android's document picker lets you attach files or send a bounded folder copy to the PC. The paired OpenCore desktop process handles commands, generated content, local model access, and app preferences; only OpenCore preference keys are synchronized.
 
-Build with an installed Android SDK and JDK:
+Build with an installed Android SDK and JDK 21 (the pinned LiteRT SDK uses Java 21 class files):
 
 ```powershell
 python android-remote/build.py --sdk C:/path/to/Android/Sdk

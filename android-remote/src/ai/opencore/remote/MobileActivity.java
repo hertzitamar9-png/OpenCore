@@ -44,6 +44,7 @@ public final class MobileActivity extends Activity {
     final UiAssetCache uiCache=new UiAssetCache(16*1024*1024);
     ConnectionPanel connectionPanel;
     WebView web;
+    PhoneBrowser browser;
     WebMessagePort port;
     TextView status;
     volatile JSONObject preferencesSeed;
@@ -67,6 +68,7 @@ public final class MobileActivity extends Activity {
         SystemInsets.apply(this,root);
         FrameLayout stage=new FrameLayout(this);root.addView(stage,new LinearLayout.LayoutParams(-1,0,1));
         web=new WebView(this);web.setBackgroundColor(0xff0b1118);stage.addView(web,new FrameLayout.LayoutParams(-1,-1));
+        browser=new PhoneBrowser(this,stage,web);
         connectionPanel=new ConnectionPanel(this,connection.name,new String[]{"Secure PC connection","Latest app interface","Your chats and tools"},()->connect(),()->finish(),()->DeviceRouting.settings(this));connectionPanel.change.setText("Phone or PC");stage.addView(connectionPanel,new FrameLayout.LayoutParams(-1,-1));
         status=label("");status.setTextSize(12);status.setVisibility(View.GONE);root.addView(status);
         WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);
@@ -138,6 +140,13 @@ public final class MobileActivity extends Activity {
             if(kind.equals("phone-startup-error")){connectionPanel.showError("Your PC is connected","The workspace did not respond yet. Press Retry now to reopen it.",2);return;}
             if(kind.equals("phone-dialog")){showPhoneDialog(id,value.optString("command",""),value.optJSONObject("args"),targetGeneration);return;}
             if(kind.equals("phone-open")){openLink(id,value.optJSONObject("args"),targetGeneration);return;}
+            if(PhoneBrowserRoute.matches(value)){
+                JSONObject args=value.getJSONObject("args");io.execute(()->{
+                    if(destroyed||targetGeneration!=generation)return;
+                    try{Object result=browser.command(args.getString("action"),args.optJSONObject("args"));runOnUiThread(()->connectionPanel.bringToFront());ok(id,result,targetGeneration);}
+                    catch(Exception error){fail(id,error.getMessage(),targetGeneration);}
+                });return;
+            }
             if(!kind.equals("invoke")&&!kind.equals("hub")&&!kind.equals("preference")){fail(id,"Unsupported phone action.",targetGeneration);return;}
             submit(value,targetGeneration);
         }catch(Exception ignored){}
@@ -194,6 +203,7 @@ public final class MobileActivity extends Activity {
         }
         @Override public void onPageFinished(WebView view,String url){
             if(!url.equals(ORIGIN+"/index.html")||destroyed)return;
+            browser.beginPage();
             final int currentGeneration=generation;WebMessagePort[] pair=view.createWebMessageChannel();port=pair[0];
             port.setWebMessageCallback(new WebMessagePort.WebMessageCallback(){@Override public void onMessage(WebMessagePort source,WebMessage message){if(source==port&&currentGeneration==generation)MobileActivity.this.message(message.getData(),currentGeneration);}});
             view.postWebMessage(new WebMessage("opencore-mobile-port:"+nonce,new WebMessagePort[]{pair[1]}),Uri.parse(ORIGIN));
@@ -220,6 +230,7 @@ public final class MobileActivity extends Activity {
     }
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
         super.onRequestPermissionsResult(request,permissions,results);
+        if(request==PhoneBrowser.PERMISSIONS){browser.permissions(results);return;}
         if(request==MICROPHONE&&microphone!=null){if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)microphone.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});else microphone.deny();microphone=null;}
     }
 
@@ -237,6 +248,7 @@ public final class MobileActivity extends Activity {
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);
+        if(request==PhoneBrowser.UPLOAD){browser.chosen(result,data);return;}
         if(request==WEB_FILE&&webFiles!=null){ValueCallback<Uri[]> callback=webFiles;webFiles=null;callback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));return;}
         if(request==DIALOG_FOLDER&&dialogId!=null){String id=dialogId;dialogId=null;if(result==RESULT_OK&&data!=null&&data.getData()!=null)uploadFolder(id,data.getData(),generation);else ok(id,null,generation);return;}
         if(request!=DIALOG_FILE||dialogId==null)return;
@@ -381,6 +393,6 @@ public final class MobileActivity extends Activity {
     }
     @Override public void onResume(){super.onResume();if(DeviceRouting.target(this).equals("phone")){DeviceRouting.route(this);return;}resumed=true;nextInfoAt=0;AppUpdates.resume(this);AppUpdates.check(this,false);}
     @Override public void onPause(){resumed=false;super.onPause();}
-    @Override public void onDestroy(){destroyed=true;remoteSession.cancel();imageCache.clear();if(port!=null)port.close();polling.shutdownNow();io.shutdownNow();if(web!=null)web.destroy();super.onDestroy();}
-    @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
+    @Override public void onDestroy(){destroyed=true;remoteSession.cancel();imageCache.clear();if(port!=null)port.close();polling.shutdownNow();io.shutdownNow();if(browser!=null)browser.destroy();if(web!=null)web.destroy();super.onDestroy();}
+    @Override public void onBackPressed(){if(browser!=null&&browser.back())return;if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
 }

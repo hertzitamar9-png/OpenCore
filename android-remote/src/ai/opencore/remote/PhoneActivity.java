@@ -63,7 +63,7 @@ public final class PhoneActivity extends Activity {
             }catch(Exception error){return denied();}
         }
         @Override public void onPageFinished(WebView view,String url){
-            if(!url.equals(ORIGIN+"/index.html")||destroyed)return;if(port!=null){bridge.detach();port.close();bridge=new PhoneAppBridge(getApplicationContext(),backend,output,PhoneActivity.this::nativeFeature);}WebMessagePort[] pair=web.createWebMessageChannel();port=pair[0];
+            if(!url.equals(ORIGIN+"/index.html")||destroyed)return;browser.beginPage();if(port!=null){bridge.detach();port.close();bridge=new PhoneAppBridge(getApplicationContext(),backend,output,PhoneActivity.this::nativeFeature);}WebMessagePort[] pair=web.createWebMessageChannel();port=pair[0];
             port.setWebMessageCallback(new WebMessagePort.WebMessageCallback(){@Override public void onMessage(WebMessagePort source,WebMessage value){if(source==port&&!destroyed)request(value.getData());}});
             bridge.attach();web.postWebMessage(new WebMessage("opencore-mobile-port:"+nonce,new WebMessagePort[]{pair[1]}),Uri.parse(ORIGIN));
         }

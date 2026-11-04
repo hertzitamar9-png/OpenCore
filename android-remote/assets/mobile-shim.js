@@ -16,7 +16,7 @@
   const ready=new Promise(resolve=>{resolvePort=resolve;});
   let browserCover=null,browserRevision=0,browserFrame=0;
   function browserVisibility(){
-    if(!globalThis.__OPENCORE_PHONE__||!port||!document.querySelectorAll||!window.requestAnimationFrame)return;
+    if(!port||!document.querySelectorAll||!window.requestAnimationFrame)return;
     if(browserFrame)return;
     browserFrame=requestAnimationFrame(()=>{
       browserFrame=0;

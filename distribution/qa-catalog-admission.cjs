@@ -31,7 +31,7 @@ code+=String.raw`
     await card.getByRole('button',{name:'Installing…',exact:true}).waitFor();
     check('Install sends the selected package to the managed download path',await page.evaluate(id=>fixture.calls.some(call=>call.route==='/install'&&call.body.id===id),selected.id));
     check('Orca never enters the native installer that rejected missing weights',await page.evaluate(()=>!fixture.calls.some(call=>call.command==='runtime_setup_start'||call.command==='install_model')));
-    await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();
+    await page.locator('.model-install-progress').first().getByRole('button',{name:'Pause installation',exact:true}).click();
     await card.getByRole('button',{name:'Install',exact:true}).waitFor();
     await search.fill('JEV');
     const reference=page.getByRole('article').filter({has:page.getByRole('heading',{name:'JEV Computer Use',exact:true})});await reference.waitFor();

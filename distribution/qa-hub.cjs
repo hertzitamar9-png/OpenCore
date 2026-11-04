@@ -48,14 +48,14 @@ record('all variants share a regular library card',await page.getByRole('article
 record('imported models use the regular card and quantization field styling',await page.getByRole('article').evaluate(card=>card.classList.contains('model-library-card')&&parseFloat(getComputedStyle(card).borderTopWidth)>=1&&parseFloat(getComputedStyle(card.querySelector('select')).minHeight)>=36));
 await page.getByRole('button',{name:'Install',exact:true}).click();await page.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('install immediately locks its card',await page.getByRole('button',{name:'Installing…',exact:true}).isDisabled());
-await page.waitForTimeout(1400);record('Hub progress uses the shared top panel',await page.locator('.model-install-progress progress').getAttribute('value')==='30');
-await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();await page.getByRole('button',{name:'Install',exact:true}).waitFor();
+await page.waitForTimeout(1400);record('Hub progress uses the shared top panel',await page.locator('.model-install-progress').first().locator('progress').getAttribute('value')==='30');
+await page.locator('.model-install-progress').first().getByRole('button',{name:'Pause installation',exact:true}).click();await page.getByRole('button',{name:'Install',exact:true}).waitFor();
 // The card can render before the shared coordinator has confirmed the pause.
 // Wait for authoritative admission to release the control, not just its label.
 await (await page.getByRole('button',{name:'Install',exact:true}).elementHandle()).waitForElementState('enabled');
 record('pause reaches service and releases the same install lock',await page.getByRole('button',{name:'Install',exact:true}).isEnabled()&&await page.evaluate(()=>fixture.calls.some(c=>c.route==='/pause')));
 await page.evaluate(()=>{fixture.catalog[0].status='installed';fixture.progress=null;});await page.getByRole('button',{name:'Prepare runtime',exact:true}).waitFor();
-await page.getByRole('button',{name:'Prepare runtime',exact:true}).click();await page.waitForTimeout(1300);record('runtime preparation uses indeterminate shared progress',await page.locator('.model-install-progress progress').getAttribute('value')===null);
+await page.getByRole('button',{name:'Prepare runtime',exact:true}).click();await page.waitForTimeout(1300);record('runtime preparation uses indeterminate shared progress',await page.locator('.model-install-progress').first().locator('progress').getAttribute('value')===null);
 await page.evaluate(()=>{fixture.catalog[0].runtimeReady=true;fixture.catalog[0].runtimePreparation={contextTokens:8192,runtimeReady:true};fixture.progress={...fixture.progress,status:'ready',stage:'ready'};});
 await page.getByRole('button',{name:'Use model',exact:true}).waitFor();await page.getByRole('button',{name:'Use model',exact:true}).click();await page.waitForTimeout(400);
 record('Use model registers and selects an actual native chat profile',await page.evaluate(()=>window.selected?.startsWith('api:provider-fixture:')));
@@ -77,8 +77,8 @@ record('managed families replace their duplicate native catalog entries',await p
 await page.getByRole('article',{name:'Flint 40B A2.5B',exact:true}).getByRole('button',{name:'Install',exact:true}).click();await page.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('another publisher model cannot install during the active download',await page.getByRole('article',{name:'Raon 1 mini',exact:true}).getByRole('button',{name:'Install',exact:true}).isDisabled());
 await page.evaluate(()=>{fixture.progress={...fixture.progress,stage:'verifying-echo'};});await page.waitForTimeout(1400);
-record('ECHO verification remains visible in the shared preparation progress',await page.locator('.model-install-progress progress').getAttribute('value')===null);
-await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();
+record('ECHO verification remains visible in the shared preparation progress',await page.locator('.model-install-progress').first().locator('progress').getAttribute('value')===null);
+await page.locator('.model-install-progress').first().getByRole('button',{name:'Pause installation',exact:true}).click();
 const planCount=await page.evaluate(()=>fixture.calls.filter(c=>c.route==='/plan').length);
 await page.evaluate(()=>{fixture.progress=null;fixture.catalog=['Q2_K','Q3_K_M','Q4_K_M','Q5_K_M','Q6_K'].map((q,j)=>({...fixture.variants[0],id:'hf-'+String(j+4).repeat(24),quantization:q,familyId:'builtin-fixture',familyLabel:'Preset checkpoint',nativeModelIds:['native-existing'],status:'not-installed',runtimeReady:false}));});
 const preset=page.getByRole('article',{name:'Preset checkpoint',exact:true});await preset.waitFor();
@@ -87,7 +87,7 @@ record('there are no community search controls on model cards or the importer',a
 record('the separate importer inspects only the entered repository',await page.evaluate(()=>fixture.calls.filter(c=>c.route==='/plan').every(c=>c.body.repository==='fixture/tiny-model'&&!c.body.includeCommunity)));
 await preset.getByRole('combobox',{name:/^Quantization for /}).selectOption('hf-'+'6'.repeat(24));await preset.getByRole('button',{name:'Install',exact:true}).click();
 record('a preset quant installs directly without Add or Check repository',await page.evaluate(()=>fixture.calls.filter(c=>c.route==='/install').at(-1).body.id==='hf-'+'6'.repeat(24)&&fixture.calls.filter(c=>c.route==='/plan').length)===planCount);
-await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();
+await page.locator('.model-install-progress').first().getByRole('button',{name:'Pause installation',exact:true}).click();
 await page.evaluate(async()=>{fixture.progress=null;fixture.nativeModels=[{id:'native-existing',label:'Existing Q4 profile',precision:'Q4_K_M',memoryMode:'native',category:'text',contextTokens:8192,installed:true,selectable:true,runtimeReady:true,totalBytes:100}];const {TestInvoke}=await import('/assets/App-kNA9sRUP.js');const library=await TestInvoke('list_model_library',{},()=>window.__TAURI_INTERNALS__.invoke('list_model_library'));window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:library}));});
 try{await preset.locator('option[value="native-existing"]').waitFor({state:'attached',timeout:5000});}catch(error){console.log('Native preservation state',await page.evaluate(async()=>{const {TestAugment}=await import('/assets/App-kNA9sRUP.js');return {native:fixture.nativeModels,augmented:TestAugment({models:fixture.nativeModels}).models.map(model=>({id:model.id,variantOf:model.variantOf,installed:model.installed})),calls:fixture.calls.filter(call=>call.command==='list_model_library').length};}));throw error;}
 record('an existing installed native profile remains in the same card without a duplicate Q4 choice',await preset.getByRole('combobox',{name:/^Quantization for /}).locator('option').count()===5&&await preset.locator('option[value="native-existing"]').innerText().then(t=>t.includes('Installed')));

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "androidVersion": "3.4",
+  "androidVersion": "3.5",
   "nativeRuntimeRevision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
   "androidArm64BinaryVerified": true,
   "android16KbPagesVerified": true,
@@ -23,6 +23,8 @@
   "automaticPcFallback": false,
   "physicalPhoneVerified": false,
   "userConfirmedPhoneStartupVersion": "3.3",
+  "phoneModelLabelsAndCacheSizesVerified": true,
+  "manualPhoneBrowserBothExecutionModes": true,
   "phoneModelSelectionProtocolVerified": true,
   "customNativePhoneSelectionReopened": true,
   "phoneGroupsCapabilityGateVerified": true,
