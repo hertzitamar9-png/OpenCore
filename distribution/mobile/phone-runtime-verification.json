@@ -4,7 +4,7 @@
   "verificationKind": "signed-APK-packaging",
   "androidVersion": "3.6",
   "versionCode": 15,
-  "apkSha256": "934cfccc3f2409819673d0a8f1c349829c20ef553b8168234e282376ecbb5233",
+  "apkSha256": "b3301e9d029e5ca3e575c27056d948188202db0896038b62c7a7fc4990331c59",
   "nativeRuntimeRevision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
   "sharedUiManifestSha256": "4399880a7997a47f0f9590867aabf85c740edbfd473e4f14cafda35b498a6290",
   "catalogSha256": "23b4fed8d0cb603ec93fa2aa57034983889dcb5c447ce2537d6f84bb81281a46",

@@ -159,6 +159,7 @@ jobs:
         env:
           OPENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.OPENCORE_ANDROID_KEYSTORE_BASE64 }}
           OPENCORE_ANDROID_STORE_PASSWORD: ${{ secrets.OPENCORE_ANDROID_STORE_PASSWORD }}
+          OPENCORE_ANDROID_BUILD_TOOLS: '36.0.0'
         run: python distribution/android_release.py --output distribution/.output/release
       - name: Install the rendered-test browser
         run: npx playwright install chromium

@@ -70,7 +70,15 @@ def sdk_inputs(sdk):
     candidates = [path for path in (sdk / 'build-tools').iterdir() if re.fullmatch(r'\d+\.\d+\.\d+', path.name)]
     if not candidates:
         raise ValueError('Install released Android SDK build tools')
-    tools = max(candidates, key=lambda path: tuple(map(int, path.name.split('.'))))
+    requested = os.environ.get('OPENCORE_ANDROID_BUILD_TOOLS')
+    if requested:
+        if not re.fullmatch(r'\d+\.\d+\.\d+', requested):
+            raise ValueError('Invalid Android build tools version')
+        tools = next((path for path in candidates if path.name == requested), None)
+        if tools is None:
+            raise ValueError('The requested Android build tools are not installed: ' + requested)
+    else:
+        tools = max(candidates, key=lambda path: tuple(map(int, path.name.split('.'))))
     platforms = [(tuple(int(value or 0) for value in match.groups()), path) for path in (sdk / 'platforms').iterdir()
                  if (match := re.fullmatch(r'android-(\d+)(?:-ext(\d+))?', path.name))]
     if not platforms:
@@ -93,19 +101,28 @@ def run_tool(command, environment):
     return result.stdout
 
 
+def verify_signer_output(certificates):
+    # Current apksigner versions may label a signer by SDK range rather than
+    # by number. Every reported certificate must still be the original key.
+    signers = re.findall(r'^Signer\s+(?:#\d+|\([^\r\n]*\))\s+certificate SHA-256 digest:\s*([0-9a-fA-F]{64})\s*$', certificates, re.MULTILINE)
+    count = re.search(r'^Number of signers:\s*(\d+)\s*$', certificates, re.MULTILINE)
+    if not signers or {digest.lower() for digest in signers} != {SIGNER_SHA256} or count and int(count.group(1)) != 1:
+        details = [line.strip() for line in certificates.splitlines() if 'Signer ' in line or 'signers:' in line]
+        raise ValueError('The APK signing identity differs from the original installed Android app: ' + '; '.join(details[:8]))
+    return SIGNER_SHA256
+
+
 def verify_apk(apk, tools, java, environment):
     """Use Android's actual signature verifier and binary manifest parser."""
     certificates = run_tool([java / 'bin/java.exe', '-jar', tools / 'lib/apksigner.jar', 'verify',
                              '--verbose', '--print-certs', apk], environment)
-    signers = re.findall(r'Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F]{64})', certificates)
-    if len(signers) != 1 or signers[0].lower() != SIGNER_SHA256:
-        raise ValueError('The APK signing identity differs from the original installed Android app')
+    signer = verify_signer_output(certificates)
     badging = run_tool([tools / 'aapt2.exe', 'dump', 'badging', apk], environment)
     package = re.search(r"^package: name='([^']+)' versionCode='([0-9]+)' versionName='([^']+)'", badging, re.MULTILINE)
     if not package or package[1] != PACKAGE:
         raise ValueError('The built APK changed the installed Android package identity')
     return {'package': package[1], 'versionCode': int(package[2]), 'version': package[3],
-            'signatureVerified': True, 'signerCertificateSha256': signers[0].lower()}
+            'signatureVerified': True, 'signerCertificateSha256': signer}
 
 
 def main():

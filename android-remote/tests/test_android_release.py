@@ -21,6 +21,27 @@ spec.loader.exec_module(android_build)
 
 
 class AndroidReleaseBuildTests(unittest.TestCase):
+    def test_release_uses_the_explicitly_pinned_android_tools(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sdk = Path(temporary)
+            for version in ('36.0.0', '37.0.0'):
+                (sdk / 'build-tools' / version).mkdir(parents=True)
+            (sdk / 'platforms/android-36').mkdir(parents=True)
+            with patch.dict(os.environ, {'OPENCORE_ANDROID_BUILD_TOOLS': '36.0.0'}):
+                self.assertEqual(android_build.sdk_inputs(sdk)[0].name, '36.0.0')
+            with patch.dict(os.environ, {'OPENCORE_ANDROID_BUILD_TOOLS': '99.0.0'}):
+                with self.assertRaisesRegex(ValueError, 'not installed'):
+                    android_build.sdk_inputs(sdk)
+
+    def test_verified_certificate_formats_and_untrusted_signers(self):
+        digest = android_build.SIGNER_SHA256
+        for signer in ('Signer #1', 'Signer (minSdkVersion=33, maxSdkVersion=2147483647)'):
+            self.assertEqual(android_build.verify_signer_output(signer + ' certificate SHA-256 digest: ' + digest + '\n'), digest)
+        with self.assertRaisesRegex(ValueError, 'signing identity'):
+            android_build.verify_signer_output('Signer #1 certificate SHA-256 digest: ' + '0' * 64 + '\n')
+        with self.assertRaisesRegex(ValueError, 'signing identity'):
+            android_build.verify_signer_output('Number of signers: 2\nSigner #1 certificate SHA-256 digest: ' + digest + '\n')
+
     def test_ci_version_codes_increase_above_all_manually_released_builds(self):
         mapping = getattr(android_build, 'ci_version_code', None)
         self.assertTrue(callable(mapping), 'CI must assign Android version codes from its run number')
