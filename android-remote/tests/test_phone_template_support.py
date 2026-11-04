@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+import urllib.request
+from test_phone_startup import JSON_URL, JSON_SHA256
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -15,10 +17,17 @@ class PhoneTemplateSupportTests(unittest.TestCase):
         sdk = Path(os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT') or Path.home() / '.opencore/android-sdk')
         platforms = sorted((sdk / 'platforms').glob('android-*/android.jar'))
         self.assertTrue(platforms, 'Pinned Android SDK is required for this helper regression')
-        jar = ROOT.parent / 'distribution/.output/android-json-aosp.jar'
-        self.assertEqual(hashlib.sha256(jar.read_bytes()).hexdigest(), 'dfb7bae2f404cfe0b72b4d23944698cb716b7665171812a0a4d0f5926c0fac79')
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)
+            cached = ROOT.parent/'distribution/.output/android-json-aosp.jar'
+            if cached.is_file():
+                dependency = cached.read_bytes()
+            else:
+                with urllib.request.urlopen(JSON_URL, timeout=20) as response:
+                    dependency = response.read(128*1024)
+            self.assertEqual(hashlib.sha256(dependency).hexdigest(), JSON_SHA256)
+            jar = output/'android-json.jar'
+            jar.write_bytes(dependency)
             stub = output / 'NetworkForbidden.java'
             stub.write_text('package ai.opencore.remote; class PhoneHub {'
                             'static javax.net.ssl.HttpsURLConnection open(String u,String t) throws java.io.IOException {throw new java.io.IOException("Network forbidden in tests");}'

@@ -4,7 +4,7 @@
   "versionCode": 13,
   "version": "3.4",
   "bytes": 17837349,
-  "sha256": "6ddd06c863c43f77a84233f8460ff827fe36e27e314534261e60064314f3dba0",
+  "sha256": "d36ea64c399aa301ec4c087305d79774cba9d850bb333d7fefe9dd9b00009d4a",
   "signatureVerified": true,
   "signerCertificateSha256": "12fba5fd7e17b8bfa6e6b83f00de36e09b4a8f3fa00908d2b447469274a44e5d",
   "sources": {
@@ -79,7 +79,7 @@
     "android-remote/tests/test_phone_runtime.py": "621a1b5171893726b48dcfafc1bbd0a72e2d9624a1924f8074a4c51a73d1e643",
     "android-remote/tests/test_phone_send_protocol.py": "4a257b60cbb8c3293f360a2c844d000b371e46c463da0435cc9ab81d74e3b420",
     "android-remote/tests/test_phone_startup.py": "ee6ca57cf3f8a8714e5e0563897ae54edb6acbfe0e0f38327320bb45761705ac",
-    "android-remote/tests/test_phone_template_support.py": "696b3914a9cc3e6b7fd1de307bd508666cab29116e24307136edbf1dc4f90f75",
+    "android-remote/tests/test_phone_template_support.py": "e2bc58e8ce55a66a878b976ca02ca88d7119c3aedc86a860984e3262bc6e53ae",
     "android-remote/tests/test_phone_templates.py": "509712272059c1a87e51229d2e3d3a6f28049ff0ad78db455afd1e13cdd402cd",
     "android-remote/vendor/litertlm/annotations-23.0.0.jar": "7b0f19724082cbfcbc66e5abea2b9bc92cf08a1ea11e191933ed43801eb3cd05",
     "android-remote/vendor/litertlm/classes.jar": "0ff0098f64407752c115bf2569a7cd3005c894ecb934e7fdbcd744037f398ce8",
