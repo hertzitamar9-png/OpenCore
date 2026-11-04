@@ -34,6 +34,7 @@ const server=http.createServer((request,response)=>{
     await page.evaluate(()=>fixture.update({downloadedBytes:2e9},4000));
     await page.getByText('About 12 seconds remaining · measured download rate').first().waitFor();
     assert.equal(await page.getByText('2.000 GB / 5.000 GB',{exact:true}).count(),2);
+    assert.equal(await page.getByText('250.00 MB/s',{exact:true}).count(),2);
     assert.equal(await page.getByText('About 12 seconds remaining · measured download rate',{exact:true}).count(),2);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No horizontal overflow');
     if(width===393)assert.ok(await card.getByRole('button').evaluateAll(buttons=>buttons.every(button=>button.getBoundingClientRect().height>=44)));
@@ -50,6 +51,6 @@ const server=http.createServer((request,response)=>{
     assert.equal(await page.getByText(/remaining/).count(),0,'No download ETA during verification');
     await card.getByRole('button',{name:'Cancel installation'}).click();
     assert.deepEqual(await page.evaluate(()=>fixture.calls),['pause','cancel']);assert.deepEqual(errors,[]);
-    console.log('PASS shared global/card bytes, ETA, pause, cancel, verification and layout at '+width+'px'+(width===393?' Phone mode':''));await page.close();
+    console.log('PASS shared global/card bytes, speed, ETA, pause, cancel, verification and layout at '+width+'px'+(width===393?' Phone mode':''));await page.close();
   }}finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});

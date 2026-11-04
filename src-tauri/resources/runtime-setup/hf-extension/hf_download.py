@@ -8,7 +8,9 @@ from pathlib import Path
 import re
 import secrets
 import shutil
+import threading
 import time
+from contextlib import contextmanager
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -334,6 +336,57 @@ class Downloader:
     parallel_workers = 8
     def __init__(self, root, client):
         self.root, self.client = Path(root).resolve(), client
+        self._targets_guard, self._target_locks = threading.Lock(), {}
+        self.shared_sources = {}
+
+    def register_shared(self, pin, path):
+        if pin.get('sha256'):
+            key = (pin['sha256'], pin['bytes'])
+            with self._targets_guard:
+                values = self.shared_sources.setdefault(key, [])
+                if Path(path) not in values: values.append(Path(path))
+
+    def _reuse_shared(self, pin, target, pause, report):
+        if target.exists() or not pin.get('sha256'): return
+        with self._targets_guard:
+            sources = list(self.shared_sources.get((pin['sha256'], pin['bytes']), []))
+        for source in sources:
+            self._pause(pause)
+            if source == target or not source.is_file(): continue
+            if partial_identity(source, self.root) is None:
+                # Hardlinks created by a previous verified reuse are legitimate;
+                # reject symlinks/reparse parents without requiring link count 1.
+                try:
+                    if source.is_symlink() or any(parent.is_symlink() or getattr(parent.stat(), 'st_file_attributes', 0) & 0x400 for parent in (source, *source.parents) if parent.is_relative_to(self.root)):
+                        continue
+                except OSError: continue
+            report({'stage': 'verifying-shared-file', 'detail': 'Verifying an existing shared checkpoint file', 'filename': pin['filename']})
+            if not self._verify(source, pin, pause): continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                os.link(source, target)
+            except FileExistsError:
+                pass
+            except OSError as error:
+                raise ValueError('The verified shared checkpoint could not be linked at its required catalog path; its existing files were kept') from error
+            return
+
+    @contextmanager
+    def owned_targets(self, paths, pause, report):
+        """Sharing a pinned path never gives two workers ownership of its partial."""
+        locks = []
+        try:
+            for key in sorted({os.path.normcase(str(path)) for path in paths}):
+                with self._targets_guard:
+                    lock = self._target_locks.setdefault(key, threading.Lock())
+                while not lock.acquire(timeout=.1):
+                    self._pause(pause)
+                    report({'stage': 'waiting-shared-file', 'detail': 'Waiting for another download to verify the shared model file'})
+                locks.append(lock)
+            self._pause(pause)
+            yield
+        finally:
+            for lock in reversed(locks): lock.release()
 
     def directory(self, entry):
         validate_entry(entry)
@@ -381,7 +434,7 @@ class Downloader:
                 sha256.update(block)
                 blob.update(block)
         actual = sha256.hexdigest()
-        if (pin.get("sha256") and actual != pin["sha256"]) or (pin.get("gitBlobSha1") and blob.hexdigest() != pin["gitBlobSha1"]):
+        if (pin.get("sha256") and actual not in [pin['sha256'], *pin.get('compatibleLocalSha256', [])]) or (pin.get("gitBlobSha1") and blob.hexdigest() != pin["gitBlobSha1"]):
             return None
         return actual
 
@@ -450,18 +503,46 @@ class Downloader:
                 future.cancel()
             pool.shutdown(wait=True, cancel_futures=True)
 
-    def install(self, entry, pause, report):
+    def install(self, entry, pause, report, *, parallel_ranges=True):
         validate_entry(entry)
         directory = self.directory(entry)
+        targets = {pin['filename']: managed_path(directory, safe_filename(pin['filename'])) for pin in entry['files']}
+        with self.owned_targets(targets.values(), pause, report):
+            return self._install(entry, pause, report, directory, targets, parallel_ranges=parallel_ranges)
+
+    def install_native(self, model, artifacts, pause, report, *, parallel_ranges=True):
+        """Use exactly the compiled catalog's pinned paths and receipt format."""
+        selected = [artifacts[identity] for identity in model['artifacts']]
+        files, targets = [], {}
+        for artifact in selected:
+            pin = {'repository': artifact['repo'], 'revision': artifact['revision'], 'filename': artifact['filename'],
+                   'sha256': artifact['sha256'], 'bytes': artifact['bytes']}
+            # Native packages may contain files with identical names in distinct
+            # repositories. Keys are manifest artifact IDs, never remote names.
+            pin['_targetId'] = artifact['id']
+            if artifact.get('compatibleLocalSha256'): pin['compatibleLocalSha256'] = artifact['compatibleLocalSha256']
+            parse_repository(pin['repository']); safe_filename(pin['filename'])
+            if not HEX40.fullmatch(pin['revision']) or not HEX64.fullmatch(pin['sha256']) or type(pin['bytes']) is not int or pin['bytes'] < 0:
+                raise ValueError('The native catalog has an invalid immutable artifact pin')
+            relative = safe_filename(artifact['path'])
+            targets[artifact['id']] = managed_path(self.root, relative)
+            files.append(pin)
+        entry = {'id': model['id'], 'repository': '', 'revision': '', 'bytes': sum(x['bytes'] for x in files), 'files': files}
+        receipt_path = managed_path(self.root, 'models', 'receipts', 'model-' + model['id'] + '.json')
+        with self.owned_targets(targets.values(), pause, report):
+            return self._install(entry, pause, report, self.root, targets, receipt_path=receipt_path, native_artifacts=model['artifacts'], parallel_ranges=parallel_ranges)
+
+    def _install(self, entry, pause, report, directory, targets, *, receipt_path=None, native_artifacts=None, parallel_ranges=True):
         directory.mkdir(parents=True, exist_ok=True)
         total, completed, verified = entry["bytes"], 0, []
         needed = 0
         for pin in entry['files']:
-            target = managed_path(directory, pin['filename'])
+            target = targets[pin.get('_targetId', pin['filename'])]
+            self._reuse_shared(pin, target, pause, report)
             if target.is_file() and target.stat().st_size == pin['bytes']:
                 continue
-            partial = managed_path(directory, pin['filename'] + '.partial')
-            marker = managed_path(directory, pin['filename'] + '.partial.json')
+            partial = target.with_name(target.name + '.partial')
+            marker = target.with_name(target.name + '.partial.json')
             try:
                 matching = marker.is_file() and marker.stat().st_size <= 65536 and json.loads(marker.read_text(encoding='utf-8')) == pin
                 offset = min(partial.stat().st_size, pin['bytes']) if matching and partial.is_file() else 0
@@ -472,10 +553,10 @@ class Downloader:
             raise HubError(f'This model needs {(needed + self.disk_reserve) / 1e9:.1f} GB of free disk space, including a 2 GB reserve. Existing files were retained.')
         for pin in entry["files"]:
             self._pause(pause)
-            target = managed_path(directory, safe_filename(pin["filename"]))
+            target = targets[pin.get('_targetId', pin['filename'])]
             target.parent.mkdir(parents=True, exist_ok=True)
-            partial = managed_path(directory, pin["filename"] + ".partial")
-            marker = managed_path(directory, pin["filename"] + ".partial.json")
+            partial = target.with_name(target.name + '.partial')
+            marker = target.with_name(target.name + '.partial.json')
             def progress(stage, current=0):
                 report({"stage": stage, "bytesDone": completed + current, "bytesTotal": total, "filename": pin["filename"]})
             progress("verifying", 0)
@@ -492,7 +573,7 @@ class Downloader:
                 atomic_json(marker, pin)
                 if offset < pin['bytes'] and shutil.disk_usage(directory).free < pin['bytes'] - offset + self.disk_reserve:
                     raise HubError('Not enough free disk space to finish or repair this checkpoint. Existing files were retained.')
-                if offset < pin['bytes'] and pin['bytes'] >= self.parallel_threshold:
+                if parallel_ranges and offset < pin['bytes'] and pin['bytes'] >= self.parallel_threshold:
                     self._download_ranges(pin, partial, offset, pause, progress)
                     offset = partial.stat().st_size if partial.is_file() else 0
                 if offset < pin["bytes"]:
@@ -536,13 +617,19 @@ class Downloader:
                 os.replace(partial, target)
                 marker.unlink(missing_ok=True)
             completed += pin["bytes"]
+            self.register_shared(pin, target)
             verified.append({**pin, "localPath": str(target), "actualSha256": digest})
             progress("verified", 0)
         self._pause(pause)
-        receipt_path = managed_path(directory, "install-receipt.json")
+        receipt_path = receipt_path or managed_path(directory, "install-receipt.json")
         receipt = {"schema": 1, "id": entry["id"], "repository": entry["repository"], "revision": entry["revision"],
                    "files": verified, "bytes": total, "installedAt": time.time(), "inferenceVerified": False,
                    "localDirectory": str(directory), "receiptPath": str(receipt_path)}
-        atomic_json(receipt_path, receipt)
+        if native_artifacts is not None:
+            for pin in verified:
+                target = Path(pin['localPath'])
+                path = managed_path(self.root, 'models', 'receipts', 'file-' + pin['_targetId'] + '.json')
+                atomic_json(path, {'sha256': pin['actualSha256'], 'bytes': pin['bytes'], 'modifiedNanos': target.stat().st_mtime_ns})
+        atomic_json(receipt_path, native_artifacts if native_artifacts is not None else receipt)
         report({"stage": "installed", "bytesDone": total, "bytesTotal": total, "filename": None})
         return receipt

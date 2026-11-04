@@ -2711,6 +2711,20 @@
           ]
         }
       ]
+    },
+    {
+      "repository": "moolvylabs/Morphy1.1-Coder-Beta-7B-GGUF",
+      "familyId": "publisher-morphy-1-1-coder-beta-7b",
+      "label": "Morphy 1.1 Coder Beta 7B",
+      "category": "text",
+      "description": "Publisher beta coding model. The exact repository currently publishes one Q8_0 GGUF; the publisher Modelfile defaults to an 8,192-token context. Runtime preparation and real generation must pass after installation.",
+      "supportedContextTokens": 8192,
+      "sources": [
+        {
+          "repository": "moolvylabs/Morphy1.1-Coder-Beta-7B-GGUF",
+          "managedEngine": "flint-cpu-v1"
+        }
+      ]
     }
   ]
 }

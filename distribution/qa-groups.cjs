@@ -7,7 +7,7 @@ fixture=fixture.replace("const dir=path.join(__dirname,'candidate-dist')","const
 fixture=fixture.replace('const html=`','app+="\\nexport{l8 as TestSidebar};";\nconst html=`');
 fixture=fixture.replace('import{TestComposer,TestFooter,TestChanges}','import{TestComposer,TestFooter,TestChanges,TestSidebar}');
 fixture=fixture.replace(/function Fixture\(\)\{[\s\S]*?\}TestDOM\.createRoot/,
-  "function Fixture(){return h(React.Fragment,null,h(TestSidebar,{conversations:[],projects:[],onSelect:()=>{},onNew:()=>{},onExit:()=>{},onCreateProject:async()=>true,onTogglePin:()=>{},onEditProject:()=>{},onRemoveProject:()=>{},onOpenProjectFolder:async()=>'',onChangeProjectFolder:async()=>'',importRevision:0}),globalThis.__opencoreGroupHost?h(globalThis.__opencoreGroupHost):null)}TestDOM.createRoot");
+  "function Fixture(){return h(React.Fragment,null,h('header',{className:'section-header'},h('div',{className:'section-heading'},h('button',{'aria-label':'Open conversations'},'Chats'),h('strong',null,'Conversations'))),h(TestSidebar,{conversations:[],projects:[],onSelect:()=>{},onNew:()=>{},onExit:()=>{},onCreateProject:async()=>true,onTogglePin:()=>{},onEditProject:()=>{},onRemoveProject:()=>{},onOpenProjectFolder:async()=>'',onChangeProjectFolder:async()=>'',importRevision:0}),globalThis.__opencoreGroupHost?h(globalThis.__opencoreGroupHost):null)}TestDOM.createRoot");
 fixture=fixture.replace('</script><script type=module>',String.raw`
 fixture.groupCalls=[];fixture.groups=[];fixture.groupMessages=[];fixture.sharing={enabled:false,models:[],approvalMode:'ask-every-time',maxSubagents:3};
 fixture.snapshot=id=>({group:{id,name:fixture.groups.find(group=>group.id===id).name},self:{id:'me',name:'Owner',role:fixture.groups.find(group=>group.id===id).hosting?'owner':'member'},
@@ -36,8 +36,8 @@ fixture+=String.raw`
   page.on('pageerror',error=>errors.push(error.message));
   await page.addInitScript(mobile=>{globalThis.__OPENCORE_MOBILE__=mobile},width<600);
   await page.goto('http://127.0.0.1:'+server.address().port);
-  if(width<600)await page.getByRole('button',{name:'Chats',exact:true}).click();
-  await page.getByRole('button',{name:'Chat Core',exact:true}).click({timeout:4000});
+  if(width<600)await page.getByRole('button',{name:'Open conversations',exact:true}).click();
+  await page.getByRole('button',{name:'Chat Core',exact:true}).click({timeout:12000});
   const dialog=page.getByRole('dialog',{name:'Chat Core'});await dialog.waitFor();
   await dialog.getByRole('button',{name:'Create group',exact:true}).click();
   await dialog.getByLabel('Group name',{exact:true}).fill('Friends QA');

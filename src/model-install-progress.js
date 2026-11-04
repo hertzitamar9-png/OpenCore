@@ -54,6 +54,7 @@ export function createModelInstallProgress(React) {
       active ? h('progress', { 'aria-label': 'Model download', ...(downloading ? { value: Math.max(0, Math.min(progress.totalBytes, progress.downloadedBytes || 0)), max: progress.totalBytes } : {}) }) : null,
       progress.totalBytes > 0 ? h('small', null, gb(progress.downloadedBytes) + ' / ' + gb(progress.totalBytes)) : null,
       h('small', null, progress.currentFile || (phase === 'verifying' ? 'Verifying downloaded files…' : phase === 'preparing' ? 'Preparing installation…' : phases[phase] || phase)),
+      phase === 'downloading' ? h('small', { className: 'model-download-speed' }, measured.bytesPerSecond === null ? 'Measuring download speed…' : (measured.bytesPerSecond < 10000 ? '< 0.01' : (measured.bytesPerSecond / 1e6).toFixed(2)) + ' MB/s') : null,
       phase === 'downloading' ? h('small', null, measured.remainingSeconds === null ? 'Estimating download time…' : 'About ' + duration(measured.remainingSeconds) + ' remaining · measured download rate') : null,
       progress.error && phase === 'failed' ? h('p', null, progress.error) : null,
       active || phase === 'paused' ? h('div', { className: 'model-install-actions', style: { display: 'flex', flexWrap: 'wrap', gap: 8 } },

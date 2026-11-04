@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 585,
+  "families": 586,
   "withFive": 232,
   "models": [
     {
@@ -5735,6 +5735,17 @@
         "Mininglamp-2718/Mano-CUA-2.0-4B",
         "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
         "mradermacher/Mano-CUA-2.0-4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-morphy-1-1-coder-beta-7b",
+      "label": "Morphy 1.1 Coder Beta 7B",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "moolvylabs/Morphy1.1-Coder-Beta-7B-GGUF"
       ]
     },
     {

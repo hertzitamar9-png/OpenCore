@@ -85,9 +85,9 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
   const starts = new Set(['install_model', 'runtime_setup_start', 'install_publisher_model', 'register_prepared_model', 'hub_prepare_model']);
   const activePhases = new Set(['preparing', 'downloading', 'verifying', 'uninstalling', 'cancelling']);
   const activeStatuses = new Set(['queued', 'running', 'cancelling']);
-  let snapshot = { active: null, progress: null, runtime: null, library: null, initialized: false, terminal: 0, receiptsRevision: 0, notificationsRevision: 0 };
+  let snapshot = { active: null, progress: null, runtime: null, library: null, queue: null, initialized: false, terminal: 0, receiptsRevision: 0, notificationsRevision: 0 };
   let runtime = null, catalogueProgress = null, starting = null, polling = null, timer = null, cancellingOperation = null;
-  let receiptKey = '', paused = new Set(), cancelled = new Set();
+  let receiptKey = '', queueReadyKey = '', paused = new Set(), cancelled = new Set();
 
   function publish(values) {
     const next = { ...snapshot, ...values };
@@ -100,8 +100,19 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
     const job = jobs.find(value => value.id === runtime?.activeJobId && activeStatuses.has(value.status)) ||
       [...jobs].reverse().find(value => activeStatuses.has(value.status));
     const download = catalogueProgress && activePhases.has(catalogueProgress.phase) ? catalogueProgress : null;
+    const queue = snapshot.queue, queueActive = queue?.items?.find(item => queue.activeIds.includes(item.id));
+    const queuePrevious = snapshot.active?.kind === 'queue' ? queue?.items?.find(item => item.id === snapshot.active.jobId) : null;
     let active = null, progress = snapshot.progress;
-    if (cancellingOperation?.pending) {
+    if (queueActive) {
+      active = {modelId:queueActive.modelId,jobId:queueActive.id,kind:'queue',pausing:/pausing|stopping/i.test(queueActive.detail||'')};
+      progress = {modelId:queueActive.modelId,operationId:queueActive.id,phase:queueActive.phase === 'starting' ? 'preparing' : queueActive.phase,
+        downloadedBytes:queueActive.downloadedBytes||0,totalBytes:queueActive.totalBytes||0,bytesPerSecond:queueActive.bytesPerSecond||0,etaSeconds:queueActive.etaSeconds,
+        currentFile:queueActive.detail||queueActive.stage||'',error:queueActive.error||null};
+    } else if (queuePrevious) {
+      progress = {modelId:queuePrevious.modelId,operationId:queuePrevious.id,phase:queuePrevious.phase,
+        downloadedBytes:queuePrevious.downloadedBytes||0,totalBytes:queuePrevious.totalBytes||0,
+        currentFile:queuePrevious.detail||queuePrevious.stage||'',error:queuePrevious.error||null};
+    } else if (cancellingOperation?.pending) {
       active = { ...cancellingOperation.operation, pausing: true, cancelling: true };
       progress = { ...(snapshot.progress || {}), modelId: active.modelId, phase: 'cancelling', error: null, currentFile: 'Stopping installation and removing its owned partial files…' };
     } else if (job) {
@@ -137,8 +148,10 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
     const terminal = snapshot.terminal + (snapshot.active && !active ? 1 : 0);
     if (active) notifications.observe(progress);
     const key = JSON.stringify(runtime?.receipts || []);
+    const readyKey = JSON.stringify(queue?.items?.filter(item=>item.phase==='ready').map(item=>item.id)||[]);
     const receiptsRevision = snapshot.receiptsRevision + (key !== receiptKey ? 1 : 0);
-    const libraryChanged = terminal !== snapshot.terminal || (receiptKey && key !== receiptKey);
+    const libraryChanged = terminal !== snapshot.terminal || (receiptKey && key !== receiptKey) || (queueReadyKey && readyKey !== queueReadyKey);
+    queueReadyKey = readyKey;
     receiptKey = key;
     publish({ active, progress, runtime, terminal, receiptsRevision });
     if (libraryChanged && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('opencore-model-library-invalidated'));
@@ -151,14 +164,16 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
     }
     polling = Promise.allSettled([
       nativeInvoke('runtime_setup_status', {}), nativeInvoke('model_install_progress', {}),
-    ]).then(([setup, download]) => {
+      nativeInvoke('download_queue_action', {action:'snapshot'}),
+    ]).then(([setup, download, queued]) => {
       // A failed status read cannot release an installation lock.
       const setupValid = setup.status === 'fulfilled' && Array.isArray(setup.value?.jobs) && Array.isArray(setup.value?.receipts);
       const downloadValid = download.status === 'fulfilled' && (download.value === null || typeof download.value?.phase === 'string');
       if (setupValid) runtime = setup.value;
       if (downloadValid) catalogueProgress = download.value;
-      const checked = setupValid && downloadValid;
-      publish({ initialized: checked });
+      const queueValid = queued.status === 'fulfilled' && queued.value?.schema === 1 && Array.isArray(queued.value.items) && Array.isArray(queued.value.activeIds);
+      const checked = queueValid || setupValid && downloadValid;
+      publish({ initialized: checked, ...(queueValid ? {queue:queued.value} : {}) });
       if (checked) {
         if (starting) starting.unknown = false;
       }
@@ -178,6 +193,13 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
     if (starts.has(command)) {
       if (!snapshot.initialized) await refresh(true);
       if (!snapshot.initialized) throw new Error('Cannot check installation status. Retry when the current status is available.');
+      if (snapshot.queue && command !== 'register_prepared_model') {
+        const modelId = args.targetId || args.id || args.modelId;
+        const queue = await nativeInvoke('download_queue_action', {action:'enqueue',items:[{modelId,label:args.label||modelId,command,args}]});
+        notifications.begin(modelId);
+        publish({queue}); reconcile(); ensurePolling();
+        return queue;
+      }
       if (snapshot.active || starting?.pending) throw new Error('Another model is installing. Pause it or wait for it to finish.');
       const modelId = args.targetId || args.id || args.modelId;
       notifications.begin(modelId);
@@ -201,6 +223,14 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
         }
         throw error;
       }
+    }
+    if (command === 'download_queue_action') {
+      const result = await run();
+      if(result?.schema===1&&Array.isArray(result.items)&&Array.isArray(result.activeIds)) {
+        if(args.action==='enqueue')for(const item of args.items||[])notifications.begin(item.modelId);
+        publish({queue:result,initialized:true});reconcile();ensurePolling();
+      }
+      return result;
     }
     if (command === 'runtime_setup_cancel' || command === 'cancel_model_install' || command === 'cancel_model_installation') {
       const discarding = command === 'cancel_model_installation';
@@ -242,6 +272,7 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
   async function pause() {
     const operation = snapshot.active;
     if (!operation || operation.pausing) return;
+    if(operation.kind==='queue')return invoke('download_queue_action',{action:'pause',id:operation.jobId},()=>nativeInvoke('download_queue_action',{action:'pause',id:operation.jobId}));
     if (operation.kind === 'starting') {
       // Keep the lock until native admission supplies the cancellable job.
       await refresh();
@@ -253,6 +284,11 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
     return invoke(command, args, () => nativeInvoke(command, args));
   }
   async function cancelInstallation(expected) {
+    const queued = snapshot.queue?.items?.find(item=>expected?.operationId ? item.id===expected.operationId&&item.modelId===expected.modelId : item.id===snapshot.active?.jobId || !snapshot.active&&item.modelId===snapshot.progress?.modelId&&item.phase==='paused');
+    if(queued){
+      if(expected&&expected.modelId!==queued.modelId)throw Error('The current installation changed. Refresh its progress before cancelling.');
+      const args={action:'remove',id:queued.id};return invoke('download_queue_action',args,()=>nativeInvoke('download_queue_action',args));
+    }
     const pausedJob = snapshot.progress?.phase === 'paused' && runtime?.jobs?.find(job=>job.id===snapshot.progress.operationId&&job.targetId===snapshot.progress.modelId);
     const operation = snapshot.active || (snapshot.progress?.phase === 'paused' ? {modelId:snapshot.progress.modelId,...(pausedJob?{jobId:pausedJob.id,kind:'runtime'}:{kind:'download'})} : null);
     if(expected&&(expected.modelId!==operation?.modelId||expected.operationId&&expected.operationId!==snapshot.progress?.operationId))
@@ -277,6 +313,7 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
 
 const $installCoordinator = createInstallCoordinator((command, args) => $hubInvoke(command,args,()=>window.__TAURI_INTERNALS__.invoke(command,args)));
 globalThis.__opencoreInstallBridge = {invoke:(command,args,run)=>$installCoordinator.invoke(command,args,()=>$hubInvoke(command,args,run))};
+globalThis.__opencoreDownloadQueue = {action:args=>$installCoordinator.invoke('download_queue_action',args,()=>$hubInvoke('download_queue_action',args,()=>window.__TAURI_INTERNALS__.invoke('download_queue_action',args)))};
 function $useInstallState() {
   return p.useSyncExternalStore($installCoordinator.subscribe, $installCoordinator.getSnapshot, $installCoordinator.getSnapshot);
 }

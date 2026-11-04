@@ -34,6 +34,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Require the existing Android signing key
+        env:
+          OPENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.OPENCORE_ANDROID_KEYSTORE_BASE64 }}
+          OPENCORE_ANDROID_STORE_PASSWORD: ${{ secrets.OPENCORE_ANDROID_STORE_PASSWORD }}
+        run: python distribution/android_release.py --check-signing
+      - name: Install the pinned Android build tools and platform
+        run: |
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install build dependencies
         run: |
           npm ci
@@ -52,6 +62,8 @@ jobs:
       - name: Test manual update controls and release version ordering
         run: |
           npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/media-catalog.test.ts src/image-generation-panel.test.ts src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx src/FileChangesReceipt.test.tsx src/generation-settings-phone.test.tsx src/phone-profile-preference.test.ts src/group-workspace-phone.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx vitest run src/model-download-queue.test.mjs src/model-install-progress.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx tsc --noEmit
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -113,6 +125,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s src-tauri/resources/runtime-setup/hf-extension -p "test_hf_*.py" -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s src-tauri/resources/runtime-setup/hf-extension -p "test_download_queue*.py" -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Test training-free AutoLoop ownership and independent quality gates
         run: |
           python -m pip install --disable-pip-version-check pytest==8.3.5
@@ -137,6 +151,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python distribution/prepare.py --inputs distribution/.output/inputs
+      - name: Build and verify this release's Android update with its original signing key
+        env:
+          OPENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.OPENCORE_ANDROID_KEYSTORE_BASE64 }}
+          OPENCORE_ANDROID_STORE_PASSWORD: ${{ secrets.OPENCORE_ANDROID_STORE_PASSWORD }}
+        run: python distribution/android_release.py --output distribution/.output/release
       - name: Install the rendered-test browser
         run: npx playwright install chromium
       - name: Verify the independent Android phone runtime and explicit PC routing
@@ -157,6 +176,8 @@ jobs:
           node --test test-conversation-deletion.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-model-install.cjs candidate-dist
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-download-queue.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -329,4 +350,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENCORE_RELEASE_VERSION: ${{ needs.windows.outputs.release_version }}
+          OPENCORE_ANDROID_RELEASE_DIR: ${{ github.workspace }}/distribution/.output/release
         run: python distribution/publish.py --directory distribution/.output/release --version "$OPENCORE_RELEASE_VERSION" --commit "$GITHUB_SHA"

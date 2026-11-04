@@ -38,6 +38,7 @@ from hf_connectors import ConnectorProfiles
 from hf_telemetry import LiveTelemetry
 from hf_computer_runtime import ComputerManager, supports as supports_computer
 from model_modes import apply_operating_modes, supports_text_generation, mode_context
+from hf_download_queue import DownloadQueue
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -96,6 +97,7 @@ class BridgeState:
         self.prompt_assistant = None
         self.autoloop = None
         self._memory_lock = threading.RLock()
+        self.queue_prepare_lock = threading.Lock()
         self.pause_event, self.closed = threading.Event(), False
         self.cancel_event = threading.Event()
         self._load_catalog()
@@ -116,6 +118,248 @@ class BridgeState:
                 self.runtime = RuntimeManager(self.root, self.resources)
             except ImportError:
                 self.runtime = RuntimeUnavailable()
+        self._native_bindings = None
+        self._register_queue_shared_files()
+        self.download_queue = DownloadQueue(managed_path(self.root, 'runtime-setup', 'hub-bridge', 'download-queue.json'),
+                                            self._queue_resolve, self._queue_execute, discard=self._queue_discard,
+                                            available=lambda: not self.progress or self.progress.get('status') not in ACTIVE)
+
+    def _bindings(self):
+        if self._native_bindings is None:
+            source = self.resources / 'runtime-setup/hf-extension/native-model-bindings.json'
+            data = _read_json(source) if source.is_file() else {'models': [], 'artifacts': []}
+            self._native_bindings = ({m['id']: m for m in data['models']}, {a['id']: a for a in data['artifacts']})
+        return self._native_bindings
+
+    def _register_queue_shared_files(self):
+        from hf_catalog import safe_filename
+        for artifact in self._bindings()[1].values():
+            self.downloader.register_shared(artifact, managed_path(self.root, safe_filename(artifact['path'])))
+        for entry in self.entries.values():
+            if entry.get('installable'):
+                for pin in entry.get('files', []):
+                    self.downloader.register_shared(pin, managed_path(self.downloader.directory(entry), pin['filename']))
+
+    def _queue_resolve(self, value):
+        if not isinstance(value, dict): raise ValueError('Choose a verified catalog model')
+        command, args, identity = value.get('command'), value.get('args', {}), value.get('modelId')
+        if command not in ('install_model', 'runtime_setup_start', 'install_publisher_model', 'hub_prepare_model') or not isinstance(args, dict):
+            raise ValueError('Unsupported model download command')
+        if not isinstance(identity, str) or not 1 <= len(identity) <= 512:
+            raise ValueError('A verified model identity is required')
+        target = args.get('targetId') or args.get('id') or args.get('modelId') or identity
+        if target != identity: raise ValueError('The queue model and selected download must match')
+        label = value.get('label') or identity
+        if not isinstance(label, str) or len(label) > 512: raise ValueError('Invalid model label')
+        model, artifacts = self._bindings()
+        clean = {'modelId': identity, 'label': label, 'command': command, 'args': {}}
+        if command == 'runtime_setup_start':
+            options = args.get('options') or {}
+            if not isinstance(options, dict): raise ValueError('Invalid runtime setup options')
+            clean['args'] = {'targetId': identity, 'options': {key: options.get(key) is True for key in ('installWeights', 'verifyInference', 'acceptLicenses', 'allowAdministrator')}}
+            if clean['args']['options']['installWeights']: clean['args']['options']['verifyInference'] = True
+        else: clean['args'] = {'id': identity}
+        if identity in model:
+            selected = model[identity]
+            if selected.get('installable') is False or not selected.get('artifacts'):
+                raise ValueError('This model has no complete pinned download plan')
+            pins = [artifacts[a] for a in selected['artifacts']]
+            clean.update(key='native:' + hashlib.sha256(json.dumps(sorted((p['path'], p['sha256'], p['bytes']) for p in pins)).encode()).hexdigest(),
+                         totalBytes=sum(p['bytes'] for p in pins), source='native')
+            if command == 'runtime_setup_start':
+                manifest = _read_json(self.resources / 'runtime-setup/recipes.json')
+                recipe = next((r for r in manifest['recipes'] if identity in r['modelIds']), None)
+                if not recipe: raise ValueError('Automatic setup has no verified publisher-compatible recipe for this model')
+                clean['key'] += ':prepare:' + recipe['id']
+                if recipe.get('requiresLicenseAcceptance') and not clean['args']['options']['acceptLicenses']:
+                    raise ValueError('This model requires accepting its publisher license before setup')
+        else:
+            entry = self.entry(identity)
+            validate_entry(entry)
+            if entry.get('origin') == 'autoloop': raise ValueError('AutoLoop checkpoints are generated locally')
+            clean.update(key='hub:' + identity, totalBytes=entry['bytes'], source='hub')
+        return clean
+
+    def _queue_discard(self, item):
+        if item.get('source') == 'native':
+            model, artifacts = self._bindings()
+            paths = [managed_path(self.root, artifacts[a]['path']) for a in model[item['modelId']]['artifacts']]
+            with self.downloader.owned_targets(paths, threading.Event(), lambda _: None):
+                self.discard_native_partials(item['modelId'])
+        else:
+            entry = self.entry(item['modelId'])
+            paths = [managed_path(self.downloader.directory(entry), pin['filename']) for pin in entry['files']]
+            with self.downloader.owned_targets(paths, threading.Event(), lambda _: None):
+                self.downloader.discard_partials(entry)
+
+    def _queue_execute(self, item, pause, cancel, report):
+        resolved = self._queue_resolve(item)
+        identity, command = resolved['modelId'], resolved['command']
+        if resolved['source'] == 'native':
+            models, artifacts = self._bindings()
+            options = resolved['args'].get('options', {})
+            speech = identity in ('phonon-2', 'whisper-large-v3', 'whisper-large-v3-turbo')
+            external_speech = self._queue_external_speech(identity) if speech else None
+            if external_speech:
+                report({'stage': 'verifying-existing-speech', 'detail': 'Reusing the existing speech checkpoint; preparing its managed runtime', 'bytesTotal': 0})
+            elif identity == 'yue2' and self._queue_existing_music(models[identity], artifacts, pause, report):
+                return
+            elif command != 'runtime_setup_start' or options.get('installWeights'):
+                self.downloader.install_native(models[identity], artifacts, pause, report, parallel_ranges=not item.get('_parallel'))
+            if command == 'runtime_setup_start' or speech:
+                self._queue_prepare(item, pause, report, lambda: self._queue_native_setup(identity, options, pause, report, item['id']))
+            return
+        entry = self.entry(identity)
+        preparing = command == 'hub_prepare_model' or command == 'runtime_setup_start' and not resolved['args']['options'].get('installWeights')
+        if not preparing:
+            self.downloader.install(entry, pause, report, parallel_ranges=not item.get('_parallel'))
+            preparing = supports_computer(entry) or supports_ocr(entry) or supports_image(entry) or entry.get('runtime', {}).get('adapter') and getattr(self.runtime, 'automatic_preparation', False)
+        if preparing:
+            def prepare():
+                progress = {'id': identity, 'jobId': item['id'], 'status': 'running', 'kind': 'prepare'}
+                self._work(self.entry(identity, installed=True), 'prepare', pause, cancel, progress=progress, external_report=report)
+                if progress['status'] == 'failed': raise ValueError(progress.get('error') or 'Model runtime preparation failed')
+                if progress['status'] == 'paused': raise Paused('Runtime preparation paused')
+            self._queue_prepare(item, pause, report, prepare)
+
+    def _queue_external_speech(self, identity):
+        if identity not in ('whisper-large-v3', 'whisper-large-v3-turbo'): return None
+        home = Path(os.environ.get('USERPROFILE', str(self.root)))
+        configured = os.environ.get('OPENCORE_WHISPER_MODEL')
+        candidates = ([Path(configured)] if configured else []) + [home / 'OpenCore-Model-Test/asr' / identity]
+        metadata = ('config.json', 'generation_config.json', 'preprocessor_config.json', 'tokenizer_config.json', 'normalizer.json', 'special_tokens_map.json', 'added_tokens.json')
+        for directory in candidates:
+            try:
+                if not directory.is_absolute() or not all((directory / name).is_file() for name in metadata): continue
+                config = _read_json(directory / 'config.json', 1024 * 1024)
+                if config.get('model_type') != 'whisper' or config.get('decoder_layers') != (32 if identity == 'whisper-large-v3' else 4): continue
+                weights = (directory / 'model.safetensors').is_file() or all((directory / name).is_file() for name in ('model.safetensors.index.json', 'model-00001-of-00002.safetensors', 'model-00002-of-00002.safetensors'))
+                tokenizer = (directory / 'tokenizer.json').is_file() or all((directory / name).is_file() for name in ('vocab.json', 'merges.txt'))
+                if weights and tokenizer: return directory
+            except (OSError, ValueError): continue
+        directory = self.root / 'speech/large-v3'
+        if identity == 'whisper-large-v3':
+            try:
+                if all((directory / name).is_file() for name in ('config.json', 'preprocessor_config.json', 'tokenizer.json', 'vocabulary.json')) and (directory / 'model.bin').stat().st_size == 3087284237:
+                    receipt = self.root / 'models/receipts/model-whisper-large-v3.json'
+                    if not receipt.is_file() or 'whisper-full-v3-model-bin' not in _read_json(receipt): return directory
+            except (OSError, ValueError): pass
+        return None
+
+    def _queue_existing_music(self, model, artifacts, pause, report):
+        home = Path(os.environ.get('USERPROFILE', str(self.root)))
+        candidates = [Path(value) for value in (os.environ.get('OPENCORE_YUE_MODELS'),) if value]
+        candidates += [Path(os.environ.get('OPENCORE_MUSIC_HOME', str(home / 'YuE'))) / 'models', home / 'YuE/models']
+        receipt_path = self.root / 'models/receipts/music-external.json'
+        try:
+            saved = _read_json(receipt_path)
+            if saved:
+                first = Path(next(iter(saved.values()))['path'])
+                candidates.insert(0, first.parent.parent)
+        except (OSError, ValueError, KeyError, TypeError): pass
+        pins = [artifacts[a] for a in model['artifacts'] if artifacts[a].get('repo', '').startswith('m-a-p/YuE2-')]
+        if not pins: return False
+        for directory in candidates:
+            paths = [(pin, directory / pin['path'].removeprefix('models/music/')) for pin in pins]
+            try:
+                if not all(path.is_file() and path.stat().st_size == pin['bytes'] for pin, path in paths): continue
+                records = {}
+                for pin, path in paths:
+                    report({'stage': 'verifying-existing-music', 'detail': 'Verifying the existing YuE checkpoint without copying its files', 'bytesTotal': 0})
+                    stamp = path.stat().st_mtime_ns
+                    if not self.downloader._verify(path, pin, pause) or path.stat().st_mtime_ns != stamp:
+                        raise ValueError('The existing YuE checkpoint failed its immutable pin; existing files were kept')
+                    records[pin['id']] = {'path': str(path), 'sha256': pin['sha256'], 'bytes': pin['bytes'], 'modified': stamp}
+                atomic_json(receipt_path, records)
+                return True
+            except OSError: continue
+        return False
+
+    def _queue_prepare(self, item, pause, report, prepare):
+        report({'stage': 'waiting-runtime', 'detail': 'Download verified. Waiting for shared runtime preparation.'})
+        while not self.queue_prepare_lock.acquire(timeout=.1):
+            if pause.is_set(): raise Paused('Preparation paused; model files were retained')
+        try:
+            if pause.is_set(): raise Paused('Preparation paused; model files were retained')
+            while self.images.operation.locked() or self.computer.operation.locked() or getattr(self.runtime, '_generation', threading.Lock()).locked():
+                report({'stage': 'waiting-runtime', 'detail': 'Download verified. Waiting for the current model operation.'})
+                if pause.wait(.2): raise Paused('Preparation paused; model files were retained')
+            report({'stage': 'preparing-runtime', 'detail': 'Preparing and verifying the managed model runtime', 'bytesTotal': 0})
+            finished = threading.Event()
+            def watch_pause():
+                while not finished.wait(.1):
+                    if pause.is_set():
+                        if item.get('source') == 'native': return  # Its subprocess owns its cancellation file.
+                        entry = self.entries.get(item['modelId'], {})
+                        if supports_computer(entry): self.computer.stop()
+                        elif supports_ocr(entry): self.ocr.stop()
+                        elif supports_image(entry): self.images.stop()
+                        else:
+                            cancellation = getattr(self.runtime, '_cancel', None)
+                            if cancellation: cancellation.set()
+                            else: self.runtime.stop()
+                        return
+            watcher = threading.Thread(target=watch_pause, daemon=True); watcher.start()
+            try: prepare()
+            finally:
+                finished.set()
+                watcher.join()
+        finally:
+            self.queue_prepare_lock.release()
+
+    def _queue_native_setup(self, identity, options, pause, report, queue_id):
+        # Reuse the bundled recipe executor, its managed environments and its
+        # receipt verification. No caller-supplied package, command or URL runs.
+        from queue import Queue, Empty
+        helper = str(self.resources / 'runtime-setup')
+        if helper not in sys.path: sys.path.insert(0, helper)
+        from setup_manager import WindowsJob, recipe_for, read_receipt
+        directory = managed_path(self.root, 'runtime-setup', 'runs', 'queue-' + queue_id)
+        directory.mkdir(parents=True, exist_ok=True)
+        options_path, cancel_path = directory / 'options.json', directory / 'cancel'
+        cancel_path.unlink(missing_ok=True)
+        atomic_json(options_path, options)
+        process = subprocess.Popen([sys.executable, '-I', str(self.resources / 'runtime-setup/hf-extension/native_queue_setup.py'),
+                    '--root', str(self.root), '--resources', str(self.resources), '--target', identity,
+                    '--options-file', str(options_path), '--cancel-file', str(cancel_path)],
+                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, encoding='utf-8',
+                    env={**os.environ, 'PYTHONIOENCODING': 'utf-8'}, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        ownership = WindowsJob(process) if os.name == 'nt' else None
+        messages = Queue()
+        def read():
+            try:
+                for line in iter(lambda: process.stdout.readline(65537), ''):
+                    if len(line) > 65536: messages.put({'error': 'Oversized setup progress message'}); break
+                    try: messages.put(json.loads(line))
+                    except ValueError: pass
+            finally: messages.put(None)
+        reader = threading.Thread(target=read, daemon=True); reader.start()
+        stopped, error, pipe_done = None, None, False
+        try:
+            while process.poll() is None or not pipe_done:
+                if pause.is_set() and stopped is None:
+                    cancel_path.write_text('cancel', encoding='utf-8'); stopped = time.monotonic()
+                if stopped is not None and time.monotonic() - stopped > 12:
+                    if ownership: ownership.stop()
+                    process.kill(); process.wait(timeout=5); raise Paused('Runtime preparation stopped; verified files were retained')
+                try: value = messages.get(timeout=.1)
+                except Empty: continue
+                if value is None: pipe_done = True; continue
+                if not isinstance(value, dict): continue
+                if value.get('error'): error = str(value['error'])[:1000]
+                if value.get('stage') != 'diagnostic': report(value)
+            if pause.is_set(): raise Paused('Runtime preparation paused; verified files were retained')
+            if process.returncode: raise ValueError(error or 'The managed dependency recipe failed')
+            recipe = recipe_for(identity)
+            receipt = read_receipt(self.root / 'runtime-setup/receipts' / (identity + '.json'), recipe)
+            if not receipt: raise ValueError('The managed runtime dependency receipt failed verification')
+            report({'stage': 'dependencies-verified', 'detail': 'Model files and runtime dependencies verified. Generation requires its model runtime.'})
+        finally:
+            if process.poll() is None:
+                if ownership: ownership.stop()
+                process.kill(); process.wait(timeout=5)
+            if ownership: ownership.close()
+            process.stdout.close()
 
     def _autoloop_helper(self):
         with self.lock:
@@ -363,6 +607,7 @@ class BridgeState:
             result = {"schema": 1, "healthy": True, "catalogRevision": self.catalog_revision, "progress": copy.deepcopy(self.progress),
                       "tokenConfigured": self.tokens.status()["configured"], "runtimeAdapterAvailable": not isinstance(self.runtime, RuntimeUnavailable),
                       "connectorProfiles": self.connectors.status()}
+            result['downloadQueue'] = self.download_queue.snapshot()
             if catalog_revision != self.catalog_revision:
                 result['catalog'] = copy.deepcopy(self.catalog_snapshot)
             return result
@@ -460,6 +705,8 @@ class BridgeState:
                 raise Conflict("The bridge is shutting down")
             if self.progress and self.progress.get("status") in ACTIVE:
                 raise Conflict("A model download or runtime preparation is already active")
+            if self.download_queue.snapshot()['activeIds']:
+                raise Conflict('A queued model installation owns the runtime. Use the download queue to add another model.')
             if self.worker and self.worker.is_alive():
                 raise Conflict('The previous installation worker is still stopping')
             if self.images.operation.locked():raise Conflict('Wait for the current image operation before installing another model')
@@ -497,13 +744,15 @@ class BridgeState:
                 self.persist_catalog()
             return self.entry(model_id)
 
-    def _work(self, entry, kind, pause, cancel):
+    def _work(self, entry, kind, pause, cancel, *, progress=None, external_report=None):
+        progress = self.progress if progress is None else progress
         last_saved = [0.0]
         def report(value):
             with self.lock:
-                self.progress.update(value, updatedAt=time.time())
-                if cancel.is_set(): self.progress.update(status='cancelling', stage='cancelling')
-                if time.monotonic() - last_saved[0] > 1:
+                progress.update(value, updatedAt=time.time())
+                if cancel.is_set(): progress.update(status='cancelling', stage='cancelling')
+                if external_report: external_report(value)
+                if not external_report and time.monotonic() - last_saved[0] > 1:
                     self._persist_progress()
                     last_saved[0] = time.monotonic()
         def prepare_ocr():
@@ -585,10 +834,10 @@ class BridgeState:
         finally:
             with self.lock:
                 if cancel.is_set():
-                    cleanup = self.downloader.discard_partials(entry) if kind == 'download' else {'removedBytes': 0, 'retainedPartials': []}
-                    self.progress.update(status='cancelled', stage='cancelled', error=None, finishedAt=time.time(),
+                    cleanup = self.downloader.discard_partials(entry) if kind == 'download' and not external_report else {'removedBytes': 0, 'retainedPartials': []}
+                    progress.update(status='cancelled', stage='cancelled', error=None, finishedAt=time.time(),
                                          detail='Installation cancelled. Completed and shared files were kept.', **cleanup)
-                self._persist_progress()
+                if not external_report: self._persist_progress()
 
     def pause(self, job_id=None):
         with self.lock:
@@ -720,6 +969,7 @@ class BridgeState:
             return {'uninstalled':True,'id':model_id}
 
     def close(self):
+        self.download_queue.close()
         if self.closed:
             return
         if self.groups: self.groups.close()
@@ -900,6 +1150,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, {**state.status(revision), "instanceId": self.server.instance_id})
             elif route == "/catalog":
                 self._send(200, {"catalog": state.catalog()})
+            elif route in ('/download-queue', '/download-queue/snapshot'):
+                self._send(200, state.download_queue.snapshot())
             elif route == "/token":
                 self._send(200, state.tokens.status())
             elif route == '/connectors/status':
@@ -1040,6 +1292,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.add(body.get("planId"), body.get("variantIds")))
         elif route == "/catalog/profile":
             self._send(200, state.profile(body))
+        elif route == '/download-queue/action':
+            self._send(200, state.download_queue.action(body))
         elif route == "/install":
             self._send(202, state.start(body.get("id"), "download"))
         elif route == "/prepare":

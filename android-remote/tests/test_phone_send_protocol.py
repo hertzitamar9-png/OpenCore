@@ -35,7 +35,7 @@ class PhoneSendProtocolTests(unittest.TestCase):
                     dependency = response.read(128*1024)
             self.assertEqual(hashlib.sha256(dependency).hexdigest(), JSON_SHA256)
             jar = output/'android-json.jar'; jar.write_bytes(dependency)
-            resource = output/'R.java'; resource.write_text('package ai.opencore.remote; final class R {static final class drawable {static final int opencore=1;}}')
+            resource = output/'R.java'; resource.write_text('package ai.opencore.remote; final class R {static final class drawable {static final int opencore=1;}}', encoding='utf-8')
             classes = output/'classes'; classes.mkdir()
             state = output/'state'; state.mkdir()
             classpath = os.pathsep.join(map(str, (jar, max(platforms, key=platform_rank), ROOT/'vendor/zxing-core-3.5.3.jar', *(ROOT/'vendor/litertlm').glob('*.jar'))))
@@ -47,7 +47,7 @@ class PhoneSendProtocolTests(unittest.TestCase):
                                      'ai.opencore.remote.PhoneSendProtocolTest', str(model), str(state)], capture_output=True, text=True, timeout=60)
             log = output_root/'android-real-send-protocol.log'; log.write_text(result.stdout+result.stderr, encoding='utf-8')
             self.assertEqual(result.returncode, 0, (result.stdout+result.stderr)[-5000:])
-            for marker in ('ACTUAL_SEND_HI', 'ACTUAL_SIDE_CHAT', 'ACTUAL_WORKSPACE', 'ACTUAL_DOWNLOAD'):
+            for marker in ('ACTUAL_SEND_HI', 'ACTUAL_SIDE_CHAT', 'ACTUAL_WORKSPACE', 'ACTUAL_DOWNLOAD', 'ACTUAL_QUEUE_API'):
                 self.assertIn(marker, result.stdout)
 
 

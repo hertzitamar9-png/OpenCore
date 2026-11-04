@@ -30,13 +30,14 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     PhoneWorkspace workspace;
     volatile boolean attached;
     int listenerSequence;
+    volatile String dismissedDownload="";
 
     PhoneAppBridge(Context app,PhoneBackend backend,PhoneBackend.Observer output){this(app,backend,output,null);}
     PhoneAppBridge(Context app,PhoneBackend backend,PhoneBackend.Observer output,FeatureHost host){
         this.app=app.getApplicationContext();this.backend=backend;this.output=output;
         ui=this.app.getSharedPreferences("phone-app-ui",Context.MODE_PRIVATE);featureHost=host;
     }
-    void attach(){attached=true;backend.watch(this);}
+    void attach(){attached=true;backend.watch(this);backend.io.execute(()->{try{backend.downloads.wake();backend.downloads.changed(true);}catch(Exception error){backend.loadError=PhoneBackend.message(error);}});}
     void detach(){attached=false;backend.detach(this);listeners.clear();removals.clear();plans.clear();contexts.clear();}
     boolean current(){return attached&&backend.observer==this;}
     JSONObject preferences(){
@@ -73,6 +74,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
                 JSONObject payload=object("conversationId",chat,"runId",value.optString("assistant"),"phase",value.optString("stage"),"content",value.optString("content"),"reasoning","","done",!value.optBoolean("running"),"metrics",metrics);
                 publish("opencore-generation",payload);publish("opencore-bridge-activity",object("conversationId",chat));
             }else if(event.equals("download"))publish("opencore-model-install-progress",progress());
+            else if(event.equals("download_queue"))publish("opencore-download-queue-progress",value);
         }catch(JSONException ignored){}
     }
     void request(JSONObject packet){
@@ -190,9 +192,10 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     static String quantization(JSONObject file){String name=file.optString("filename");if(PhoneBackend.isLiteRt(file))return (name.contains("mixed_int4")?"Mixed INT4":"INT8")+" · "+file.optInt("contextTokens")/1024+"K cache";java.util.regex.Matcher match=java.util.regex.Pattern.compile("(?i)(?:TQ[12]_[A-Z0-9_]+|IQ[1-4]_[A-Z0-9_]+|Q[1-8](?:_[A-Z0-9]+)+|BF16|F16|F32)").matcher(name);return match.find()?match.group().toUpperCase(Locale.ROOT):"GGUF";}
     static int displayContext(JSONObject file,int configured){int cap=file.optInt("modelContext",file.optInt("contextTokens",configured));return PhoneBackend.isLiteRt(file)?cap:Math.min(configured,cap);}
     JSONObject progress()throws JSONException{
-        JSONObject value=backend.download;if(value.length()==0)return null;String phase=value.optString("phase"),error=value.optString("error","");
-        String state=backend.downloading.get()?(phase.equals("Cancelling")?"cancelling":phase.equals("Verifying")?"verifying":"downloading"):phase.equals("Paused")?"paused":phase.equals("Cancelled")?"cancelled":!error.isEmpty()?"failed":phase.startsWith("Downloaded")?"ready":"paused";
-        return object("modelId",value.optString("id"),"operationId",value.optString("operationId"),"jobId",value.optString("operationId"),"phase",state,"downloadedBytes",value.optLong("received"),"totalBytes",value.optLong("total"),"bytesPerSecond",value.optDouble("bytesPerSecond",0),"etaSeconds",value.opt("etaSeconds"),"currentFile",value.optString("filename",phase),"error",error.isEmpty()?null:error);
+        if(backend.downloads.queue==null)return null;JSONObject snapshot=backend.downloads.queue.snapshot();JSONArray rows=snapshot.getJSONArray("items"),ids=snapshot.getJSONArray("activeIds");JSONObject first=null;
+        if(ids.length()>0)for(int i=0;i<rows.length();i++){JSONObject row=rows.getJSONObject(i);if(row.getString("id").equals(ids.getString(0))){first=row;break;}}
+        if(first==null&&rows.length()>0)first=rows.getJSONObject(rows.length()-1);if(first==null||ids.length()==0&&first.getString("id").equals(dismissedDownload))return null;
+        return object("modelId",first.getString("modelId"),"operationId",first.getString("id"),"jobId",first.getString("id"),"phase",first.getString("phase"),"downloadedBytes",first.getLong("downloadedBytes"),"totalBytes",first.getLong("totalBytes"),"bytesPerSecond",first.getDouble("bytesPerSecond"),"etaSeconds",first.opt("etaSeconds"),"currentFile",first.getString("label"),"error",first.opt("error"));
     }
     JSONObject modelRow(JSONObject file,String id,String label,JSONObject installed,long budget)throws Exception{
         boolean present=installed!=null&&backend.modelFile(file.getString("id")).isFile();String reason=problem(file,budget);
@@ -341,13 +344,30 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         return backend.dispatch("model.delete",object("id",file.getString("id")));
     }
     Object install(String id)throws Exception{
-        JSONObject file=selectedFile(id);String problem=problem(file);if(!problem.isEmpty())throw new IOException(problem);backend.offered.put(file.getString("id"),file);return backend.dispatch("download",object("id",file.getString("id")));
+        JSONObject file=selectedFile(id);String problem=problem(file);if(!problem.isEmpty())throw new IOException(problem);return backend.downloads.enqueue(id,file.optString("familyLabel",file.getString("filename"))+" · "+quantization(file),file);
     }
     JSONObject setupStatus()throws Exception{
         JSONArray receipts=new JSONArray(),models=backend.store.models();
         for(int i=0;i<models.length();i++){JSONObject model=models.getJSONObject(i);if(model.optBoolean("runtimeReady"))receipts.put(object("schema",1,"targetId",nativeProfile(model),"recipeId","android-llama-cpp","recipeFingerprint",model.getString("sha256"),"verifiedAt",iso(System.currentTimeMillis()),"dependenciesVerified",true,"inferenceVerified",model.optBoolean("inferenceVerified"),"sourceUrls",new JSONArray().put("https://huggingface.co/"+model.getString("repo"))));}
         JSONArray jobs=new JSONArray();JSONObject progress=progress();if(progress!=null)jobs.put(object("id","phone-download","targetId",progress.optString("modelId"),"recipeId","android-llama-cpp","status",backend.downloading.get()?"running":progress.optString("phase").equals("ready")?"completed":progress.optString("phase"),"stage",progress.optString("phase"),"detail",progress.optString("currentFile"),"createdAt",iso(System.currentTimeMillis()),"updatedAt",iso(System.currentTimeMillis()),"downloadedBytes",progress.optLong("downloadedBytes"),"totalBytes",progress.optLong("totalBytes"),"diagnostics",new JSONArray(),"error",progress.opt("error"),"receipt",null));
         return object("recipes",new JSONArray(),"jobs",jobs,"receipts",receipts,"activeJobId",backend.downloading.get()?"phone-download":null,"managedRoot",app.getFilesDir().getAbsolutePath());
+    }
+    Object queueAction(JSONObject args)throws Exception{
+        if(!args.optString("action","snapshot").equals("enqueue"))return backend.downloads.action(args);
+        JSONArray requested=args.getJSONArray("items");if(requested.length()<1||requested.length()>128)throw new IOException("Add 1–128 phone download choices per request; more batches can be appended anytime.");
+        // Only modelId selects an artifact already known to this native backend.
+        // Renderer-provided command/args/URLs/hashes never select download bytes.
+        ArrayList<JSONObject> files=new ArrayList<>();ArrayList<String> ids=new ArrayList<>(),labels=new ArrayList<>();
+        for(int i=0;i<requested.length();i++){
+            JSONObject request=requested.getJSONObject(i);String id=request.getString("modelId");JSONObject file;
+            try{file=selectedFile(id);}catch(IOException unknown){file=backend.offered.get(id);if(file==null)throw unknown;}
+            String reason=problem(file);if(!reason.isEmpty())throw new IOException(reason);PhoneDownloadQueue.validate(file);PhoneTemplateSupport.pinForModel(file);
+            String label=request.optString("label",file.getString("filename"));if(label.length()>1024)throw new IOException("The queue label is too long.");
+            files.add(file);ids.add(id);labels.add(label);
+        }
+        backend.downloads.require();
+        for(int i=0;i<files.size();i++)backend.downloads.queue.enqueue(ids.get(i),labels.get(i),files.get(i));
+        backend.downloads.wake();backend.downloads.changed(true);return backend.downloads.snapshot();
     }
     Object invoke(String command,JSONObject args)throws Exception{
         switch(command){
@@ -369,8 +389,9 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
             case "send_side_chat_message":refreshBranch(args.getJSONObject("request").getString("conversationId"));return send(args.getJSONObject("request"));
             case "cancel_chat_message":case "cancel_model_install":case "cancel_model_installation":case "runtime_setup_cancel":return cancel(command,args);
             case "install_model":return install(args.getString("id"));
+            case "download_queue_action":return queueAction(args);
             case "model_install_progress":return progress();
-            case "dismiss_model_install_progress":if(!backend.downloading.get())backend.download=new JSONObject();return null;
+            case "dismiss_model_install_progress":if(!backend.downloading.get()){JSONObject value=progress();if(value!=null)dismissedDownload=value.optString("jobId");backend.download=new JSONObject();}return null;
             case "model_removal_plan":return removalPlan(args.getString("id"));
             case "uninstall_model":return uninstall(args);
             case "rename_conversation":{String id=args.getString("id"),title=args.getString("title").trim();if(!backend.store.hasChat(id)||title.isEmpty()||title.length()>500)throw new IOException("Use a valid phone chat and a title of 1–500 characters.");backend.store.title(id,title);return null;}
@@ -395,7 +416,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
             case "account_action":if(args.optString("action").equals("status")||args.optString("action").equals("startup_status"))return accountStatus();throw unavailable();
             case "runtime_setup_probe":return object("python",new JSONArray(),"gpus",new JSONArray(),"tools",new JSONObject(),"ramBytes",backend.available(),"diskFreeBytes",app.getFilesDir().getUsableSpace(),"hubBridge",object("available",true,"url","http://127.0.0.1:1","secret","phone-native-message-port","authHeader","X-OpenCore-Hub-Secret"));
             case "runtime_setup_status":return setupStatus();
-            case "runtime_setup_start":{String id=args.getString("targetId");JSONObject options=args.optJSONObject("options");if(options!=null&&options.optBoolean("installWeights"))install(id);else start(id);return object("id","phone-download","targetId",id,"recipeId","android-llama-cpp","status",backend.downloading.get()?"running":"completed","stage",backend.downloading.get()?"downloading":"loaded","detail","Phone native runtime","diagnostics",new JSONArray(),"createdAt",iso(System.currentTimeMillis()),"updatedAt",iso(System.currentTimeMillis()),"error",null);}
+            case "runtime_setup_start":{String id=args.getString("targetId");JSONObject options=args.optJSONObject("options");boolean install=options!=null&&options.optBoolean("installWeights");if(install)install(id);else start(id);return object("id","phone-download","targetId",id,"recipeId","android-llama-cpp","status",install?"queued":"running","stage",install?"queued":"loading","detail","Phone native runtime","diagnostics",new JSONArray(),"createdAt",iso(System.currentTimeMillis()),"updatedAt",iso(System.currentTimeMillis()),"error",null);}
             case "list_studio_jobs":case "installed_skill_models":case "list_operations":case "list_archive_pages":case "list_archive_events":case "search_archive":case "agent_platform_skills":case "agent_platform_plugins":case "agent_platform_activity":case "agent_platform_memories":case "testing_lab_profiles":case "api_provider_list":case "api_providers":case "list_api_providers":case "computer_access_windows":return new JSONArray();
             case "studio_runtime":case "get_imported_conversation_summary":return null;
             case "list_imported_conversations":return object("conversations",new JSONArray(),"total",0,"offset",args.optInt("offset"),"limit",args.optInt("limit",100),"hasMore",false);

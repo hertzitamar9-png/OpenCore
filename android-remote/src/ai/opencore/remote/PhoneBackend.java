@@ -22,16 +22,13 @@ class PhoneBackend {
     final SharedPreferences prefs;
     final ExecutorService io=Executors.newFixedThreadPool(2),inference=Executors.newSingleThreadExecutor();
     final Map<String,JSONObject> offered=new ConcurrentHashMap<>();
-    final AtomicBoolean generating=new AtomicBoolean(),downloading=new AtomicBoolean(),downloadCancelled=new AtomicBoolean();
+    final AtomicBoolean generating=new AtomicBoolean(),downloading=new AtomicBoolean();
     final AtomicBoolean generationCancelled=new AtomicBoolean();
     final Handler main=new Handler(Looper.getMainLooper());
-    final Object installation=new Object();
     final PhoneOperationGate operations=new PhoneOperationGate();
     volatile Observer observer;
     volatile JSONObject generation=new JSONObject(),download=new JSONObject();
-    volatile HttpsURLConnection downloadConnection;
-    volatile boolean discardDownload;
-    volatile Future<?> downloadWorker;
+    final PhoneDownloads downloads;
     volatile String activeChat="",loadedId="";
     volatile int loadedContext;
     volatile boolean loading;
@@ -47,7 +44,11 @@ class PhoneBackend {
         return file.optLong("bytes")>memory-512L*1024*1024?"This quantization exceeds the phone's available memory budget. Choose a smaller quantization.":"";
     }
     void unloadModels(){PhoneNative.unload();if(liteRt!=null)liteRt.close();loadedId="";loadedContext=0;}
-    PhoneBackend(Context context){app=context;prefs=app.getSharedPreferences("phone-settings",Context.MODE_PRIVATE);store=new PhoneStore(app);store.recoverInterrupted();try{JSONObject saved=new JSONObject(prefs.getString("downloadState","{}"));String id=saved.optString("id");if(id.matches("[a-f0-9]{64}")){File part=new File(modelFile(id).getParentFile(),id+".part");if(part.isFile())saved.put("phase","Paused").put("received",part.length()).put("error",JSONObject.NULL);else if(store.model(id)==null&&!saved.optString("phase").equals("Cancelled"))saved.put("phase","Paused").put("received",0);download=saved;}}catch(Exception ignored){}}
+    PhoneBackend(Context context){
+        app=context;prefs=app.getSharedPreferences("phone-settings",Context.MODE_PRIVATE);store=new PhoneStore(app);store.recoverInterrupted();downloads=new PhoneDownloads(this);
+        // Older single-transfer .part files keep the same artifact path and can
+        // be resumed by selecting that exact pinned quantization in the queue.
+    }
     void watch(Observer value){observer=value;}
     void detach(Observer value){if(observer==value)observer=null;}
     void post(Runnable task){main.post(task);}
@@ -61,17 +62,17 @@ class PhoneBackend {
     JSONObject settings()throws Exception{
         Connection pc=DeviceRouting.paired(app);
         return new JSONObject().put("device",ExecutionPolicy.target(app.getSharedPreferences("execution-device",0).getString("target",null))).put("paired",pc!=null).put("pcName",pc==null?"":pc.name)
-            .put("context",prefs.getInt("context",2048)).put("maxTokens",prefs.getInt("maxTokens",512)).put("temperature",(double)prefs.getFloat("temperature",.7f)).put("tokenConfigured",PhoneCredentials.configured(app));
+            .put("context",prefs.getInt("context",2048)).put("maxTokens",prefs.getInt("maxTokens",512)).put("temperature",(double)prefs.getFloat("temperature",.7f)).put("tokenConfigured",PhoneCredentials.configured(app)).put("downloadMode",downloads.queue==null?"sequential":downloads.snapshot().optString("mode")).put("downloadQueue",downloads.queue==null?JSONObject.NULL:downloads.snapshot());
     }
     JSONObject state()throws Exception{
         return new JSONObject().put("models",store.models()).put("chats",store.chats()).put("settings",settings()).put("availableMemory",available()).put("freeDisk",app.getFilesDir().getUsableSpace())
             .put("runtime",arm64()?"llama.cpp · Android ARM64 · CPU":"Phone inference requires a 64-bit ARM Android device.").put("runtimeAvailable",arm64()).put("loadedId",loadedId)
-            .put("generating",generating.get()).put("downloading",downloading.get()).put("generation",generation).put("download",download);
+            .put("generating",generating.get()).put("downloading",downloading.get()).put("generation",generation).put("download",download).put("downloadQueue",downloads.queue==null?JSONObject.NULL:downloads.snapshot());
     }
     void request(Observer origin,String id,String action,JSONObject args){
         if(observer!=origin)return;
         if(action.equals("cancel")){stop();reply(origin,id,true,null,null);return;}
-        if(action.equals("download.cancel")){synchronized(installation){downloadCancelled.set(true);HttpsURLConnection c=downloadConnection;if(c!=null)c.disconnect();}reply(origin,id,true,null,null);return;}
+        if(action.equals("download.cancel")){try{reply(origin,id,true,downloads.action(new JSONObject().put("action","pause")),null);}catch(Exception error){reply(origin,id,false,null,message(error));}return;}
         io.execute(()->{if(observer!=origin)return;try{Object result=dispatch(action,args);reply(origin,id,true,result,null);}catch(Throwable error){reply(origin,id,false,null,message(error));}});
     }
     void reply(Observer origin,String id,boolean okay,Object value,String error){try{JSONObject result=new JSONObject().put("id",id).put("ok",okay);if(okay)result.put("value",value==null?JSONObject.NULL:value);else result.put("error",error);main.post(()->{if(observer==origin)origin.event(result);});}catch(JSONException ignored){}}
@@ -93,13 +94,9 @@ class PhoneBackend {
             }
             case "download":{
                 JSONObject file=offered.get(args.getString("id"));if(file==null)throw new IOException("Check the repository again before downloading.");
-                if(!file.optString("problem","").isEmpty())throw new IOException(file.getString("problem"));
-                if(!ExecutionPolicy.validIdentity(file.getString("repo"),file.getString("revision"),file.getString("filename"),file.getString("sha256"),file.getLong("bytes")))throw new IOException("This file lacks a verified publisher identity.");
-                if(!arm64())throw new IOException("The bundled phone runtime needs a 64-bit ARM Android device.");
-                String problem=modelProblem(file,available());if(!problem.isEmpty())throw new IOException(problem);
-                if(store.model(file.getString("id"))!=null)throw new IOException("This exact model is already installed on the phone.");
-                synchronized(installation){if(!downloading.compareAndSet(false,true))throw new IOException("Another phone download is already running. Stop it or wait for completion.");downloadCancelled.set(false);discardDownload=false;download=new JSONObject().put("id",file.getString("id")).put("operationId",UUID.randomUUID().toString()).put("filename",file.getString("filename")).put("received",0).put("total",file.getLong("bytes")).put("phase","Downloading");prefs.edit().putString("downloadState",download.toString()).commit();downloadWorker=io.submit(()->install(file));}return null;
+                return downloads.enqueue(file.getString("id"),file.optString("familyLabel",file.getString("filename")),file);
             }
+            case "download_queue_action":return downloads.action(args);
             case "model.delete":{
                 if(generating.get())throw new IOException("Stop the active generation before removing a model.");String model=args.getString("id");JSONObject record=store.model(model);if(record==null)return null;
                 // Serialize with all native loads and generations before removing their backing file.
@@ -134,65 +131,7 @@ class PhoneBackend {
         finally{loadElapsedMs=elapsed()-start;loading=false;emitState();}
     }
     void emitState(){try{emit("state",state());}catch(Exception ignored){}}
-    HttpsURLConnection openDownload(JSONObject file,long offset)throws Exception{return PhoneHub.open(PhoneHub.downloadUrl(file),PhoneCredentials.token(app),offset,connection->{downloadConnection=connection;if(downloadCancelled.get()){connection.disconnect();throw new java.util.concurrent.CancellationException("Download stopped.");}});}
-    JSONObject cancelInstallation(String model,String operation,boolean discard)throws Exception{
-        synchronized(installation){
-            if(!model.equals(download.optString("id"))||!operation.isEmpty()&&!operation.equals(download.optString("operationId")))throw new IOException("This phone installation is no longer the active operation.");
-            if(store.model(model)!=null||download.optString("phase").startsWith("Downloaded"))throw new IOException("This model is already installed. Use its Remove action to delete installed weights.");
-            if(!downloading.get()){
-                if(!discard)return new JSONObject(download.toString());
-                File part=new File(modelFile(model).getParentFile(),model+".part");if(part.exists()&&!part.delete())throw new IOException("Could not remove this installation's partial phone file.");download.put("phase","Cancelled").put("error",JSONObject.NULL);prefs.edit().putString("downloadState",download.toString()).commit();emit("download",download);return new JSONObject(download.toString());
-            }
-            downloadCancelled.set(true);discardDownload=discard;download.put("phase",discard?"Cancelling":"Pausing");emit("download",download);HttpsURLConnection connection=downloadConnection;if(connection!=null)connection.disconnect();return new JSONObject(download.toString());
-        }
-    }
-    void install(JSONObject file){
-        File partial=null,target=null;boolean published=false,renamed=false,invalid=false;String id=file.optString("id");long received=0,expected=file.optLong("bytes");
-        try{
-            target=modelFile(id);partial=new File(target.getParentFile(),id+".part");received=partial.isFile()?partial.length():0;if(received>expected){invalid=true;throw new IOException("The paused model exceeds its pinned size.");}
-            if(!ExecutionPolicy.validIdentity(file.getString("repo"),file.getString("revision"),file.getString("filename"),file.getString("sha256"),expected))throw new IOException("The model source is not pinned and verified.");
-            if(expected-received>app.getFilesDir().getUsableSpace()-128*1024*1024L)throw new IOException("Not enough free phone storage for this model.");
-            if(downloadCancelled.get())throw new InterruptedIOException("Download stopped.");
-            MessageDigest digest=MessageDigest.getInstance("SHA-256");if(received>0)try(InputStream prefix=new FileInputStream(partial)){byte[] buffer=new byte[128*1024];int n;while((n=prefix.read(buffer))!=-1){if(downloadCancelled.get())throw new InterruptedIOException("Download stopped.");digest.update(buffer,0,n);}}
-            long started=elapsed(),initial=received,last=0;
-            download=new JSONObject(download.toString()).put("received",received).put("phase","Downloading");emit("download",download);
-            if(received<expected){
-                if(downloadCancelled.get())throw new InterruptedIOException("Download stopped.");HttpsURLConnection request=openDownload(file,received);downloadConnection=request;
-                try{
-                    if(downloadCancelled.get())throw new InterruptedIOException("Download stopped.");
-                    boolean resumed=received>0&&request.getResponseCode()==206;
-                    if(resumed){String range=request.getHeaderField("Content-Range"),prefix="bytes "+received+"-";if(range==null||!range.startsWith(prefix)||!range.endsWith("/"+expected)){invalid=true;throw new IOException("The publisher returned an invalid resume range.");}}
-                    else if(received>0){received=0;initial=0;digest.reset();}
-                    long length=request.getContentLengthLong();if(length>=0&&length!=expected-received){invalid=true;throw new IOException("The pinned publisher file size changed. Nothing was installed.");}
-                    try(InputStream input=request.getInputStream();FileOutputStream output=new FileOutputStream(partial,resumed)){
-                        byte[] buffer=new byte[128*1024];int n;
-                        while((n=input.read(buffer))!=-1){if(downloadCancelled.get())throw new InterruptedIOException("Download stopped.");received+=n;if(received>expected){invalid=true;throw new IOException("Downloaded model exceeded its pinned size.");}output.write(buffer,0,n);digest.update(buffer,0,n);long now=elapsed();if(now-last>150){last=now;double speed=(received-initial)*1000.0/Math.max(1,now-started);download=new JSONObject(download.toString()).put("received",received).put("phase","Downloading").put("bytesPerSecond",speed).put("etaSeconds",speed>0?(expected-received)/speed:JSONObject.NULL);emit("download",download);}}
-                        output.getFD().sync();
-                    }
-                }finally{request.disconnect();downloadConnection=null;}
-            }
-            if(downloadCancelled.get())throw new InterruptedIOException("Download stopped.");
-            if(received!=expected||!Connection.hex(digest.digest()).equals(file.getString("sha256"))){invalid=true;throw new IOException("The model size or SHA-256 did not match the publisher. Nothing was installed.");}
-            download=new JSONObject(download.toString()).put("received",received).put("phase","Verifying");emit("download",download);
-            GgufMetadata metadata=isLiteRt(file)?null:GgufMetadata.read(partial);
-            // Fetch declared support during installation, so an offline first
-            // generation has exactly the publisher's template already available.
-            PhoneTemplateSupport.load(app.getFilesDir(),file,pin->{
-                HttpsURLConnection support=openDownload(pin,0);
-                try(InputStream input=support.getInputStream()){return MobileActivity.read(input,pin.getInt("bytes"));}
-                finally{support.disconnect();downloadConnection=null;}
-            });
-            synchronized(installation){
-                if(downloadCancelled.get())throw new InterruptedIOException("Download stopped.");
-                if(target.exists())throw new IOException("This model file already exists; it has not been overwritten.");
-                if(!partial.renameTo(target))throw new IOException("Could not finalize the verified phone model.");
-                renamed=true;
-                JSONObject record=new JSONObject(file.toString()).put("architecture",metadata==null?file.getString("architecture"):metadata.architecture).put("modelContext",metadata==null?file.getInt("contextTokens"):metadata.contextTokens).put("runtimeReady",false);
-                store.putModel(record);published=true;download=new JSONObject(download.toString()).put("received",received).put("total",expected).put("phase","Downloaded · verified weights").put("error",JSONObject.NULL);
-            }
-        }catch(Exception error){try{download=new JSONObject(download.toString()).put("received",partial!=null&&partial.isFile()?partial.length():received).put("phase",downloadCancelled.get()?(discardDownload?"Cancelling":"Paused"):"Download failed").put("error",downloadCancelled.get()?JSONObject.NULL:message(error));}catch(JSONException ignored){}}
-        finally{synchronized(installation){boolean cleaned=true;if(partial!=null&&partial.exists()&&(published||discardDownload||invalid))cleaned=partial.delete();if(renamed&&!published&&target!=null&&target.exists())target.delete();if(discardDownload&&!published)try{download.put("phase",cleaned?"Cancelled":"Download failed").put("error",cleaned?JSONObject.NULL:"The transfer stopped, but its partial file could not be removed. Retry Cancel.");}catch(JSONException ignored){}downloading.set(false);prefs.edit().putString("downloadState",download.toString()).commit();emit("download",download);}emitState();}
-    }
+    JSONObject cancelInstallation(String model,String operation,boolean discard)throws Exception{return downloads.cancelLegacy(model,operation,discard);}
     Object send(JSONObject args)throws Exception{
         if(!arm64())throw new IOException("Phone inference needs a 64-bit ARM Android device.");
         String modelId=args.getString("model"),text=args.getString("text").trim(),chat=args.getString("chat");

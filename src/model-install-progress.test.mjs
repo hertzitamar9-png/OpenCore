@@ -44,6 +44,7 @@ it('shows the same measured bytes and ETA globally and in the card with separate
   const card = within(screen.getByRole('article', { name: 'Model A card' }));
   for (const panel of [global, card]) {
     expect(panel.getByText('2.000 GB / 5.000 GB')).toBeVisible();
+    expect(panel.getByText('250.00 MB/s')).toBeVisible();
     expect(panel.getByText(/About 12 seconds remaining/)).toBeVisible();
     expect(panel.getByRole('progressbar')).toHaveAttribute('value', '2000000000');
   }
@@ -60,4 +61,5 @@ it('keeps verification indeterminate and never presents download ETA as verifica
   render(React.createElement(View, { progress: { ...progress, phase: 'verifying', downloadedBytes: 5e9 }, label: 'Model A' }));
   expect(screen.getByRole('progressbar')).not.toHaveAttribute('value');
   expect(screen.queryByText(/remaining/)).toBeNull();
+  expect(screen.queryByText(/MB\/s/)).toBeNull();
 });

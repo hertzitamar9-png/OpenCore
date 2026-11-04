@@ -9,7 +9,9 @@ import { SpeechRuntimeControls } from "./SpeechRuntimeControls";
 import "./ModelLibrary.css";
 import * as React from 'react';
 import { createModelInstallProgress } from './model-install-progress.js';
+import { createDownloadQueueUI } from './model-download-queue.js';
 const ModelInstallProgress = createModelInstallProgress(React);
+const DownloadQueue = createDownloadQueueUI(React,ModelInstallProgress);
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
 const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
@@ -25,6 +27,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   selectedProfile: RuntimeProfile; onSelect: (profile: RuntimeProfile) => void;
   runtimeActive: boolean; onNotice: (notice: string) => void;
 }) {
+  const downloadQueue = DownloadQueue.useQueue();
   const [library, setLibrary] = useState<api.ModelLibrary | null>(null);
   const [error, setError] = useState("");
   const [category, setCategory] = useState('all');
@@ -125,6 +128,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {!library && !error ? <p role="status">Loading model options… You can choose a category while they load.</p> : null}
     {progress ? <ModelInstallProgress progress={progress} label={modelById.get(progress.modelId)?.label} onPause={() => api.cancelModelInstall()} onCancel={() => api.cancelModelInstallation(progress.modelId,progress.operationId)} onError={onNotice} /> : null}
+    <DownloadQueue.Panel legacyModelId={progress?.modelId} />
     <div className="model-filter-row"><span className="model-filter-label">Category</span><div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => categoryMatches(group, id)).length}</span></button>)}</div></div>
     <div className="model-filter-row"><span className="model-filter-label">Memory mode</span><div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => categoryMatches(group, category)).length}</span></button>)}</div></div>
     <div className="model-library-search"><Search size={17} aria-hidden="true" /><input aria-label="Search models" placeholder="Find a model or quantization…" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Escape') setQuery(''); }} />{query ? <button onClick={() => setQuery('')}>Clear search</button> : null}<span>{visibleModels.length} models</span></div>
@@ -149,6 +153,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       const phononPrecision = speech.runtimePrecision || 'bf16';
       const loadingSpeech = speechLoadingMessage(speech);
       return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : profileSelected) ? "selected" : ""}`}>
+      <DownloadQueue.Checkbox groupId={group.id} modelId={model.id} label={`${group.model.label} · ${model.precision}`} installed={model.installed} installable={model.installable!==false} modelIds={group.variants.map(value=>value.id)} legacyModelId={progress?.modelId} />
       <header><div><h3>{group.model.label}</h3><span>{modelMemoryMode(model) === "echo" ? "ECHO" : "Native"} · {model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
       {progress && group.variants.some(value => value.id === progress.modelId || group.aliases[progress.modelId] === value.id) ? <ModelInstallProgress progress={progress} label={modelById.get(progress.modelId)?.label} onPause={() => api.cancelModelInstall()} onCancel={() => api.cancelModelInstallation(progress.modelId,progress.operationId)} onError={onNotice} /> : null}
@@ -204,7 +209,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
         <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Local weights found. Prepare the speech runtime to enable the microphone." : "Install this speech model to enable the microphone." : loadingSpeech || (speech.phase === "error" ? "Could not restore the saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? selectedPhonon && phononPrecision === 'original' ? "Sleeping in system RAM; ready for CPU dictation." : "Sleeping in system RAM; moves to GPU when dictation starts." : "RAM standby will load before the next recording." : "Loads from disk when you click the microphone." : "Speech is off. The model stays installed on disk.")}</p>
       </div> : null}
       {model.runtimeReady === false && <small className="model-setup-note">{model.installed ? 'Weights downloaded · runtime setup required' : 'Runtime setup required'}</small>}
-      <footer>{preparedRuntime && model.runtimeReady === false ? <button disabled={!model.sourceDownloaded || runtimeActive || installing || Boolean(pending)} onClick={() => void prepareRuntime(model)}>{pending === model.id ? 'Verifying setup…' : 'Use prepared GGUF'}</button> : null}{!model.installed && model.installable !== false ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
+      <footer>{preparedRuntime && model.runtimeReady === false ? <button disabled={!model.sourceDownloaded || runtimeActive || installing || Boolean(pending)} onClick={() => void prepareRuntime(model)}>{pending === model.id ? 'Verifying setup…' : 'Use prepared GGUF'}</button> : null}{!model.installed && model.installable !== false ? <button disabled={(!downloadQueue.available && (runtimeActive || installing)) || Boolean(pending) || downloadQueue.items.some(item=>item.modelId===model.id&&['queued','starting','downloading','preparing','paused'].includes(item.phase))} onClick={() => void change(model)}>
         <Download size={15} />{pending === model.id ? "Working…" : model.externalManaged ? model.category === 'music' ? 'Use existing weights' : "Prepare speech runtime" : "Install"}
       </button> : null}{model.selectable ? <button className={profileSelected ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>
         {profileSelected ? <Check size={15} /> : null}{profileSelected ? "Selected" : "Use model"}

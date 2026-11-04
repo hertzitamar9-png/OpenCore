@@ -1,91 +1,25 @@
 {
   "schema": 1,
-  "androidVersion": "3.5",
+  "passed": true,
+  "verificationKind": "signed-APK-packaging",
+  "androidVersion": "3.6",
+  "versionCode": 15,
+  "apkSha256": "5eb2464cea9cdae9a6356b06cca03cd8d747c5c16c4138f16cbc7450d248919a",
   "nativeRuntimeRevision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
-  "androidArm64BinaryVerified": true,
-  "android16KbPagesVerified": true,
+  "sharedUiManifestSha256": "4399880a7997a47f0f9590867aabf85c740edbfd473e4f14cafda35b498a6290",
+  "catalogSha256": "23b4fed8d0cb603ec93fa2aa57034983889dcb5c447ce2537d6f84bb81281a46",
   "apkSigningIdentityPreserved": true,
   "packagedSourcesMatchReviewedSources": true,
   "sharedDesktopInterface": true,
-  "separatePhoneComposer": false,
-  "androidArm64BinarySha256": "51dd756ee87fe717ad31be7e64e2898adf0189092740b3a77c15940b7f45f791",
-  "nativeOuterContainerInsets": true,
-  "bothExecutionModesBrowserVerified": true,
   "browserWidthsVerified": [
     360,
     393,
     430
   ],
-  "androidJsonStartupVerified": true,
-  "missingMetricsStartupVerified": true,
-  "savedDataSnapshotSerializationVerified": true,
-  "freshInstallDefault": "phone",
-  "automaticPcFallback": false,
+  "phoneAndPcBrowserFixturesPassed": true,
   "physicalPhoneVerified": false,
-  "userConfirmedPhoneStartupVersion": "3.3",
-  "phoneModelLabelsAndCacheSizesVerified": true,
-  "manualPhoneBrowserBothExecutionModes": true,
-  "phoneModelSelectionProtocolVerified": true,
-  "customNativePhoneSelectionReopened": true,
-  "phoneGroupsCapabilityGateVerified": true,
-  "nativePhoneGroupTransportAvailable": false,
-  "hostNativeInference": {
-    "platform": "Windows x86_64 JVM using identical JNI worker source",
-    "model": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
-    "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_K_M.gguf",
-    "sha256": "b145feb7fcc28fd0b4d0c2ef10a0f9ba4cbde17920ef2eb717afc8e8c6209e25",
-    "generatedTokens": 48,
-    "streamCallbacks": 49,
-    "stopVerified": true,
-    "explicitStopStartVerified": true,
-    "staleStartRejected": true,
-    "manualSamplingControlsVerified": true,
-    "seededSamplingRepeatable": true
-  },
-  "hostPhoneProtocol": {
-    "realNativeModel": "bartowski/SmolLM2-135M-Instruct-GGUF",
-    "strictCommands": true,
-    "ordinarySend": true,
-    "sideChats": true,
-    "textAttachments": true,
-    "workspaceSnapshotsAndExports": true,
-    "pauseResumeRangeAndCancel": true,
-    "androidStorageAndUi": "isolated host fixture; not physical Android"
-  },
-  "hostLiteRtInference": {
-    "sdk": "0.18.1",
-    "filename": "LFM3-1.7B_mixed_int4_ekv2048.litertlm",
-    "sha256": "0400d8ffdb00e4bbe1209120e2c7baf05322a8c900839b0a94cc28f599011196",
-    "realGeneration": true,
-    "stopAndReload": true,
-    "physicalPhoneVerified": false
-  },
-  "publisherTemplate": {
-    "fullJinjaRendererVerified": true,
-    "pinnedExternalTemplateVerified": true,
-    "resetAndModelReloadVerified": true,
-    "externalWeightsGenerated": false
-  },
-  "phoneBrowser": {
-    "realAndroidWebViewsIncluded": true,
-    "externalPagesHaveNoAppBridge": true,
-    "boundedPanelAndOverlayGuardIncluded": true,
-    "urlAndBoundsPolicyTested": true,
-    "physicalPhoneVerified": false
-  },
-  "downloadUi": {
-    "globalAndOwningCard": true,
-    "measuredEta": true,
-    "pause": true,
-    "cancel": true,
-    "actualRecoveredUiBrowserVerified": true
-  },
   "limitations": [
-    "Device memory and native architecture support apply to local models",
-    "Published LiteRT cache limits remain 2K or 4K",
-    "No universal safetensors, image diffusion, projector, split-model or LoRA-only Android engine",
-    "Phone and paired PC chats and models remain separate",
-    "Phone does not host Chat Core group transport",
-    "No physical Android browser, inference throughput or thermal claim"
+    "Physical Android behavior still needs a phone test.",
+    "Android requires approval for app updates."
   ]
 }

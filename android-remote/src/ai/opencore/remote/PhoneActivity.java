@@ -88,6 +88,7 @@ public final class PhoneActivity extends Activity {
             if(kind.equals("phone-execution-settings")){reply(id,true,null,null);DeviceRouting.settings(this);return;}
             if(kind.equals("phone-app-update")){reply(id,true,null,null);AppUpdates.check(this,true);return;}
             if(kind.equals("phone-disconnect")){reply(id,true,null,null);DeviceRouting.settings(this);return;}
+            if(kind.equals("invoke")&&(packet.optString("command").equals("install_model")||packet.optString("command").equals("download_queue_action")&&packet.optJSONObject("args")!=null&&packet.optJSONObject("args").optString("action").equals("enqueue")||packet.optString("command").equals("runtime_setup_start")&&packet.optJSONObject("args")!=null&&packet.optJSONObject("args").optJSONObject("options")!=null&&packet.optJSONObject("args").optJSONObject("options").optBoolean("installWeights")))PhoneDownloadService.requestNotifications(this);
             if(kind.equals("phone-dialog")){chooseFiles(packet);return;}
             if(kind.equals("phone-open")){JSONObject args=packet.optJSONObject("args");String url=args==null?"":args.optString("url",args.optString("path",""));if(url.startsWith("https://")){startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));reply(id,true,null,null);}else{backend.io.execute(()->{try{reply(id,true,nativeFeature("open_local_path",new JSONObject().put("path",url)),null);}catch(Exception error){reply(id,false,null,error.getMessage());}});}return;}
             bridge.request(packet);
