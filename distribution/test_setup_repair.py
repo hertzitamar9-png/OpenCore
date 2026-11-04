@@ -15,6 +15,14 @@ import setup_manager as setup
 
 
 class ComfyRuntimeReleaseTests(unittest.TestCase):
+    def test_download_queue_workers_are_shipped_with_the_bridge(self):
+        repository = Path(__file__).resolve().parents[1]
+        mappings = json.loads((repository/'distribution/resource-map.json').read_text(encoding='utf-8'))
+        for filename in ('hf_bridge.py', 'hf_download.py', 'hf_download_queue.py', 'native_queue_setup.py'):
+            target = 'runtime-setup/hf-extension/' + filename
+            self.assertEqual(mappings.get(target), 'src-tauri/resources/' + target)
+            self.assertTrue((repository/mappings[target]).is_file())
+
     def test_signed_release_package_includes_pinned_moss_loader(self):
         from managed_model_sources import verify_pinned_plugin_sources
         repository = Path(__file__).resolve().parents[1]
