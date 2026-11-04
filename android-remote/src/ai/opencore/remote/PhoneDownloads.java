@@ -179,6 +179,8 @@ class PhoneDownloads {
             if(installed&&partial!=null&&partial.exists())partial.delete();
             try{queue.finish(ticket,installed,failure);}catch(Exception error){backend.loadError="Could not save download queue progress: "+PhoneBackend.message(error);try{queue.pause("");}catch(Exception ignored){}}
             schedule();changed(true);backend.emitState();
+            if(installed)PhoneNotifications.result(backend.app,"download:"+ticket.id,"Model download complete",file.optString("familyLabel",file.optString("filename","Model"))+" was downloaded to this phone.");
+            else if(failure!=null&&!ticket.stopped)PhoneNotifications.result(backend.app,"download:"+ticket.id,"Model download needs attention",file.optString("familyLabel",file.optString("filename","Model"))+" did not finish. Open Models to retry.");
         }
     }
 }

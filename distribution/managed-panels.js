@@ -35,7 +35,7 @@ function $RemoteSettings(){
     h('div',{className:'remote-steps'},
       h('section',{className:'remote-step'},h('h3',null,'Connect your phone'),
         h('p',null,'1. Install and open OpenCore Remote on your Android phone.'),
-        h('a',{href:'https://raw.githubusercontent.com/hertzitamar9-png/OpenCore/main/distribution/mobile/OpenCore.Remote.apk',target:'_blank',rel:'noreferrer'},'Download the Android app'),
+        h('a',{href:'https://github.com/hertzitamar9-png/OpenCore/releases/latest/download/OpenCore.Remote.apk',target:'_blank',rel:'noreferrer'},'Download the Android app'),
         h('p',null,'2. Keep the PC awake and online. Then reveal the QR code. OpenCore tries to set up a secure connection for Wi-Fi and mobile data. If your network blocks it, see Connection options below.'),
         h('button',{disabled:busy||!state,onClick:()=>void revealPair()},busy?'Getting the code…':'Reveal QR code'),
         h('p',null,'3. On your phone, tap Scan QR code, point the camera at this screen, and allow access.')),

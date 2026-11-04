@@ -9,11 +9,15 @@ import java.util.concurrent.Executors;
 
 /** The destination belongs to this phone, not to synchronized PC preferences. */
 public final class ExecutionSettingsActivity extends Activity {
+    final NotificationGate notifications=new NotificationGate(this);
+    boolean resumed;
     int dp(int n){return Math.round(n*getResources().getDisplayMetrics().density);}
     TextView text(String value,int size){TextView v=new TextView(this);v.setText(value);v.setTextColor(0xffd8e5f2);v.setTextSize(size);v.setPadding(0,dp(8),0,dp(8));return v;}
     Button button(String value,Runnable action){Button b=new Button(this);b.setText(value);b.setAllCaps(false);b.setMinHeight(dp(48));b.setOnClickListener(v->action.run());return b;}
     @Override public void onCreate(Bundle state){super.onCreate(state);getWindow().setStatusBarColor(0xff0b1118);getWindow().setNavigationBarColor(0xff0b1118);}
-    @Override public void onResume(){super.onResume();render();AppUpdates.resume(this);}
+    @Override public void onResume(){super.onResume();resumed=true;render();notifications.firstLaunch(()->{if(resumed&&!isFinishing()){AppUpdates.resume(this);AppUpdates.startWatching(this);}});}
+    @Override public void onPause(){resumed=false;AppUpdates.stopWatching(this);super.onPause();}
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);notifications.onPermissionResult(request);}
     void render(){
         Connection pc=DeviceRouting.paired(this);String selected=DeviceRouting.target(this);
         ScrollView scroll=new ScrollView(this);scroll.setBackgroundColor(0xff0b1118);LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(24),dp(20),dp(24));scroll.addView(body);setContentView(scroll);

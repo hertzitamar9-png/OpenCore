@@ -1,9 +1,7 @@
 package ai.opencore.remote;
 
-import android.Manifest;
 import android.app.*;
 import android.content.*;
-import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.*;
 import org.json.*;
@@ -12,34 +10,30 @@ import java.util.Locale;
 /** A visible dataSync owner for phone model transfers while another app is open. */
 public class PhoneDownloadService extends Service {
     private static final String CHANNEL="opencore-model-downloads";
-    private static final int NOTIFICATION=7213,NOTIFICATION_PERMISSION=7214;
+    private static final int NOTIFICATION=7213;
     private PhoneBackend backend;
     private PowerManager.WakeLock wakeLock;
     private int lastStartId;
 
-    /** Invoke on the UI thread only after the user first requests a download. */
-    static void requestNotifications(Activity activity){
-        if(Build.VERSION.SDK_INT>=33&&activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
-            activity.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},NOTIFICATION_PERMISSION);
-    }
     private PendingIntent action(String action,int request){return PendingIntent.getService(this,request,new Intent(this,PhoneDownloadService.class).setAction(action),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);}
     private Notification notification(JSONObject snapshot){
         Notification.Builder out=new Notification.Builder(this,CHANNEL).setSmallIcon(android.R.drawable.stat_sys_download).setContentTitle("OpenCore model downloads")
             .setOnlyAlertOnce(true).setOngoing(true).setCategory(Notification.CATEGORY_PROGRESS).setVisibility(Notification.VISIBILITY_PRIVATE);
         Intent open=new Intent(this,PhoneActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP);
         out.setContentIntent(PendingIntent.getActivity(this,NOTIFICATION,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
-        String detail="Preparing download queue";double received=0,total=0;int active=0,waiting=0;String label="";
+        String detail="Preparing download queue";double received=0,total=0,speed=0;int active=0,waiting=0;String label="";
         if(snapshot!=null){
             JSONArray rows=snapshot.optJSONArray("items"),ids=snapshot.optJSONArray("activeIds");active=ids==null?0:ids.length();
             if(rows!=null)for(int i=0;i<rows.length();i++){
                 JSONObject row=rows.optJSONObject(i);if(row==null)continue;String phase=row.optString("phase");
                 if(phase.equals("queued"))waiting++;
                 if(PhoneDownloadQueue.isActive(phase)){
-                    if(label.isEmpty())label=row.optString("label");received+=row.optLong("downloadedBytes");total+=row.optLong("totalBytes");
+                    if(label.isEmpty())label=row.optString("label");received+=row.optLong("downloadedBytes");total+=row.optLong("totalBytes");speed+=Math.max(0,row.optDouble("bytesPerSecond",0));
                 }
             }
             detail=active>0?(active==1?label:active+" concurrent downloads")+(waiting>0?" · "+waiting+" queued":""):snapshot.optBoolean("paused")?"Downloads paused":waiting+" queued";
             if(total>0)detail+=" · "+size(received)+" / "+size(total);
+            if(speed>0){detail+=String.format(Locale.US," · %.2f MB/s",speed/1e6);if(total>0){long seconds=(long)Math.ceil(Math.max(0,total-received)/speed);detail+=seconds<60?" · about "+Math.max(1,seconds)+"s left":" · about "+Math.max(1,(seconds+59)/60)+"m left";}}
         }
         out.setContentText(detail).setStyle(new Notification.BigTextStyle().bigText(detail));
         if(total>0)out.setProgress(1000,(int)Math.min(1000,Math.max(0,received/total*1000)),false);else out.setProgress(0,0,true);
@@ -47,7 +41,7 @@ public class PhoneDownloadService extends Service {
         out.addAction(new Notification.Action.Builder(null,"Cancel",action("remove",2)).build());
         return out.build();
     }
-    static String size(double bytes){if(bytes>=1024*1024*1024)return String.format(Locale.US,"%.1f GB",bytes/(1024*1024*1024));return String.format(Locale.US,"%.0f MB",bytes/(1024*1024));}
+    static String size(double bytes){if(bytes>=1e9)return String.format(Locale.US,"%.1f GB",bytes/1e9);return String.format(Locale.US,"%.0f MB",bytes/1e6);}
     @Override public void onCreate(){
         super.onCreate();NotificationManager manager=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         manager.createNotificationChannel(new NotificationChannel(CHANNEL,"Model downloads",NotificationManager.IMPORTANCE_LOW));

@@ -22,9 +22,10 @@ import java.util.*;
 public final class PhoneActivity extends Activity {
     static final String ORIGIN="https://phone.opencore.local";
     static final int FILES=80,MICROPHONE=81,FOLDER=82;
-    WebView web;WebMessagePort port;PhoneBackend backend;PhoneAppBridge bridge;String nonce;boolean destroyed;
+    WebView web;WebMessagePort port;PhoneBackend backend;PhoneAppBridge bridge;String nonce;boolean destroyed,resumed;
     String dialogId;boolean dialogMultiple;PermissionRequest microphone;JSONObject sharedAssets;
     PhoneBrowser browser;
+    final NotificationGate notifications=new NotificationGate(this);
     final PhoneBackend.Observer output=value->runOnUiThread(()->{
         if(destroyed||port==null)return;port.postMessage(new WebMessage(value.toString()));
         if(backend.generating.get()||backend.downloading.get())getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -39,7 +40,7 @@ public final class PhoneActivity extends Activity {
         WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);settings.setAllowFileAccess(false);settings.setAllowContentAccess(true);settings.setJavaScriptCanOpenWindowsAutomatically(false);settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);settings.setSupportMultipleWindows(false);settings.setMediaPlaybackRequiresUserGesture(true);
         try(InputStream input=getAssets().open("phone/shared-ui/manifest.json")){sharedAssets=new JSONObject(new String(MobileActivity.read(input,128*1024),StandardCharsets.UTF_8)).getJSONObject("files");}
         catch(Exception error){new AlertDialog.Builder(this).setTitle("OpenCore could not open").setMessage("The bundled desktop interface is missing. Install the current signed Android update.").setPositiveButton("Close",(d,w)->finish()).show();return;}
-        web.setWebViewClient(new SharedClient());web.setWebChromeClient(new PhoneChrome());web.loadUrl(ORIGIN+"/index.html");AppUpdates.check(this,false);
+        web.setWebViewClient(new SharedClient());web.setWebChromeClient(new PhoneChrome());web.loadUrl(ORIGIN+"/index.html");
     }
     static boolean isLocal(Uri uri){return uri!=null&&"https".equals(uri.getScheme())&&"phone.opencore.local".equals(uri.getHost())&&(uri.getPort()==-1||uri.getPort()==443);}
     final class SharedClient extends WebViewClient {
@@ -88,7 +89,7 @@ public final class PhoneActivity extends Activity {
             if(kind.equals("phone-execution-settings")){reply(id,true,null,null);DeviceRouting.settings(this);return;}
             if(kind.equals("phone-app-update")){reply(id,true,null,null);AppUpdates.check(this,true);return;}
             if(kind.equals("phone-disconnect")){reply(id,true,null,null);DeviceRouting.settings(this);return;}
-            if(kind.equals("invoke")&&(packet.optString("command").equals("install_model")||packet.optString("command").equals("download_queue_action")&&packet.optJSONObject("args")!=null&&packet.optJSONObject("args").optString("action").equals("enqueue")||packet.optString("command").equals("runtime_setup_start")&&packet.optJSONObject("args")!=null&&packet.optJSONObject("args").optJSONObject("options")!=null&&packet.optJSONObject("args").optJSONObject("options").optBoolean("installWeights")))PhoneDownloadService.requestNotifications(this);
+            if(NotificationGate.startsDownload(packet)){notifications.beforeDownload(()->{if(!destroyed&&bridge!=null)bridge.request(packet);});return;}
             if(kind.equals("phone-dialog")){chooseFiles(packet);return;}
             if(kind.equals("phone-open")){JSONObject args=packet.optJSONObject("args");String url=args==null?"":args.optString("url",args.optString("path",""));if(url.startsWith("https://")){startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));reply(id,true,null,null);}else{backend.io.execute(()->{try{reply(id,true,nativeFeature("open_local_path",new JSONObject().put("path",url)),null);}catch(Exception error){reply(id,false,null,error.getMessage());}});}return;}
             bridge.request(packet);
@@ -107,7 +108,7 @@ public final class PhoneActivity extends Activity {
     final class PhoneChrome extends WebChromeClient {
         @Override public void onPermissionRequest(PermissionRequest request){runOnUiThread(()->{if(!isLocal(request.getOrigin())||!Arrays.asList(request.getResources()).contains(PermissionRequest.RESOURCE_AUDIO_CAPTURE)){request.deny();return;}if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)==PackageManager.PERMISSION_GRANTED)request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});else{microphone=request;requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},MICROPHONE);}});}
     }
-    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==PhoneBrowser.PERMISSIONS&&browser!=null){browser.permissions(results);return;}if(request==MICROPHONE&&microphone!=null){if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)microphone.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});else microphone.deny();microphone=null;}}
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(notifications.onPermissionResult(request))return;if(request==PhoneBrowser.PERMISSIONS&&browser!=null){browser.permissions(results);return;}if(request==MICROPHONE&&microphone!=null){if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)microphone.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});else microphone.deny();microphone=null;}}
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);if(request==PhoneBrowser.UPLOAD&&browser!=null){browser.chosen(result,data);return;}
         if(request==FOLDER&&dialogId!=null){String id=dialogId;dialogId=null;if(result!=RESULT_OK||data==null||data.getData()==null){reply(id,true,null,null);return;}Uri tree=data.getData();backend.io.execute(()->{try{reply(id,true,PhoneFileImports.tree(this,tree).getAbsolutePath(),null);}catch(Exception error){reply(id,false,null,error.getMessage());}});return;}
@@ -117,7 +118,8 @@ public final class PhoneActivity extends Activity {
         if(selected.size()>16){reply(id,false,null,"Choose at most 16 files.");return;}
         backend.io.execute(()->{try{JSONArray paths=new JSONArray();File folder=new File(getFilesDir(),"attachments");if(!folder.isDirectory()&&!folder.mkdirs())throw new IOException("Could not prepare phone attachments.");for(Uri uri:selected){String name="attachment";try(android.database.Cursor c=getContentResolver().query(uri,new String[]{OpenableColumns.DISPLAY_NAME},null,null,null)){if(c!=null&&c.moveToFirst())name=c.getString(0);}name=PhoneFileImports.name(name);File target=new File(folder,UUID.randomUUID()+"-"+name);try(InputStream input=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(target)){if(input==null)throw new IOException("The file could not be opened.");byte[] buffer=new byte[32768];int n;long total=0;while((n=input.read(buffer))!=-1){total+=n;if(total>64*1024*1024L)throw new IOException("This attachment exceeds the phone's 64 MB limit.");out.write(buffer,0,n);}}catch(Exception error){target.delete();throw error;}paths.put(target.getAbsolutePath());}reply(id,true,dialogMultiple?paths:paths.length()>0?paths.getString(0):null,null);}catch(Exception error){reply(id,false,null,error.getMessage());}});
     }
-    @Override public void onResume(){super.onResume();AppUpdates.resume(this);if(DeviceRouting.target(this).equals("pc")){DeviceRouting.route(this);return;}if(bridge!=null&&port!=null)bridge.attach();}
+    @Override public void onResume(){super.onResume();if(DeviceRouting.target(this).equals("pc")){DeviceRouting.route(this);return;}resumed=true;notifications.firstLaunch(()->{if(resumed&&!destroyed&&!isFinishing()){AppUpdates.resume(this);AppUpdates.startWatching(this);}});if(bridge!=null&&port!=null)bridge.attach();}
+    @Override public void onPause(){resumed=false;AppUpdates.stopWatching(this);super.onPause();}
     @Override public void onDestroy(){destroyed=true;if(bridge!=null)bridge.detach();if(port!=null)port.close();if(browser!=null)browser.destroy();if(web!=null)web.destroy();super.onDestroy();}
     @Override public void onBackPressed(){if(browser!=null&&browser.back())return;if(web!=null&&web.canGoBack())web.goBack();else DeviceRouting.settings(this);}
 }

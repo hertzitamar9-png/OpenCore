@@ -149,7 +149,7 @@ def build_release(args, environment):
         'sharedDesktopInterface': True, 'generatedCatalogMatchesInputs': True,
         'physicalPhoneVerified': False,
         'limitations': ['Build and packaging checks do not establish physical Android gameplay or inference performance',
-                        'Android requires the user to approve installation of each app update']}
+                        'Android can require user approval or defer self-updates depending on system policy']}
     for name, value in (('android-client.json', receipt), ('phone-runtime-verification.json', verification)):
         (output / name).write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8')
     validate(output, root=ROOT, environment=environment)

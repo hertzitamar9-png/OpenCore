@@ -38,6 +38,9 @@ public final class AppUpdatesTest {
         rejected(()->AppUpdates.trustedLocation(new URL("http://github.com/hertzitamar9-png/OpenCore")));
         rejected(()->AppUpdates.trustedLocation(new URL("https://evil.example/OpenCore.Remote.apk")));
         AppUpdates.trustedLocation(new URL("https://release-assets.githubusercontent.com/a?token=fixture"));
+        check(AppUpdates.releaseTag(new URL("https://github.com/hertzitamar9-png/OpenCore/releases/tag/app-v0.3.294")).equals("app-v0.3.294"),"Latest check must pin the real release tag");
+        rejected(()->AppUpdates.releaseTag(new URL("https://github.com/other/OpenCore/releases/tag/app-v0.3.294")));
+        rejected(()->AppUpdates.releaseTag(new URL("https://github.com/hertzitamar9-png/OpenCore/releases/tag/app-v0.3.294?other=1")));
         File file=new File(args[0],"update.part");long size=17*1024*1024+5;final int[] progress={0};
         AppUpdates.receive(new Zeros(size),file,size,zerosHash(size),value->progress[0]=value);
         check(file.length()==size&&progress[0]==100,"APK must stream to disk with exact byte count and progress");

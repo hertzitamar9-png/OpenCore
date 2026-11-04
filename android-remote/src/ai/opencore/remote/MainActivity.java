@@ -22,12 +22,14 @@ import java.util.concurrent.Executors;
 public final class MainActivity extends Activity {
     static final int SCAN_PAIRING = 30;
     final ExecutorService actions = Executors.newSingleThreadExecutor();
+    final NotificationGate notifications=new NotificationGate(this);
     volatile Connection connection;
     LinearLayout root;
     TextView status;
     EditText pairing;
     Button pairButton;
     volatile boolean pairingInProgress = false;
+    boolean resumed;
     ConnectionPanel pairingPanel;
     String pendingPairCode;
 
@@ -85,7 +87,6 @@ public final class MainActivity extends Activity {
         content.addView(label("3  OpenCore saves this PC on your phone. It reconnects when the PC is online."));
         content.addView(button("Check for app updates",()->AppUpdates.check(this,true)));
         content.addView(button("Keep using this phone",()->DeviceRouting.select(this,"phone")));
-        AppUpdates.check(this,false);
         content.addView(button("Scan QR code", () -> startActivityForResult(new Intent(this, ScannerActivity.class), SCAN_PAIRING)));
         TextView fallback = label("If you can’t scan, paste the pairing code from OpenCore on your PC.");
         fallback.setPadding(dp(14), dp(18), dp(14), dp(4)); content.addView(fallback);
@@ -178,5 +179,8 @@ public final class MainActivity extends Activity {
             }).show();
     }
 
+    @Override protected void onResume() { super.onResume(); resumed=true; if(!isFinishing())notifications.firstLaunch(()->{if(resumed&&!isFinishing()){AppUpdates.resume(this);AppUpdates.startWatching(this);}}); }
+    @Override protected void onPause() { resumed=false; AppUpdates.stopWatching(this); super.onPause(); }
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);notifications.onPermissionResult(request);}
     @Override protected void onDestroy() { actions.shutdownNow(); super.onDestroy(); }
 }

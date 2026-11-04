@@ -2,11 +2,11 @@
   "schema": 1,
   "passed": true,
   "verificationKind": "signed-APK-packaging",
-  "androidVersion": "3.6",
-  "versionCode": 15,
-  "apkSha256": "b3301e9d029e5ca3e575c27056d948188202db0896038b62c7a7fc4990331c59",
+  "androidVersion": "0.3.300",
+  "versionCode": 100300,
+  "apkSha256": "b1cf620d3375482ab1f62b80c56bff5eb208d0b00671ecd2e2f90b20b5968d91",
   "nativeRuntimeRevision": "0ef27309b78d054832e44a95a6fb9314d4b7363c",
-  "sharedUiManifestSha256": "4399880a7997a47f0f9590867aabf85c740edbfd473e4f14cafda35b498a6290",
+  "sharedUiManifestSha256": "2df1c76adb6b4f51e3314119cee3ef0c0d778fb25bf73e04a1d321440b365eb7",
   "catalogSha256": "23b4fed8d0cb603ec93fa2aa57034983889dcb5c447ce2537d6f84bb81281a46",
   "apkSigningIdentityPreserved": true,
   "packagedSourcesMatchReviewedSources": true,
@@ -20,6 +20,6 @@
   "physicalPhoneVerified": false,
   "limitations": [
     "Physical Android behavior still needs a phone test.",
-    "Android requires approval for app updates."
+    "Android can require user approval or defer updates depending on system policy."
   ]
 }

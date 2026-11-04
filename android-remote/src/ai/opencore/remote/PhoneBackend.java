@@ -46,6 +46,7 @@ class PhoneBackend {
     void unloadModels(){PhoneNative.unload();if(liteRt!=null)liteRt.close();loadedId="";loadedContext=0;}
     PhoneBackend(Context context){
         app=context;prefs=app.getSharedPreferences("phone-settings",Context.MODE_PRIVATE);store=new PhoneStore(app);store.recoverInterrupted();downloads=new PhoneDownloads(this);
+        AppUpdates.setBusyProbe(()->generating.get()||loading||downloads.queue!=null&&(downloads.queue.hasActive()||downloads.queue.hasRunnable()));
         // Older single-transfer .part files keep the same artifact path and can
         // be resumed by selecting that exact pinned quantization in the queue.
     }
@@ -53,7 +54,7 @@ class PhoneBackend {
     void detach(Observer value){if(observer==value)observer=null;}
     void post(Runnable task){main.post(task);}
     long elapsed(){return SystemClock.elapsedRealtime();}
-    void emit(String type,JSONObject value){try{JSONObject event=new JSONObject().put("event",type).put("value",value);Observer origin=observer;post(()->{if(origin!=null&&observer==origin)origin.event(event);});}catch(JSONException ignored){}}
+    void emit(String type,JSONObject value){if(type.equals("generation"))PhoneGenerationService.publish(value);try{JSONObject event=new JSONObject().put("event",type).put("value",value);Observer origin=observer;post(()->{if(origin!=null&&observer==origin)origin.event(event);});}catch(JSONException ignored){}}
     static String message(Throwable error){return error.getMessage()==null?"This phone operation failed.":error.getMessage();}
     ActivityManager.MemoryInfo memoryInfo(){ActivityManager.MemoryInfo info=new ActivityManager.MemoryInfo();((ActivityManager)app.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(info);return info;}
     long available(){ActivityManager.MemoryInfo info=memoryInfo();return Math.max(0,info.availMem-info.threshold);}
@@ -150,10 +151,13 @@ class PhoneBackend {
             String user=store.add(chat,"user",text,"completed");JSONObject userMeta=new JSONObject().put("submissionId",args.optString("submissionId"));if(!attachmentText.isEmpty())userMeta.put("attachmentText",attachmentText).put("files",args.getJSONArray("files"));store.updateMessage(user,text,"completed",userMeta);String assistant=store.add(chat,"assistant","","loading");
             int context=prefs.getInt("context",2048),max=args.optInt("maxTokens",prefs.getInt("maxTokens",512));float temperature=(float)args.optDouble("temperature",prefs.getFloat("temperature",.7f));
             float topP=(float)args.optDouble("topP",.95),repeatPenalty=(float)args.optDouble("repeatPenalty",1.05);int topK=args.optInt("topK",40);long seed=args.optLong("seed",-1);
-            long started=elapsed();inference.execute(()->generate(chat,assistant,modelId,record,context,max,temperature,topP,topK,repeatPenalty,seed,started));return new JSONObject().put("assistant",assistant);
+            String label=args.optString("modelLabel",record.optString("familyLabel","Phone model"));
+            generation=new JSONObject().put("chat",chat).put("assistant",assistant).put("stage","Starting on this phone").put("content","").put("running",true);emit("generation",generation);
+            try{app.startForegroundService(new Intent(app,PhoneGenerationService.class).putExtra("model",label).putExtra("effort",args.optString("effort")).putExtra("approval",args.optString("approval")).putExtra("prompt",text));}catch(RuntimeException ignored){/* The reply can still run; Android may restrict service starts. */}
+            long started=elapsed();inference.execute(()->generate(chat,assistant,modelId,label,record,context,max,temperature,topP,topK,repeatPenalty,seed,started));return new JSONObject().put("assistant",assistant);
         }catch(Exception|LinkageError error){if(accepted){generating.set(false);activeChat="";}throw error;}
     }
-    void generate(String chat,String assistant,String modelId,JSONObject record,int context,int max,float temperature,float topP,int topK,float repeatPenalty,long seed,long started){
+    void generate(String chat,String assistant,String modelId,String modelLabel,JSONObject record,int context,int max,float temperature,float topP,int topK,float repeatPenalty,long seed,long started){
         final String[] output={""};final JSONObject[] metrics={new JSONObject()};final long[] checkpoint={0};String status="failed",detail="";
         try{
             generation=new JSONObject().put("chat",chat).put("assistant",assistant).put("stage","Loading model on this phone").put("content","").put("running",true);emit("generation",generation);
@@ -181,7 +185,10 @@ class PhoneBackend {
                 store.updateMessage(assistant,output[0],status,metrics[0]);
             }catch(Throwable error){status="failed";detail="Could not save the phone response: "+message(error);loadError=detail;try{metrics[0].put("detail",detail);}catch(JSONException ignored){}}
             finally{if(isLiteRt(record)){loadedId="";loadedContext=0;}generating.set(false);activeChat="";}
-            try{generation=new JSONObject().put("chat",chat).put("assistant",assistant).put("stage",status.equals("completed")?"Generation complete":status.equals("stopped")?"Stopped":"Generation failed").put("status",status).put("content",output[0]).put("running",false).put("metrics",metrics[0]).put("detail",detail);emit("generation",generation);}catch(JSONException ignored){}emitState();
+            try{generation=new JSONObject().put("chat",chat).put("assistant",assistant).put("stage",status.equals("completed")?"Generation complete":status.equals("stopped")?"Stopped":"Generation failed").put("status",status).put("content",output[0]).put("running",false).put("metrics",metrics[0]).put("detail",detail);emit("generation",generation);}catch(JSONException ignored){}
+            if(status.equals("completed"))PhoneNotifications.result(app,"generation:"+assistant,"OpenCore response ready",modelLabel+" finished responding.");
+            else if(status.equals("failed"))PhoneNotifications.result(app,"generation:"+assistant,"OpenCore generation needs attention",modelLabel+" could not finish. Open the conversation to retry.");
+            emitState();
         }
     }
 }

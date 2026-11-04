@@ -82,7 +82,7 @@ public final class PhoneSendProtocolTest {
         void install(PhoneDownloadQueue.Ticket ticket){try{super.install(ticket);}finally{synchronized(completion){completion.notifyAll();}}}
         void awaitIdle()throws Exception{
             long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);
-            synchronized(completion){while(queue.hasActive()){long remaining=deadline-System.nanoTime();if(remaining<=0)throw new AssertionError("Transfer worker did not exit");TimeUnit.NANOSECONDS.timedWait(completion,remaining);}}
+            synchronized(completion){while(queue.hasActive()||queue.hasRunnable()){long remaining=deadline-System.nanoTime();if(remaining<=0)throw new AssertionError("Transfer worker did not exit");TimeUnit.NANOSECONDS.timedWait(completion,remaining);}}
         }
     }
     final PhoneAppBridge bridge;final HostBackend backend;final DiskStore store;final HostContext context;

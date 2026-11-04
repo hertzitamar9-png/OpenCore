@@ -45,6 +45,7 @@ public final class MobileActivity extends Activity {
     ConnectionPanel connectionPanel;
     WebView web;
     PhoneBrowser browser;
+    final NotificationGate notifications=new NotificationGate(this);
     WebMessagePort port;
     TextView status;
     volatile JSONObject preferencesSeed;
@@ -77,7 +78,6 @@ public final class MobileActivity extends Activity {
         settings.setSupportMultipleWindows(false);
         web.setWebViewClient(new LocalClient());web.setWebChromeClient(new PhoneChrome());
         connect();
-        AppUpdates.check(this,false);
         polling.scheduleWithFixedDelay(this::poll,0,450,TimeUnit.MILLISECONDS);
     }
 
@@ -148,6 +148,7 @@ public final class MobileActivity extends Activity {
                 });return;
             }
             if(!kind.equals("invoke")&&!kind.equals("hub")&&!kind.equals("preference")){fail(id,"Unsupported phone action.",targetGeneration);return;}
+            if(NotificationGate.startsDownload(value)){notifications.beforeDownload(()->{if(!destroyed)submit(value,targetGeneration);});return;}
             submit(value,targetGeneration);
         }catch(Exception ignored){}
     }
@@ -230,6 +231,7 @@ public final class MobileActivity extends Activity {
     }
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
         super.onRequestPermissionsResult(request,permissions,results);
+        if(notifications.onPermissionResult(request))return;
         if(request==PhoneBrowser.PERMISSIONS){browser.permissions(results);return;}
         if(request==MICROPHONE&&microphone!=null){if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)microphone.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});else microphone.deny();microphone=null;}
     }
@@ -391,8 +393,8 @@ public final class MobileActivity extends Activity {
         connection=null;session=null;getSharedPreferences("paired-pc",MODE_PRIVATE).edit().clear().apply();
         runOnUiThread(()->{if(!destroyed){startActivity(new Intent(this,MainActivity.class));finish();}});
     }
-    @Override public void onResume(){super.onResume();if(DeviceRouting.target(this).equals("phone")){DeviceRouting.route(this);return;}resumed=true;nextInfoAt=0;AppUpdates.resume(this);AppUpdates.check(this,false);}
-    @Override public void onPause(){resumed=false;super.onPause();}
+    @Override public void onResume(){super.onResume();if(DeviceRouting.target(this).equals("phone")){DeviceRouting.route(this);return;}resumed=true;nextInfoAt=0;notifications.firstLaunch(()->{if(resumed&&!destroyed&&!isFinishing()){AppUpdates.resume(this);AppUpdates.startWatching(this);}});}
+    @Override public void onPause(){AppUpdates.stopWatching(this);resumed=false;super.onPause();}
     @Override public void onDestroy(){destroyed=true;remoteSession.cancel();imageCache.clear();if(port!=null)port.close();polling.shutdownNow();io.shutdownNow();if(browser!=null)browser.destroy();if(web!=null)web.destroy();super.onDestroy();}
     @Override public void onBackPressed(){if(browser!=null&&browser.back())return;if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
 }
