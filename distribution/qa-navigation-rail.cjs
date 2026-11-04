@@ -2,11 +2,11 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module');
 const original=fs.readFileSync(path.join(__dirname,'qa-hub.cjs'),'utf8');
 let code=original.slice(0,original.indexOf('(async()=>{await new Promise'));
-code=code.replace('Up as TestProfiles','Up as TestProfiles,r8 as TestRail');
-code=code.replace('TestModels,TestHubSettings}from','TestModels,TestHubSettings,TestRail}from');
+code=code.replace('Up as TestProfiles','Up as TestProfiles,r8 as TestRail,h8 as TestOverview');
+code=code.replace('TestModels,TestHubSettings}from','TestModels,TestHubSettings,TestRail,TestOverview}from');
 code=code.replace("if(name==='/assets/'+entryName)","if(name==='/opencore-logo.png'){res.setHeader('Content-Type','image/png');return res.end(fs.readFileSync(path.join(__dirname,'../public/opencore-logo.png')));}if(name==='/assets/'+entryName)");
 code=code.replace('React.createElement(React.Fragment,null,React.createElement(TestModels,{selectedProfile:\'none\',onSelect:id=>window.selected=id,runtimeActive:false,onNotice:message=>window.notice=message}),React.createElement(TestHubSettings))',
-  'React.createElement("div",{className:"opencore-shell"},React.createElement(TestRail,{active:"conversations",compact:true,onChange:id=>window.selected=id,onAccount:()=>window.selected="account"}),React.createElement("main",{style:{gridColumn:"2 / -1",padding:"16px"}},React.createElement("h1",null,"Conversations")),React.createElement("footer",{className:"statusbar"},"OpenCore"))');
+  'React.createElement("div",{className:"opencore-shell"},React.createElement(globalThis.__opencoreGroupHost),React.createElement(TestRail,{active:"overview",compact:true,onChange:id=>window.selected=id,onAccount:()=>window.selected="account"}),React.createElement("main",{className:"section-main",style:{gridColumn:"2 / -1",padding:"16px",overflow:"auto"}},React.createElement(TestOverview,{view:"overview",snapshot:{conversations:[],projects:[],connectors:[],runtime:{archivePath:"fixture",status:"stopped"}},selectedProfile:"none",onSelectProfile:()=>{},onNotice:()=>{},onRefresh:async()=>{},onNavigate:id=>window.selected=id,appearance:{},onAppearanceChange:()=>{},platformConfiguration:{}})),React.createElement("footer",{className:"statusbar"},"OpenCore"))');
 code=code.replace('<div id=root></div>','<style>html,body,#root{width:100%;height:100%;margin:0}#root{height:100dvh;overflow:hidden}.conversation-focus-shell{grid-template-rows:minmax(0,1fr) 28px}main{min-width:0}h1{font-size:18px}</style><div id=root></div>');
 code+=String.raw`
 (async()=>{
@@ -27,6 +27,8 @@ code+=String.raw`
   await page.screenshot({path:path.join(out,'rail-'+width+'x'+height+(expanded?'-expanded':'')+'.png')});
   if(!process.argv.includes('--before')){
    const expectedHeight=expanded?(width<=900?64:48):44,expectedRail=expanded?(width<=900?96:184):64;
+   const order=sample.buttons.slice(0,4).map(button=>button.label);
+   if(JSON.stringify(order)!==JSON.stringify(['Overview','Conversations','Open Chat Core','Scheduled tasks']))throw Error('Unexpected navigation order: '+order.join(', '));
    if(sample.rail.width!==expectedRail)throw Error('The packaged shell rail width is '+sample.rail.width+', expected '+expectedRail);
    for(const item of sample.buttons){if(item.height!==expectedHeight||item.width<44)throw Error(item.label+' has uneven size '+item.width+'x'+item.height+' at '+width+'x'+height);if(item.svg.width!==22||item.svg.height!==22)throw Error('Squashed icon: '+item.label);}
    const hitTargets=await page.evaluate(()=>[...document.querySelectorAll('.conversation-app-rail nav button')].every(button=>{
@@ -41,6 +43,13 @@ code+=String.raw`
    await page.getByRole('button',{name:'Open Chat Core',exact:true}).scrollIntoViewIfNeeded();
    await page.evaluate(()=>window.addEventListener('opencore-open-groups',()=>window.groupOpened=true,{once:true}));
    await page.getByRole('button',{name:'Open Chat Core',exact:true}).click();if(!await page.evaluate(()=>window.groupOpened))throw Error('Chat Core entry failed');
+   await page.getByRole('dialog',{name:'Chat Core',exact:true}).waitFor();
+   await page.getByRole('button',{name:'Close Chat Core',exact:true}).click();
+   const overviewOrder=await page.locator('.overview-grid > button strong').allTextContents();
+   if(JSON.stringify(overviewOrder.slice(0,3))!==JSON.stringify(['Conversations','Chat Core','Scheduled tasks']))throw Error('Unexpected overview order: '+overviewOrder.join(', '));
+   await page.getByRole('button',{name:'Open Chat Core group chats',exact:true}).click();
+   await page.getByRole('dialog',{name:'Chat Core',exact:true}).waitFor();
+   await page.getByRole('button',{name:'Close Chat Core',exact:true}).click();
    if(!await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))throw Error('Horizontal overflow');
   }
   await page.close();

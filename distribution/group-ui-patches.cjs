@@ -1,6 +1,14 @@
 const fs=require('node:fs'),path=require('node:path'),terser=require('terser');
 module.exports=function applyGroupUi(app,{editFunction,replaceOnce}) {
-  app=editFunction(app,'r8',text=>replaceOnce(replaceOnce(text,'children:Br.map(o=>','children:[i.jsx("div",{children:i.jsx(globalThis.__opencoreGroupEntry,{navigation:true})},"chat-core"),...Br.map(o=>'),'},o.id))})','},o.id))]})'));
+  app=replaceOnce(app,'id:"jobs",label:"Jobs"','id:"jobs",label:"Scheduled tasks"');
+  app=editFunction(app,'r8',text=>replaceOnce(replaceOnce(text,
+    'children:Br.map(o=>i.jsx("div",','children:Br.flatMap(o=>[i.jsx("div",'),
+    '},o.id))})','},o.id),...(o.id==="conversations"?[i.jsx("div",{children:i.jsx(globalThis.__opencoreGroupEntry,{navigation:true})},"chat-core")]:[])])})'));
+  app=editFunction(app,'h8',text=>replaceOnce(replaceOnce(replaceOnce(text,
+    'className:"overview-grid",children:Br.filter(q=>q.id!=="overview").map(q=>{',
+    'className:"overview-grid",children:Br.filter(q=>q.id!=="overview").flatMap(q=>{'),
+    'return i.jsxs("button",{onClick:()=>c(q.id),children:[','return [i.jsxs("button",{onClick:()=>c(q.id),children:['),
+    ']},q.id)})})]});if(t==="connectors")',']},q.id),...(q.id==="conversations"?[i.jsx(globalThis.__opencoreGroupEntry,{overview:true})]:[])]})})]});if(t==="connectors")'));
   app=editFunction(app,'l8',text=>replaceOnce(text,'className:"conversation-list-actions",children:[','className:"conversation-list-actions",children:[i.jsx(globalThis.__opencoreGroupEntry,{}),'));
   app=editFunction(app,'w8',text=>{
     const frame=text.indexOf('className:`app-window-frame');

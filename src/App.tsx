@@ -137,7 +137,7 @@ function savedAppearance(): Appearance {
 const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }> = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "conversations", label: "Conversations", icon: MessageSquare },
-  { id: "jobs", label: "Jobs", icon: Clock3 },
+  { id: "jobs", label: "Scheduled tasks", icon: Clock3 },
   { id: "spaces", label: "Spaces", icon: Files },
   { id: "context", label: "Live Context", icon: BrainCircuit },
   { id: "memory", label: "Memory", icon: Database },
