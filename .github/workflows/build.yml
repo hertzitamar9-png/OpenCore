@@ -35,6 +35,10 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          # The action's default includes the obsolete SDK package "tools".
+          # Current SDK managers provide it through cmdline-tools instead.
+          packages: 'platform-tools'
       - name: Require the existing Android signing key
         env:
           OPENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.OPENCORE_ANDROID_KEYSTORE_BASE64 }}
