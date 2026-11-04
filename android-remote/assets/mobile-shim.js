@@ -14,6 +14,25 @@
   for(const [key,value] of Object.entries(preferenceSeed))if(preferenceKey(key)&&typeof value==='string')originalSet.call(storage,key,value);
   let resolvePort;
   const ready=new Promise(resolve=>{resolvePort=resolve;});
+  let browserCover=null,browserRevision=0,browserFrame=0;
+  function browserVisibility(){
+    if(!globalThis.__OPENCORE_PHONE__||!port||!document.querySelectorAll||!window.requestAnimationFrame)return;
+    if(browserFrame)return;
+    browserFrame=requestAnimationFrame(()=>{
+      browserFrame=0;
+      const stage=[...document.querySelectorAll('.native-browser-stage')].find(node=>node.getClientRects().length);
+      let covered=!stage||document.body.classList.contains('oc-chats-open')||document.body.classList.contains('oc-more-open');
+      if(stage&&!covered){
+        const box=stage.getBoundingClientRect();
+        covered=[...document.querySelectorAll('[role="dialog"],[role="menu"],.composer-action-popover,.statusbar-model-popover,.project-picker-menu')].some(node=>{
+          if(!node.getClientRects().length)return false;const rect=node.getBoundingClientRect();
+          return rect.right>box.left&&rect.left<box.right&&rect.bottom>box.top&&rect.top<box.bottom;
+        });
+      }
+      if(covered===browserCover)return;browserCover=covered;
+      request({kind:'invoke',command:'native_browser_command',args:{action:'obscured',args:{obscured:covered,revision:++browserRevision}}}).catch(()=>{browserCover=null;});
+    });
+  }
   function startupError(message){if(port&&!appReady)port.postMessage(JSON.stringify({id:'phone-startup-error',kind:'phone-startup-error',error:message}));}
   function request(value){
     if(connectionError)return Promise.reject(new Error(connectionError));
@@ -44,12 +63,14 @@
   }
   function checkAppReady(){
     executionSettings();
+    browserVisibility();
     if(!port||appReady||!document.getElementById('root')?.querySelector('.opencore-shell .section-header'))return;
     appReady=true;
     port.postMessage(JSON.stringify({id:'phone-ready',kind:'phone-ready'}));
   }
   rootObserver=new MutationObserver(checkAppReady);
-  rootObserver.observe(document.documentElement,{childList:true,subtree:true});
+  rootObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','style','open']});
+  window.addEventListener('resize',browserVisibility);
   function deliver(packet){
     if(packet.type==='connection-lost'){
       connectionError=packet.error||'PC disconnected. Reconnecting…';

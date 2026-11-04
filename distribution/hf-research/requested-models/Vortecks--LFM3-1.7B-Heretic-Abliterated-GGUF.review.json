@@ -1,0 +1,455 @@
+{
+  "schema": 1,
+  "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+  "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF/revision/d41a069845366e4770c12c104c1dff19ce7fe853?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": "gguf",
+  "gated": false,
+  "architecture": "lfm3",
+  "publishedContextTokens": 262144,
+  "publishedWeights": [
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-BF16.gguf",
+      "bytes": 3466625568,
+      "sha256": "ca610c0f07fdb64a42c769822a7ebabacf4766ba830a5719f0761604395946c4"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-F16.gguf",
+      "bytes": 3466625568,
+      "sha256": "14b1b01faf8a66e7142577d94c6a3dad77e974733f6fa0d6ea61196879d9dfcb"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-F32.gguf",
+      "bytes": 6923452960,
+      "sha256": "47cbf8371347c54e56d080ab36623e19651c675212f00db4ae2d1a005f68a01e"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-IQ3_M.gguf",
+      "bytes": 868802336,
+      "sha256": "1b884cfb68565b6866ac0b68a8475aa1a2b7061f2e31d40e249b57b1854f432f"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-IQ3_S.gguf",
+      "bytes": 854875936,
+      "sha256": "9e88cc33588f41646bee16f08ac906148042be848080d837beccd4a765715a64"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-IQ4_NL.gguf",
+      "bytes": 1055513120,
+      "sha256": "e7fe7b7314c22c4d2f5312f1e0879c47b3040addc2a39bc2bef13a4492fc7ada"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-IQ4_XS.gguf",
+      "bytes": 1011166752,
+      "sha256": "2aa38c705daf21078c9c44bce1976c4c281bb2c9f0ff42cf0a0c26e1a33cfd28"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q1_0.gguf",
+      "bytes": 431032352,
+      "sha256": "6e6c9f7bfc57d797ba3db60a8a7b82cdf39e11b6ace83ba195fdbb8f715ce0f0"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q2_0.gguf",
+      "bytes": 637226528,
+      "sha256": "bc364ce5b93b63da94cd543455e9dac7a790ac6e957bcb5480cc6c9dcc44d9a5"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q2_K.gguf",
+      "bytes": 750153760,
+      "sha256": "c317566e6ca6eb3f4351658d8d63ad6f094987dbe37b1e13289e10cc0e117169"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q3_K_L.gguf",
+      "bytes": 967065376,
+      "sha256": "4cdbe07115ce05e485e10331b971f6f2e9abf492a5c9ba7866d4eea96bf99cef"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q3_K_M.gguf",
+      "bytes": 914898720,
+      "sha256": "226f5db6d90e161b9062b436cef210acd60262a2cba08cba9e03c7a4ef7627b9"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q3_K_S.gguf",
+      "bytes": 854875936,
+      "sha256": "52c946d94f08e8e79248d9850c7f9ef7f9b35b13f75d3097946b8dbc39f0e5f6"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_0.gguf",
+      "bytes": 1049614880,
+      "sha256": "1f5a6e514e51b6b9c980d1272224356264316c3f58f30893a81d03fc2a6e46c7"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_1.gguf",
+      "bytes": 1141256736,
+      "sha256": "58d35dc157373974c6ba365adb7c6a5f4ca006464dbf1cfd53f200c6d5a0b94e"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_K_M.gguf",
+      "bytes": 1099627040,
+      "sha256": "b145feb7fcc28fd0b4d0c2ef10a0f9ba4cbde17920ef2eb717afc8e8c6209e25"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_K_S.gguf",
+      "bytes": 1056037408,
+      "sha256": "af0b3535461790a08c0512a6e28a64e55522a9275552c7f6ea9c77698e910357"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_0.gguf",
+      "bytes": 1232898592,
+      "sha256": "3b0625d9d667ac46db9604b3d9e836699cd2656cf8f0cdd64c58392223aa96cf"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_1.gguf",
+      "bytes": 1324540448,
+      "sha256": "5b46f607c995788b1c0a5ff0b8d1217a0c298cf5cc291bf66109685cfd99e2b1"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_K_M.gguf",
+      "bytes": 1258662432,
+      "sha256": "3abb2bcbc8c49ebf2c0260e8dfe9cb624a8d240bff31e203cdf83cd588d9044b"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_K_S.gguf",
+      "bytes": 1232898592,
+      "sha256": "9ca36556ee70bfcdec57b7449eddda544c3a02ef36f5612450ebc12064fa9f8e"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q6_K.gguf",
+      "bytes": 1427637536,
+      "sha256": "616775686c9abcbc1a0d302f75dc0a1f12498f272170bd7cda556a706c5606e1"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-Q8_0.gguf",
+      "bytes": 1846237728,
+      "sha256": "04a1f6085a8789bf634546b50cc4afd9ef7763aa9d76d769ea870de807d1936c"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-TQ1_0.gguf",
+      "bytes": 534129440,
+      "sha256": "482a18064d88f154b239d85ae3d10ef73bbf7ef57953e5ce77da84d5e79809fa"
+    },
+    {
+      "filename": "LFM3-1.7B-Heretic-Abliterated-TQ2_0.gguf",
+      "bytes": 602860832,
+      "sha256": "9315d2520f023e386ba1230313f21b07133ead8d91371a27c05434df84e77020"
+    }
+  ],
+  "packageCount": 25,
+  "options": [
+    {
+      "format": "gguf",
+      "label": "BF16",
+      "bytes": 3466625568,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-BF16.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "F16",
+      "bytes": 3466625568,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-F16.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "F32",
+      "bytes": 6923452960,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-F32.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "IQ3_M",
+      "bytes": 868802336,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-IQ3_M.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "IQ3_S",
+      "bytes": 854875936,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-IQ3_S.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "IQ4_NL",
+      "bytes": 1055513120,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-IQ4_NL.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "IQ4_XS",
+      "bytes": 1011166752,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-IQ4_XS.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q1_0",
+      "bytes": 431032352,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q1_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q2_0",
+      "bytes": 637226528,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q2_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q2_K",
+      "bytes": 750153760,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q2_K.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q3_K_L",
+      "bytes": 967065376,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q3_K_L.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q3_K_M",
+      "bytes": 914898720,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q3_K_M.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q3_K_S",
+      "bytes": 854875936,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q3_K_S.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q4_0",
+      "bytes": 1049614880,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q4_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q4_1",
+      "bytes": 1141256736,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q4_1.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q4_K_M",
+      "bytes": 1099627040,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q4_K_M.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q4_K_S",
+      "bytes": 1056037408,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q4_K_S.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q5_0",
+      "bytes": 1232898592,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q5_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q5_1",
+      "bytes": 1324540448,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q5_1.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q5_K_M",
+      "bytes": 1258662432,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q5_K_M.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q5_K_S",
+      "bytes": 1232898592,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q5_K_S.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q6_K",
+      "bytes": 1427637536,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q6_K.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q8_0",
+      "bytes": 1846237728,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-Q8_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "TQ1_0",
+      "bytes": 534129440,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-TQ1_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "TQ2_0",
+      "bytes": 602860832,
+      "files": [
+        "LFM3-1.7B-Heretic-Abliterated-TQ2_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    }
+  ],
+  "smallFiles": [
+    {
+      "filename": "README.md",
+      "bytes": 11911,
+      "sha256": "250e3e1455d6918985ae2b2f510621a0eb9f29154287958d86c7050a77c12229",
+      "gitBlobSha1": "4824eb27c2166398fca74b30b8383f4261c8d138",
+      "url": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF/raw/d41a069845366e4770c12c104c1dff19ce7fe853/README.md"
+    }
+  ],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore."
+}

@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 577,
-  "withFive": 231,
+  "families": 585,
+  "withFive": 232,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5537,6 +5537,17 @@
       ]
     },
     {
+      "id": "publisher-lfm3-1-7b-atomicchat-uncensored",
+      "label": "AtomicChat LFM3 1.7B Uncensored",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/LFM3-1.7B-Uncensored-GGUF"
+      ]
+    },
+    {
       "id": "publisher-lfm3-1-7b-base",
       "label": "LFM3 1.7B Base",
       "category": "text",
@@ -5546,6 +5557,83 @@
       "repositories": [
         "LiquidAI/LFM3-1.7B-Base",
         "VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-claude-code",
+      "label": "mondk LFM3 1.7B Claude Code",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "mondk/LFM3-1.7B-Claude-Code-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-frontier-smartagent-v4",
+      "label": "mohommed LFM3 Frontier SmartAgent v4",
+      "category": "text",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-heretic-abliterated",
+      "label": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "category": "text",
+      "quantizations": 25,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-litert",
+      "label": "LFM3 1.7B LiteRT",
+      "category": "text",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "litert-community/LFM3-1.7B-LiteRT"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-looped-hiddencot",
+      "label": "Guilherme34 LFM3 Looped HiddenCoT",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-orcarouter-abliterated",
+      "label": "orcarouter LFM3 1.7B Abliterated",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "orcarouter/LFM3-1.7B-abliterated"
+      ]
+    },
+    {
+      "id": "publisher-lfm3-1-7b-slq",
+      "label": "Kaitchup LFM3 1.7B SLQ",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "kaitchup/LFM3-1.7B-SLQ-GGUF"
       ]
     },
     {

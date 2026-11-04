@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+  "revision": "3ad712542eb9de349dbd28f2739b69c925cdec7d",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/AtomicChat/LFM3-1.7B-Uncensored-GGUF/revision/3ad712542eb9de349dbd28f2739b69c925cdec7d?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": "gguf",
+  "gated": false,
+  "architecture": "lfm3",
+  "publishedContextTokens": 262144,
+  "publishedWeights": [
+    {
+      "filename": "LFM3-1.7B-Uncensored-AD-Q4_K_M.gguf",
+      "bytes": 1132208000,
+      "sha256": "b22df65673b54ed326f18f74826d76f3b65dadc237ffd6306cd52be04544827d"
+    },
+    {
+      "filename": "LFM3-1.7B-Uncensored-AD-Q6_K.gguf",
+      "bytes": 1587969920,
+      "sha256": "4a7d91c094b9a0f8ed094093f3a0eb3cfeeb46b9bd491e33115689fc5d658b22"
+    }
+  ],
+  "packageCount": 2,
+  "options": [
+    {
+      "format": "gguf",
+      "label": "AD-Q4_K_M",
+      "bytes": 1132218574,
+      "files": [
+        "LFM3-1.7B-Uncensored-AD-Q4_K_M.gguf",
+        "LICENSE"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "AD-Q6_K",
+      "bytes": 1587980494,
+      "files": [
+        "LFM3-1.7B-Uncensored-AD-Q6_K.gguf",
+        "LICENSE"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    }
+  ],
+  "smallFiles": [
+    {
+      "filename": "README.md",
+      "bytes": 2840,
+      "sha256": "1540b11cf218cc51ee7769bfb885a69da67eb507c00e7040d5945582275c651c",
+      "gitBlobSha1": "eec9d037587179141edb82b1e88cc4ffe9c01fb5",
+      "url": "https://huggingface.co/AtomicChat/LFM3-1.7B-Uncensored-GGUF/raw/3ad712542eb9de349dbd28f2739b69c925cdec7d/README.md"
+    }
+  ],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore."
+}

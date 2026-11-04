@@ -20,7 +20,7 @@ final class PhoneCatalog {
         for(int i=0;i<families.length();i++){
             JSONObject row=families.getJSONObject(i);if(!row.getString("id").equals(id))continue;JSONArray source=row.getJSONArray("files"),files=new JSONArray();
             for(int j=0;j<source.length();j++){
-                JSONObject file=new JSONObject(source.getJSONObject(j).toString());String problem=row.optBoolean("textCapable")?ExecutionPolicy.fileProblem(file.getString("filename"),file.getLong("bytes"),budget):"This family needs a compatible image, audio or specialist runtime on the paired PC.";
+                JSONObject file=new JSONObject(source.getJSONObject(j).toString());String problem=row.optBoolean("textCapable")?PhoneBackend.modelProblem(file,budget):"This family needs a compatible image, audio or specialist runtime on the paired PC.";
                 if(!ExecutionPolicy.validIdentity(file.getString("repo"),file.getString("revision"),file.getString("filename"),file.getString("sha256"),file.getLong("bytes")))problem="The catalog file identity is incomplete.";
                 file.put("problem",problem);files.put(file);
             }

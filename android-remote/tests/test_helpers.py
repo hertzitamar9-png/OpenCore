@@ -13,14 +13,17 @@ class NativeClientTests(unittest.TestCase):
         java_home = Path(os.environ['JAVA_HOME'])
         sources = ROOT / 'src/ai/opencore/remote'
         with tempfile.TemporaryDirectory(prefix='opencore-android-tests-') as output:
-            files = [sources / name for name in ('RemoteSession.java', 'ImageMemoryCache.java', 'UiAssetCache.java', 'ConnectionMessages.java')]
+            files = [sources / name for name in ('RemoteSession.java', 'ImageMemoryCache.java', 'UiAssetCache.java', 'ConnectionMessages.java', 'PhoneBrowserPolicy.java')]
             compile_result = subprocess.run([str(java_home / 'bin/javac.exe'), '--release', '8', '-encoding', 'UTF-8', '-d', output,
-                                             *map(str, files), str(ROOT / 'tests/RemoteClientTest.java')], capture_output=True, text=True)
+                                             *map(str, files), str(ROOT / 'tests/RemoteClientTest.java'), str(ROOT/'tests/PhoneBrowserPolicyTest.java')], capture_output=True, text=True)
             self.assertEqual(compile_result.returncode, 0, compile_result.stderr)
             result = subprocess.run([str(java_home / 'bin/java.exe'), '-cp', output, 'ai.opencore.remote.RemoteClientTest'],
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn('passed', result.stdout)
+            browser = subprocess.run([str(java_home/'bin/java.exe'), '-cp', output, 'ai.opencore.remote.PhoneBrowserPolicyTest'], capture_output=True, text=True)
+            self.assertEqual(browser.returncode, 0, browser.stdout+browser.stderr)
+            self.assertIn('browser URL isolation', browser.stdout)
 
 
 if __name__ == '__main__':

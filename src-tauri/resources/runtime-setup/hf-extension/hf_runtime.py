@@ -129,6 +129,51 @@ def visual_text_probe(entry):
                  'max_tokens':16,'temperature':0,'stream':False}
 
 
+def _chat_template_path(entry, folder):
+    declaration = entry.get('chatTemplate')
+    if declaration is None:
+        return None
+    try:
+        from hf_catalog import safe_filename, HEX40, HEX64
+        if not isinstance(declaration, dict):
+            raise ValueError()
+        name = safe_filename(declaration.get('filename'))
+        size, digest = declaration.get('bytes'), declaration.get('sha256')
+        if (declaration.get('repo') != entry['repository'] or declaration.get('revision') != entry['revision']
+                or type(size) is not int or not 0 < size < 1048576
+                or not isinstance(digest, str) or not HEX64.fullmatch(digest)):
+            raise ValueError()
+        matches = [pin for pin in entry.get('files', []) if pin.get('filename') == name]
+        if len(matches) != 1:
+            raise ValueError()
+        pin = matches[0]
+        if (pin.get('role') != 'support' or pin.get('pinned') is not True or pin.get('bytes') != size
+                or pin.get('repository') != entry['repository'] or pin.get('revision') != entry['revision']):
+            raise ValueError()
+        blob = pin.get('gitBlobSha1')
+        if pin.get('sha256'):
+            if pin['sha256'] != digest:
+                raise ValueError()
+        elif not isinstance(blob, str) or not HEX40.fullmatch(blob):
+            raise ValueError()
+        if declaration.get('gitBlobSha1') != blob:
+            raise ValueError()
+        path = _inside(folder / name, folder)
+        if path.stat().st_size != size:
+            raise ValueError()
+        with path.open('rb') as stream:
+            raw = stream.read(1048576)
+        if len(raw) != size or hashlib.sha256(raw).hexdigest() != digest:
+            raise ValueError()
+        if blob and hashlib.sha1(b'blob ' + str(size).encode('ascii') + b'\0' + raw).hexdigest() != blob:
+            raise ValueError()
+        if '\x00' in raw.decode('utf-8', errors='strict'):
+            raise ValueError()
+        return path
+    except (KeyError, TypeError, ValueError, OSError):
+        raise ValueError('The external chat template is not a verified pinned UTF-8 support file for this model.') from None
+
+
 def runtime_plan(entry, root, resources):
     root, resources = Path(root).resolve(), Path(resources).resolve()
     fmt = entry.get('format', '')
@@ -168,6 +213,11 @@ def runtime_plan(entry, root, resources):
             if publisher_engine == 'velociq8-cpu-v1':
                 # Q8A64 stored tensors require the publisher's repacked buffers.
                 command.remove('--no-repack')
+        template = _chat_template_path(entry, folder)
+        if template is not None:
+            if '--jinja' not in command:
+                command.append('--jinja')
+            command += ['--chat-template-file', str(template)]
         companions = [folder / f['filename'] for f in entry['files'] if f.get('role') == 'companion' and f['filename'].lower().endswith('.gguf')]
         if companions:
             command += ['--mmproj', str(companions[0])]

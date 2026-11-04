@@ -407,11 +407,16 @@ class RequestedCatalogTests(unittest.TestCase):
             self.assertFalse(entry.get('runtimeReady'))
             self.assertFalse(any(pin['filename'].endswith(('.py', '.sh', '.swift', '.exe')) for pin in entry['files']))
         for entry in self.entries:
-            if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw', 'Q2_0'):
+            if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw'):
                 self.assertIsNone(entry['runtime']['adapter'])
+            if entry['quantization'] == 'Q2_0':
+                if entry['repository'] == 'Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF':
+                    self.assertEqual(entry['managedEngine'], 'lfm3-cpu-v1')
+                else:
+                    self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 32)
+        self.assertEqual(report['withFive'], 33)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

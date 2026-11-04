@@ -35,7 +35,8 @@ module.exports=({snapshot,timeline,mode='pc',firstRun=false,startupDelay=0,hangS
         else if(command==='plugin:event|listen'){value=++fixture.nextListener;fixture.listeners[args.event]=args.handler;}
         else if(command==='runtime_setup_probe')value={hubBridge:{available:true,url:'http://127.0.0.1:1',secret:'fixture'}};
         else if(command==='runtime_setup_status')value={jobs:[],receipts:[],recipes:[],activeJobId:null};
-        else if(command==='list_model_library')value={models:fixture.models,progress:null,diskFreeBytes:100e9,minimumFreeBytes:0};
+        else if(command==='list_model_library')value={models:fixture.models,progress:fixture.progress||null,diskFreeBytes:100e9,minimumFreeBytes:0};
+        else if(command==='model_install_progress')value=fixture.progress||null;
         else if(command==='api_provider_list')value=[];
         else if(command==='speech_status')value={enabled:false,installed:false,modelId:'whisper-large-v3-turbo',phase:'off'};
         else if(command==='get_version'||command==='plugin:app|version')value='0.3.168';

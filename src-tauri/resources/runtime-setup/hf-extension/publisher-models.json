@@ -110485,6 +110485,174 @@
       "publishedContextTokens": 262144
     },
     {
+      "id": "hf-a1453b2f5ce8faa9b58965b9",
+      "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+      "revision": "3ad712542eb9de349dbd28f2739b69c925cdec7d",
+      "variantKey": "gguf:LFM3-1.7B-Uncensored-AD-Q4_K_M.gguf",
+      "name": "AtomicChat LFM3 1.7B Uncensored · AD-Q4_K_M",
+      "quantization": "AD-Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1132218574,
+      "files": [
+        {
+          "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+          "revision": "3ad712542eb9de349dbd28f2739b69c925cdec7d",
+          "filename": "LFM3-1.7B-Uncensored-AD-Q4_K_M.gguf",
+          "bytes": 1132208000,
+          "sha256": "b22df65673b54ed326f18f74826d76f3b65dadc237ffd6306cd52be04544827d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+          "revision": "3ad712542eb9de349dbd28f2739b69c925cdec7d",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-atomicchat-uncensored",
+      "familyLabel": "AtomicChat LFM3 1.7B Uncensored",
+      "originalRepository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact AtomicChat safety-ablated edition with both published AD-Q4_K_M and AD-Q6_K GGUFs. The ablation is baked into these weights, keeping this edition distinct from the base model and other publishers. Uses the pinned LFM3 engine; publisher quality claims are not OpenCore runtime tests.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-46ed23d14e88b50c405d9fd1",
+      "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+      "revision": "3ad712542eb9de349dbd28f2739b69c925cdec7d",
+      "variantKey": "gguf:LFM3-1.7B-Uncensored-AD-Q6_K.gguf",
+      "name": "AtomicChat LFM3 1.7B Uncensored · AD-Q6_K",
+      "quantization": "AD-Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1587980494,
+      "files": [
+        {
+          "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+          "revision": "3ad712542eb9de349dbd28f2739b69c925cdec7d",
+          "filename": "LFM3-1.7B-Uncensored-AD-Q6_K.gguf",
+          "bytes": 1587969920,
+          "sha256": "4a7d91c094b9a0f8ed094093f3a0eb3cfeeb46b9bd491e33115689fc5d658b22",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+          "revision": "3ad712542eb9de349dbd28f2739b69c925cdec7d",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-atomicchat-uncensored",
+      "familyLabel": "AtomicChat LFM3 1.7B Uncensored",
+      "originalRepository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact AtomicChat safety-ablated edition with both published AD-Q4_K_M and AD-Q6_K GGUFs. The ablation is baked into these weights, keeping this edition distinct from the base model and other publishers. Uses the pinned LFM3 engine; publisher quality claims are not OpenCore runtime tests.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
       "id": "hf-82a34cde365c031a7a133f94",
       "repository": "VelociQ8/LFM3-1.7B-Base-Q8A64-GGUF",
       "revision": "1592faa342404442e5e1f0e78e174361988df5c2",
@@ -110689,6 +110857,2959 @@
           "targetContextTokens": 32768,
           "contextTokens": 32768,
           "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-8849a95a91a66aa5c2c06499",
+      "repository": "mondk/LFM3-1.7B-Claude-Code-GGUF",
+      "revision": "1589719430defe5364fb9e65cc3fa995f55babcf",
+      "variantKey": "gguf:LFM3-1.7B-Claude-Code-Q8_0.gguf",
+      "name": "mondk LFM3 1.7B Claude Code · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1846248302,
+      "files": [
+        {
+          "repository": "mondk/LFM3-1.7B-Claude-Code-GGUF",
+          "revision": "1589719430defe5364fb9e65cc3fa995f55babcf",
+          "filename": "LFM3-1.7B-Claude-Code-Q8_0.gguf",
+          "bytes": 1846237728,
+          "sha256": "ee88674be5f0d09a52f5fe7aba047ca9bf620de0fbe81799de5299eabf13742d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mondk/LFM3-1.7B-Claude-Code-GGUF",
+          "revision": "1589719430defe5364fb9e65cc3fa995f55babcf",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mondk/LFM3-1.7B-Claude-Code-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-claude-code",
+      "familyLabel": "mondk LFM3 1.7B Claude Code",
+      "originalRepository": "mondk/LFM3-1.7B-Claude-Code-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact mondk tool-use and coding fine-tune, published as one Q8_0 GGUF. It is a local LFM3 derivative, not an Anthropic model or hosted Claude service. Uses the pinned LFM3 engine with verification after installation; publisher benchmark results are not OpenCore tests.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-f08c9e8ee1bbf9195d087357",
+      "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "revision": "15337568f924a8218d4dc6c6a81a86670c915a52",
+      "variantKey": "gguf:lfm3-1.7b-frontier-v4-q4_k_s.gguf",
+      "name": "mohommed LFM3 Frontier SmartAgent v4 · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1056037664,
+      "files": [
+        {
+          "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+          "revision": "15337568f924a8218d4dc6c6a81a86670c915a52",
+          "filename": "lfm3-1.7b-frontier-v4-q4_k_s.gguf",
+          "bytes": 1056037664,
+          "sha256": "5571a888896734f57d8c00c2c3352aea07a441909bff83c7f7c54fc5d50c19ce",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-frontier-smartagent-v4",
+      "familyLabel": "mohommed LFM3 Frontier SmartAgent v4",
+      "originalRepository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Frontier SmartAgent v4 SDT/SimPO edition with all three published Q4_K_M, Q4_K_S and Q8_0 GGUFs. Uses the pinned LFM3 engine and verifies actual generation after installation. The files declare 524288-token context; the publisher extension and quality claims have not been independently evaluated by OpenCore.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 524288,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 524288
+    },
+    {
+      "id": "hf-2b4e8d9a988278f8596588bc",
+      "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "revision": "15337568f924a8218d4dc6c6a81a86670c915a52",
+      "variantKey": "gguf:lfm3-1.7b-frontier-v4-q4_k_m.gguf",
+      "name": "mohommed LFM3 Frontier SmartAgent v4 · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1099627296,
+      "files": [
+        {
+          "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+          "revision": "15337568f924a8218d4dc6c6a81a86670c915a52",
+          "filename": "lfm3-1.7b-frontier-v4-q4_k_m.gguf",
+          "bytes": 1099627296,
+          "sha256": "c8205c3b7d0b64d9ae2e0192f8a50c074f23f2eb382698705914b7f0cbce5c62",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-frontier-smartagent-v4",
+      "familyLabel": "mohommed LFM3 Frontier SmartAgent v4",
+      "originalRepository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Frontier SmartAgent v4 SDT/SimPO edition with all three published Q4_K_M, Q4_K_S and Q8_0 GGUFs. Uses the pinned LFM3 engine and verifies actual generation after installation. The files declare 524288-token context; the publisher extension and quality claims have not been independently evaluated by OpenCore.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 524288,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 524288
+    },
+    {
+      "id": "hf-73f29dae5e7931575ece761d",
+      "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "revision": "15337568f924a8218d4dc6c6a81a86670c915a52",
+      "variantKey": "gguf:lfm3-1.7b-frontier-v4-q8_0.gguf",
+      "name": "mohommed LFM3 Frontier SmartAgent v4 · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1846237984,
+      "files": [
+        {
+          "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+          "revision": "15337568f924a8218d4dc6c6a81a86670c915a52",
+          "filename": "lfm3-1.7b-frontier-v4-q8_0.gguf",
+          "bytes": 1846237984,
+          "sha256": "ec2fccfe4d34c8717964c362722277252a51b41d4e51906d5f13df48b426d2f4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-frontier-smartagent-v4",
+      "familyLabel": "mohommed LFM3 Frontier SmartAgent v4",
+      "originalRepository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Frontier SmartAgent v4 SDT/SimPO edition with all three published Q4_K_M, Q4_K_S and Q8_0 GGUFs. Uses the pinned LFM3 engine and verifies actual generation after installation. The files declare 524288-token context; the publisher extension and quality claims have not been independently evaluated by OpenCore.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 524288,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 524288
+    },
+    {
+      "id": "hf-a965ff643199c9429d1d08e1",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q1_0.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q1_0",
+      "quantization": "Q1_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 431032352,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q1_0.gguf",
+          "bytes": 431032352,
+          "sha256": "6e6c9f7bfc57d797ba3db60a8a7b82cdf39e11b6ace83ba195fdbb8f715ce0f0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-bbcc66f9df7effe834347a31",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-TQ1_0.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · TQ1_0",
+      "quantization": "TQ1_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 534129440,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-TQ1_0.gguf",
+          "bytes": 534129440,
+          "sha256": "482a18064d88f154b239d85ae3d10ef73bbf7ef57953e5ce77da84d5e79809fa",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-11f5671258567ffc8bf6d9e3",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-TQ2_0.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · TQ2_0",
+      "quantization": "TQ2_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 602860832,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-TQ2_0.gguf",
+          "bytes": 602860832,
+          "sha256": "9315d2520f023e386ba1230313f21b07133ead8d91371a27c05434df84e77020",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-0e1c4e4ddc75a79bb02da739",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q2_0.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q2_0",
+      "quantization": "Q2_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 637226528,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q2_0.gguf",
+          "bytes": 637226528,
+          "sha256": "bc364ce5b93b63da94cd543455e9dac7a790ac6e957bcb5480cc6c9dcc44d9a5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-8d0de0b6ed5e967b55f75bf3",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q2_K.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 750153760,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q2_K.gguf",
+          "bytes": 750153760,
+          "sha256": "c317566e6ca6eb3f4351658d8d63ad6f094987dbe37b1e13289e10cc0e117169",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-1321dafda6e8baa7effdaa57",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q3_K_S.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 854875936,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q3_K_S.gguf",
+          "bytes": 854875936,
+          "sha256": "52c946d94f08e8e79248d9850c7f9ef7f9b35b13f75d3097946b8dbc39f0e5f6",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-32746662c854e5303844172a",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-IQ3_S.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · IQ3_S",
+      "quantization": "IQ3_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 854875936,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-IQ3_S.gguf",
+          "bytes": 854875936,
+          "sha256": "9e88cc33588f41646bee16f08ac906148042be848080d837beccd4a765715a64",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-0c2a1e22e402dd0a9c639744",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-IQ3_M.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · IQ3_M",
+      "quantization": "IQ3_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 868802336,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-IQ3_M.gguf",
+          "bytes": 868802336,
+          "sha256": "1b884cfb68565b6866ac0b68a8475aa1a2b7061f2e31d40e249b57b1854f432f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-6fb18958a80197832b7ea421",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q3_K_M.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 914898720,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q3_K_M.gguf",
+          "bytes": 914898720,
+          "sha256": "226f5db6d90e161b9062b436cef210acd60262a2cba08cba9e03c7a4ef7627b9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-98433658005b5d4f207f0295",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q3_K_L.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 967065376,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q3_K_L.gguf",
+          "bytes": 967065376,
+          "sha256": "4cdbe07115ce05e485e10331b971f6f2e9abf492a5c9ba7866d4eea96bf99cef",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-15690a8eac10f127a1518fa3",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-IQ4_XS.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1011166752,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-IQ4_XS.gguf",
+          "bytes": 1011166752,
+          "sha256": "2aa38c705daf21078c9c44bce1976c4c281bb2c9f0ff42cf0a0c26e1a33cfd28",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-9e7c0f53337e84a3eb9e6298",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q4_0.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q4_0",
+      "quantization": "Q4_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1049614880,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_0.gguf",
+          "bytes": 1049614880,
+          "sha256": "1f5a6e514e51b6b9c980d1272224356264316c3f58f30893a81d03fc2a6e46c7",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-bdb4e1a0e9c8fa084a128039",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-IQ4_NL.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · IQ4_NL",
+      "quantization": "IQ4_NL",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1055513120,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-IQ4_NL.gguf",
+          "bytes": 1055513120,
+          "sha256": "e7fe7b7314c22c4d2f5312f1e0879c47b3040addc2a39bc2bef13a4492fc7ada",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-bd9b7e9e93d4dd76a8a47310",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q4_K_S.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1056037408,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_K_S.gguf",
+          "bytes": 1056037408,
+          "sha256": "af0b3535461790a08c0512a6e28a64e55522a9275552c7f6ea9c77698e910357",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-d3543788a04499c5e2670880",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q4_K_M.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1099627040,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_K_M.gguf",
+          "bytes": 1099627040,
+          "sha256": "b145feb7fcc28fd0b4d0c2ef10a0f9ba4cbde17920ef2eb717afc8e8c6209e25",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-fd07f7cab7b3ecbaeb35c155",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q4_1.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q4_1",
+      "quantization": "Q4_1",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1141256736,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q4_1.gguf",
+          "bytes": 1141256736,
+          "sha256": "58d35dc157373974c6ba365adb7c6a5f4ca006464dbf1cfd53f200c6d5a0b94e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-43eb990d8d94a8963bd7d93b",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q5_K_S.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1232898592,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_K_S.gguf",
+          "bytes": 1232898592,
+          "sha256": "9ca36556ee70bfcdec57b7449eddda544c3a02ef36f5612450ebc12064fa9f8e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-ec053e105428f019aacf1ac9",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q5_0.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q5_0",
+      "quantization": "Q5_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1232898592,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_0.gguf",
+          "bytes": 1232898592,
+          "sha256": "3b0625d9d667ac46db9604b3d9e836699cd2656cf8f0cdd64c58392223aa96cf",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-ce2299b2c67a7c5c14afcd8c",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q5_K_M.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1258662432,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_K_M.gguf",
+          "bytes": 1258662432,
+          "sha256": "3abb2bcbc8c49ebf2c0260e8dfe9cb624a8d240bff31e203cdf83cd588d9044b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-837ce4f6999291fba52916c7",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q5_1.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q5_1",
+      "quantization": "Q5_1",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1324540448,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q5_1.gguf",
+          "bytes": 1324540448,
+          "sha256": "5b46f607c995788b1c0a5ff0b8d1217a0c298cf5cc291bf66109685cfd99e2b1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-d1b845b89912b1c102c55a3c",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q6_K.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1427637536,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q6_K.gguf",
+          "bytes": 1427637536,
+          "sha256": "616775686c9abcbc1a0d302f75dc0a1f12498f272170bd7cda556a706c5606e1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-ce1f9fed5b6625aea98df968",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-Q8_0.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1846237728,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-Q8_0.gguf",
+          "bytes": 1846237728,
+          "sha256": "04a1f6085a8789bf634546b50cc4afd9ef7763aa9d76d769ea870de807d1936c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-90bac7fbe6353e8fcd92b523",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-BF16.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · BF16",
+      "quantization": "BF16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3466625568,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-BF16.gguf",
+          "bytes": 3466625568,
+          "sha256": "ca610c0f07fdb64a42c769822a7ebabacf4766ba830a5719f0761604395946c4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-d9653a44e03fa697d15c759f",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-F16.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · F16",
+      "quantization": "F16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3466625568,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-F16.gguf",
+          "bytes": 3466625568,
+          "sha256": "14b1b01faf8a66e7142577d94c6a3dad77e974733f6fa0d6ea61196879d9dfcb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-04c7d47614c139ba09554b98",
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+      "variantKey": "gguf:LFM3-1.7B-Heretic-Abliterated-F32.gguf",
+      "name": "Vortecks LFM3 1.7B Heretic Abliterated · F32",
+      "quantization": "F32",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6923452960,
+      "files": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "revision": "d41a069845366e4770c12c104c1dff19ce7fe853",
+          "filename": "LFM3-1.7B-Heretic-Abliterated-F32.gguf",
+          "bytes": 6923452960,
+          "sha256": "47cbf8371347c54e56d080ab36623e19651c675212f00db4ae2d1a005f68a01e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "familyLabel": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "originalRepository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-7658a760b8c13af3bd98a716",
+      "variantKey": "litertlm:LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+      "repository": "litert-community/LFM3-1.7B-LiteRT",
+      "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+      "format": "litertlm",
+      "quantization": "Mixed INT4 · 2K cache",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+          "bytes": 1441620928,
+          "sha256": "0400d8ffdb00e4bbe1209120e2c7baf05322a8c900839b0a94cc28f599011196",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "README.md",
+          "bytes": 17770,
+          "sha256": null,
+          "gitBlobSha1": "1226ae3d8edfcc56b1683b9bf558e89b41ef5fa8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "litertlm_manifest.json",
+          "bytes": 24513,
+          "sha256": null,
+          "gitBlobSha1": "a105d434b87a76bc0cd71725d80a0b3b6ff8f03a",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 1441673785,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/litert-community/LFM3-1.7B-LiteRT",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+      },
+      "supportedContextTokens": 2048,
+      "familyId": "publisher-lfm3-1-7b-litert",
+      "familyLabel": "LFM3 1.7B LiteRT",
+      "originalRepository": "litert-community/LFM3-1.7B-LiteRT",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact LiteRT-LM conversion with two weight precisions, INT8 and mixed INT4/INT8, each published with a 2048- or 4096-token cache. Each bundle embeds its tokenizer and modified chat template. These are .litertlm packages, requiring a real Android LiteRT-LM adapter; they cannot load in llama.cpp. No NPU package is published.",
+      "contextTokens": 2048,
+      "license": "other",
+      "name": "LFM3 1.7B LiteRT · Mixed INT4 · 2K cache",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 2048,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 2048,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 2048,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-276d9749a0e845f0bbb38fcf",
+      "variantKey": "litertlm:LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+      "repository": "litert-community/LFM3-1.7B-LiteRT",
+      "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+      "format": "litertlm",
+      "quantization": "Mixed INT4 · 4K cache",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+          "bytes": 1441629120,
+          "sha256": "327486bf01d0b1eefd727b7aadec8627a2b8db143349262857ac98403109d72b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "README.md",
+          "bytes": 17770,
+          "sha256": null,
+          "gitBlobSha1": "1226ae3d8edfcc56b1683b9bf558e89b41ef5fa8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "litertlm_manifest.json",
+          "bytes": 24513,
+          "sha256": null,
+          "gitBlobSha1": "a105d434b87a76bc0cd71725d80a0b3b6ff8f03a",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 1441681977,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/litert-community/LFM3-1.7B-LiteRT",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+      },
+      "supportedContextTokens": 4096,
+      "familyId": "publisher-lfm3-1-7b-litert",
+      "familyLabel": "LFM3 1.7B LiteRT",
+      "originalRepository": "litert-community/LFM3-1.7B-LiteRT",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact LiteRT-LM conversion with two weight precisions, INT8 and mixed INT4/INT8, each published with a 2048- or 4096-token cache. Each bundle embeds its tokenizer and modified chat template. These are .litertlm packages, requiring a real Android LiteRT-LM adapter; they cannot load in llama.cpp. No NPU package is published.",
+      "contextTokens": 4096,
+      "license": "other",
+      "name": "LFM3 1.7B LiteRT · Mixed INT4 · 4K cache",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 4096,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 4096,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 4096,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-9ac56c0b98159e187ef87373",
+      "variantKey": "litertlm:LFM3-1.7B_int8_ekv2048.litertlm",
+      "repository": "litert-community/LFM3-1.7B-LiteRT",
+      "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+      "format": "litertlm",
+      "quantization": "INT8 · 2K cache",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LFM3-1.7B_int8_ekv2048.litertlm",
+          "bytes": 1801549264,
+          "sha256": "fb8af4d6cfb71d0f381a2af23f14733c3adbd93171b251560ee899276926001a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "README.md",
+          "bytes": 17770,
+          "sha256": null,
+          "gitBlobSha1": "1226ae3d8edfcc56b1683b9bf558e89b41ef5fa8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "litertlm_manifest.json",
+          "bytes": 24513,
+          "sha256": null,
+          "gitBlobSha1": "a105d434b87a76bc0cd71725d80a0b3b6ff8f03a",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 1801602121,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/litert-community/LFM3-1.7B-LiteRT",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+      },
+      "supportedContextTokens": 2048,
+      "familyId": "publisher-lfm3-1-7b-litert",
+      "familyLabel": "LFM3 1.7B LiteRT",
+      "originalRepository": "litert-community/LFM3-1.7B-LiteRT",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact LiteRT-LM conversion with two weight precisions, INT8 and mixed INT4/INT8, each published with a 2048- or 4096-token cache. Each bundle embeds its tokenizer and modified chat template. These are .litertlm packages, requiring a real Android LiteRT-LM adapter; they cannot load in llama.cpp. No NPU package is published.",
+      "contextTokens": 2048,
+      "license": "other",
+      "name": "LFM3 1.7B LiteRT · INT8 · 2K cache",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 2048,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 2048,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 2048,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-a3b50d4836ad67d0437b4a2b",
+      "variantKey": "litertlm:LFM3-1.7B_int8_ekv4096.litertlm",
+      "repository": "litert-community/LFM3-1.7B-LiteRT",
+      "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+      "format": "litertlm",
+      "quantization": "INT8 · 4K cache",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LFM3-1.7B_int8_ekv4096.litertlm",
+          "bytes": 1801557456,
+          "sha256": "8b83651037fcec23f232e8f4e670683a44cc7097a4d5f74a1abddeb7bc0dae27",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "README.md",
+          "bytes": 17770,
+          "sha256": null,
+          "gitBlobSha1": "1226ae3d8edfcc56b1683b9bf558e89b41ef5fa8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+          "filename": "litertlm_manifest.json",
+          "bytes": 24513,
+          "sha256": null,
+          "gitBlobSha1": "a105d434b87a76bc0cd71725d80a0b3b6ff8f03a",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 1801610313,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/litert-community/LFM3-1.7B-LiteRT",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+      },
+      "supportedContextTokens": 4096,
+      "familyId": "publisher-lfm3-1-7b-litert",
+      "familyLabel": "LFM3 1.7B LiteRT",
+      "originalRepository": "litert-community/LFM3-1.7B-LiteRT",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact LiteRT-LM conversion with two weight precisions, INT8 and mixed INT4/INT8, each published with a 2048- or 4096-token cache. Each bundle embeds its tokenizer and modified chat template. These are .litertlm packages, requiring a real Android LiteRT-LM adapter; they cannot load in llama.cpp. No NPU package is published.",
+      "contextTokens": 4096,
+      "license": "other",
+      "name": "LFM3 1.7B LiteRT · INT8 · 4K cache",
+      "memoryMode": "echo",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 4096,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 4096,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 4096,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-634fa273c0a7de3343a90a64",
+      "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+      "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+      "variantKey": "gguf:lfm3-v21-Q6_K.gguf",
+      "name": "Guilherme34 LFM3 Looped HiddenCoT · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 2227096605,
+      "files": [
+        {
+          "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+          "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+          "filename": "lfm3-v21-Q6_K.gguf",
+          "bytes": 2227084384,
+          "sha256": "5d3a55b2e4d4e9538e9da379d2f88c793a161e4a076d0a3eb473b74c53e59db8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+          "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+          "filename": "chat_template",
+          "bytes": 12221,
+          "sha256": null,
+          "gitBlobSha1": "007d195d7a3730155b5f55293c7b8ec7fc117929",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires the LFM3 runtime plus explicit selection of the pinned external chat_template and its latent-token prefix. The current OpenCore runner uses the embedded template and has no external-template selection hook; correct Looped HiddenCoT inference is not yet verified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "chatTemplate": {
+        "filename": "chat_template",
+        "bytes": 12221,
+        "sha256": "f6cd29fd46ccf7817ae8d81b44a7ba979c316647c95d8332d8029af509a571e6",
+        "repo": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+        "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+        "gitBlobSha1": "007d195d7a3730155b5f55293c7b8ec7fc117929"
+      },
+      "familyId": "publisher-lfm3-1-7b-looped-hiddencot",
+      "familyLabel": "Guilherme34 LFM3 Looped HiddenCoT",
+      "originalRepository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact research edition with structural changes and a latent-token thinking prefix, published as Q6_K and Q8_0 GGUF. Includes the publisher-required external chat_template, which differs from the embedded GGUF template. Its reported behavior and quality remain unverified in OpenCore.",
+      "license": "Publisher terms",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-9cfe8d2fcfdf01ef64e3c1a2",
+      "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+      "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+      "variantKey": "gguf:lfm3-v21-Q8_0.gguf",
+      "name": "Guilherme34 LFM3 Looped HiddenCoT · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 2881427741,
+      "files": [
+        {
+          "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+          "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+          "filename": "lfm3-v21-Q8_0.gguf",
+          "bytes": 2881415520,
+          "sha256": "b8505a20ed4640d28a7dc690aedd14988b65eef19a60ccd87d8ec3b51c20c9d4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+          "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+          "filename": "chat_template",
+          "bytes": 12221,
+          "sha256": null,
+          "gitBlobSha1": "007d195d7a3730155b5f55293c7b8ec7fc117929",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires the LFM3 runtime plus explicit selection of the pinned external chat_template and its latent-token prefix. The current OpenCore runner uses the embedded template and has no external-template selection hook; correct Looped HiddenCoT inference is not yet verified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "chatTemplate": {
+        "filename": "chat_template",
+        "bytes": 12221,
+        "sha256": "f6cd29fd46ccf7817ae8d81b44a7ba979c316647c95d8332d8029af509a571e6",
+        "repo": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+        "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+        "gitBlobSha1": "007d195d7a3730155b5f55293c7b8ec7fc117929"
+      },
+      "familyId": "publisher-lfm3-1-7b-looped-hiddencot",
+      "familyLabel": "Guilherme34 LFM3 Looped HiddenCoT",
+      "originalRepository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact research edition with structural changes and a latent-token thinking prefix, published as Q6_K and Q8_0 GGUF. Includes the publisher-required external chat_template, which differs from the embedded GGUF template. Its reported behavior and quality remain unverified in OpenCore.",
+      "license": "Publisher terms",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-e10110a291f533dc929048b4",
+      "repository": "orcarouter/LFM3-1.7B-abliterated",
+      "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+      "variantKey": "safetensors:.",
+      "name": "orcarouter LFM3 1.7B Abliterated · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3475570547,
+      "files": [
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "model.safetensors",
+          "bytes": 3457635448,
+          "sha256": "a11f80c25e8d70ead520fa8e686442d3807cbee12a6286182f40174d5ef34bf5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "chat_template.jinja",
+          "bytes": 12129,
+          "sha256": null,
+          "gitBlobSha1": "d0747b8b5fc99eaecfe02a04eefcff75eb181334",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "config.json",
+          "bytes": 1483,
+          "sha256": null,
+          "gitBlobSha1": "d4eb9bf868d257ac043328ffdbadc0f610cda127",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "generation_config.json",
+          "bytes": 328,
+          "sha256": null,
+          "gitBlobSha1": "51060b9bc21bf4412628131b7242b226ccbad497",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "special_tokens_map.json",
+          "bytes": 92,
+          "sha256": null,
+          "gitBlobSha1": "5d871daaacbf26aaa9cb47c2935f30e797ee35a7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "tokenizer.json",
+          "bytes": 17908634,
+          "sha256": "41927bd314d17d7d7fadb44e10cd0919f7b71528d7741596d8cbd15c6945ec44",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "tokenizer_config.json",
+          "bytes": 1859,
+          "sha256": null,
+          "gitBlobSha1": "aed9ef7db33b96e794f1fcb4df16acdbb8a3a724",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [
+        "Lfm3ForCausalLM"
+      ],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "This publisher checkpoint is gated and declares custom Lfm3 Python code. Approved Hugging Face access and a separately reviewed compatible LFM3 Transformers adapter are required; OpenCore does not execute repository code automatically. No actual generation has been verified."
+      },
+      "private": false,
+      "gated": true,
+      "sourceUrl": "https://huggingface.co/orcarouter/LFM3-1.7B-abliterated",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-orcarouter-abliterated",
+      "familyLabel": "orcarouter LFM3 1.7B Abliterated",
+      "originalRepository": "orcarouter/LFM3-1.7B-abliterated",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact gated orcarouter abliterated checkpoint. Public publisher metadata identifies one BF16 safetensors model and the Lfm3ForCausalLM custom-code architecture. Publisher access is required for the files; no GGUF or additional quantization is published in this repository. OpenCore does not automatically execute repository code.",
+      "license": "other",
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-a55fbf6903c0c3e783e3918b",
+      "repository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+      "revision": "60e8d51e442e75b017c432cb9f3798cc6b7a07f3",
+      "variantKey": "gguf:LFM3-1.7B-SLQ-EAR97.7-Q6_K.gguf",
+      "name": "Kaitchup LFM3 1.7B SLQ · SLQ EAR97.7 (mixed Q6_K)",
+      "quantization": "SLQ EAR97.7 (mixed Q6_K)",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1587732738,
+      "files": [
+        {
+          "repository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+          "revision": "60e8d51e442e75b017c432cb9f3798cc6b7a07f3",
+          "filename": "LFM3-1.7B-SLQ-EAR97.7-Q6_K.gguf",
+          "bytes": 1587721664,
+          "sha256": "9d78490c5e27257114a015c28644088d10ab88a3d5e1dd539a5cb86b22997a1d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+          "revision": "60e8d51e442e75b017c432cb9f3798cc6b7a07f3",
+          "filename": "LICENSE",
+          "bytes": 10574,
+          "sha256": null,
+          "gitBlobSha1": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+          "revision": "60e8d51e442e75b017c432cb9f3798cc6b7a07f3",
+          "filename": "NOTICE",
+          "bytes": 500,
+          "sha256": null,
+          "gitBlobSha1": "4c0371c703baea4486a5da6ecd35198cee87ad0d",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/kaitchup/LFM3-1.7B-SLQ-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-1-7b-slq",
+      "familyLabel": "Kaitchup LFM3 1.7B SLQ",
+      "originalRepository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Exact EAR97.7 SLQ checkpoint: one mixed-precision GGUF with Q6_K as its dominant-family label, not an ordinary uniform Q6_K quant. The publisher EAR value measures calibration probability overlap, not benchmark accuracy or statistical equivalence. Uses the pinned LFM3 engine; generation is checked after installation.",
+      "license": "other",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
         }
       ],
       "publishedContextTokens": 262144

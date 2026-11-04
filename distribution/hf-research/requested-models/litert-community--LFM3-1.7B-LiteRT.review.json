@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "repository": "litert-community/LFM3-1.7B-LiteRT",
+  "revision": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/litert-community/LFM3-1.7B-LiteRT/revision/29f09e1eac2ccf753af14806dca96eb048e8baad?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": "litert-lm",
+  "gated": false,
+  "architecture": "LFM3 per pinned LiteRT publisher manifest",
+  "publishedContextTokens": null,
+  "publishedWeights": [
+    {
+      "filename": "LFM3-1.7B_int8_ekv2048.litertlm",
+      "bytes": 1801549264,
+      "sha256": "fb8af4d6cfb71d0f381a2af23f14733c3adbd93171b251560ee899276926001a"
+    },
+    {
+      "filename": "LFM3-1.7B_int8_ekv4096.litertlm",
+      "bytes": 1801557456,
+      "sha256": "8b83651037fcec23f232e8f4e670683a44cc7097a4d5f74a1abddeb7bc0dae27"
+    },
+    {
+      "filename": "LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+      "bytes": 1441620928,
+      "sha256": "0400d8ffdb00e4bbe1209120e2c7baf05322a8c900839b0a94cc28f599011196"
+    },
+    {
+      "filename": "LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+      "bytes": 1441629120,
+      "sha256": "327486bf01d0b1eefd727b7aadec8627a2b8db143349262857ac98403109d72b"
+    }
+  ],
+  "packageCount": 4,
+  "options": [
+    {
+      "format": "litertlm",
+      "label": "INT8 · 2K cache",
+      "bytes": 1801602121,
+      "files": [
+        "LFM3-1.7B_int8_ekv2048.litertlm",
+        "LICENSE",
+        "README.md",
+        "litertlm_manifest.json"
+      ],
+      "supportedContextTokens": 2048,
+      "managedEngine": null,
+      "adapter": null,
+      "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+    },
+    {
+      "format": "litertlm",
+      "label": "INT8 · 4K cache",
+      "bytes": 1801610313,
+      "files": [
+        "LFM3-1.7B_int8_ekv4096.litertlm",
+        "LICENSE",
+        "README.md",
+        "litertlm_manifest.json"
+      ],
+      "supportedContextTokens": 4096,
+      "managedEngine": null,
+      "adapter": null,
+      "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+    },
+    {
+      "format": "litertlm",
+      "label": "Mixed INT4 · 2K cache",
+      "bytes": 1441673785,
+      "files": [
+        "LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+        "LICENSE",
+        "README.md",
+        "litertlm_manifest.json"
+      ],
+      "supportedContextTokens": 2048,
+      "managedEngine": null,
+      "adapter": null,
+      "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+    },
+    {
+      "format": "litertlm",
+      "label": "Mixed INT4 · 4K cache",
+      "bytes": 1441681977,
+      "files": [
+        "LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+        "LICENSE",
+        "README.md",
+        "litertlm_manifest.json"
+      ],
+      "supportedContextTokens": 4096,
+      "managedEngine": null,
+      "adapter": null,
+      "reason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens."
+    }
+  ],
+  "smallFiles": [
+    {
+      "filename": "README.md",
+      "bytes": 17770,
+      "sha256": "e0fff402686bd28e94259cf49f8d21c38c0f0763260baf78b0cc335d3330adea",
+      "gitBlobSha1": "1226ae3d8edfcc56b1683b9bf558e89b41ef5fa8",
+      "url": "https://huggingface.co/litert-community/LFM3-1.7B-LiteRT/raw/29f09e1eac2ccf753af14806dca96eb048e8baad/README.md"
+    },
+    {
+      "filename": "litertlm_manifest.json",
+      "bytes": 24513,
+      "sha256": "9d5fcd95e4fc4aae6095965df6de7808644051c0b722889e0c59b792c1b38c5b",
+      "gitBlobSha1": "a105d434b87a76bc0cd71725d80a0b3b6ff8f03a",
+      "url": "https://huggingface.co/litert-community/LFM3-1.7B-LiteRT/raw/29f09e1eac2ccf753af14806dca96eb048e8baad/litertlm_manifest.json"
+    }
+  ],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore.",
+  "runtimeRequirements": {
+    "runtime": "LiteRT-LM",
+    "minimumVersion": "0.18.1",
+    "AndroidAdapterIntegrated": false,
+    "cacheCaps": [
+      2048,
+      4096
+    ],
+    "oneEnginePerConversation": true,
+    "NpuPackagePublished": false,
+    "toolCalls": "Publisher XML text needs explicit host parsing; not inferred autonomous execution."
+  }
+}

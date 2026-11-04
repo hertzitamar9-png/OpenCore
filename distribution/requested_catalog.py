@@ -1,11 +1,12 @@
 """Append individually reviewed Hub models to the offline bundled package catalog."""
 import copy
 import fnmatch
+import hashlib
 import json
 import re
 from pathlib import PurePosixPath
 
-from hf_catalog import build_plan, _pin, stable_id, echo_context_tokens, generation_defaults
+from hf_catalog import build_plan, _pin, stable_id, echo_context_tokens, generation_defaults, safe_filename
 from hf_download import validate_entry
 from hf_lineage import same_checkpoint, bases, quantized_relation, checkpoint_name
 
@@ -61,17 +62,20 @@ def append_requested(entries, manifest, snapshots):
                 variants = []
                 for package in source['packages']:
                     pins = [_pin(repository, metadata['sha'], item,
-                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx', '.cmf')) or re.search(r'\.onnx_data(?:_\d+)?$', item['rfilename']) else 'support')
+                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx', '.cmf', '.litertlm')) or re.search(r'\.onnx_data(?:_\d+)?$', item['rfilename']) else 'support')
                             for item in metadata['siblings'] if any(fnmatch.fnmatchcase(item['rfilename'], pattern) for pattern in package['files'])]
                     selected = {pin['filename'] for pin in pins}
                     if not pins or any(not pin['pinned'] for pin in pins) or any(filename not in selected for filename in package.get('requiredFiles', [])):
                         raise ValueError('Incomplete curated package: ' + repository)
                     key = package['key']
-                    variants.append({'id': stable_id(repository, key), 'variantKey': key, 'repository': repository,
+                    variant = {'id': stable_id(repository, key), 'variantKey': key, 'repository': repository,
                         'revision': metadata['sha'], 'format': package['format'], 'quantization': package['quantization'],
                         'subdirectory': '', 'category': row['category'], 'files': pins, 'bytes': sum(pin['bytes'] for pin in pins),
                         'installable': True, 'status': 'not-installed', 'sourceUrl': 'https://huggingface.co/' + repository,
-                        'gated': bool(metadata.get('gated')), 'runtime': {'adapter': None, 'available': False, 'inferenceVerified': False}})
+                        'gated': bool(metadata.get('gated')), 'runtime': {'adapter': None, 'available': False, 'inferenceVerified': False}}
+                    if 'supportedContextTokens' in package:
+                        variant['supportedContextTokens'] = package['supportedContextTokens']
+                    variants.append(variant)
                 plan['variants'] = variants
             if source.get('onlyVariantKeys'):
                 plan['variants'] = [entry for entry in plan['variants'] if entry['variantKey'] in source['onlyVariantKeys']]
@@ -111,16 +115,34 @@ def append_requested(entries, manifest, snapshots):
                         raise ValueError('Required publisher support file is absent: ' + filename)
                     if not any(pin['filename'] == filename for pin in entry['files']):
                         entry['files'].append(_pin(repository, metadata['sha'], item, 'support'))
+                if source.get('chatTemplate') is not None:
+                    declaration=source['chatTemplate']
+                    try:
+                        filename=safe_filename(declaration.get('filename'))
+                        pins=[pin for pin in entry['files'] if pin['filename']==filename]
+                        raw=(snapshots/(repository.replace('/','--')+'.'+filename.replace('/','--'))).read_bytes()
+                        digest=hashlib.sha256(raw).hexdigest()
+                        blob=hashlib.sha1(b'blob '+str(len(raw)).encode('ascii')+b'\0'+raw).hexdigest()
+                        if (len(pins)!=1 or pins[0]['role']!='support' or not pins[0]['pinned']
+                                or type(declaration.get('bytes')) is not int or not 0<len(raw)<1048576
+                                or len(raw)!=declaration['bytes'] or len(raw)!=pins[0]['bytes']
+                                or digest!=declaration.get('sha256') or blob!=pins[0].get('gitBlobSha1')
+                                or '\x00' in raw.decode('utf-8',errors='strict')):
+                            raise ValueError()
+                        entry['chatTemplate']={**declaration,'repo':repository,'revision':metadata['sha'],'gitBlobSha1':blob}
+                    except (AttributeError,KeyError,TypeError,ValueError,OSError):
+                        raise ValueError('Invalid reviewed external chat template pin: '+repository) from None
                 entry['bytes'] = sum(pin['bytes'] for pin in entry['files'])
                 entry.update(familyId=row['familyId'], familyLabel=row['label'], originalRepository=row['repository'],
                              builtIn=True, nativeModelIds=[], libraryCategory=row['category'],
                              builtInDescription=row['description'], contextTokens=echo_context_tokens(original) if entry['category']=='text' else 8192, quantization=quant,
                              license=(original.get('cardData') or {}).get('license', 'Publisher terms'))
-                if 'supportedContextTokens' in row:
-                    limit = row['supportedContextTokens']
-                    if type(limit) is not int or not 0 < limit <= 16 * 1048576:
+                if 'supportedContextTokens' in row or 'supportedContextTokens' in entry:
+                    limits = [value['supportedContextTokens'] for value in (row, entry) if 'supportedContextTokens' in value]
+                    if any(type(limit) is not int or not 0 < limit <= 16 * 1048576 for limit in limits):
                         raise ValueError('Invalid reviewed execution context limit')
-                    entry['supportedContextTokens'] = limit
+                    entry['supportedContextTokens'] = min(limits)
+                    entry['contextTokens'] = min(entry['contextTokens'], entry['supportedContextTokens'])
                 entry['name'] = row['label'] + ' · ' + quant
                 if entry['category']=='text':
                     entry['memoryMode']='echo'

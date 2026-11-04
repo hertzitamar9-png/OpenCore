@@ -1,10 +1,16 @@
-# OpenCore for Android 3.3
+# OpenCore for Android 3.4
 
 Fresh installs open **Phone** mode without a PC or sign-in. Phone chats, model files, execution preferences and encrypted Hugging Face credentials are stored privately on Android. No model downloads or inference run at launch.
 
 Version 3.2 fixes startup before native decoding has produced its first speed reading. Missing metrics serialize as zero rather than Android JSON's invalid NaN. The production snapshot serializer is tested against the real Android JSON implementation for fresh startup, saved-data payloads and unchanged real telemetry; no chat or pairing reset is required.
 
 Version 3.3 starts a phone with no downloaded model in an explicit idle state. It does not select the PC's DuoCore default. Validated installed Native aliases and imported model IDs remain selected across reloads; stale or missing files recover to another installed model or idle. Chat Core checks whether its group service is available before opening workspace polls and actions. Its Phone view offers the existing execution-device chooser for the paired PC's real groups; Android does not yet host the group service itself.
+
+Version 3.4 connects the shared chat submission protocol to actual phone inference, including context reservations, new conversation IDs, side-chat history, text attachments, private workspace snapshots and file exports. The Chats tab returns to the current chat; the header history button opens the conversation list. Download progress appears above Models and in the matching card, with measured bytes, rate and ETA. Pause keeps the resumable prefix; Cancel stops the matching worker and removes only its incomplete file.
+
+Phone web tabs use actual Android WebViews, isolated from the app's command bridge. Address navigation, tabs, history, reload, uploads and permission-controlled microphone/camera use the phone. Native web content is confined to the browser panel and hidden behind app menus and drawers. Android's folder picker imports an explicitly selected bounded copy into the phone workspace; it does not synchronize the original folder. Workspace files can be previewed and shared through Android's chooser.
+
+The eight requested LFM3 derivative repositories retain their real published quantizations. Compatible GGUFs use the pinned llama.cpp engine and publisher Jinja templates, including the hash-verified external HiddenCoT template. The four `litert-community/LFM3-1.7B-LiteRT` packages use the separate official LiteRT-LM 0.18.1 CPU SDK, bundled with its licenses and dependencies. Their published cache caps remain 2K or 4K. Each turn recreates LiteRT recurrent state from that conversation's history; it never inherits another chat's running state. These engines do not make gated BF16 checkpoints or every image/vision architecture executable on Android.
 
 Phone and Paired PC use the same original desktop OpenCore interface, tabs, composer, Approval/Effort controls, settings and model browser. There is no separate redesigned Phone interface. Phone ships a verified copy of the desktop frontend for offline use; Paired PC fetches that PC's current frontend. Only the execution backend and device wording differ. Android system bars, display cutouts and the keyboard inset the outer native container rather than cover app controls. The bundled desktop bytes are pinned by `shared-ui/manifest.json`.
 
@@ -31,6 +37,6 @@ Build with an installed Android SDK and JDK:
 python android-remote/build.py --sdk C:/path/to/Android/Sdk
 ```
 
-The bundled native library is pinned in `native/runtime.json` and checked against `native/binaries.json`, including its source hashes and 16 KB ELF segment alignment. To rebuild it with the pinned NDK installed, run `python android-remote/native/build_runtime.py --sdk C:/path/to/Android/Sdk`, then rebuild the APK. The upstream MIT license is bundled. Native verification uses the identical JNI worker with real SmolLM2 weights on the host; it is not evidence of performance on a physical Android phone. Phone validation must include an offline local request as well as a paired-PC request.
+The bundled GGUF library is pinned in `native/runtime.json` and checked against `native/binaries.json`, including source hashes and 16 KB ELF segment alignment. To rebuild it with the pinned NDK installed, run `python android-remote/native/build_runtime.py --sdk C:/path/to/Android/Sdk`, then rebuild the APK. The upstream MIT license is bundled. The official LiteRT SDK and transitive inputs are pinned in `vendor/litertlm/manifest.json`; the build verifies every input and keeps required Kotlin resources and services. Host checks run real SmolLM2, LFM3 GGUF and LiteRT LFM3 weights with streaming, cancellation and reload. They do not establish throughput, Android WebView behavior or thermal performance on a physical handset. Phone validation must include an offline local request as well as a paired-PC request.
 
 Keep the signing key at `.opencore/distribution-keys` for compatible in-place Android updates. Release verification still needs a real Android phone to confirm pairing, a known chat request, and opening generated media.

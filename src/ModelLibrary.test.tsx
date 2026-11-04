@@ -4,6 +4,28 @@ import { ModelLibrary } from "./ModelLibrary";
 import * as api from "./api";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
 
+it('shows one installation in the global panel and its own model card with distinct Pause and Cancel', async () => {
+  const models = ['active-model','other-model'].map(id => ({id,label:id,description:id,precision:'Q4',contextTokens:8192,license:'test',experimental:false,note:'',selectable:true,installed:false,externalManaged:false,downloadBytes:5e9,totalBytes:5e9,memoryMode:'native' as const}));
+  const library = vi.spyOn(api,'modelLibrary').mockResolvedValue({models,progress:{modelId:'active-model',operationId:'owned-job',phase:'downloading',downloadedBytes:2e9,totalBytes:5e9,currentFile:'weights.gguf',error:null},diskFreeBytes:100e9,minimumFreeBytes:0});
+  const speech = vi.spyOn(api,'speechStatus').mockResolvedValue({modelId:'speech',installed:false,enabled:false,idleMode:'cold',workerReady:false,coldStartMs:null,warmWakeMs:null,phase:'off'});
+  const install = vi.spyOn(api,'installModel').mockResolvedValue();
+  const pause = vi.spyOn(api,'cancelModelInstall').mockResolvedValue();
+  const cancel = vi.spyOn(api,'cancelModelInstallation').mockResolvedValue();
+  try {
+    const {container} = render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()}/>);
+    const active = (await screen.findByRole('heading',{name:'active-model'})).closest('article')!;
+    const other = screen.getByRole('heading',{name:'other-model'}).closest('article')!;
+    expect(container.querySelectorAll('.model-install-progress')).toHaveLength(2);
+    expect(within(active).getByText('2.000 GB / 5.000 GB')).toBeVisible();
+    expect(within(other).queryByRole('progressbar')).toBeNull();
+    fireEvent.click(within(active).getByRole('button',{name:'Cancel installation'}));
+    await waitFor(()=>expect(cancel).toHaveBeenCalledWith('active-model','owned-job'));
+    expect(pause).not.toHaveBeenCalled(); expect(install).not.toHaveBeenCalled();
+    fireEvent.click(container.querySelector('.model-library > .model-install-progress')!.querySelector('button')!);
+    await waitFor(()=>expect(pause).toHaveBeenCalledOnce());
+  } finally { library.mockRestore(); speech.mockRestore(); install.mockRestore(); pause.mockRestore(); cancel.mockRestore(); }
+});
+
 it("states that all three Phonon choices use one downloadable checkpoint", () => {
   const phonon = modelCatalog.models.find(model => model.id === "phonon-2");
   expect(phonon?.precision).toBe("Five-value checkpoint");

@@ -55,7 +55,7 @@ class PhoneStartupTests(unittest.TestCase):
             resource = output/'R.java'
             resource.write_text('package ai.opencore.remote; final class R {'
                                 'static final class drawable {static final int opencore=1;}}', encoding='utf-8')
-            classpath = os.pathsep.join(map(str, (jar, platform, ROOT/'vendor/zxing-core-3.5.3.jar')))
+            classpath = os.pathsep.join(map(str, (jar, platform, ROOT/'vendor/zxing-core-3.5.3.jar', *(ROOT/'vendor/litertlm').glob('*.jar'))))
             sources = list((ROOT/'src').rglob('*.java'))
             tests = [ROOT/'tests/PhoneStartupSnapshotTest.java', ROOT/'tests/PhoneGenerationSettingsTest.java', ROOT/'tests/PhoneProfileSelectionTest.java']
             compiled = subprocess.run([str(java/'javac.exe'), '--release', '8', '-encoding', 'UTF-8',

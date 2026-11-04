@@ -57,6 +57,22 @@ def atomic_json(path, value):
         temporary.unlink(missing_ok=True)
 
 
+def partial_identity(path, root):
+    """A plain, singly linked file below an explicitly managed root."""
+    try:
+        path, root = Path(path), Path(root)
+        if not path.is_relative_to(root) or path == root: return None
+        for parent in (path, *path.parents):
+            info = parent.lstat()
+            if parent.is_symlink() or getattr(info, 'st_file_attributes', 0) & 0x400: return None
+            if parent == root: break
+        info = path.lstat()
+        if not path.is_file() or info.st_nlink != 1: return None
+        return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns)
+    except OSError:
+        return None
+
+
 class SafeRedirect(HTTPRedirectHandler):
     def __init__(self, allow_test_http=False):
         self.allow_test_http = allow_test_http
@@ -323,6 +339,28 @@ class Downloader:
         validate_entry(entry)
         hub = managed_path(self.root, "models", "hub")
         return managed_path(hub, entry["id"])
+
+    def discard_partials(self, entry):
+        """Called only after the worker exits; retain complete and unproven files."""
+        validate_entry(entry)
+        removed, retained = 0, []
+        directory = self.root / 'models' / 'hub' / entry['id']
+        def plain(path): return partial_identity(path, self.root)
+        for pin in entry['files']:
+            partial = directory / (safe_filename(pin['filename']) + '.partial')
+            marker = directory / (pin['filename'] + '.partial.json')
+            identity, proof = plain(partial), plain(marker)
+            if identity is None and not partial.exists(): continue
+            try:
+                matching = proof and proof[2] <= 65536 and json.loads(marker.read_text(encoding='utf-8')) == pin
+                if not identity or identity[2] > pin['bytes'] or not matching or plain(partial) != identity or plain(marker) != proof:
+                    retained.append(pin['filename']); continue
+                partial.unlink()
+                removed += identity[2]
+                if plain(marker) == proof: marker.unlink()
+            except (OSError, ValueError):
+                retained.append(pin['filename'])
+        return {'removedBytes': removed, 'retainedPartials': retained}
 
     @staticmethod
     def _pause(pause):

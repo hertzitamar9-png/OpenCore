@@ -1,0 +1,58 @@
+{
+  "version": "0.18.1",
+  "source": "https://github.com/google-ai-edge/LiteRT-LM/releases/tag/v0.18.1",
+  "aarSha256": "05c6bdc8acda834efcca12c0ad5d06d2cd8c83e60770f056d8d222f699f3012b",
+  "files": {
+    "classes.jar": {
+      "bytes": 191250,
+      "sha256": "0ff0098f64407752c115bf2569a7cd3005c894ecb934e7fdbcd744037f398ce8"
+    },
+    "liblitertlm_jni.so": {
+      "bytes": 22155680,
+      "sha256": "cf4c55139c6fc86425ecfe75f8a907e6193ca665ecc19fbabcaba7ab361bdc43"
+    },
+    "LICENSE": {
+      "bytes": 16086,
+      "sha256": "ec40a2da15ab0e8b44a9f787ab210203d3cad32572f5f99744a88eb90ff9ba4e"
+    },
+    "THIRD_PARTY_NOTICE.txt": {
+      "bytes": 2198164,
+      "sha256": "52a70c82685debf85d4ea9d677615b8636ffd3b75435ce71f247bf5982fb2ba2"
+    },
+    "gson-2.14.0.jar": {
+      "bytes": 313604,
+      "sha256": "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f",
+      "url": "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.14.0/gson-2.14.0.jar"
+    },
+    "kotlin-reflect-2.4.0.jar": {
+      "bytes": 3750099,
+      "sha256": "f0d8e8908624eb4478bb131e9f887366680d2e239741195e548fa5c906963b90",
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-reflect/2.4.0/kotlin-reflect-2.4.0.jar"
+    },
+    "kotlin-stdlib-2.4.0.jar": {
+      "bytes": 1841929,
+      "sha256": "ccb14ff83fabcb11458b798dbc9824748ccdffeec79c9aba789e6ed1cda86b1c",
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.4.0/kotlin-stdlib-2.4.0.jar"
+    },
+    "kotlinx-coroutines-android-1.11.0.jar": {
+      "bytes": 17819,
+      "sha256": "c2cb206d27017c7d1bf5ff179787397543d13748dbabb0d7237e1585e0b29044",
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.11.0/kotlinx-coroutines-android-1.11.0.jar"
+    },
+    "kotlinx-coroutines-core-jvm-1.11.0.jar": {
+      "bytes": 1577052,
+      "sha256": "d1d75aa01dffbb4d1c520e67e4c4e7f5f6174718e7cb4632412503f2f0e604fa",
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.11.0/kotlinx-coroutines-core-jvm-1.11.0.jar"
+    },
+    "annotations-23.0.0.jar": {
+      "bytes": 29371,
+      "sha256": "7b0f19724082cbfcbc66e5abea2b9bc92cf08a1ea11e191933ed43801eb3cd05",
+      "url": "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0.jar"
+    },
+    "error_prone_annotations-2.48.0.jar": {
+      "bytes": 20255,
+      "sha256": "b49c5c958316ed67a09c699dda9aa749caf434d51d863dea599ef36a49b9c855",
+      "url": "https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotations/2.48.0/error_prone_annotations-2.48.0.jar"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "repository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+  "revision": "60e8d51e442e75b017c432cb9f3798cc6b7a07f3",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/kaitchup/LFM3-1.7B-SLQ-GGUF/revision/60e8d51e442e75b017c432cb9f3798cc6b7a07f3?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": "gguf",
+  "gated": false,
+  "architecture": "lfm3",
+  "publishedContextTokens": 262144,
+  "publishedWeights": [
+    {
+      "filename": "LFM3-1.7B-SLQ-EAR97.7-Q6_K.gguf",
+      "bytes": 1587721664,
+      "sha256": "9d78490c5e27257114a015c28644088d10ab88a3d5e1dd539a5cb86b22997a1d"
+    }
+  ],
+  "packageCount": 1,
+  "options": [
+    {
+      "format": "gguf",
+      "label": "SLQ EAR97.7 (mixed Q6_K)",
+      "bytes": 1587732738,
+      "files": [
+        "LFM3-1.7B-SLQ-EAR97.7-Q6_K.gguf",
+        "LICENSE",
+        "NOTICE"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    }
+  ],
+  "smallFiles": [
+    {
+      "filename": "README.md",
+      "bytes": 5623,
+      "sha256": "7b66d839c9915f27a835e66a33066184bfd8c85cab3a842fb5566a380582d7ee",
+      "gitBlobSha1": "8993b0694eb54cbfe20231cd1c95630eddbeb8b5",
+      "url": "https://huggingface.co/kaitchup/LFM3-1.7B-SLQ-GGUF/raw/60e8d51e442e75b017c432cb9f3798cc6b7a07f3/README.md"
+    }
+  ],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore."
+}

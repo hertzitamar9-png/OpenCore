@@ -27,7 +27,7 @@ if str(Path(__file__).resolve().parent) not in sys.path:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hf_catalog import build_plan, parse_repository, DRAFT
 from hf_lineage import source_identity
-from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, managed_path, validate_entry
+from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, managed_path, validate_entry, partial_identity
 from hf_security import TokenStore
 from hf_specialist_ocr import OCRManager, supports as supports_ocr
 from hf_image_runtime import ImageRuntimeManager, supports as supports_image
@@ -43,7 +43,7 @@ AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
 TAURI_ORIGINS = {"http://tauri.localhost", "https://tauri.localhost", "tauri://localhost"}
 ID = re.compile(r"hf-[0-9a-f]{24}\Z")
-ACTIVE = {"running", "pausing"}
+ACTIVE = {"running", "pausing", "cancelling"}
 MAX_CATALOG_ENTRIES = 10000
 MAX_CATALOG_BYTES = 64 * 1024 * 1024
 
@@ -97,6 +97,7 @@ class BridgeState:
         self.autoloop = None
         self._memory_lock = threading.RLock()
         self.pause_event, self.closed = threading.Event(), False
+        self.cancel_event = threading.Event()
         self._load_catalog()
         self._seed_publisher_catalog()
         try:
@@ -459,6 +460,8 @@ class BridgeState:
                 raise Conflict("The bridge is shutting down")
             if self.progress and self.progress.get("status") in ACTIVE:
                 raise Conflict("A model download or runtime preparation is already active")
+            if self.worker and self.worker.is_alive():
+                raise Conflict('The previous installation worker is still stopping')
             if self.images.operation.locked():raise Conflict('Wait for the current image operation before installing another model')
             if self.computer.operation.locked():raise Conflict('Wait for the current computer-use prediction before installing another model')
             entry = self.entry(model_id, installed=kind == "prepare")
@@ -466,11 +469,12 @@ class BridgeState:
                 raise ValueError('AutoLoop checkpoints are generated locally, not downloaded. Run a new verified experiment in Learning Studio.')
             validate_entry(entry)
             self.pause_event = threading.Event()
+            self.cancel_event = threading.Event()
             self.progress = {"jobId": secrets.token_hex(16), "id": model_id, "kind": kind, "status": "running",
                              "stage": "preparing" if kind == "prepare" else "queued", "bytesDone": 0, "bytesTotal": entry["bytes"], "startedAt": time.time()}
             initial = copy.deepcopy(self.progress)
             self._persist_progress()
-            self.worker = threading.Thread(target=self._work, args=(entry, kind, self.pause_event), daemon=True)
+            self.worker = threading.Thread(target=self._work, args=(entry, kind, self.pause_event, self.cancel_event), daemon=True)
             self.worker.start()
             return initial
 
@@ -493,11 +497,12 @@ class BridgeState:
                 self.persist_catalog()
             return self.entry(model_id)
 
-    def _work(self, entry, kind, pause):
+    def _work(self, entry, kind, pause, cancel):
         last_saved = [0.0]
         def report(value):
             with self.lock:
                 self.progress.update(value, updatedAt=time.time())
+                if cancel.is_set(): self.progress.update(status='cancelling', stage='cancelling')
                 if time.monotonic() - last_saved[0] > 1:
                     self._persist_progress()
                     last_saved[0] = time.monotonic()
@@ -519,6 +524,7 @@ class BridgeState:
         try:
             if kind == "download":
                 result = self.downloader.install(entry, pause, report)
+                if pause.is_set(): raise Paused('Installation stopped after downloading; completed files were retained')
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
                 if supports_computer(entry):
                     final = prepare_computer()
@@ -578,6 +584,10 @@ class BridgeState:
             report({"status": "paused" if pause.is_set() else "failed", "stage": "paused" if pause.is_set() else "failed", "error": detail[:1000], "finishedAt": time.time()})
         finally:
             with self.lock:
+                if cancel.is_set():
+                    cleanup = self.downloader.discard_partials(entry) if kind == 'download' else {'removedBytes': 0, 'retainedPartials': []}
+                    self.progress.update(status='cancelled', stage='cancelled', error=None, finishedAt=time.time(),
+                                         detail='Installation cancelled. Completed and shared files were kept.', **cleanup)
                 self._persist_progress()
 
     def pause(self, job_id=None):
@@ -586,6 +596,7 @@ class BridgeState:
                 return {"paused": False, "progress": copy.deepcopy(self.progress)}
             if job_id is not None and job_id != self.progress["jobId"]:
                 raise Conflict("The requested job is no longer the active model job")
+            stage = self.progress.get('stage')
             self.pause_event.set()
             self.progress.update(status="pausing", stage="pausing")
             ocr_job = supports_ocr(self.entries.get(self.progress.get('id'), {}))
@@ -593,12 +604,55 @@ class BridgeState:
             if supports_image(self.entries.get(self.progress.get('id'),{})) and self.images.operation.locked():self.images.stop()
             if ocr_job and self.ocr.active():
                 self.ocr.stop()
-            if not ocr_job and (self.progress.get('kind')=='prepare' or self.progress.get('stage') not in ('queued','downloading','verifying')):
+            if not ocr_job and (self.progress.get('kind')=='prepare' or stage in ('preparing-runtime','installing-runtime','installing-dependencies','checking-hardware','loading-model','verifying-inference','preparing-echo','verifying-echo')):
                 cancellation=getattr(self.runtime,'_cancel',None)
                 if cancellation:cancellation.set()
                 else:self.runtime.stop()
             self._persist_progress()
             return {"paused": True, "progress": copy.deepcopy(self.progress)}
+
+    def cancel(self, job_id):
+        with self.lock:
+            if not isinstance(job_id, str) or not self.progress or job_id != self.progress.get('jobId'):
+                raise Conflict('The requested installation is no longer the current model job')
+            if self.progress.get('status') == 'cancelled':
+                return {'cancelled': True, 'progress': copy.deepcopy(self.progress)}
+            if self.progress.get('status') not in ACTIVE | {'paused'}:
+                raise Conflict('This installation has already finished; completed files were kept')
+            self.cancel_event.set()
+            self.pause(job_id)
+            self.progress.update(status='cancelling', stage='cancelling', error=None)
+            if not self.worker or not self.worker.is_alive():
+                entry = self.entry(self.progress['id'])
+                cleanup = self.downloader.discard_partials(entry) if self.progress.get('kind') == 'download' else {'removedBytes': 0, 'retainedPartials': []}
+                self.progress.update(status='cancelled', stage='cancelled', finishedAt=time.time(),
+                                     detail='Installation cancelled. Completed and shared files were kept.', **cleanup)
+            self._persist_progress()
+            return {'cancelling': self.progress['status'] == 'cancelling', 'progress': copy.deepcopy(self.progress)}
+
+    def discard_native_partials(self, model_id):
+        """The frontend stops and awaits native admission before requesting cleanup."""
+        source = self.resources / 'runtime-setup/hf-extension/native-model-bindings.json'
+        data = _read_json(source)
+        model = next((value for value in data.get('models', []) if value.get('id') == model_id or model_id in (value.get('modeProfiles') or {}).values()), None)
+        if model is None: raise ValueError('This native model has no verified partial-file manifest')
+        ids = set(model.get('artifacts', []))
+        removed, retained = 0, []
+        for artifact in data.get('artifacts', []):
+            if artifact.get('id') not in ids: continue
+            relative = artifact.get('path')
+            if not isinstance(relative, str) or Path(relative).is_absolute() or '..' in Path(relative).parts: continue
+            path = self.root / (relative + '.partial')
+            identity = partial_identity(path, self.root)
+            if identity is None and not path.exists(): continue
+            if not identity or type(artifact.get('bytes')) is not int or identity[2] > artifact['bytes']:
+                retained.append(relative); continue
+            try:
+                if partial_identity(path, self.root) != identity: retained.append(relative); continue
+                path.unlink(); removed += identity[2]
+            except OSError:
+                retained.append(relative)
+        return {'cancelled': True, 'removedBytes': removed, 'retainedPartials': retained}
 
     def profile(self, body):
         with self.lock:
@@ -1038,6 +1092,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
             else:self._send(200,media.delete(body.get('id')))
         elif route == "/pause":
             self._send(200, state.pause(body.get("jobId")))
+        elif route == '/cancel':
+            self._send(202, state.cancel(body.get('jobId')))
+        elif route == '/native/cancel':
+            self._send(200, state.discard_native_partials(body.get('id')))
         elif route == "/stop":
             self._send(200, state.stop())
         elif route == "/uninstall":

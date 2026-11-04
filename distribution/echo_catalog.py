@@ -72,5 +72,8 @@ def publisher_echo_policy(entries,research,context_tokens):
         category=entry.get('category') or entry.get('libraryCategory') or ('text' if entry.get('format') in ('gguf','safetensors') else '')
         if category!='text':continue
         source=read(entry.get('originalRepository')) or read(entry.get('repository'))
-        entry.update(category='text',memoryMode='echo',contextTokens=context_tokens(source),echoWorkingWindowTokens=context_tokens(source))
+        target=context_tokens(source)
+        cap=entry.get('supportedContextTokens')
+        if type(cap) is int and 0<cap<=16*1048576:target=min(target,cap)
+        entry.update(category='text',memoryMode='echo',contextTokens=target,echoWorkingWindowTokens=target)
     return entries

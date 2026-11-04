@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "repository": "mondk/LFM3-1.7B-Claude-Code-GGUF",
+  "revision": "1589719430defe5364fb9e65cc3fa995f55babcf",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/mondk/LFM3-1.7B-Claude-Code-GGUF/revision/1589719430defe5364fb9e65cc3fa995f55babcf?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": null,
+  "gated": false,
+  "architecture": "lfm3",
+  "publishedContextTokens": 262144,
+  "publishedWeights": [
+    {
+      "filename": "LFM3-1.7B-Claude-Code-Q8_0.gguf",
+      "bytes": 1846237728,
+      "sha256": "ee88674be5f0d09a52f5fe7aba047ca9bf620de0fbe81799de5299eabf13742d"
+    }
+  ],
+  "packageCount": 1,
+  "options": [
+    {
+      "format": "gguf",
+      "label": "Q8_0",
+      "bytes": 1846248302,
+      "files": [
+        "LFM3-1.7B-Claude-Code-Q8_0.gguf",
+        "LICENSE"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    }
+  ],
+  "smallFiles": [
+    {
+      "filename": "README.md",
+      "bytes": 2501,
+      "sha256": "0e35d9f5ae2a5455a8cbfd41a9f3fe3ba0e7ebce8653adaa5f5dd8ca4e6a4bd0",
+      "gitBlobSha1": "5f7a23ff7ce1c17551662ce4c1515756dcc1d541",
+      "url": "https://huggingface.co/mondk/LFM3-1.7B-Claude-Code-GGUF/raw/1589719430defe5364fb9e65cc3fa995f55babcf/README.md"
+    }
+  ],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore."
+}

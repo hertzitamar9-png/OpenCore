@@ -7,6 +7,9 @@ import { estimateGgufVramRange, filterGroupsByMemoryMode, groupModelVariants, ma
 import { speechLoadingMessage } from "./speech-progress";
 import { SpeechRuntimeControls } from "./SpeechRuntimeControls";
 import "./ModelLibrary.css";
+import * as React from 'react';
+import { createModelInstallProgress } from './model-install-progress.js';
+const ModelInstallProgress = createModelInstallProgress(React);
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
 const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
@@ -56,7 +59,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     }, 1000);
     return () => { disposed = true; window.clearInterval(timer); };
   }, [speech.enabled, pending]);
-  const installing = Boolean(library?.progress && ["preparing", "downloading", "verifying", "uninstalling"].includes(library.progress.phase));
+  const installing = Boolean(library?.progress && ["preparing", "downloading", "verifying", "uninstalling", "cancelling"].includes(library.progress.phase));
   useEffect(() => {
     if (!installing && !pending) return;
     const timer = window.setInterval(() => void refresh(false), 1000);
@@ -121,11 +124,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     {runtimeActive ? <p className="model-library-note">Use the bottom model menu to change an idle running model. Stop the runtime before installing. Uninstalling an active model requires confirmation to stop it first.</p> : null}
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {!library && !error ? <p role="status">Loading model options… You can choose a category while they load.</p> : null}
-    {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
-      <div><strong>{library?.models.find((model) => model.id === progress.modelId)?.label || progress.modelId}</strong><span>{progress.phase}</span></div>
-      {installing && progress.phase !== "uninstalling" ? <><progress aria-label="Model download" value={progress.phase === "preparing" ? undefined : progress.downloadedBytes} max={Math.max(1, progress.totalBytes)} /><small>{progress.currentFile === "Preparing speech runtime" ? "Setting up speech recognition for the microphone." : `${gb(progress.downloadedBytes)} / ${gb(progress.totalBytes)} · ${progress.currentFile || "Preparing download"}`}</small><button onClick={() => void api.cancelModelInstall().catch((cause) => onNotice(String(cause)))}>Cancel download</button></> : null}
-      {progress.error ? <p>{progress.error}</p> : null}
-    </div> : null}
+    {progress ? <ModelInstallProgress progress={progress} label={modelById.get(progress.modelId)?.label} onPause={() => api.cancelModelInstall()} onCancel={() => api.cancelModelInstallation(progress.modelId,progress.operationId)} onError={onNotice} /> : null}
     <div className="model-filter-row"><span className="model-filter-label">Category</span><div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => categoryMatches(group, id)).length}</span></button>)}</div></div>
     <div className="model-filter-row"><span className="model-filter-label">Memory mode</span><div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => categoryMatches(group, category)).length}</span></button>)}</div></div>
     <div className="model-library-search"><Search size={17} aria-hidden="true" /><input aria-label="Search models" placeholder="Find a model or quantization…" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Escape') setQuery(''); }} />{query ? <button onClick={() => setQuery('')}>Clear search</button> : null}<span>{visibleModels.length} models</span></div>
@@ -152,6 +151,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : profileSelected) ? "selected" : ""}`}>
       <header><div><h3>{group.model.label}</h3><span>{modelMemoryMode(model) === "echo" ? "ECHO" : "Native"} · {model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
+      {progress && group.variants.some(value => value.id === progress.modelId || group.aliases[progress.modelId] === value.id) ? <ModelInstallProgress progress={progress} label={modelById.get(progress.modelId)?.label} onPause={() => api.cancelModelInstall()} onCancel={() => api.cancelModelInstallation(progress.modelId,progress.operationId)} onError={onNotice} /> : null}
       {availableModes.length > 1 || showQuantization ? <div className="model-variant-controls">
         {availableModes.length > 1 ? <label className="model-quantization-picker">Memory mode
           <select aria-label={`Memory mode for ${group.model.label}`} value={activeMode} disabled={Boolean(pending)} onChange={event => {

@@ -2504,6 +2504,213 @@
           ]
         }
       ]
+    },
+    {
+      "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+      "familyId": "publisher-lfm3-1-7b-heretic-abliterated",
+      "label": "Vortecks LFM3 1.7B Heretic Abliterated",
+      "category": "text",
+      "description": "Exact Vortecks Heretic-abliterated edition with all 25 published GGUF files, from experimental low-bit formats to BF16, F16 and F32. The pinned LFM3 engine prepares automatically; actual text generation must pass after installation. Published 256K context metadata is a capacity, not a long-context quality test.",
+      "sources": [
+        {
+          "repository": "Vortecks/LFM3-1.7B-Heretic-Abliterated-GGUF",
+          "managedEngine": "lfm3-cpu-v1"
+        }
+      ]
+    },
+    {
+      "repository": "mondk/LFM3-1.7B-Claude-Code-GGUF",
+      "familyId": "publisher-lfm3-1-7b-claude-code",
+      "label": "mondk LFM3 1.7B Claude Code",
+      "category": "text",
+      "description": "Exact mondk tool-use and coding fine-tune, published as one Q8_0 GGUF. It is a local LFM3 derivative, not an Anthropic model or hosted Claude service. Uses the pinned LFM3 engine with verification after installation; publisher benchmark results are not OpenCore tests.",
+      "sources": [
+        {
+          "repository": "mondk/LFM3-1.7B-Claude-Code-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "supportFiles": [
+            "LICENSE"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "litert-community/LFM3-1.7B-LiteRT",
+      "familyId": "publisher-lfm3-1-7b-litert",
+      "label": "LFM3 1.7B LiteRT",
+      "category": "text",
+      "description": "Exact LiteRT-LM conversion with two weight precisions, INT8 and mixed INT4/INT8, each published with a 2048- or 4096-token cache. Each bundle embeds its tokenizer and modified chat template. These are .litertlm packages, requiring a real Android LiteRT-LM adapter; they cannot load in llama.cpp. No NPU package is published.",
+      "sources": [
+        {
+          "repository": "litert-community/LFM3-1.7B-LiteRT",
+          "runtimeReason": "Requires a real Android LiteRT-LM 0.18.1-compatible adapter with a separate Engine per conversation and the bundled template/state handling. OpenCore has no integrated verified LiteRT-LM runner. This .litertlm package cannot load in llama.cpp; context is limited to its published 2048 or 4096 tokens.",
+          "packages": [
+            {
+              "key": "litertlm:LFM3-1.7B_int8_ekv2048.litertlm",
+              "format": "litertlm",
+              "quantization": "INT8 · 2K cache",
+              "supportedContextTokens": 2048,
+              "files": [
+                "LFM3-1.7B_int8_ekv2048.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "LFM3-1.7B_int8_ekv2048.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ]
+            },
+            {
+              "key": "litertlm:LFM3-1.7B_int8_ekv4096.litertlm",
+              "format": "litertlm",
+              "quantization": "INT8 · 4K cache",
+              "supportedContextTokens": 4096,
+              "files": [
+                "LFM3-1.7B_int8_ekv4096.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "LFM3-1.7B_int8_ekv4096.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ]
+            },
+            {
+              "key": "litertlm:LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+              "format": "litertlm",
+              "quantization": "Mixed INT4 · 2K cache",
+              "supportedContextTokens": 2048,
+              "files": [
+                "LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ]
+            },
+            {
+              "key": "litertlm:LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+              "format": "litertlm",
+              "quantization": "Mixed INT4 · 4K cache",
+              "supportedContextTokens": 4096,
+              "files": [
+                "LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+                "litertlm_manifest.json",
+                "LICENSE",
+                "README.md"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+      "familyId": "publisher-lfm3-1-7b-looped-hiddencot",
+      "label": "Guilherme34 LFM3 Looped HiddenCoT",
+      "category": "text",
+      "description": "Exact research edition with structural changes and a latent-token thinking prefix, published as Q6_K and Q8_0 GGUF. Includes the publisher-required external chat_template, which differs from the embedded GGUF template. Its reported behavior and quality remain unverified in OpenCore.",
+      "sources": [
+        {
+          "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+          "supportFiles": [
+            "chat_template"
+          ],
+          "runtimeReason": "Requires the LFM3 runtime plus explicit selection of the pinned external chat_template and its latent-token prefix. The current OpenCore runner uses the embedded template and has no external-template selection hook; correct Looped HiddenCoT inference is not yet verified.",
+          "chatTemplate": {
+            "filename": "chat_template",
+            "bytes": 12221,
+            "sha256": "f6cd29fd46ccf7817ae8d81b44a7ba979c316647c95d8332d8029af509a571e6"
+          }
+        }
+      ]
+    },
+    {
+      "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+      "familyId": "publisher-lfm3-1-7b-frontier-smartagent-v4",
+      "label": "mohommed LFM3 Frontier SmartAgent v4",
+      "category": "text",
+      "description": "Exact Frontier SmartAgent v4 SDT/SimPO edition with all three published Q4_K_M, Q4_K_S and Q8_0 GGUFs. Uses the pinned LFM3 engine and verifies actual generation after installation. The files declare 524288-token context; the publisher extension and quality claims have not been independently evaluated by OpenCore.",
+      "sources": [
+        {
+          "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+          "managedEngine": "lfm3-cpu-v1"
+        }
+      ]
+    },
+    {
+      "repository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+      "familyId": "publisher-lfm3-1-7b-slq",
+      "label": "Kaitchup LFM3 1.7B SLQ",
+      "category": "text",
+      "description": "Exact EAR97.7 SLQ checkpoint: one mixed-precision GGUF with Q6_K as its dominant-family label, not an ordinary uniform Q6_K quant. The publisher EAR value measures calibration probability overlap, not benchmark accuracy or statistical equivalence. Uses the pinned LFM3 engine; generation is checked after installation.",
+      "sources": [
+        {
+          "repository": "kaitchup/LFM3-1.7B-SLQ-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "quantizationLabels": {
+            "Q6_K": "SLQ EAR97.7 (mixed Q6_K)"
+          },
+          "supportFiles": [
+            "LICENSE",
+            "NOTICE"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "orcarouter/LFM3-1.7B-abliterated",
+      "familyId": "publisher-lfm3-1-7b-orcarouter-abliterated",
+      "label": "orcarouter LFM3 1.7B Abliterated",
+      "category": "text",
+      "description": "Exact gated orcarouter abliterated checkpoint. Public publisher metadata identifies one BF16 safetensors model and the Lfm3ForCausalLM custom-code architecture. Publisher access is required for the files; no GGUF or additional quantization is published in this repository. OpenCore does not automatically execute repository code.",
+      "sources": [
+        {
+          "repository": "orcarouter/LFM3-1.7B-abliterated",
+          "quantization": "BF16",
+          "supportFiles": [
+            "LICENSE"
+          ],
+          "runtimeReason": "This publisher checkpoint is gated and declares custom Lfm3 Python code. Approved Hugging Face access and a separately reviewed compatible LFM3 Transformers adapter are required; OpenCore does not execute repository code automatically. No actual generation has been verified."
+        }
+      ]
+    },
+    {
+      "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+      "familyId": "publisher-lfm3-1-7b-atomicchat-uncensored",
+      "label": "AtomicChat LFM3 1.7B Uncensored",
+      "category": "text",
+      "description": "Exact AtomicChat safety-ablated edition with both published AD-Q4_K_M and AD-Q6_K GGUFs. The ablation is baked into these weights, keeping this edition distinct from the base model and other publishers. Uses the pinned LFM3 engine; publisher quality claims are not OpenCore runtime tests.",
+      "sources": [
+        {
+          "repository": "AtomicChat/LFM3-1.7B-Uncensored-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "quantizationLabels": {
+            "Q4_K_M": "AD-Q4_K_M",
+            "Q6_K": "AD-Q6_K"
+          },
+          "supportFiles": [
+            "LICENSE"
+          ]
+        }
+      ]
     }
   ]
 }

@@ -7,12 +7,50 @@ const {createInstallCoordinator: create, createInstallNotificationPolicy: create
 function fixture(notifications) {
   let status = { jobs: [], receipts: [], activeJobId: null }, progress = null, failedReads = false;
   let clock = 0;
-  const coordinator = create(async command => {
+  const calls=[];
+  const coordinator = create(async (command,args) => {
+    calls.push({command,args});
     if (failedReads) throw new Error('Transient status failure');
     return command === 'runtime_setup_status' ? status : progress;
   }, () => clock, notifications);
-  return { coordinator, setStatus(value) { status = value; }, setProgress(value) { progress = value; }, failReads() { failedReads = true; }, advance(value) { clock += value; } };
+  return { coordinator, calls, setStatus(value) { status = value; }, setProgress(value) { progress = value; }, failReads() { failedReads = true; }, advance(value) { clock += value; } };
 }
+
+test('cancel installation is distinct from pause and carries the exact current job identity', async () => {
+  const state = fixture();
+  state.setProgress({modelId:'gguf',operationId:'owned-job',phase:'downloading',downloadedBytes:3,totalBytes:10});
+  await state.coordinator.refresh();
+  assert.equal(typeof state.coordinator.cancel, 'function');
+  await state.coordinator.cancel();
+  assert.equal(state.calls.filter(call=>call.command==='cancel_model_installation').length,1);
+  assert.equal(state.calls.find(call=>call.command==='cancel_model_installation').args.modelId,'gguf');
+  assert.equal(state.calls.find(call=>call.command==='cancel_model_installation').args.operationId,'owned-job');
+  state.setProgress({modelId:'gguf',operationId:'owned-job',phase:'cancelled',downloadedBytes:3,totalBytes:10});await state.coordinator.refresh();
+  assert.equal(state.coordinator.getSnapshot().progress.phase,'cancelled');
+  state.setProgress({modelId:'other',operationId:'new-job',phase:'downloading',downloadedBytes:1,totalBytes:10});
+  await state.coordinator.refresh();
+  let reached=false;
+  await assert.rejects(state.coordinator.invoke('cancel_model_installation',{modelId:'gguf',operationId:'owned-job'},async()=>{reached=true;}),/changed|current|active/i);
+  assert.equal(reached,false);
+});
+
+test('native cancellation keeps admission until owned partial cleanup has completed',async()=>{
+  const state=fixture();state.setProgress({modelId:'one',phase:'downloading',downloadedBytes:2,totalBytes:10});await state.coordinator.refresh();
+  let release;
+  const cancelling=state.coordinator.invoke('cancel_model_installation',{modelId:'one'},()=>new Promise(resolve=>release=resolve));
+  state.setProgress({modelId:'one',phase:'failed',error:'Installation cancelled; partial retained'});await state.coordinator.refresh();
+  assert.equal(state.coordinator.getSnapshot().active?.modelId,'one');
+  await assert.rejects(state.coordinator.invoke('install_model',{id:'two'},async()=>{}),/installing|stopping/i);
+  release();await cancelling;assert.equal(state.coordinator.getSnapshot().active,null);assert.equal(state.coordinator.getSnapshot().progress.phase,'cancelled');
+});
+
+test('a stale card cancel cannot target a newer active model or another operation of the same model',async()=>{
+  const state=fixture();state.setProgress({modelId:'new',operationId:'new-job',phase:'downloading',downloadedBytes:2,totalBytes:10});await state.coordinator.refresh();
+  for(const expected of [{modelId:'old',operationId:'old-job'},{modelId:'new',operationId:'old-job'}]){
+    await assert.rejects(state.coordinator.cancel(expected),/changed|current|active/i);
+  }
+  assert.equal(state.calls.some(call=>call.command==='cancel_model_installation'),false);
+});
 
 test('a start response error does not unlock a job native admission already created', async () => {
   const state = fixture(); await state.coordinator.refresh();

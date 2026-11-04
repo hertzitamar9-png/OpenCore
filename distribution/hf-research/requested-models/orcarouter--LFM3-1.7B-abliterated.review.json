@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "repository": "orcarouter/LFM3-1.7B-abliterated",
+  "revision": "c1ca5b62e529a095966acbc126909375280aff8b",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/orcarouter/LFM3-1.7B-abliterated/revision/c1ca5b62e529a095966acbc126909375280aff8b?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": "transformers",
+  "gated": "auto",
+  "architecture": "lfm3",
+  "publishedContextTokens": null,
+  "publishedWeights": [
+    {
+      "filename": "model.safetensors",
+      "bytes": 3457635448,
+      "sha256": "a11f80c25e8d70ead520fa8e686442d3807cbee12a6286182f40174d5ef34bf5"
+    }
+  ],
+  "packageCount": 1,
+  "options": [
+    {
+      "format": "safetensors",
+      "label": "BF16",
+      "bytes": 3475570547,
+      "files": [
+        "model.safetensors",
+        "chat_template.jinja",
+        "config.json",
+        "generation_config.json",
+        "special_tokens_map.json",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "LICENSE"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": null,
+      "adapter": null,
+      "reason": "This publisher checkpoint is gated and declares custom Lfm3 Python code. Approved Hugging Face access and a separately reviewed compatible LFM3 Transformers adapter are required; OpenCore does not execute repository code automatically. No actual generation has been verified."
+    }
+  ],
+  "smallFiles": [],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore.",
+  "fileAccess": {
+    "README.md": 401,
+    "config.json": 401,
+    "authenticatedAccessAttempted": false
+  },
+  "precisionEvidence": {
+    "parameters": {
+      "BF16": 1728801536
+    },
+    "total": 1728801536
+  },
+  "notes": "Public API provides exact file hashes, architecture and BF16 tensor count. Raw gated README/config were not accessible anonymously; no gate was accepted and no repository Python is included or executed."
+}

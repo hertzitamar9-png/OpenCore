@@ -129,6 +129,7 @@ app = require('./slash-menu-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./group-ui-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./task-progress-patches.cjs')(app,{replaceOnce});
 app = require('./model-mode-patches.cjs')(app,{editFunction,replaceOnce});
+app = require('./download-ui-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./autoloop-ui-patches.cjs')(app,{editFunction,replaceOnce});
 app=editFunction(app,'yj',text=>{
   text=replaceOnce(text,'J=p.useCallback(async(se=!0)=>','J=p.useCallback(async(se=!1)=>');
@@ -155,7 +156,7 @@ app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+
   const report = [];
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
-  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+coordinatorCode;
+  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode;
   for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,

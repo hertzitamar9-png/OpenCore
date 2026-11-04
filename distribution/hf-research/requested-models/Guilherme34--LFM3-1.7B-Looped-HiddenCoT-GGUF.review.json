@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "repository": "Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF",
+  "revision": "8530c4a214a115c28b18e845dc0c48604653ef26",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF/revision/8530c4a214a115c28b18e845dc0c48604653ef26?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": null,
+  "gated": false,
+  "architecture": "lfm3",
+  "publishedContextTokens": 262144,
+  "publishedWeights": [
+    {
+      "filename": "lfm3-v21-Q6_K.gguf",
+      "bytes": 2227084384,
+      "sha256": "5d3a55b2e4d4e9538e9da379d2f88c793a161e4a076d0a3eb473b74c53e59db8"
+    },
+    {
+      "filename": "lfm3-v21-Q8_0.gguf",
+      "bytes": 2881415520,
+      "sha256": "b8505a20ed4640d28a7dc690aedd14988b65eef19a60ccd87d8ec3b51c20c9d4"
+    }
+  ],
+  "packageCount": 2,
+  "options": [
+    {
+      "format": "gguf",
+      "label": "Q6_K",
+      "bytes": 2227096605,
+      "files": [
+        "lfm3-v21-Q6_K.gguf",
+        "chat_template"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": null,
+      "adapter": null,
+      "reason": "Requires the LFM3 runtime plus explicit selection of the pinned external chat_template and its latent-token prefix. The current OpenCore runner uses the embedded template and has no external-template selection hook; correct Looped HiddenCoT inference is not yet verified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q8_0",
+      "bytes": 2881427741,
+      "files": [
+        "lfm3-v21-Q8_0.gguf",
+        "chat_template"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": null,
+      "adapter": null,
+      "reason": "Requires the LFM3 runtime plus explicit selection of the pinned external chat_template and its latent-token prefix. The current OpenCore runner uses the embedded template and has no external-template selection hook; correct Looped HiddenCoT inference is not yet verified."
+    }
+  ],
+  "smallFiles": [
+    {
+      "filename": "README.md",
+      "bytes": 802,
+      "sha256": "2089cd7aae92e3a9f299b99e47c46c361d4f273299bb1a4a7e0d7081f940d84e",
+      "gitBlobSha1": "ae340d490e6924c9068846cfb4c84e9c32936fe1",
+      "url": "https://huggingface.co/Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF/raw/8530c4a214a115c28b18e845dc0c48604653ef26/README.md"
+    },
+    {
+      "filename": "chat_template",
+      "bytes": 12221,
+      "sha256": "f6cd29fd46ccf7817ae8d81b44a7ba979c316647c95d8332d8029af509a571e6",
+      "gitBlobSha1": "007d195d7a3730155b5f55293c7b8ec7fc117929",
+      "url": "https://huggingface.co/Guilherme34/LFM3-1.7B-Looped-HiddenCoT-GGUF/raw/8530c4a214a115c28b18e845dc0c48604653ef26/chat_template"
+    }
+  ],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore.",
+  "templateCompatibility": {
+    "publishedSha256": "f6cd29fd46ccf7817ae8d81b44a7ba979c316647c95d8332d8029af509a571e6",
+    "embeddedSha256": "ab01a1844d5085ca53a3362b306c0bd91459910b4658a31460374fecea6c10c5",
+    "identical": false,
+    "missingHook": "hf_runtime GGUF launch currently selects embedded --jinja only; no --chat-template-file handling. Android legacy template matcher does not establish full Jinja compatibility."
+  }
+}

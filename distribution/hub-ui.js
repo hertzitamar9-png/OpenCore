@@ -73,7 +73,7 @@ function $useHub() {
 function $hubProgress() {
   const job=$hubState.progress;if(!job)return null;
   const preparing=job.kind==='prepare'||/^(installing-runtime|installing-dependencies|checking-hardware|loading-model|verifying-files|verifying-inference|preparing-echo|verifying-echo)$/.test(job.stage);
-  const phase=job.status==='running'||job.status==='pausing'?preparing?'preparing':/verif/.test(job.stage)?'verifying':'downloading':
+  const phase=job.status==='cancelling'?'cancelling':job.status==='cancelled'?'cancelled':job.status==='running'||job.status==='pausing'?preparing?'preparing':/verif/.test(job.stage)?'verifying':'downloading':
     job.status==='paused'?'paused':job.status==='failed'?'failed':job.status==='ready'||job.status==='installed'?'ready':null;
   return phase?{modelId:job.id,operationId:job.jobId,phase,downloadedBytes:job.bytesDone||0,totalBytes:preparing?0:job.bytesTotal||0,
     currentFile:job.detail||job.currentFile||String(job.stage||'').replaceAll('-',' '),error:job.status==='failed'?job.error:null}:null;
@@ -200,6 +200,31 @@ async function $hubInvoke(command,args,run) {
   }
   if(command==='cancel_model_install'&&['running','pausing'].includes($hubState.progress?.status)){
     const value=await $hubRequest('/pause',{jobId:$hubState.progress.jobId});await $hubRefresh(true);return value;
+  }
+  if(command==='cancel_model_installation'){
+    if(globalThis.__OPENCORE_PHONE__===true)return run();
+    await $hubRefresh(true);
+    const job=$hubState.progress;
+    if(job?.id===args.modelId&&['running','pausing','cancelling','paused'].includes(job.status)){
+      if(args.operationId&&args.operationId!==job.jobId)throw Error('The current installation changed before cancellation.');
+      const value=await $hubRequest('/cancel',{jobId:job.jobId});await $hubRefresh(true);return value;
+    }
+    const native=(command,args)=>window.__TAURI_INTERNALS__.invoke(command,args);
+    const status=await native(args.jobId?'runtime_setup_status':'model_install_progress',{});
+    const current=args.jobId?status?.jobs?.find(value=>value.id===args.jobId):status;
+    if(!current||(args.jobId?current.targetId:current.modelId)!==args.modelId)throw Error('The native installation changed before cancellation.');
+    const stopping=args.jobId?'runtime_setup_cancel':'cancel_model_install';
+    await native(stopping,args.jobId?{jobId:args.jobId}:{});
+    const deadline=Date.now()+35000;
+    for(;;){
+      const next=await native(args.jobId?'runtime_setup_status':'model_install_progress',{});
+      const own=args.jobId?next?.jobs?.find(value=>value.id===args.jobId):next;
+      if(own&&(args.jobId?own.targetId:own.modelId)!==args.modelId)throw Error('Another native installation replaced the cancelled job. Its files were kept.');
+      if(own&&!['queued','running','cancelling','preparing','downloading','verifying'].includes(args.jobId?own.status:own.phase))break;
+      if(Date.now()>=deadline)throw Error('The installation is still stopping. Its partial files were kept; retry Cancel when it has stopped.');
+      await new Promise(resolve=>setTimeout(resolve,200));
+    }
+    return $hubRequest('/native/cancel',{id:args.modelId});
   }
   if(command==='stop_runtime'&&$hubDescriptor){await $hubRequest('/stop').catch(()=>{});return run();}
   if(command==='send_chat_message'&&$hubDescriptor){
@@ -426,6 +451,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
   const model=group.variants.find(v=>v.id===choice)||group.variants[0],rawEntry=state.catalog.find(v=>v.id===model.id)||model.hubEntry,entry=globalThis.__opencoreModelModes?.entry(rawEntry)||rawEntry;
   const active=shared.active?.modelId===entry.id,locked=disabled||!!shared.active||busy;
+  const cardProgress=$installCoordinator.visibleProgress(shared.progress);
   const adapter=!entry.computerRuntime&&(entry.packageKind==='adapter'||entry.format==='lora');
   const bases=adapter?$hubBaseModels(entry):[];
   const selectedBase=bases.find(item=>item.id===baseChoice)||bases.find(item=>item.id===pairedBaseId)||bases[0]||null;
@@ -499,6 +525,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const prepared=await globalThis.__opencoreModelModes?.ensure(rawEntry)||entry;const profile=entry.nativeProfile?await globalThis.__opencoreModelModes?.activate(entry.id,globalThis.__opencoreModelModes.mode(entry))||entry.id:await $hubRegister(prepared);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   function askRemove(){setError('');onNativeRemove?.(model);}
   return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady||entry.specialistReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
+    globalThis.__opencoreModelInstallProgress&&group.variants.some(value=>value.id===cardProgress?.modelId)?h(globalThis.__opencoreModelInstallProgress,{progress:cardProgress,label:state.catalog.find(value=>value.id===cardProgress.modelId)?.familyLabel||entry.familyLabel||entry.repository,busy:shared.active?.pausing||shared.active?.kind==='starting',onPause:()=>$installCoordinator.pause(),onCancel:()=>$installCoordinator.cancel(cardProgress),onError:setError}):null,
     h('p',null,entry.origin==='autoloop'?'Local AutoLoop variant':entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,entry.gated?h('p',null,'Publisher-gated: accept the repository access terms on Hugging Face and save an authorized token in Settings before installing.'):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='computer'?'Computer-use · Action prediction':entry.specialist==='ocr'?'OCR · Image to text':entry.category==='image'?'Image model':entry.runtime?.adapter?(entry.operatingMode==='native'?'Native':'ECHO')+' · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
     globalThis.__opencoreModelModes?h(globalThis.__opencoreModelModes.Control,{model:entry,disabled:locked,onChanged}):null,

@@ -13,12 +13,27 @@ set(GGML_BACKEND_DL OFF CACHE BOOL "" FORCE)
 set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
 set(GGML_CPU_KLEIDIAI OFF CACHE BOOL "" FORCE)
 add_subdirectory("${OPENCORE_LLAMA_SOURCE}" llama)
+# Compile the pinned common Jinja interpreter without CLI/network helpers.
+set(PHONE_COMMON "${OPENCORE_LLAMA_SOURCE}/common")
+add_library(opencore_phone_jinja STATIC
+  "${PHONE_COMMON}/json.cpp" "${PHONE_COMMON}/unicode.cpp"
+  "${PHONE_COMMON}/jinja/lexer.cpp" "${PHONE_COMMON}/jinja/parser.cpp"
+  "${PHONE_COMMON}/jinja/runtime.cpp" "${PHONE_COMMON}/jinja/value.cpp"
+  "${PHONE_COMMON}/jinja/string.cpp")
+target_include_directories(opencore_phone_jinja PUBLIC "${PHONE_COMMON}")
+target_link_libraries(opencore_phone_jinja PUBLIC llama vendor::nlohmann)
 add_library(opencore_phone SHARED phone_runtime.cpp)
-target_link_libraries(opencore_phone PRIVATE llama)
+target_link_libraries(opencore_phone PRIVATE opencore_phone_jinja)
 if(ANDROID)
   target_link_libraries(opencore_phone PRIVATE log android)
   target_link_options(opencore_phone PRIVATE "-Wl,-z,max-page-size=16384")
 else()
   find_package(JNI REQUIRED)
+  if(WIN32)
+    set_target_properties(opencore_phone PROPERTIES PREFIX "")
+  endif()
   target_include_directories(opencore_phone PRIVATE ${JNI_INCLUDE_DIRS})
+  add_executable(opencore_phone_templates_test EXCLUDE_FROM_ALL ../tests/native_template_test.cpp)
+  target_include_directories(opencore_phone_templates_test PRIVATE ${JNI_INCLUDE_DIRS})
+  target_link_libraries(opencore_phone_templates_test PRIVATE opencore_phone_jinja)
 endif()

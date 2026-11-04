@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "repository": "mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF",
+  "revision": "15337568f924a8218d4dc6c6a81a86670c915a52",
+  "reviewedAt": "2026-11-04",
+  "inspection": "Public official Hub metadata and small publisher files only",
+  "weightBytesDownloaded": 0,
+  "inferenceVerified": false,
+  "metadataUrl": "https://huggingface.co/api/models/mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF/revision/15337568f924a8218d4dc6c6a81a86670c915a52?blobs=true",
+  "pipelineTag": "text-generation",
+  "library": "transformers",
+  "gated": false,
+  "architecture": "lfm3",
+  "publishedContextTokens": 524288,
+  "publishedWeights": [
+    {
+      "filename": "lfm3-1.7b-frontier-v4-q4_k_m.gguf",
+      "bytes": 1099627296,
+      "sha256": "c8205c3b7d0b64d9ae2e0192f8a50c074f23f2eb382698705914b7f0cbce5c62"
+    },
+    {
+      "filename": "lfm3-1.7b-frontier-v4-q4_k_s.gguf",
+      "bytes": 1056037664,
+      "sha256": "5571a888896734f57d8c00c2c3352aea07a441909bff83c7f7c54fc5d50c19ce"
+    },
+    {
+      "filename": "lfm3-1.7b-frontier-v4-q8_0.gguf",
+      "bytes": 1846237984,
+      "sha256": "ec2fccfe4d34c8717964c362722277252a51b41d4e51906d5f13df48b426d2f4"
+    }
+  ],
+  "packageCount": 3,
+  "options": [
+    {
+      "format": "gguf",
+      "label": "Q4_K_M",
+      "bytes": 1099627296,
+      "files": [
+        "lfm3-1.7b-frontier-v4-q4_k_m.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q4_K_S",
+      "bytes": 1056037664,
+      "files": [
+        "lfm3-1.7b-frontier-v4-q4_k_s.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    },
+    {
+      "format": "gguf",
+      "label": "Q8_0",
+      "bytes": 1846237984,
+      "files": [
+        "lfm3-1.7b-frontier-v4-q8_0.gguf"
+      ],
+      "supportedContextTokens": null,
+      "managedEngine": "lfm3-cpu-v1",
+      "adapter": "gguf",
+      "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+    }
+  ],
+  "smallFiles": [
+    {
+      "filename": "README.md",
+      "bytes": 1087,
+      "sha256": "9b72cd92e80ed28d26379bbe9ac941bc34fc9565be27b0de6cc4762b37857f59",
+      "gitBlobSha1": "b3b796a1a39b4877f76272148b594cd2658d730a",
+      "url": "https://huggingface.co/mohommed/LFM3-1.7B-Frontier-SmartAgentv4-GGUF/raw/15337568f924a8218d4dc6c6a81a86670c915a52/README.md"
+    }
+  ],
+  "claims": "Architecture and sizes are metadata evidence. Publisher quality, speed and long-context claims were not tested by OpenCore."
+}

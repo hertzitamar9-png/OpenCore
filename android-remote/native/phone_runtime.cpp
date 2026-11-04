@@ -1,6 +1,10 @@
 #include <jni.h>
 #include "llama.h"
 #include "ggml-backend.h"
+#include "jinja/parser.h"
+#include "jinja/runtime.h"
+#include "json.h"
+#include "unicode.h"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -15,6 +19,7 @@ std::mutex owner;
 std::atomic<bool> stopped{false};
 llama_model *model=nullptr;
 llama_context *context=nullptr;
+std::string chat_template_override;
 std::once_flag initialized;
 using Clock=std::chrono::steady_clock;
 void fail(JNIEnv *env,const char *message){env->ThrowNew(env->FindClass("java/io/IOException"),message);}
@@ -29,7 +34,26 @@ std::string utf8(JNIEnv *env,jstring s){
 }
 bool abort_decode(void*){return stopped.load();}
 bool progress(float,void*){return !stopped.load();}
-void close_model(){if(context){llama_free(context);context=nullptr;}if(model){llama_model_free(model);model=nullptr;}}
+void close_model(){chat_template_override.clear();if(context){llama_free(context);context=nullptr;}if(model){llama_model_free(model);model=nullptr;}}
+void validate_template(const std::string &source){
+    if(source.empty()||source.size()>=1048576||source.find('\0')!=std::string::npos)throw std::runtime_error("Invalid publisher chat template size or text.");
+    for(size_t at=0;at<source.size();){auto point=common_parse_utf8_codepoint(source,at);if(point.status!=utf8_parse_result::SUCCESS)throw std::runtime_error("The publisher chat template is not valid UTF-8.");at+=point.bytes_consumed;}
+    try{jinja::lexer lexer;auto tokens=lexer.tokenize(source);jinja::parse_from_tokens(tokens);}
+    catch(const std::exception &){throw std::runtime_error("The publisher chat template is not valid Jinja.");}
+}
+std::string render_chat(const std::string &source,const std::vector<std::string> &roles,const std::vector<std::string> &contents,const std::string &bos,const std::string &eos){
+    if(source.empty()||source.size()>=1048576||roles.size()!=contents.size())throw std::runtime_error("Invalid publisher chat template or history.");
+    try{
+        jinja::lexer lexer;auto tokens=lexer.tokenize(source);auto program=jinja::parse_from_tokens(tokens);
+        auto messages=common_json::array();
+        for(size_t i=0;i<roles.size();i++)messages.push_back(common_json{{"role",roles[i]},{"content",contents[i]}});
+        jinja::context env(source);
+        jinja::global_from_json(env,common_json{{"messages",messages},{"bos_token",bos},{"eos_token",eos},{"add_generation_prompt",true},{"enable_thinking",true}},false);
+        jinja::runtime renderer(env);auto output=jinja::runtime::gather_string_parts(renderer.execute(program))->as_string().str();
+        if(output.empty()||output.size()>8*1024*1024)throw std::runtime_error("Invalid rendered prompt size");
+        return output;
+    }catch(const std::exception &){throw std::runtime_error("The publisher chat template could not be rendered by the bundled Jinja engine.");}
+}
 void update(JNIEnv *env,jobject callback,jmethodID method,const std::string &output,int prompt,int generated,Clock::time_point start){
     jbyteArray bytes=env->NewByteArray((jsize)output.size());
     if(!bytes)throw std::runtime_error("Phone memory exhausted while streaming output.");
@@ -43,6 +67,16 @@ void update(JNIEnv *env,jobject callback,jmethodID method,const std::string &out
 extern "C" JNIEXPORT void JNICALL Java_ai_opencore_remote_PhoneNative_cancel(JNIEnv*,jclass){stopped=true;}
 extern "C" JNIEXPORT void JNICALL Java_ai_opencore_remote_PhoneNative_prepare(JNIEnv*,jclass){stopped=false;}
 extern "C" JNIEXPORT void JNICALL Java_ai_opencore_remote_PhoneNative_unload(JNIEnv*,jclass){std::lock_guard<std::mutex> lock(owner);close_model();}
+extern "C" JNIEXPORT void JNICALL Java_ai_opencore_remote_PhoneNative_setChatTemplate(JNIEnv *env,jclass,jbyteArray bytes){
+    std::lock_guard<std::mutex> lock(owner);chat_template_override.clear();
+    try{
+        if(!bytes)return;
+        if(!model)throw std::runtime_error("Load the selected model before setting its chat template.");
+        auto size=env->GetArrayLength(bytes);if(size<1||size>=1048576)throw std::runtime_error("Invalid publisher chat template size.");
+        std::string source(size,'\0');env->GetByteArrayRegion(bytes,0,size,(jbyte*)source.data());if(env->ExceptionCheck())return;
+        validate_template(source);chat_template_override=std::move(source);
+    }catch(const std::exception &error){if(!env->ExceptionCheck())fail(env,error.what());}
+}
 
 extern "C" JNIEXPORT void JNICALL Java_ai_opencore_remote_PhoneNative_load(JNIEnv *env,jclass,jstring path,jint window,jint threads){
     std::lock_guard<std::mutex> lock(owner);
@@ -75,18 +109,20 @@ extern "C" JNIEXPORT jstring JNICALL Java_ai_opencore_remote_PhoneNative_generat
             if(names.back()!="system"&&names.back()!="user"&&names.back()!="assistant")throw std::runtime_error("Unsupported conversation role.");
             bytes+=texts.back().size();if(bytes>4*1024*1024)throw std::runtime_error("This history exceeds the phone runtime's prompt limit.");
         }
-        std::vector<llama_chat_message> messages;for(int i=0;i<count;i++)messages.push_back({names[i].c_str(),texts[i].c_str()});
         const char *tmpl=llama_model_chat_template(model,nullptr);
-        if(!tmpl||!tmpl[0])throw std::runtime_error("This model does not contain a supported publisher chat template. Choose an Instruct GGUF or use the paired PC.");
-        int needed=llama_chat_apply_template(tmpl,messages.data(),messages.size(),true,nullptr,0);
-        if(needed<=0||needed>8*1024*1024)throw std::runtime_error("This publisher chat template is not supported by the phone runtime.");
-        std::vector<char> prompt((size_t)needed+1);llama_chat_apply_template(tmpl,messages.data(),messages.size(),true,prompt.data(),(int)prompt.size());
+        if(chat_template_override.empty()&&(!tmpl||!tmpl[0]))throw std::runtime_error("This model does not contain a supported publisher chat template. Choose an Instruct GGUF or use the paired PC.");
+        if(stopped)return env->NewStringUTF("cancelled");
         const auto *vocab=llama_model_get_vocab(model);
-        int tokens_needed=llama_tokenize(vocab,prompt.data(),needed,nullptr,0,true,true);
+        auto token_text=[&](llama_token token){const char *text=token<0?nullptr:llama_vocab_get_text(vocab,token);return text?std::string(text):std::string();};
+        auto bos=token_text(llama_vocab_bos(vocab)),eos=token_text(llama_vocab_eos(vocab));
+        auto prompt=render_chat(chat_template_override.empty()?std::string(tmpl):chat_template_override,names,texts,bos,eos);
+        bool add_special=bos.empty()||prompt.compare(0,bos.size(),bos)!=0;
+        int needed=(int)prompt.size();
+        int tokens_needed=llama_tokenize(vocab,prompt.data(),needed,nullptr,0,add_special,true);
         if(tokens_needed==INT32_MIN)throw std::runtime_error("The prompt is too large to tokenize.");
         tokens_needed=tokens_needed<0?-tokens_needed:tokens_needed;
         if(tokens_needed<1||tokens_needed+32>int(llama_n_ctx(context)))throw std::runtime_error("This chat exceeds the selected phone context window. Start a new chat or increase Phone context in Settings. The app has not dropped your history.");
-        std::vector<llama_token> tokens(tokens_needed);int n=llama_tokenize(vocab,prompt.data(),needed,tokens.data(),(int)tokens.size(),true,true);
+        std::vector<llama_token> tokens(tokens_needed);int n=llama_tokenize(vocab,prompt.data(),needed,tokens.data(),(int)tokens.size(),add_special,true);
         if(n<1)throw std::runtime_error("Prompt tokenization failed.");
         llama_memory_clear(llama_get_memory(context),true);
         jclass cls=env->GetObjectClass(callback);jmethodID on_update=env->GetMethodID(cls,"onUpdate","([BIIJ)V");env->DeleteLocalRef(cls);

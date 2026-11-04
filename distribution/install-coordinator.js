@@ -83,11 +83,11 @@ function createInstallNotificationPolicy(options = {}) {
 function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifications = createInstallNotificationPolicy()) {
   const listeners = new Set();
   const starts = new Set(['install_model', 'runtime_setup_start', 'install_publisher_model', 'register_prepared_model', 'hub_prepare_model']);
-  const activePhases = new Set(['preparing', 'downloading', 'verifying', 'uninstalling']);
+  const activePhases = new Set(['preparing', 'downloading', 'verifying', 'uninstalling', 'cancelling']);
   const activeStatuses = new Set(['queued', 'running', 'cancelling']);
   let snapshot = { active: null, progress: null, runtime: null, library: null, initialized: false, terminal: 0, receiptsRevision: 0, notificationsRevision: 0 };
-  let runtime = null, catalogueProgress = null, starting = null, polling = null, timer = null;
-  let receiptKey = '', paused = new Set();
+  let runtime = null, catalogueProgress = null, starting = null, polling = null, timer = null, cancellingOperation = null;
+  let receiptKey = '', paused = new Set(), cancelled = new Set();
 
   function publish(values) {
     const next = { ...snapshot, ...values };
@@ -101,7 +101,10 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
       [...jobs].reverse().find(value => activeStatuses.has(value.status));
     const download = catalogueProgress && activePhases.has(catalogueProgress.phase) ? catalogueProgress : null;
     let active = null, progress = snapshot.progress;
-    if (job) {
+    if (cancellingOperation?.pending) {
+      active = { ...cancellingOperation.operation, pausing: true, cancelling: true };
+      progress = { ...(snapshot.progress || {}), modelId: active.modelId, phase: 'cancelling', error: null, currentFile: 'Stopping installation and removing its owned partial files…' };
+    } else if (job) {
       const total = Math.max(0, Number(job.totalBytes) || 0);
       const stage = String(job.stage || 'preparing').replaceAll('-', ' ');
       const verifying = /verif|loading.*model|test.*generation/.test(job.stage || '');
@@ -111,7 +114,7 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
         downloadedBytes: Math.min(total, Math.max(0, Number(job.downloadedBytes) || 0)), totalBytes: total,
         currentFile: job.detail || stage, error: null };
     } else if (download) {
-      active = { modelId: download.modelId, kind: 'download', pausing: false };
+      active = { modelId: download.modelId, kind: 'download', pausing: download.phase === 'cancelling', cancelling: download.phase === 'cancelling' };
       progress = download;
     } else if (starting && (starting.pending || starting.unknown || now() - starting.at < 2000)) {
       active = { modelId: starting.modelId, kind: 'starting', pausing: false };
@@ -123,11 +126,11 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
       const terminalDownload = previous.kind !== 'runtime' && catalogueProgress?.modelId === previous.modelId ? catalogueProgress : null;
       const error = terminalJob?.error || terminalDownload?.error;
       const status = terminalJob?.status || terminalDownload?.phase;
-      const phase = status === 'ready' ? 'ready' : status === 'cancelled' || /cancelled|canceled/i.test(error || '') ? 'paused' :
+      const phase = status === 'ready' ? 'ready' : status === 'cancelled' || status === 'canceled' || /cancelled|canceled/i.test(error || '') ? cancelled.has(previous.modelId) || !paused.has(previous.modelId) && status === 'cancelled' ? 'cancelled' : 'paused' :
         status === 'failed' || error ? 'failed' : paused.has(previous.modelId) ? 'paused' : 'ready';
       progress = { ...(snapshot.progress || {}), modelId: previous.modelId, phase,
         operationId: terminalJob?.id || terminalDownload?.operationId || terminalDownload?.jobId || snapshot.progress?.operationId,
-        currentFile: phase === 'paused' ? 'Paused. Completed files are kept for the next attempt.' : terminalJob?.detail || terminalDownload?.currentFile || (phase === 'failed' ? 'Installation failed.' : 'Installation complete.'),
+        currentFile: phase === 'paused' ? 'Paused. Completed files are kept for the next attempt.' : phase === 'cancelled' ? 'Installation cancelled. Completed and shared files were kept.' : terminalJob?.detail || terminalDownload?.currentFile || (phase === 'failed' ? 'Installation failed.' : 'Installation complete.'),
         error: phase === 'failed' ? error || 'Installation failed.' : null };
       starting = null;
     }
@@ -179,6 +182,7 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
       const modelId = args.targetId || args.id || args.modelId;
       notifications.begin(modelId);
       paused.delete(modelId);
+      cancelled.delete(modelId);
       starting = { modelId, pending: true, at: now() };
       reconcile(); ensurePolling();
       try {
@@ -198,17 +202,24 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
         throw error;
       }
     }
-    if (command === 'runtime_setup_cancel' || command === 'cancel_model_install') {
-      const modelId = snapshot.active?.modelId;
+    if (command === 'runtime_setup_cancel' || command === 'cancel_model_install' || command === 'cancel_model_installation') {
+      const discarding = command === 'cancel_model_installation';
+      const current = snapshot.active || (snapshot.progress?.phase === 'paused' ? {modelId:snapshot.progress.modelId} : null);
+      const modelId = current?.modelId;
+      if (discarding && (!current || args.modelId !== modelId || args.operationId && args.operationId !== snapshot.progress?.operationId))
+        throw Error('The active installation changed before cancellation. Refresh Models and retry.');
+      if (discarding && cancellingOperation?.pending) throw Error('This installation is already stopping.');
+      if (discarding) { cancelled.add(modelId); paused.delete(modelId); cancellingOperation = {pending:true,operation:{kind:'download',...current}}; }
       if (snapshot.active) {
-        publish({ active: { ...snapshot.active, pausing: true } });
+        publish({ active: { ...snapshot.active, pausing: true, cancelling: discarding } });
       }
+      if (discarding) reconcile();
       try {
         const result = await run();
-        if (modelId) paused.add(modelId);
+        if (modelId && !discarding) paused.add(modelId);
         return result;
-      } catch (error) { if (modelId) paused.delete(modelId); throw error; }
-      finally { starting = null; await refresh(true); }
+      } catch (error) { if (modelId) { paused.delete(modelId); cancelled.delete(modelId); } throw error; }
+      finally { starting = null; if (discarding) cancellingOperation = null; await refresh(true); }
     }
     if (command === 'dismiss_model_install_progress') {
       const current = snapshot.progress || snapshot.library?.progress || catalogueProgress;
@@ -241,8 +252,18 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifica
     const args = operation.jobId ? { jobId: operation.jobId } : {};
     return invoke(command, args, () => nativeInvoke(command, args));
   }
+  async function cancelInstallation(expected) {
+    const pausedJob = snapshot.progress?.phase === 'paused' && runtime?.jobs?.find(job=>job.id===snapshot.progress.operationId&&job.targetId===snapshot.progress.modelId);
+    const operation = snapshot.active || (snapshot.progress?.phase === 'paused' ? {modelId:snapshot.progress.modelId,...(pausedJob?{jobId:pausedJob.id,kind:'runtime'}:{kind:'download'})} : null);
+    if(expected&&(expected.modelId!==operation?.modelId||expected.operationId&&expected.operationId!==snapshot.progress?.operationId))
+      throw Error('The current installation changed. Refresh its progress before cancelling.');
+    if (!operation || operation.pausing) return;
+    if (operation.kind === 'starting') throw Error('Installation is starting. Cancel will be available in a moment.');
+    const args = { modelId: operation.modelId, ...(snapshot.progress?.operationId ? {operationId:snapshot.progress.operationId} : {}), ...(operation.jobId ? {jobId:operation.jobId} : {}) };
+    return invoke('cancel_model_installation', args, () => nativeInvoke('cancel_model_installation', args));
+  }
   return {
-    invoke, refresh, pause, getSnapshot: () => snapshot,
+    invoke, refresh, pause, cancel: cancelInstallation, getSnapshot: () => snapshot,
     visibleProgress(...values) {
       const progress = values.find(Boolean) || null;
       return notifications.hidden(progress) ? null : progress;

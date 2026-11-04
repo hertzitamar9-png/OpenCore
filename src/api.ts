@@ -97,7 +97,7 @@ export interface InstalledModel {
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;
-  progress: { modelId: string; phase: string; downloadedBytes: number; totalBytes: number; currentFile: string; error: string | null } | null;
+  progress: { modelId: string; operationId?: string; phase: string; downloadedBytes: number; totalBytes: number; currentFile: string; error: string | null } | null;
 }
 export async function modelLibrary(options?: { fresh?: boolean }): Promise<ModelLibrary> {
   if (desktop()) {
@@ -136,6 +136,7 @@ export async function uninstallModel(id: string, confirmationToken: string): Pro
   await invoke("uninstall_model", { id, confirmationToken });
 }
 export const cancelModelInstall = () => invoke<void>("cancel_model_install");
+export const cancelModelInstallation = (modelId:string,operationId?:string,jobId?:string) => invoke<void>('cancel_model_installation',{modelId,...(operationId?{operationId}:{}),...(jobId?{jobId}:{})});
 
 export type ArtifactPreview = { id: string; name: string; mime: string; size: number; dataUrl: string; text: string | null };
 export type ComposerAttachmentPreview = { name: string; mime: string; size: number; dataUrl: string; text: string | null };

@@ -7,7 +7,7 @@ import org.json.*;
 import java.util.UUID;
 
 /** Phone-only data. This database is never part of PC pairing or preference sync. */
-final class PhoneStore extends SQLiteOpenHelper {
+class PhoneStore extends SQLiteOpenHelper {
     PhoneStore(Context context){super(context,"opencore-phone.sqlite3",null,1);setWriteAheadLoggingEnabled(true);}
     @Override public void onCreate(SQLiteDatabase db){
         db.execSQL("CREATE TABLE chats(id TEXT PRIMARY KEY,title TEXT NOT NULL,updated INTEGER NOT NULL)");
@@ -16,7 +16,10 @@ final class PhoneStore extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE models(id TEXT PRIMARY KEY,record TEXT NOT NULL)");
     }
     @Override public void onUpgrade(SQLiteDatabase db,int oldVersion,int newVersion){throw new IllegalStateException("Phone database migration is required.");}
-    String createChat(String title){String id=UUID.randomUUID().toString();ContentValues values=new ContentValues();values.put("id",id);values.put("title",title);values.put("updated",System.currentTimeMillis());getWritableDatabase().insertOrThrow("chats",null,values);return id;}
+    String createChat(String title){String id="opencore:"+UUID.randomUUID();ensureChat(id,title);return id;}
+    static boolean validChatId(String id){return id!=null&&id.matches("(?:opencore:)?[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}");}
+    void ensureChat(String id,String title){if(!validChatId(id))throw new IllegalArgumentException("Invalid phone conversation identity.");ContentValues values=new ContentValues();values.put("id",id);values.put("title",title);values.put("updated",System.currentTimeMillis());getWritableDatabase().insertWithOnConflict("chats",null,values,SQLiteDatabase.CONFLICT_IGNORE);}
+    String chatTitle(String id)throws JSONException{try(Cursor c=getReadableDatabase().rawQuery("SELECT title FROM chats WHERE id=?",new String[]{id})){if(!c.moveToFirst())throw new IllegalArgumentException("This phone chat was not found.");return c.getString(0);}}
     boolean hasChat(String id){try(Cursor c=getReadableDatabase().rawQuery("SELECT 1 FROM chats WHERE id=?",new String[]{id})){return c.moveToFirst();}}
     void title(String id,String title){ContentValues v=new ContentValues();v.put("title",title);v.put("updated",System.currentTimeMillis());getWritableDatabase().update("chats",v,"id=?",new String[]{id});}
     JSONArray chats()throws JSONException{JSONArray out=new JSONArray();try(Cursor c=getReadableDatabase().rawQuery("SELECT id,title,updated FROM chats ORDER BY updated DESC",null)){while(c.moveToNext())out.put(new JSONObject().put("id",c.getString(0)).put("title",c.getString(1)).put("updated",c.getLong(2)));}return out;}
@@ -33,4 +36,27 @@ final class PhoneStore extends SQLiteOpenHelper {
     JSONObject model(String id)throws JSONException{try(Cursor c=getReadableDatabase().rawQuery("SELECT record FROM models WHERE id=?",new String[]{id})){return c.moveToFirst()?new JSONObject(c.getString(0)):null;}}
     JSONArray models()throws JSONException{JSONArray out=new JSONArray();try(Cursor c=getReadableDatabase().rawQuery("SELECT record FROM models ORDER BY id",null)){while(c.moveToNext())out.put(new JSONObject(c.getString(0)));}return out;}
     void removeModel(String id){getWritableDatabase().delete("models","id=?",new String[]{id});}
+    /** Copy terminal history once. Metadata retains exact parent/original message provenance. */
+    synchronized JSONObject copyMessages(String parent,String target,long through)throws Exception{
+        if(!hasChat(parent)||!hasChat(target))throw new IllegalArgumentException("The phone conversation was not found.");
+        SQLiteDatabase db=getWritableDatabase();db.beginTransaction();
+        try{
+            JSONObject plan=copyPlan(parent,target,through,messages(parent),messages(target));JSONArray rows=plan.getJSONArray("rows");
+            for(int i=0;i<rows.length();i++){
+                JSONObject row=rows.getJSONObject(i);ContentValues values=new ContentValues();values.put("id",UUID.randomUUID().toString());values.put("chat",target);values.put("role",row.getString("role"));values.put("content",row.getString("content"));values.put("status",row.getString("status"));values.put("created",row.getLong("created"));values.put("metrics",row.getJSONObject("metrics").toString());db.insertOrThrow("messages",null,values);
+            }
+            db.setTransactionSuccessful();return new JSONObject().put("copiedThrough",plan.getLong("copiedThrough")).put("updatedEntries",rows.length());
+        }finally{db.endTransaction();}
+    }
+    static JSONObject copyPlan(String parent,String target,long through,JSONArray source,JSONArray existing)throws JSONException{
+        java.util.HashSet<String> origins=new java.util.HashSet<>();JSONArray rows=new JSONArray();
+        for(int i=0;i<existing.length();i++){JSONObject meta=existing.getJSONObject(i).getJSONObject("metrics");origins.add(meta.optString("originConversation")+":"+meta.optString("originMessage"));}
+        java.util.ArrayList<JSONObject> ordered=new java.util.ArrayList<>();for(int i=0;i<source.length();i++)ordered.add(source.getJSONObject(i));java.util.Collections.sort(ordered,(a,b)->Long.compare(a.optLong("rowId"),b.optLong("rowId")));
+        long copied=through;
+        for(JSONObject row:ordered){long rowId=row.getLong("rowId");if(rowId<=through)continue;String state=row.getString("status");if(state.equals("loading")||state.equals("running"))break;copied=Math.max(copied,rowId);
+            JSONObject meta=new JSONObject(row.getJSONObject("metrics").toString());String origin=meta.optString("originConversation",parent),message=meta.optString("originMessage",row.getString("id"));if(origin.equals(target)||!origins.add(origin+":"+message))continue;
+            meta.put("originConversation",origin).put("originMessage",message).put("sideChatInherited",true).put("sideChatParent",parent).put("sideChatSourceEntry",rowId);
+            rows.put(new JSONObject(row.toString()).put("metrics",meta));
+        }return new JSONObject().put("copiedThrough",copied).put("rows",rows);
+    }
 }

@@ -5,33 +5,39 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import org.json.*;
 import java.io.IOException;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 
 /** Adapts the unchanged desktop application protocol to phone-owned data and JNI inference. */
 final class PhoneAppBridge implements PhoneBackend.Observer {
+    interface FeatureHost {Object invoke(String command,JSONObject args)throws Exception;}
     final Context app;
     final PhoneBackend backend;
     final PhoneBackend.Observer output;
     final SharedPreferences ui;
+    final FeatureHost featureHost;
     final Map<Integer,JSONObject> listeners=new ConcurrentHashMap<>();
     final Map<String,String> removals=new ConcurrentHashMap<>();
     final Map<String,JSONArray> plans=new ConcurrentHashMap<>();
     final Map<String,JSONObject> catalogEntries=new ConcurrentHashMap<>();
+    final Map<String,JSONObject> contexts=new ConcurrentHashMap<>();
     final Map<String,JSONObject> pinnedById=new ConcurrentHashMap<>(),profilesById=new ConcurrentHashMap<>();
     volatile List<JSONObject> pinnedFiles;
     volatile JSONArray statusCatalog;
     volatile String statusFingerprint="",statusRevision="";
+    PhoneWorkspace workspace;
     volatile boolean attached;
     int listenerSequence;
 
-    PhoneAppBridge(Context app,PhoneBackend backend,PhoneBackend.Observer output){
+    PhoneAppBridge(Context app,PhoneBackend backend,PhoneBackend.Observer output){this(app,backend,output,null);}
+    PhoneAppBridge(Context app,PhoneBackend backend,PhoneBackend.Observer output,FeatureHost host){
         this.app=app.getApplicationContext();this.backend=backend;this.output=output;
-        ui=this.app.getSharedPreferences("phone-app-ui",Context.MODE_PRIVATE);
+        ui=this.app.getSharedPreferences("phone-app-ui",Context.MODE_PRIVATE);featureHost=host;
     }
     void attach(){attached=true;backend.watch(this);}
-    void detach(){attached=false;backend.detach(this);listeners.clear();removals.clear();plans.clear();}
+    void detach(){attached=false;backend.detach(this);listeners.clear();removals.clear();plans.clear();contexts.clear();}
     boolean current(){return attached&&backend.observer==this;}
     JSONObject preferences(){
         JSONObject values=new JSONObject();
@@ -50,7 +56,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     static String iso(long time){SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",Locale.US);format.setTimeZone(TimeZone.getTimeZone("UTC"));return format.format(new Date(time));}
     static JSONObject object(Object... pairs)throws JSONException{JSONObject out=new JSONObject();for(int i=0;i<pairs.length;i+=2)out.put((String)pairs[i],pairs[i+1]==null?JSONObject.NULL:pairs[i+1]);return out;}
     static IOException unavailable(){return new IOException("This feature requires desktop tools or a media runtime. Choose Paired PC in Execution device settings.");}
-    void deliver(JSONObject packet){backend.main.post(()->{if(current())output.event(packet);});}
+    void deliver(JSONObject packet){backend.post(()->{if(current())output.event(packet);});}
     void result(String id,Object value,Throwable error){try{JSONObject packet=object("type","result","id",id,"ok",error==null);if(error==null)packet.put("value",value==null?JSONObject.NULL:value);else packet.put("error",PhoneBackend.message(error));deliver(packet);}catch(JSONException ignored){}}
     void publish(String name,Object payload)throws JSONException{
         for(Map.Entry<Integer,JSONObject> row:listeners.entrySet()){
@@ -73,7 +79,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         if(!current())return;
         final String id=packet.optString("id"),kind=packet.optString("kind"),command=packet.optString("command");
         // Cancellation bypasses the bounded I/O worker so a slow Hub request cannot delay Stop.
-        if(kind.equals("invoke")&&(command.equals("cancel_chat_message")||command.equals("cancel_model_install")||command.equals("runtime_setup_cancel"))){
+        if(kind.equals("invoke")&&(command.equals("cancel_chat_message")||command.equals("cancel_model_install")||command.equals("cancel_model_installation")||command.equals("runtime_setup_cancel"))){
             try{result(id,cancel(command,packet.optJSONObject("args")),null);}catch(Throwable error){result(id,null,error);}return;
         }
         backend.io.execute(()->{
@@ -98,7 +104,8 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         if(command.equals("cancel_chat_message")){
             boolean active=backend.generating.get()&&(args==null||args.optString("conversationId").isEmpty()||args.optString("conversationId").equals(backend.activeChat));if(active)backend.stop();return active;
         }
-        synchronized(backend.installation){backend.downloadCancelled.set(true);if(backend.downloadConnection!=null)backend.downloadConnection.disconnect();}return null;
+        if(command.equals("cancel_model_installation")){if(args==null)throw new IOException("Choose the phone installation to cancel.");String id=selectedFile(args.getString("modelId")).getString("id");return backend.cancelInstallation(id,args.optString("operationId",args.optString("jobId","")),true);}
+        String id=backend.download.optString("id");if(!id.isEmpty())backend.cancelInstallation(id,"",false);return null;
     }
     JSONObject selectedFile(String profile)throws Exception{
         JSONObject installed=backend.store.model(profile);if(installed!=null)return installed;
@@ -159,6 +166,8 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     void requirePhoneModel(String profile)throws Exception{
         if(profile.equals("stopped")||!installedProfileIds().containsKey(profile))throw modelRequired();
     }
+    synchronized PhoneWorkspace files()throws IOException{if(workspace==null)workspace=new PhoneWorkspace(app.getFilesDir(),ui);return workspace;}
+    String workspaceConversation(String chat)throws JSONException{return chat.isEmpty()?"":metadata(chat).optString("workspaceOrigin",chat);}
     String nativeProfile(JSONObject file)throws Exception{
         // Prefer the exact installed desktop Native profile ID when this artifact has one.
         pinned();JSONObject published=pinnedById.get(file.getString("id"));if(published==null)published=file;
@@ -176,12 +185,13 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         if(!file.optBoolean("textCapable",true))return "This specialist package requires the paired PC.";
         if(!backend.arm64())return "Phone inference requires a 64-bit ARM Android device.";
         if(!ExecutionPolicy.validIdentity(file.getString("repo"),file.getString("revision"),file.getString("filename"),file.getString("sha256"),file.getLong("bytes")))return "The publisher identity is incomplete.";
-        return ExecutionPolicy.fileProblem(file.getString("filename"),file.getLong("bytes"),budget);
+        return PhoneBackend.modelProblem(file,budget);
     }
     static String quantization(JSONObject file){java.util.regex.Matcher match=java.util.regex.Pattern.compile("(?i)(?:IQ[1-4]_[A-Z0-9_]+|Q[2-8](?:_[A-Z0-9]+)+|BF16|F16|F32)").matcher(file.optString("filename"));return match.find()?match.group().toUpperCase(Locale.ROOT):"GGUF";}
     JSONObject progress()throws JSONException{
         JSONObject value=backend.download;if(value.length()==0)return null;String phase=value.optString("phase"),error=value.optString("error","");
-        return object("modelId",value.optString("id"),"phase",backend.downloading.get()?"downloading":!error.isEmpty()?"failed":phase.startsWith("Downloaded")?"ready":"cancelled","downloadedBytes",value.optLong("received"),"totalBytes",value.optLong("total"),"currentFile",value.optString("filename",phase),"error",error.isEmpty()?null:error);
+        String state=backend.downloading.get()?(phase.equals("Cancelling")?"cancelling":phase.equals("Verifying")?"verifying":"downloading"):phase.equals("Paused")?"paused":phase.equals("Cancelled")?"cancelled":!error.isEmpty()?"failed":phase.startsWith("Downloaded")?"ready":"paused";
+        return object("modelId",value.optString("id"),"operationId",value.optString("operationId"),"jobId",value.optString("operationId"),"phase",state,"downloadedBytes",value.optLong("received"),"totalBytes",value.optLong("total"),"bytesPerSecond",value.optDouble("bytesPerSecond",0),"etaSeconds",value.opt("etaSeconds"),"currentFile",value.optString("filename",phase),"error",error.isEmpty()?null:error);
     }
     JSONObject modelRow(JSONObject file,String id,String label,JSONObject installed,long budget)throws Exception{
         boolean present=installed!=null&&backend.modelFile(file.getString("id")).isFile();String reason=problem(file,budget);
@@ -228,7 +238,7 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         }return out;
     }
     JSONObject snapshot()throws Exception{
-        ActivityManager.MemoryInfo memory=new ActivityManager.MemoryInfo();((ActivityManager)app.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(memory);
+        ActivityManager.MemoryInfo memory=backend.memoryInfo();
         JSONObject metrics=backend.generation.optJSONObject("metrics");if(metrics==null)metrics=new JSONObject();
         String loaded=backend.loading?selected():loadedProfile();String state=backend.loading?"starting":backend.loadedId.isEmpty()?"stopped":"running";
         JSONObject runtime=object("profile",state.equals("stopped")?"stopped":loaded,"status",state,"gatewayPort",0,"backendPort",0,"echoPort",0,"modelPath",backend.loadedId.isEmpty()?"":backend.modelFile(backend.loadedId).getAbsolutePath(),"archivePath",app.getDatabasePath("opencore-phone.sqlite3").getAbsolutePath(),"contextSize",backend.loadedContext>0?backend.loadedContext:backend.prefs.getInt("context",2048),"attentionKvLocation","Phone RAM","attentionKvType","Native finite context","loadingPhase",backend.loading?"Loading on this phone":state.equals("running")?"Loaded on this phone":"Phone runtime stopped","loadingElapsedMs",backend.loadElapsedMs,"error",backend.loadError.isEmpty()?null:backend.loadError);
@@ -260,14 +270,15 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     static void await(Future<?> task)throws Exception{try{task.get();}catch(ExecutionException error){Throwable cause=error.getCause();if(cause instanceof RuntimeException&&cause.getCause()!=null)cause=cause.getCause();if(cause instanceof Exception)throw (Exception)cause;throw new IOException(PhoneBackend.message(cause),cause);}}
     long stopRuntime()throws Exception{
         Future<?> unload;long ticket;
-        synchronized(backend.operations){backend.stop();ticket=backend.operations.ticket();unload=backend.inference.submit(()->{PhoneNative.unload();backend.loadedId="";backend.loadedContext=0;backend.emitState();});}
+        synchronized(backend.operations){backend.stop();ticket=backend.operations.ticket();unload=backend.inference.submit(()->{backend.unloadModels();backend.emitState();});}
         await(unload);return ticket;
     }
     Object send(JSONObject request)throws Exception{
-        JSONArray files=request.optJSONArray("files");if(files!=null&&files.length()>0)throw unavailable();
-        JSONArray skills=request.optJSONArray("skills");if(skills!=null)for(int i=0;i<skills.length();i++)if(!skills.getString(i).equals("text"))throw unavailable();
-        String profile=selected();requirePhoneModel(profile);JSONObject file=selectedFile(profile);String chat=request.optString("conversationId","");boolean created=chat.isEmpty();
-        if(created)chat=backend.store.createChat("New chat");else if(!backend.store.hasChat(chat))throw new IOException("This phone conversation was not found.");
+        JSONArray attachments=request.optJSONArray("files");
+        JSONArray skills=request.optJSONArray("skills");if(skills!=null)for(int i=0;i<skills.length();i++)if(!skills.getString(i).equals("text"))throw new IOException("This phone model generates text and reads text attachments. Disable the "+skills.getString(i)+" skill for this message; the phone workspace controls remain available.");
+        String profile=selected();requirePhoneModel(profile);JSONObject file=selectedFile(profile);String chat=request.optString("conversationId","");boolean created=chat.isEmpty()||!backend.store.hasChat(chat);
+        JSONObject reservation=contexts.get(request.optString("submissionId"));if(reservation!=null&&(!reservation.getString("modelId").equals(file.getString("id"))||!reservation.getString("conversationId").equals(chat)))throw new IOException("The selected model or conversation changed before submission. Retry this draft.");
+        if(chat.isEmpty())chat=backend.store.createChat("New chat");else if(created){if(!PhoneStore.validChatId(chat))throw new IOException("Invalid phone conversation identity.");backend.store.ensureChat(chat,"New chat");}
         try{
             JSONObject meta=metadata(chat).put("profile",profile);metadata(chat,meta);
             JSONObject parameters;
@@ -278,9 +289,45 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
                 String key="generation:"+chat;ui.edit().putString(key,parameters==null?"{}":parameters.toString()).commit();
             }else parameters=validateParameters(new JSONObject(ui.getString("generation:"+chat,ui.getString("generation-model:"+file.getString("id"),"{}"))));
             if(parameters==null)parameters=new JSONObject();
-            backend.send(object("model",file.getString("id"),"text",request.getString("text"),"chat",chat,"submissionId",request.optString("submissionId"),"maxTokens",parameters.optInt("max_tokens",backend.prefs.getInt("maxTokens",512)),"temperature",parameters.optDouble("temperature",backend.prefs.getFloat("temperature",.7f)),"topP",parameters.optDouble("top_p",.95),"topK",parameters.optInt("top_k",40),"repeatPenalty",parameters.optDouble("repeat_penalty",1.05),"seed",parameters.optLong("seed",-1)));
+            JSONObject input=files().attachmentInput(attachments,workspaceConversation(chat),request.optString("submissionId"));
+            backend.send(object("model",file.getString("id"),"chatTemplate",file.opt("chatTemplate"),"text",request.getString("text"),"chat",chat,"submissionId",request.optString("submissionId"),"attachmentText",input.getString("text"),"files",input.getJSONArray("files"),"maxTokens",parameters.optInt("max_tokens",backend.prefs.getInt("maxTokens",512)),"temperature",parameters.optDouble("temperature",backend.prefs.getFloat("temperature",.7f)),"topP",parameters.optDouble("top_p",.95),"topK",parameters.optInt("top_k",40),"repeatPenalty",parameters.optDouble("repeat_penalty",1.05),"seed",parameters.optLong("seed",-1)));
+            if(attachments!=null&&attachments.length()>0){try{for(int i=0;i<attachments.length();i++)files().indexFile(attachments.getString(i),workspaceConversation(chat),request.optString("submissionId"),"Attached to phone chat");publish("opencore-file-changes",object("conversationId",chat));}catch(Exception indexing){backend.loadError="The reply was submitted, but file indexing needs a retry: "+PhoneBackend.message(indexing);}}
         }catch(Exception|LinkageError error){if(created&&backend.store.messages(chat).length()==0)backend.store.deleteChat(chat);throw error;}
-        String title=request.getString("text").trim();return object("conversationId",chat,"title",title.substring(0,Math.min(70,title.length())));
+        return object("conversationId",chat,"title",backend.store.chatTitle(chat));
+    }
+    JSONObject createConversation(JSONObject args)throws Exception{
+        String profile=args.optString("profile",selected());if(args.isNull("profile"))profile=selected();if(!profile.equals("stopped"))requirePhoneModel(profile);
+        String chat=backend.store.createChat("New chat");metadata(chat,object("profile",profile));return object("id",chat,"conversationId",chat,"title","New chat");
+    }
+    JSONObject branchInfo(String chat)throws Exception{
+        JSONObject meta=metadata(chat),branch=meta.optJSONObject("branch");if(branch==null)throw new IOException("This phone chat is not a side-chat branch.");
+        return new JSONObject(branch.toString()).put("conversationId",chat).put("title",backend.store.chatTitle(chat)).put("sharedWorkspace",true).put("contextSource","timeline-branch");
+    }
+    JSONObject refreshBranch(String chat)throws Exception{
+        if(backend.generating.get()&&backend.activeChat.equals(chat))throw new IOException("Wait for this side chat to finish before refreshing its context.");
+        JSONObject meta=metadata(chat),branch=meta.optJSONObject("branch");if(branch==null)throw new IOException("This phone chat is not a side-chat branch.");String parent=branch.getString("parentId");
+        if(!backend.store.hasChat(parent))return branchInfo(chat).put("updatedEntries",0).put("contextWarning","The main chat was deleted. This side chat keeps its saved context and independent messages.");
+        JSONObject copied=backend.store.copyMessages(parent,chat,branch.optLong("copiedThrough"));branch.put("copiedThrough",copied.getLong("copiedThrough")).put("inheritedEntries",branch.optInt("inheritedEntries")+copied.getInt("updatedEntries"));metadata(chat,meta);
+        return branchInfo(chat).put("updatedEntries",copied.getInt("updatedEntries"));
+    }
+    JSONObject createBranch(JSONObject args)throws Exception{
+        String parent=args.getString("conversationId");if(!backend.store.hasChat(parent))throw new IOException("Send a message in the main phone chat before creating a side chat.");
+        if(backend.generating.get()&&backend.activeChat.equals(parent))throw new IOException("Wait for the main chat response to finish before branching.");
+        String profile=args.optString("profile",selected());requirePhoneModel(profile);String chat=backend.store.createChat("Side chat · "+backend.store.chatTitle(parent));
+        try{JSONObject inherited=metadata(parent);String origin=inherited.optString("workspaceOrigin",parent);
+            metadata(chat,object("profile",profile,"projectId",inherited.optString("projectId"),"workspaceOrigin",origin,"branch",object("parentId",parent,"workspaceOrigin",origin,"contextTokens",backend.loadedContext>0?backend.loadedContext:backend.prefs.getInt("context",2048),"copiedThrough",0,"inheritedEntries",0)));
+            JSONObject info=refreshBranch(chat);publish("opencore-side-chat-created",info);return info;
+        }catch(Exception error){backend.store.deleteChat(chat);ui.edit().remove("chat:"+chat).commit();throw error;}
+    }
+    Object fileHost(String command,File file,JSONObject extra)throws Exception{
+        File allowed=files().allowed(file.getPath(),true);JSONObject args=extra==null?new JSONObject():new JSONObject(extra.toString());args.put("path",allowed.getPath()).put("name",PhoneWorkspace.name(allowed)).put("mime",allowed.isDirectory()?"inode/directory":PhoneWorkspace.mime(allowed)).put("directory",allowed.isDirectory());if(allowed.isFile())args.put("sha256",PhoneWorkspace.hash(allowed));
+        if(featureHost==null)throw new IOException("The Android file viewer is not attached. Reopen this phone window and retry.");return featureHost.invoke(command,args);
+    }
+    JSONObject exportConversation(JSONObject args)throws Exception{
+        String chat=args.getString("id"),format=args.getString("format");if(!backend.store.hasChat(chat))throw new IOException("This phone conversation was not found.");if(!format.equals("json")&&!format.equals("markdown"))throw new IOException("Choose JSON or Markdown export.");
+        JSONArray entries=timeline(chat);String content;if(format.equals("json"))content=object("conversationId",chat,"title",backend.store.chatTitle(chat),"entries",entries).toString(2);else{StringBuilder markdown=new StringBuilder("# "+backend.store.chatTitle(chat)+"\n\n");for(int i=0;i<entries.length();i++){JSONObject entry=entries.getJSONObject(i);if(!entry.getString("kind").equals("message"))continue;markdown.append("## ").append(entry.getString("role")).append("\n\n").append(entry.getString("content")).append("\n\n");}content=markdown.toString();}
+        File target=new File(files().directory("exports"),"OpenCore-"+UUID.randomUUID()+(format.equals("json")?".json":".md"));try(java.io.FileOutputStream out=new java.io.FileOutputStream(target)){out.write(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));out.getFD().sync();}
+        files().indexFile(target.getPath(),workspaceConversation(chat),"export","Exported phone conversation");publish("opencore-file-changes",object("conversationId",chat));if(featureHost!=null)fileHost("export_conversation",target,null);return object("path",target.getPath());
     }
     JSONObject removalPlan(String id)throws Exception{
         JSONObject file=selectedFile(id),record=backend.store.model(file.getString("id"));if(record==null)throw new IOException("This model is not installed on the phone.");
@@ -309,13 +356,17 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
             case "get_snapshot":return snapshot();
             case "get_conversation":return timeline(args.getString("id"));
             case "list_conversations":return conversations();
+            case "create_conversation":return createConversation(args);
+            case "create_side_chat":return createBranch(args);
+            case "refresh_side_chat_context":return refreshBranch(args.getString("conversationId"));
             case "list_model_library":return library();
             case "select_profile":{String profile=selectProfileRequest(args,installedProfileIds());if(backend.generating.get())throw new IOException("Stop generation before changing models.");ui.edit().putString("selectedProfile",profile).commit();return null;}
             case "start_profile":start(args.getJSONObject("request").getString("profile"));return null;
             case "stop_runtime":stopRuntime();return null;
             case "restart_runtime":{String profile=selected();long ticket=stopRuntime();start(profile,ticket);return null;}
-            case "send_chat_message":case "send_side_chat_message":return send(args.getJSONObject("request"));
-            case "cancel_chat_message":case "cancel_model_install":case "runtime_setup_cancel":return cancel(command,args);
+            case "send_chat_message":return send(args.getJSONObject("request"));
+            case "send_side_chat_message":refreshBranch(args.getJSONObject("request").getString("conversationId"));return send(args.getJSONObject("request"));
+            case "cancel_chat_message":case "cancel_model_install":case "cancel_model_installation":case "runtime_setup_cancel":return cancel(command,args);
             case "install_model":return install(args.getString("id"));
             case "model_install_progress":return progress();
             case "dismiss_model_install_progress":if(!backend.downloading.get())backend.download=new JSONObject();return null;
@@ -325,9 +376,18 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
             case "delete_conversation":{String id=args.getString("id");backend.dispatch("chat.delete",object("chat",id));ui.edit().remove("chat:"+id).commit();return null;}
             case "set_conversation_pinned":{String id=args.getString("id");metadata(id,metadata(id).put("pinned",args.getBoolean("pinned")));return null;}
             case "move_conversation_to_project":{String id=args.getString("id"),project=args.optString("projectId","");if(!args.isNull("projectId")&&!project.isEmpty()){boolean found=false;JSONArray rows=projects();for(int i=0;i<rows.length();i++)if(rows.getJSONObject(i).getString("id").equals(project))found=true;if(!found)throw new IOException("This phone project was not found.");}metadata(id,metadata(id).put("projectId",project));return null;}
-            case "create_project":case "rename_project":case "delete_project":return projectAction(command,args);
+            case "create_project":case "rename_project":case "delete_project":case "change_project_folder":return projectAction(command,args);
             case "list_projects":return projects();
-            case "workspace_files":return object("files",new JSONArray(),"coverage",new JSONArray());
+            case "workspace_files":{JSONObject request=args.getJSONObject("args");return files().command(request,workspaceConversation(request.optString("conversationId")));}
+            case "stage_composer_attachment":{String path=files().stage(args.getString("name"),args.getString("dataBase64"));publish("opencore-file-changes",new JSONObject());return path;}
+            case "preview_composer_attachment":return files().composerPreview(args.getString("path"));
+            case "preview_attachment_image":{JSONObject preview=files().composerPreview(args.getString("path"));if(!preview.optString("mime").startsWith("image/")||preview.optString("dataUrl").isEmpty())throw new IOException("This attachment has no bounded image preview.");return preview.getString("dataUrl");}
+            case "preview_artifact":{JSONObject row=files().record(args.getString("id"));return files().preview(files().version(row,"after"),PhoneWorkspace.name(new java.io.File(row.getString("path"))),row.getString("mime")).put("id",row.getString("id"));}
+            case "open_workspace_file":{JSONObject row=files().record(args.getString("id"));File file=files().version(row,args.optString("version","after"));if(file.getParentFile().getName().equals("workspace-snapshots")){File copy=new File(files().directory("exports"),UUID.randomUUID()+"-"+PhoneWorkspace.name(new File(row.getString("path"))));try(java.io.InputStream in=new java.io.FileInputStream(file);java.io.OutputStream out=new java.io.FileOutputStream(copy)){byte[] bytes=new byte[32768];int n;while((n=in.read(bytes))!=-1)out.write(bytes,0,n);}file=copy;}return fileHost(command,file,args);}
+            case "download_artifact":{JSONObject row=files().record(args.getString("id"));File file=files().allowed(row.getString("path"),true);fileHost(command,file,args);return file.getPath();}
+            case "open_local_path":return fileHost(command,new File(args.getString("path")),args);
+            case "export_conversation":return exportConversation(args);
+            case "native_browser_command":if(featureHost==null)throw new IOException("The phone browser is still opening. Retry in a moment.");return featureHost.invoke(command,args);
             case "experimental_fast_mode":if(args.optBoolean("enabled"))throw unavailable();return object("supported",false,"enabled",false,"active",false,"restartRequired",false);
             case "get_version":case "plugin:app|version":return app.getPackageManager().getPackageInfo(app.getPackageName(),0).versionName;
             case "startup_status":return accountStatus();
@@ -356,11 +416,11 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
         }
     }
     Object projectAction(String command,JSONObject args)throws Exception{
-        if(args.has("folderPath")&&!args.isNull("folderPath")&&!args.optString("folderPath").isEmpty())throw unavailable();
+        String folder=null;if(args.has("folderPath")&&!args.isNull("folderPath")&&!args.optString("folderPath").isEmpty()){File selected=files().allowed(args.getString("folderPath"),true);if(!selected.isDirectory())throw new IOException("Choose an imported phone workspace folder.");folder=selected.getPath();}
         JSONArray source=projects(),out=new JSONArray();JSONObject changed=null;int removed=0;String id=args.optString("id");
-        if(command.equals("create_project")){String name=args.getString("name").trim();if(name.isEmpty()||name.length()>200)throw new IOException("Use a project name of 1–200 characters.");changed=object("id",UUID.randomUUID().toString(),"name",name,"folderPath",null,"needsFolder",false,"folderAvailable",false,"createdAt",iso(System.currentTimeMillis()),"updatedAt",iso(System.currentTimeMillis()),"conversationCount",0);out.put(changed);}
+        if(command.equals("create_project")){String name=args.getString("name").trim();if(name.isEmpty()||name.length()>200)throw new IOException("Use a project name of 1–200 characters.");changed=object("id",UUID.randomUUID().toString(),"name",name,"folderPath",folder,"needsFolder",false,"folderAvailable",folder!=null,"createdAt",iso(System.currentTimeMillis()),"updatedAt",iso(System.currentTimeMillis()),"conversationCount",0);out.put(changed);}
         for(int i=0;i<source.length();i++){JSONObject project=source.getJSONObject(i);if(project.getString("id").equals(id)){
-            if(command.equals("delete_project")){removed++;continue;}String name=args.getString("name").trim();if(name.isEmpty()||name.length()>200)throw new IOException("Use a project name of 1–200 characters.");project.put("name",name).put("updatedAt",iso(System.currentTimeMillis()));changed=project;
+            if(command.equals("delete_project")){removed++;continue;}if(command.equals("change_project_folder"))project.put("folderPath",folder==null?JSONObject.NULL:folder).put("folderAvailable",folder!=null).put("needsFolder",false);else{String name=args.getString("name").trim();if(name.isEmpty()||name.length()>200)throw new IOException("Use a project name of 1–200 characters.");project.put("name",name);}project.put("updatedAt",iso(System.currentTimeMillis()));changed=project;
         }out.put(project);}
         if(!command.equals("create_project")&&changed==null&&removed==0)throw new IOException("This phone project was not found.");
         ui.edit().putString("projects",out.toString()).commit();if(removed>0){JSONArray chats=backend.store.chats();for(int i=0;i<chats.length();i++){String chat=chats.getJSONObject(i).getString("id");JSONObject meta=metadata(chat);if(meta.optString("projectId").equals(id))metadata(chat,meta.put("projectId",""));}}return command.equals("delete_project")?removed:changed;
@@ -423,6 +483,15 @@ final class PhoneAppBridge implements PhoneBackend.Observer {
     Object hub(JSONObject packet)throws Exception{
         String path=packet.optString("path"),method=packet.optString("method","GET");JSONObject body=packet.has("body")&&!packet.optString("body").isEmpty()?new JSONObject(packet.getString("body")):new JSONObject();
         if(path.equals("/api/status"))return hubStatus(packet.optString("revision"));
+        if(path.equals("/api/context")){
+            String requestId=body.getString("requestId"),chat=body.getString("conversationId");if(!requestId.matches("[A-Za-z0-9:_-]{1,128}")||!PhoneStore.validChatId(chat))throw new IOException("Invalid phone context reservation.");
+            String profile=selected();requirePhoneModel(profile);JSONObject file=selectedFile(profile);if(!file.getString("id").equals(body.getString("modelId")))throw new IOException("The context model does not match the selected phone model.");
+            if(backend.generating.get()&&!backend.activeChat.equals(chat))throw new IOException("Another phone chat is generating. Wait for it to finish.");
+            long now=System.currentTimeMillis();for(Map.Entry<String,JSONObject> entry:contexts.entrySet())if(now-entry.getValue().optLong("created")>180000)contexts.remove(entry.getKey());if(contexts.size()>=128&&!contexts.containsKey(requestId))throw new IOException("Too many pending phone submissions. Retry after the current request completes.");
+            JSONObject reservation=object("requestId",requestId,"modelId",file.getString("id"),"conversationId",chat,"created",now);JSONObject previous=contexts.putIfAbsent(requestId,reservation);if(previous!=null&&(!previous.getString("modelId").equals(file.getString("id"))||!previous.getString("conversationId").equals(chat)))throw new IOException("This submission identity already belongs to a different phone context.");
+            return object("reserved",true,"requestId",requestId,"conversationId",chat,"contextTokens",Math.min(backend.prefs.getInt("context",2048),file.optInt("modelContext",backend.prefs.getInt("context",2048))));
+        }
+        if(path.equals("/api/context/release"))return object("released",contexts.remove(body.getString("requestId"))!=null);
         if(path.equals("/api/groups/capabilities"))return groupCapabilities();
         if(path.startsWith("/api/groups/"))throw new IOException(groupCapabilities().getString("reason"));
         if(path.equals("/api/runtime/modes"))return runtimeModes();

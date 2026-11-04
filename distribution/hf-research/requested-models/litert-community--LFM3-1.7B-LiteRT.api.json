@@ -1,0 +1,164 @@
+{
+  "_id": "6ae2ceaf976750499468f744",
+  "id": "litert-community/LFM3-1.7B-LiteRT",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "litert-lm",
+  "tags": [
+    "litert-lm",
+    "litert",
+    "tflite",
+    "on-device",
+    "edge",
+    "liquid",
+    "lfm3",
+    "conversational",
+    "text-generation",
+    "en",
+    "ar",
+    "zh",
+    "fr",
+    "de",
+    "it",
+    "ja",
+    "ko",
+    "pt",
+    "es",
+    "vi",
+    "th",
+    "id",
+    "hi",
+    "ru",
+    "pl",
+    "base_model:LiquidAI/LFM3-1.7B",
+    "base_model:quantized:LiquidAI/LFM3-1.7B",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 1203,
+  "likes": 3,
+  "modelId": "litert-community/LFM3-1.7B-LiteRT",
+  "author": "litert-community",
+  "sha": "29f09e1eac2ccf753af14806dca96eb048e8baad",
+  "lastModified": "2026-11-03T17:23:55.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "lfm1.0",
+    "license_link": "https://huggingface.co/litert-community/LFM3-1.7B-LiteRT/blob/main/LICENSE",
+    "base_model": "LiquidAI/LFM3-1.7B",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "text-generation",
+    "library_name": "litert-lm",
+    "language": [
+      "en",
+      "ar",
+      "zh",
+      "fr",
+      "de",
+      "it",
+      "ja",
+      "ko",
+      "pt",
+      "es",
+      "vi",
+      "th",
+      "id",
+      "hi",
+      "ru",
+      "pl"
+    ],
+    "tags": [
+      "litert",
+      "litert-lm",
+      "tflite",
+      "on-device",
+      "edge",
+      "liquid",
+      "lfm3",
+      "conversational"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c2fc453d2afaff4706f6a9138f2d946c945cd255",
+      "size": 1803
+    },
+    {
+      "rfilename": "LFM3-1.7B_int8_ekv2048.litertlm",
+      "blobId": "25d07ac51ee5bdf437a51fe2be1063ee8da4e997",
+      "size": 1801549264,
+      "lfs": {
+        "sha256": "fb8af4d6cfb71d0f381a2af23f14733c3adbd93171b251560ee899276926001a",
+        "size": 1801549264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LFM3-1.7B_int8_ekv4096.litertlm",
+      "blobId": "2d210f7511cf8618542fcd1666529935b520daa4",
+      "size": 1801557456,
+      "lfs": {
+        "sha256": "8b83651037fcec23f232e8f4e670683a44cc7097a4d5f74a1abddeb7bc0dae27",
+        "size": 1801557456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LFM3-1.7B_mixed_int4_ekv2048.litertlm",
+      "blobId": "3b5c0fe6791e212baea51091e5afe226d2bbf820",
+      "size": 1441620928,
+      "lfs": {
+        "sha256": "0400d8ffdb00e4bbe1209120e2c7baf05322a8c900839b0a94cc28f599011196",
+        "size": 1441620928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LFM3-1.7B_mixed_int4_ekv4096.litertlm",
+      "blobId": "fb35f8b499d25f456886a17b9044ea74d12dbf53",
+      "size": 1441629120,
+      "lfs": {
+        "sha256": "327486bf01d0b1eefd727b7aadec8627a2b8db143349262857ac98403109d72b",
+        "size": 1441629120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+      "size": 10574
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "1226ae3d8edfcc56b1683b9bf558e89b41ef5fa8",
+      "size": 17770
+    },
+    {
+      "rfilename": "litertlm_manifest.json",
+      "blobId": "a105d434b87a76bc0cd71725d80a0b3b6ff8f03a",
+      "size": 24513
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-29T04:42:23.000Z",
+  "usedStorage": 6486356768
+}

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "engine": "lfm3-cpu-v1",
+  "runtimeRevision": "8642541b255bfb5dc39cd351a178be09013a55d6",
+  "headerUrl": "https://raw.githubusercontent.com/ggml-org/llama.cpp/8642541b255bfb5dc39cd351a178be09013a55d6/ggml/include/ggml.h",
+  "headerSha256": "2b4dd92fa992cb4ef484917a6c62fef5097698744160ccc09214fd0c459c92c7",
+  "typeChecks": {
+    "Q1_0": true,
+    "Q2_0": true,
+    "TQ1_0": true,
+    "TQ2_0": true
+  },
+  "inferenceVerified": false,
+  "allocationHeaderUrl": "https://raw.githubusercontent.com/ggml-org/llama.cpp/8642541b255bfb5dc39cd351a178be09013a55d6/include/llama.h",
+  "allocationHeaderSha256": "c0854771d3760a41642c4e59429c5b3b9fc774887c59d37eeadc4527681732cd",
+  "allocationChecks": {
+    "IQ3_M": true
+  },
+  "architectureSource": "https://github.com/ggml-org/llama.cpp/blob/8642541b255bfb5dc39cd351a178be09013a55d6/src/models/lfm3.cpp",
+  "notes": "Type and architecture dispatch evidence only. Runtime readiness still requires actual post-install generation; no model weights were downloaded or executed for this review."
+}
