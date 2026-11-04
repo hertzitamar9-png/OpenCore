@@ -23,6 +23,7 @@ distribution/recovered-dist/** -text -whitespace
 android-remote/shared-ui/** -text -whitespace
 android-remote/vendor/litertlm/** -text -whitespace
 distribution/hf-research/requested-models/*.chat_template -text -whitespace
+distribution/hf-research/requested-models/*.Modelfile -text -whitespace
 distribution/bootstrap/permanent/*.exe -text
 distribution/bootstrap/permanent/*.exe.sig -text
 src-tauri/resources/agent-platform/TENCENT-MEMORY-LICENSE.txt -text -whitespace

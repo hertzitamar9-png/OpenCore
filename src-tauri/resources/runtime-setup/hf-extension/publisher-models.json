@@ -125052,7 +125052,7 @@
       "gated": false,
       "sourceUrl": "https://huggingface.co/moolvylabs/Morphy1.1-Coder-Beta-7B-GGUF",
       "status": "not-installed",
-      "contextTokens": 8192,
+      "contextTokens": 32768,
       "memoryMode": "echo",
       "familyId": "publisher-morphy-1-1-coder-beta-7b",
       "familyLabel": "Morphy 1.1 Coder Beta 7B",
@@ -125060,25 +125060,25 @@
       "builtIn": true,
       "nativeModelIds": [],
       "libraryCategory": "text",
-      "builtInDescription": "Publisher beta coding model. The exact repository currently publishes one Q8_0 GGUF; the publisher Modelfile defaults to an 8,192-token context. Runtime preparation and real generation must pass after installation.",
+      "builtInDescription": "Publisher beta coding model. The exact repository currently publishes one Q8_0 GGUF. Its GGUF metadata reports a 32,768-token context; the publisher Modelfile defaults to 8,192. Runtime preparation and real generation must pass after installation.",
       "license": "apache-2.0",
-      "supportedContextTokens": 8192,
+      "supportedContextTokens": 32768,
       "managedEngine": "flint-cpu-v1",
       "catalogOrder": 0,
-      "echoWorkingWindowTokens": 8192,
+      "echoWorkingWindowTokens": 32768,
       "outputsText": true,
       "supportsTextGeneration": true,
       "operatingModes": [
         {
           "id": "native",
           "targetContextTokens": 1048576,
-          "contextTokens": 8192,
+          "contextTokens": 32768,
           "supported": true
         },
         {
           "id": "echo",
           "targetContextTokens": 32768,
-          "contextTokens": 8192,
+          "contextTokens": 32768,
           "supported": true
         }
       ],

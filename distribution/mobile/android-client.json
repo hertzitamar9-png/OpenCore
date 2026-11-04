@@ -6,7 +6,7 @@
   "signatureVerified": true,
   "signerCertificateSha256": "12fba5fd7e17b8bfa6e6b83f00de36e09b4a8f3fa00908d2b447469274a44e5d",
   "bytes": 17853733,
-  "sha256": "5eb2464cea9cdae9a6356b06cca03cd8d747c5c16c4138f16cbc7450d248919a",
+  "sha256": "934cfccc3f2409819673d0a8f1c349829c20ef553b8168234e282376ecbb5233",
   "sources": {
     "android-remote/AndroidManifest.xml": "43b9b86307b4dd6e7be60dd515b60fb4ea6a5cf26e761208a190bb99a277983b",
     "android-remote/assets/mobile-shim.js": "6cd2b9b5ecefc7e8a8547e1a645e46bfd71f2808b84cdcd93d9a7200375cc241",
@@ -108,7 +108,7 @@
     "src-tauri/icons/icon.png": "ba08b03e82e13a4ef4287a3c0fb6f8d4dba3bd9a4e00e47e56da2dd7ee5e99a5",
     "public/opencore-logo.png": "6756be58ddc8540f16d026fa661cea4b3f16a965e2be25b7de63dd1f8a59a527",
     "src-tauri/resources/model-catalog.json": "f4ca05818d8b8b5391659b3f385a91a907e7a8f10aae0d21ccb4834ed5980d33",
-    "src-tauri/resources/runtime-setup/hf-extension/publisher-models.json": "c4f26162042bfea9d881d6dce9e1ae2e4527663d2e9b5c2e267c1e6daa4aebb3",
+    "src-tauri/resources/runtime-setup/hf-extension/publisher-models.json": "03870a926cd908adb7937366fc573e9805b42a52b6aecc6adee5123860917609",
     "distribution/mobile_ui.py": "69df3beedd52924dd6e511988fe220689ce3c5ee0f1031b2e6a9426ff444cc0d",
     "distribution/mobile_client.py": "0b9c25c24de229d1e1739ee185a26ba0383bf9dd9e17bf3b1be56505391210bd",
     "distribution/android_release.py": "b1db5d1db2bc0575d3795f262b3ea0ee385d93191392be721c2ae65f94913a08"
