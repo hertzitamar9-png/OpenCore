@@ -101,10 +101,12 @@ async function phoneStartupRegressions(browser){
  try{
   await custom.addInitScript(fixture,{snapshot:emptyPhoneSnapshot(),timeline:[],mode:'phone',profileSeed:alias,installedModels:models,strictPhoneProfiles:true,persistPhoneSelection:true});
   await custom.goto(`http://127.0.0.1:${server.address().port}/?mode=phone`);await custom.locator('.opencore-shell').waitFor();await assertPhoneIdle(custom,alias);
+  await custom.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Conversations',exact:true}).click();
   let picker=await modelPicker();const initial=picker.getByRole('button',{name:/Fixture downloaded alias model/});await initial.waitFor();assert.equal(await initial.getAttribute('aria-pressed'),'true','Backend-seeded custom alias is selected in the original model picker');
   await picker.getByRole('button',{name:/Fixture downloaded hash model/}).click();await custom.waitForFunction(id=>fixture.calls.some(c=>c.command==='select_profile'&&c.args.profile===id),hash);
   assert.equal(await custom.evaluate(()=>fixture.selectedProfile),hash,'Original model picker selects the installed hash ID through native IPC');
   await custom.reload();await custom.locator('.opencore-shell').waitFor();await assertPhoneIdle(custom,hash);
+  await custom.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Conversations',exact:true}).click();
   picker=await modelPicker();const reopened=picker.getByRole('button',{name:/Fixture downloaded hash model/});await reopened.waitFor();assert.equal(await reopened.getAttribute('aria-pressed'),'true','Reopened Phone honors the backend-seeded selected hash ID');
   await custom.screenshot({path:path.join(evidence,'phone-custom-model-reopened.png')});assert.deepEqual(customErrors,[]);
   console.log('Phone backend-seeded custom alias, original-picker hash selection and reopen regressions passed');
@@ -137,6 +139,8 @@ async function phoneStartupRegressions(browser){
     const nav=page.getByRole('navigation',{name:'OpenCore sections',exact:true});
     const labels=['Overview','Conversations','Scheduled tasks','Spaces','Live Context','Memory','Runtime & Logs','Models','Learning Studio','Music Studio','Game Dev Studio','Media Studio','Connectors','Settings','Troubleshooting'];
     assert.deepEqual(await nav.getByRole('button').allTextContents(),labels,'Use current direct navigation, not removed More menu');
+    await page.getByRole('heading',{name:'OpenCore',exact:true}).waitFor();
+    await nav.getByRole('button',{name:'Conversations',exact:true}).click();
     const draft=page.getByLabel('Message OpenCore',{exact:true});
     await draft.fill('PRESERVED_UNSENT_PHONE_DRAFT');
     await controls(page);
@@ -151,7 +155,26 @@ async function phoneStartupRegressions(browser){
     assert.equal(await page.evaluate(()=>globalThis.__OPENCORE_PHONE__===true),mode==='phone','Execution mode is accurate');
     await nav.getByRole('button',{name:'Conversations',exact:true}).click();
     await page.getByLabel('Message OpenCore',{exact:true}).waitFor({timeout:10000});
-    assert.deepEqual(errors,[],'No browser errors while entering Settings, Models or conversation');
+    // Every native Phone and Paired PC page must expose the actual workspace,
+    // not a desktop-only button that silently fails when tapped.
+    const tools=page.getByRole('button',{name:'Mobile tools',exact:true});
+    await tools.click();
+    const toolsMenu=page.getByRole('menu',{name:'Mobile workspace tools'});
+    await toolsMenu.getByRole('menuitem',{name:'Files and comparisons'}).click();
+    await page.locator('#opencore-workspace').waitFor({state:'visible'});
+    assert.equal(await page.getByRole('tab',{name:'Files',exact:true}).getAttribute('aria-selected'),'true','Files workspace opened from Phone tools');
+    await tools.click();
+    await toolsMenu.getByRole('menuitem',{name:'In-app browser'}).click();
+    assert.equal(await page.getByRole('tab',{name:'Browser',exact:true}).getAttribute('aria-selected'),'true','Browser workspace opened from Phone tools');
+    await tools.click();
+    await toolsMenu.getByRole('menuitem',{name:'Computer view'}).click();
+    assert.equal(await page.getByRole('tab',{name:'Computer',exact:true}).getAttribute('aria-selected'),'true','Computer workspace opened from Phone tools');
+    await tools.click();
+    await toolsMenu.getByRole('menuitem',{name:'Side chat'}).click();
+    assert.equal(await page.getByRole('tab',{name:'Side chat',exact:true}).getAttribute('aria-selected'),'true','Side chat workspace opened from Phone tools');
+    await page.getByRole('button',{name:'Close workspace',exact:true}).click();
+    assert.equal(await page.locator('#opencore-workspace').isVisible(),false,'Workspace can be closed without leaving the page');
+    assert.deepEqual(errors,[],'No browser errors while entering Settings, Models, conversation or workspace tools');
     assert.equal(requests.some(url=>!url.startsWith(`http://127.0.0.1:${server.address().port}/`)&&!url.startsWith('data:')),false,'No external network requests');
     results.push({mode,width,normalHeight:804,shortUsableHeight:540,sharedReact:true,modelAndSettingsNavigation:true,sixTouchControls:true,noUnhandledErrors:true});
     await page.screenshot({path:path.join(evidence,`${mode}-current-navigation-${width}.png`)});

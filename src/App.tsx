@@ -1264,7 +1264,7 @@ export default function App() {
   const platform=usePlatformConfiguration();
   const updatingApp = useAppUpdateInstalling();
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
-  const [view, setView] = useState<View>("conversations");
+  const [view, setView] = useState<View>("overview");
   useEffect(()=>{const open=(event:Event)=>{if((event as CustomEvent).detail?.primary!==false&&!event.defaultPrevented)setView('conversations');};window.addEventListener('opencore-chat-image-selected',open);return()=>window.removeEventListener('opencore-chat-image-selected',open);},[]);
   const [assetCategory,setAssetCategory]=useState('image');
   const [mediaCategory,setMediaCategory]=useState('video');
@@ -1310,6 +1310,7 @@ export default function App() {
   const [studioActive, setStudioActive] = useState(false);
   const studioJobs = useRef(new Map<string, string>());
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>('files');
   const [workspacePreview, setWorkspacePreview] = useState<WorkspacePreview | null>(null);
   const [workspaceFile, setWorkspaceFile] = useState<FileRecord | null>(null);
@@ -1329,7 +1330,18 @@ export default function App() {
     setParentSettings(current => JSON.stringify(current) === JSON.stringify(settings) ? current : settings);
   }, [draftKey]);
   const recordChatActivity = useCallback((id: string, active: boolean) => setInferenceOwner(current => active ? id : current === id ? undefined : current), []);
-  const openWorkspace = useCallback((tab: WorkspaceTab) => { setWorkspaceTab(tab); setWorkspaceOpen(true); }, []);
+  const openWorkspace = useCallback((tab: WorkspaceTab) => { setMobileToolsOpen(false); setWorkspaceTab(tab); setWorkspaceOpen(true); }, []);
+  useEffect(() => { setMobileToolsOpen(false); }, [view]);
+  useEffect(() => {
+    if (!mobileToolsOpen) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('.mobile-workspace-tools')) setMobileToolsOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setMobileToolsOpen(false); };
+    window.addEventListener('pointerdown', dismiss);
+    window.addEventListener('keydown', escape);
+    return () => { window.removeEventListener('pointerdown', dismiss); window.removeEventListener('keydown', escape); };
+  }, [mobileToolsOpen]);
   const openWorkspacePreview = useCallback((preview: WorkspacePreview) => { setWorkspacePreview(preview); setWorkspaceTab('files'); setWorkspaceOpen(true); }, []);
   const openWorkspaceFile = useCallback((file: FileRecord) => { setWorkspaceFile(file); setWorkspaceTab('files'); setWorkspaceOpen(true); }, []);
   const openBrowserLink = useCallback((url: string) => { setBrowserLocation({url, requestId: crypto.randomUUID()}); setWorkspaceTab('browser'); setWorkspaceOpen(true); }, []);
@@ -1737,7 +1749,7 @@ export default function App() {
   return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
     <Navigation active={view} onChange={setView} running={running} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
-      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>
+      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{Reflect.get(globalThis, '__OPENCORE_MOBILE__') === true ? <div className="mobile-workspace-tools"><button className="mobile-tools-trigger" aria-label="Mobile tools" aria-expanded={mobileToolsOpen} aria-controls="opencore-mobile-tools-menu" onClick={() => setMobileToolsOpen(current => !current)}><Files size={17} /><span>Tools</span></button>{mobileToolsOpen ? <div id="opencore-mobile-tools-menu" className="mobile-tools-menu" role="menu" aria-label="Mobile workspace tools">{([{tab:'files',label:'Files and comparisons'},{tab:'browser',label:'In-app browser'},{tab:'computer',label:'Computer view'},{tab:'side-chat',label:'Side chat'}] as const).map(item => <button key={item.tab} role="menuitem" onClick={() => openWorkspace(item.tab)}>{item.label}</button>)}</div> : null}</div> : null}{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>
       <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={workspaceConversationId} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={workspaceConversationId} parentTitle={view==='learning'?'Learning assistant':selected?.title || 'New conversation'} settings={workspaceSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} inferenceBlocked={runtimeTransitionReason} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
     </div>
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={profile => void switchRuntimeProfile(profile)} blockedReason={modelSwitchBlocked} conversationId={workspaceConversationId} />
