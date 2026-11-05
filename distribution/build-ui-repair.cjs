@@ -65,7 +65,7 @@ app=replaceOnce(app,'const Xf=()=>{try{const t=window.localStorage.getItem("open
   'const Xf=()=>{const e=globalThis.__OPENCORE_PHONE__===true;try{const t=window.localStorage.getItem("opencore.model-profile");if(e)return t||"stopped";if(t&&g2(t))return t}catch{}return "stopped"}');
 app=replaceOnce(app,'t==="stopped"?"Stopped":t','t==="stopped"?"No model selected":t');
 app=editFunction(app,'w8',text=>replaceOnce(text,'!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch',
-  'v==="stopped"||!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch'));
+  'v==="stopped"&&globalThis.__OPENCORE_PHONE__!==true||!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch'));
 app=editFunction(app,'Gp',text=>replaceOnce(text,
   'f&&(an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])',
   'f&&(globalThis.__opencoreUnreadyTextModels=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&!g.selectable&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,precision:g.precision})):[],an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])'));

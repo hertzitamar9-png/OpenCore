@@ -1403,7 +1403,7 @@ export default function App({ initialView = "overview" }: { initialView?: View }
     try { window.localStorage.setItem("opencore.model-profile", profile); } catch { /* The choice remains active for this session. */ }
   }, []);
   useEffect(() => {
-    if (selectedProfile === "stopped" || !snapshot || switchingProfile.current || ["running", "starting"].includes(snapshot.runtime.status)) return;
+    if ((selectedProfile === "stopped" && Reflect.get(globalThis, "__OPENCORE_PHONE__") !== true) || !snapshot || switchingProfile.current || ["running", "starting"].includes(snapshot.runtime.status)) return;
     void api.selectProfile(selectedProfile).catch((error) => setNotice(String(error)));
   }, [selectedProfile, snapshot?.runtime.status]);
   useEffect(() => {
