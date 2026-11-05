@@ -194,7 +194,7 @@ class GroupStore(WorkspaceStore):
         if not row:raise ValueError('This agent is no longer shared')
         return json.loads(row[0])
 
-    def _enqueue(self, group, agent, content, root, requested_by, parent=None, channel=None):
+    def _enqueue(self, group, agent, content, root, requested_by, parent=None, channel=None, request_settings=None):
         if self.db.execute('SELECT COUNT(*) FROM tasks WHERE group_id=? AND status IN (\'queued\',\'running\')',(group,)).fetchone()[0]>=64:
             raise ValueError('Wait for queued group tasks before adding more')
         depth=(parent['depth']+1) if parent else 0
@@ -210,7 +210,8 @@ class GroupStore(WorkspaceStore):
              'workerId':agent['memberId'],'text':text(content,16000),'status':'queued','rootId':root,
              'parentId':parent['id'] if parent else None,'depth':depth,'agentChain':list(ancestors)+[agent['id']],
              'requestedBy':requested_by,'createdAt':self.clock(),'updatedAt':self.clock(),'progress':{},
-             'channelId':channel['id'],'projectId':channel.get('projectId'),'priority':agent.get('priority',5)}
+             'channelId':channel['id'],'projectId':channel.get('projectId'),'priority':agent.get('priority',5),
+             'requestSettings':request_settings if request_settings is not None else (parent or {}).get('requestSettings',{})}
         self._save_task(job)
         return job
 
@@ -245,10 +246,17 @@ class GroupStore(WorkspaceStore):
                 return self._view(group,member)
             if action=='message':
                 content=text(body.get('text'),16000);channel=self._channel(group,member,body.get('channelId'))
+                settings=body.get('requestSettings') or {}
+                if not isinstance(settings,dict) or set(settings)-{'effort','approval'}:
+                    raise ValueError('Invalid group request settings')
+                if settings.get('effort','owner-default') not in ('owner-default','off','low','medium','high','ultra'):
+                    raise ValueError('Choose a supported reasoning effort')
+                if settings.get('approval','owner-default') not in ('owner-default','ask-every-time','allow-chat','allow-all'):
+                    raise ValueError('Choose a supported approval setting')
                 agents=self._targets(group,member,channel,content,body)
                 message_id,new=self._message(group,member,body.get('requestId'),content,channel=channel['id'])
                 if new:
-                    for agent in agents:self._enqueue(group,agent,content,message_id,member['id'],channel=channel)
+                    for agent in agents:self._enqueue(group,agent,content,message_id,member['id'],channel=channel,request_settings=settings)
                 return self._view(group,member,channel_id=channel['id'])
             if action=='claim':
                 self._expire(group)
@@ -339,8 +347,9 @@ def parse_invite(value):
     parsed=urlsplit(text(value,4096))
     if parsed.scheme!='opencore' or parsed.netloc!='group' or parsed.path or parsed.fragment:raise ValueError('Paste an OpenCore group invitation')
     fields=parse_qs(parsed.query,strict_parsing=True)
-    if set(fields)!=set(('url','pin','group','code')) or any(len(values)!=1 for values in fields.values()):raise ValueError('Invalid group invitation')
+    if set(fields) not in (set(('url','pin','group','code')),set(('url','pin','group','code','channel'))) or any(len(values)!=1 for values in fields.values()):raise ValueError('Invalid group invitation')
     result={key:fields[key][0] for key in ('url','pin','group','code')}
+    if 'channel' in fields:result['channel']=identifier(fields['channel'][0])
     endpoint=urlsplit(result['url'])
     if endpoint.scheme!='https' or not endpoint.hostname or endpoint.username or endpoint.password or endpoint.path not in ('','/') or endpoint.query or endpoint.fragment:
         raise ValueError('Group invitation must use a direct HTTPS PC address')
@@ -466,18 +475,25 @@ class GroupManager:
                 return self._remember(membership,True)
             if action=='join':
                 invite=parse_invite(body.get('invite'))
+                def destination(connection):
+                    channel=invite.get('channel','general')
+                    try:
+                        view=self._rpc(connection,'view',{'channelId':channel})
+                        return channel if not view.get('channel',{}).get('private') else 'general'
+                    except (ValueError,PermissionError,OSError):return 'general'
                 existing=self.saved['connections'].get(invite['group'])
                 if existing:
                     if not existing['hosting'] and existing.get('pin')!=invite['pin']:
                         raise ValueError('This group invitation identifies a different PC. Leave the old group before joining it.')
                     try:
-                        self._rpc(existing,'view');return {'id':existing['id'],'name':existing['name'],'hosting':existing['hosting'],'connected':True}
+                        self._rpc(existing,'view');return {'id':existing['id'],'name':existing['name'],'hosting':existing['hosting'],'connected':True,'channelId':destination(existing)}
                     except PermissionError:pass
                 membership=self.transport(invite['url'],invite['pin'],'/groups/join',
                     {'groupId':invite['group'],'code':invite['code'],'displayName':body.get('displayName') or self.remote.pc_name,
                      'clientId':self.saved['clientId'],'pcName':self.remote.pc_name})
                 if membership.get('groupId')!=invite['group']:raise ValueError('The invited group does not match this PC response')
-                return self._remember(membership,False,invite['url'],invite['pin'])
+                remembered=self._remember(membership,False,invite['url'],invite['pin'])
+                return {**remembered,'channelId':destination(self._connection(remembered['id']))}
             if action=='worker/poll':return self._poll(bool(body.get('busy')))
             if action=='worker/register':return self._register(body)
             if action=='worker/update':return self._update(body)
@@ -488,13 +504,32 @@ class GroupManager:
             connection=self._connection(body.get('id'))
             if action=='invite':
                 if not connection['hosting']:raise PermissionError('Create invitations on the hosting PC')
+                channel_id=identifier(body['channelId']) if body.get('channelId') else None
+                if channel_id:
+                    channel=self._rpc(connection,'view',{'channelId':channel_id}).get('channel',{})
+                    if channel.get('private'):raise ValueError('Private chats cannot be shared with a channel invite')
                 endpoint,pin,network=self._endpoint()
                 value=self.store.invite(connection['groupId'],connection['token'])
-                link='opencore://group?'+urlencode({'url':endpoint,'pin':pin,'group':connection['groupId'],'code':value['code']})
-                return {'invite':link,'expiresIn':value['expiresIn'],'network':network}
+                fields={'url':endpoint,'pin':pin,'group':connection['groupId'],'code':value['code']}
+                if channel_id:fields['channel']=channel_id
+                link='opencore://group?'+urlencode(fields)
+                return {'invite':link,'expiresIn':value['expiresIn'],'network':network,'channelId':channel_id}
             if action=='view':
                 result=self._rpc(connection,'view',{'after':body.get('after',0),'channelId':body.get('channelId','general')})
                 return {**result,'sharing':copy.deepcopy(connection['sharing']),'connectionId':connection['id']}
+            if action=='project-bind':
+                project_id=identifier(body.get('projectId'))
+                local_id=identifier(body['localProjectId']) if body.get('localProjectId') else None
+                result=self._rpc(connection,'view',{'channelId':body.get('channelId','general')})
+                if not any(project.get('id')==project_id for project in result.get('projects',[])):
+                    raise ValueError('Choose a project from this group')
+                bindings=dict(connection['sharing'].get('projectBindings',{}))
+                if local_id:bindings[project_id]=local_id
+                else:bindings.pop(project_id,None)
+                if len(bindings)>100:raise ValueError('Use at most 100 project bindings')
+                connection['sharing']['projectBindings']=bindings;self._save()
+                return {'localOnly':True,'sharing':copy.deepcopy(connection['sharing']),'connectionId':connection['id'],
+                        'notice':'Project linked on this PC.' if local_id else 'Project disconnected on this PC.'}
             if action=='sharing':
                 enabled=body.get('enabled') is True;models=body.get('models',[])
                 policy=body.get('approvalMode','ask-every-time');maximum=body.get('maxSubagents',3)

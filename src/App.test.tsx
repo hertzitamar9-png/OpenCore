@@ -282,7 +282,13 @@ describe("OpenCore", () => {
   beforeEach(() => {
     eventHandlers.clear();
     stageClipboardAttachment.mockReset();
-    window.localStorage.removeItem?.("opencore.model-profile");
+    const values = new Map<string, string>([["opencore.model-profile", "doucode"]]);
+    Object.defineProperty(window, "localStorage", { configurable: true, value: {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, String(value)),
+      removeItem: (key: string) => values.delete(key),
+      clear: () => values.clear(),
+    } });
     window.localStorage.removeItem?.("opencore.reasoning-effort.v1");
     window.localStorage.removeItem?.("opencore.approval-global.v1");
     window.sessionStorage.removeItem?.("opencore.approval-chat.preview");

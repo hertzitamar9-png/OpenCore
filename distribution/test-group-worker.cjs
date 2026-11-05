@@ -93,6 +93,16 @@ test('agent execution uses its owner-selected effort tools approval and bounded 
   assert.deepEqual(request.skills,['browser-use']);
 });
 
+test('group requests may choose effort or stricter approval but never weaken the PC owner policy',async()=>{
+  const {createGroupWorker}=await load();
+  for(const [owner,requested,expected] of [['ask-every-time','allow-all','ask-every-time'],['allow-all','ask-every-time','ask-every-time'],['allow-chat','allow-all','allow-chat']]){
+    const f=fixture({sharing:{approvalMode:owner}});f.task.requestSettings={approval:requested,effort:'high'};
+    await createGroupWorker(f.api).poll();
+    const request=f.calls.find(call=>call.command==='send_chat_message').args.request;
+    assert.equal(request.approvalMode,expected);assert.equal(request.reasoningEffort,'high');
+  }
+});
+
 test('worker runs an API agent through native provider selection without requiring downloaded weights',async()=>{
   const {createGroupWorker}=await load(),f=fixture({providers:[{id:'vendor',name:'Vendor',model:'model-one'}],
     sharing:{models:[{id:'api:vendor',key:'api-agent',name:'Helper',label:'API',instructions:'Review changes carefully'}]}});

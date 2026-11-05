@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import socket
@@ -174,7 +175,20 @@ def _chat_template_path(entry, folder):
         raise ValueError('The external chat template is not a verified pinned UTF-8 support file for this model.') from None
 
 
-def runtime_plan(entry, root, resources):
+def _bundled_cuda_available(server, resources):
+    from managed_engines import cuda_driver_version
+    if not Path(server).is_file() or not cuda_driver_version():
+        return False
+    try:
+        env = dict(os.environ, PATH=str(Path(resources) / 'doucode/runtime') + os.pathsep + os.environ.get('PATH', ''))
+        result = subprocess.run([str(server), '--list-devices'], cwd=str(Path(server).parent), env=env,
+                                capture_output=True, text=True, timeout=8, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        return result.returncode == 0 and re.search(r'^\s*CUDA\d+\s*:', result.stdout, re.I | re.M) is not None
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None):
     root, resources = Path(root).resolve(), Path(resources).resolve()
     fmt = entry.get('format', '')
     quant = str(entry.get('quantization', '')).upper()
@@ -190,19 +204,25 @@ def runtime_plan(entry, root, resources):
     if context < 8192:
         raise ValueError('This model has less than the 8,192-token context required by the chat agent. Its downloaded files are retained.')
     if fmt == 'gguf':
-        from managed_engines import engine_for, executable
-        publisher_engine = engine_for(entry)
-        engine = executable(root, publisher_engine) if publisher_engine else root / 'runtime/llama-server.exe'
-        if not publisher_engine:
-            if not engine.is_file():
-                engine=resources/'opencore/runtime/llama-server.exe'
-            if not engine.is_file():
-                raise ValueError('The bundled GGUF runtime is missing. Reinstall OpenCore to restore it.')
+        from managed_engines import engine_for, executable, select_engine
+        # The generic b11960 build and each publisher-specific build remain pinned
+        # to their own tested llama.cpp revision.
+        specialized_engine = engine_for(entry)
+        base_engine = specialized_engine or 'lfm3-cpu-v1'
+        preference = backend_override or (entry.get('runtimePreference', 'auto') if prefer_gpu else 'cpu')
+        bundled = root / 'runtime/llama-server.exe'
+        if not bundled.is_file():bundled = resources / 'opencore/runtime/llama-server.exe'
+        use_bundled_cuda = not specialized_engine and preference in ('auto', 'cuda') and _bundled_cuda_available(bundled, resources)
+        publisher_engine = None if use_bundled_cuda else select_engine(base_engine, preference)
+        cpu_fallback = base_engine if use_bundled_cuda or publisher_engine != base_engine else None
+        engine = bundled if use_bundled_cuda else executable(root, publisher_engine)
         model = sorted(models, key=lambda p: p.name)[0]
         command = [str(engine), '--model', str(model), '--host', '127.0.0.1', '--port', '{port}',
                    '--ctx-size', str(context), '--threads', '2', '--threads-batch', '2',
                    '--gpu-layers', 'auto', '--fit', 'on', '--parallel', '1', '--no-webui', '--api-key-file', '{keyfile}']
-        if publisher_engine:
+        if cpu_fallback:
+            command += ['--no-warmup', '--jinja', '--batch-size', '64', '--ubatch-size', '16']
+        if publisher_engine and not cpu_fallback:
             # The publisher CPU builds work without a CUDA SDK or a particular GPU.
             command[command.index('--gpu-layers') + 1] = '0'
             command[command.index('--fit') + 1] = 'off'
@@ -236,7 +256,9 @@ def runtime_plan(entry, root, resources):
     return {'command': command, 'context': context, 'operatingMode':entry.get('operatingMode','echo'),
             'requestedContextTokens':NATIVE_TARGET if entry.get('operatingMode')=='native' else ECHO_TARGET,
             'format': fmt, 'folder': str(folder),
-            **({'publisherEngine': publisher_engine} if fmt == 'gguf' and publisher_engine else {})}
+            **({'publisherEngine': publisher_engine} if fmt == 'gguf' and publisher_engine else {}),
+            **({'publisherCpuFallback': cpu_fallback} if fmt == 'gguf' and cpu_fallback else {}),
+            **({'runtimeBackend': 'cuda' if use_bundled_cuda or '-cuda' in publisher_engine else 'vulkan' if '-vulkan' in publisher_engine else 'cpu'} if fmt == 'gguf' else {})}
 
 
 def _port():
@@ -427,7 +449,14 @@ class RuntimeManager:
                 self.stop()
         return {'operatingMode':mode}
 
-    def _prepare(self, entry):
+    def change_backend(self, entry):
+        with self._state_lock:
+            if self._generation.locked() or self._preparation.locked() or self._context:
+                raise RuntimeError('Wait for the active model request before changing runtime')
+            if self._active and self._active['id'] == entry['id']:
+                self.stop()
+
+    def _prepare(self, entry, force_cpu=False, backend_override=None):
         if self._generation.locked():
             raise RuntimeError('Wait for the current local response to finish')
         if self._active and self._active['id'] == entry['id'] and self._active.get('mode','echo')==entry.get('operatingMode','echo') and all(child.poll() is None for child in self._children):
@@ -435,26 +464,42 @@ class RuntimeManager:
         self.stop(clear_context=False)
         self._cancel.clear()
         self._stop_reason = ''
-        plan = runtime_plan(entry, self.root, self.resources)
+        plan = runtime_plan(entry, self.root, self.resources, prefer_gpu=not force_cpu, backend_override=backend_override)
         plan.setdefault('operatingMode',entry.get('operatingMode','echo'))
         plan.setdefault('requestedContextTokens',NATIVE_TARGET if plan['operatingMode']=='native' else ECHO_TARGET)
         self.on_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
         files = checked_model_files(entry, self.root, self._cancel)
         available = _available_memory()
         weight_bytes = sum(path.stat().st_size for path in files)
-        if plan.get('publisherEngine') and available and weight_bytes + 3 * 1024 ** 3 > available:
-            raise RuntimeError(f'This CPU package needs about {(weight_bytes + 3 * 1024 ** 3) / 1e9:.1f} GB of available host RAM including working space. Choose a smaller quantization or close other applications.')
-        if available and weight_bytes > available + 8 * 1024**3:
+        if plan.get('publisherEngine') and not plan.get('publisherCpuFallback') and available and weight_bytes + 3 * 1024 ** 3 > available:
+            raise RuntimeError(f'This model uses a CPU-only runtime and needs about {(weight_bytes + 3 * 1024 ** 3) / 1e9:.1f} GB of free RAM including working space; GPU memory is not used by that runtime. The downloaded model is kept. Free RAM or choose a smaller quantization, then prepare it again.')
+        if not plan.get('publisherCpuFallback') and available and weight_bytes > available + 8 * 1024**3:
             raise RuntimeError(f'This checkpoint has {weight_bytes / 1e9:.1f} GB of weights; there is not enough available host/GPU memory for this managed runtime. Choose a smaller quantization.')
         run_dir = self.root / 'runtime-setup/hub-runs' / (entry['id'] + '-' + uuid.uuid4().hex[:12])
         run_dir.mkdir(parents=True)
         log_path = run_dir / 'runtime.log'
+        cuda_library_dir = None
+        def fallback(error):
+            if entry.get('runtimePreference', 'auto') != 'auto' or not plan.get('publisherCpuFallback') or self._cancel.is_set():
+                raise error
+            from managed_engines import vulkan_gpu_available
+            next_backend = 'vulkan' if plan.get('runtimeBackend') == 'cuda' and vulkan_gpu_available() else 'cpu'
+            self.on_progress(stage='loading-model', detail='The ' + plan['runtimeBackend'].upper() + ' runtime could not start; trying ' + next_backend.upper() + '. Model files are kept.')
+            return self._prepare(entry, backend_override=next_backend)
         if plan.get('publisherEngine'):
-            from managed_engines import ensure
+            from managed_engines import ensure, folder
             def check_cancel():
                 if self._cancel.is_set():
                     raise RuntimeError('Runtime preparation paused; downloaded files were retained.')
-            ensure(self.root, plan['publisherEngine'], self.on_progress, check_cancel)
+            try:
+                ensure(self.root, plan['publisherEngine'], self.on_progress, check_cancel)
+                if plan.get('runtimeBackend') == 'cuda':
+                    version = '13' if '-cuda13-' in plan['publisherEngine'] else '12'
+                    library_id = 'cuda' + version + '-libs-v1'
+                    ensure(self.root, library_id, self.on_progress, check_cancel)
+                    cuda_library_dir = folder(self.root, library_id)
+            except (OSError, RuntimeError, ValueError) as error:
+                return fallback(error)
         if plan['format'] == 'safetensors':
             self._ensure_transformers(entry, log_path)
             plan = runtime_plan(entry, self.root, self.resources)
@@ -464,12 +509,18 @@ class RuntimeManager:
         self._key_file = key_file
         command = [str(value).replace('{port}', str(port)).replace('{keyfile}', str(key_file)) for value in plan['command']]
         environment = dict(os.environ, PYTHONIOENCODING='utf-8', OPENCORE_HF_INTERNAL_KEY=key,
-                           PATH=str(self.resources/'doucode/runtime')+os.pathsep+os.environ.get('PATH',''))
+                           PATH=(str(cuda_library_dir)+os.pathsep if cuda_library_dir else '')+str(self.resources/'doucode/runtime')+os.pathsep+os.environ.get('PATH',''))
         self.on_progress(stage='loading-model', detail='Loading the selected checkpoint in its managed runtime')
-        child = self._spawn(command, environment, log_path,
-                            cwd=Path(command[0]).parent if plan.get('publisherEngine') else None)
+        try:
+            child = self._spawn(command, environment, log_path,
+                                cwd=Path(command[0]).parent if plan.get('publisherEngine') else None)
+        except OSError as error:
+            return fallback(error)
         upstream = f'http://127.0.0.1:{port}'
-        self._wait_health(child, upstream, key, log_path)
+        try:
+            self._wait_health(child, upstream, key, log_path)
+        except RuntimeError as error:
+            return fallback(error)
         try:
             with self._request(upstream + '/props', key=key, timeout=5) as response:
                 props = json.load(response)
@@ -557,6 +608,8 @@ class RuntimeManager:
             from managed_engines import definition
             proof['engineId'] = plan['publisherEngine']
             proof['engineArchiveSha256'] = definition(plan['publisherEngine'])['sha256']
+        if plan.get('runtimeBackend'):
+            proof['runtimeBackend'] = plan['runtimeBackend']
         return proof
 
     def chat(self, entry, payload):

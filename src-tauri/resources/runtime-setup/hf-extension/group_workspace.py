@@ -5,7 +5,7 @@ import re
 import uuid
 
 REPLY_MODES = ('mentions', 'always', 'manual')
-WORKSPACE_ACTIONS = ('channel-save', 'project-save', 'direct', 'cancel')
+WORKSPACE_ACTIONS = ('channel-save', 'channel-delete', 'project-save', 'direct', 'cancel')
 
 
 def bounded(value, maximum=100, optional=False):
@@ -150,6 +150,20 @@ class WorkspaceStore:
                        'createdBy': prior.get('createdBy') if prior else member['id']}
             self.db.execute('INSERT OR REPLACE INTO group_channels VALUES(?,?,?)', (group, key, json.dumps(channel)))
             return {'channel': channel, **self._view(group, member, channel_id=key)}
+        if action == 'channel-delete':
+            key = identifier(body.get('channelId'))
+            channel = self._channel(group, member, key)
+            if key == 'general' or channel['private']:
+                raise ValueError('The General channel and private chats cannot be deleted here')
+            if member['role'] != 'owner' and channel.get('createdBy') != member['id']:
+                raise PermissionError('Only the group owner or channel creator can delete it')
+            if self.db.execute("SELECT 1 FROM tasks WHERE group_id=? AND status IN ('queued','running') AND json_extract(data,'$.channelId')=? LIMIT 1", (group, key)).fetchone():
+                raise ValueError('Cancel active channel tasks before deleting this channel')
+            self.db.execute("DELETE FROM plans WHERE group_id=? AND task_id IN (SELECT id FROM tasks WHERE group_id=? AND json_extract(data,'$.channelId')=?)", (group, group, key))
+            self.db.execute("DELETE FROM tasks WHERE group_id=? AND json_extract(data,'$.channelId')=?", (group, key))
+            self.db.execute('DELETE FROM messages WHERE group_id=? AND channel_id=?', (group, key))
+            self.db.execute('DELETE FROM group_channels WHERE group_id=? AND id=?', (group, key))
+            return self._view(group, member, channel_id='general')
         if action == 'cancel':
             job = self._task(group, body.get('taskId'))
             self._channel(group, member, job.get('channelId'))

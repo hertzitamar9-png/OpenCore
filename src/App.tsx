@@ -221,7 +221,7 @@ export const readProfilePreference = (): RuntimeProfile => {
     if (phone) return stored || "stopped";
     if (stored && isSelectableModelProfile(stored)) return stored as RuntimeProfile;
   } catch { /* Use the first-run profile when storage is unavailable. */ }
-  return phone ? "stopped" : "doucode";
+  return "stopped";
 };
 
 function StatusDot({ state }: { state: string }) {
@@ -1265,6 +1265,7 @@ export default function App({ initialView = "overview" }: { initialView?: View }
   const updatingApp = useAppUpdateInstalling();
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>(initialView);
+  useEffect(()=>{const open=()=>setView('models');window.addEventListener('opencore-open-models',open);return()=>window.removeEventListener('opencore-open-models',open);},[]);
   useEffect(()=>{const open=(event:Event)=>{if((event as CustomEvent).detail?.primary!==false&&!event.defaultPrevented)setView('conversations');};window.addEventListener('opencore-chat-image-selected',open);return()=>window.removeEventListener('opencore-chat-image-selected',open);},[]);
   const [assetCategory,setAssetCategory]=useState('image');
   const [mediaCategory,setMediaCategory]=useState('video');
@@ -1402,7 +1403,7 @@ export default function App({ initialView = "overview" }: { initialView?: View }
     try { window.localStorage.setItem("opencore.model-profile", profile); } catch { /* The choice remains active for this session. */ }
   }, []);
   useEffect(() => {
-    if (!snapshot || switchingProfile.current || ["running", "starting"].includes(snapshot.runtime.status)) return;
+    if (selectedProfile === "stopped" || !snapshot || switchingProfile.current || ["running", "starting"].includes(snapshot.runtime.status)) return;
     void api.selectProfile(selectedProfile).catch((error) => setNotice(String(error)));
   }, [selectedProfile, snapshot?.runtime.status]);
   useEffect(() => {

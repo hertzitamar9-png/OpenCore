@@ -15,7 +15,7 @@ code+=String.raw`
  const browser=await chromium.launch({headless:true,args:['--mute-audio']});
  const out=process.env.OPENCORE_RAIL_QA_DIR||path.join(__dirname,'.output/navigation-rail');fs.mkdirSync(out,{recursive:true});
  const samples=[],errors=[];
- try{for(const [width,height,expanded=false] of [[1366,900],[1366,700],[1000,720],[800,600],[700,600],[1366,900,true],[1000,720,true],[800,600,true]]){
+ try{for(const [width,height,expanded=false] of [[1366,1080],[1366,900],[1366,700],[1000,720],[800,600],[700,600],[1366,1080,true],[1366,900,true],[1000,720,true],[800,600,true]]){
   const page=await browser.newPage({viewport:{width,height}});page.on('pageerror',error=>errors.push(error.message));
   if(expanded)await page.addInitScript(()=>document.addEventListener('DOMContentLoaded',()=>document.documentElement.dataset.windowExpanded='true'));
   await page.goto('http://127.0.0.1:'+server.address().port);await page.getByRole('button',{name:'Open Chat Core',exact:true}).waitFor();
@@ -26,30 +26,29 @@ code+=String.raw`
   });sample.expanded=expanded;samples.push(sample);
   await page.screenshot({path:path.join(out,'rail-'+width+'x'+height+(expanded?'-expanded':'')+'.png')});
   if(!process.argv.includes('--before')){
-   const expectedHeight=expanded?(width<=900?64:48):44,expectedRail=expanded?(width<=900?96:184):64;
+   const twoColumns=height<=1000,expectedHeight=twoColumns?44:expanded?(width<=900?64:48):44,expectedRail=twoColumns?(expanded?184:112):expanded?(width<=900?96:184):64;
    const order=sample.buttons.slice(0,4).map(button=>button.label);
    if(JSON.stringify(order)!==JSON.stringify(['Overview','Conversations','Open Chat Core','Scheduled tasks']))throw Error('Unexpected navigation order: '+order.join(', '));
    if(sample.rail.width!==expectedRail)throw Error('The packaged shell rail width is '+sample.rail.width+', expected '+expectedRail);
    for(const item of sample.buttons){if(item.height!==expectedHeight||item.width<44)throw Error(item.label+' has uneven size '+item.width+'x'+item.height+' at '+width+'x'+height);if(item.svg.width!==22||item.svg.height!==22)throw Error('Squashed icon: '+item.label);}
+   if(sample.nav.scrollHeight>sample.nav.clientHeight)throw Error('Navigation must fit without scrolling at '+width+'x'+height);
+   for(const item of sample.buttons)if(item.y<sample.nav.y-1||item.y+item.height>sample.nav.y+sample.nav.height+1)throw Error(item.label+' is outside the visible navigation');
    const hitTargets=await page.evaluate(()=>[...document.querySelectorAll('.conversation-app-rail nav button')].every(button=>{
-    button.scrollIntoView({block:'center'});const r=button.getBoundingClientRect();return [[2,r.height/2],[r.width-2,r.height/2],[r.width/2,2],[r.width/2,r.height-2]].every(([x,y])=>button.contains(document.elementFromPoint(r.x+x,r.y+y)));
+    const r=button.getBoundingClientRect();return [[2,r.height/2],[r.width-2,r.height/2],[r.width/2,2],[r.width/2,r.height-2]].every(([x,y])=>button.contains(document.elementFromPoint(r.x+x,r.y+y)));
    }));if(!hitTargets)throw Error('A visible navigation target has obstructed edges');
    const dividers=await page.evaluate(()=>{document.querySelector('.conversation-app-rail nav').scrollTop=0;return [...document.querySelectorAll('.conversation-app-rail nav > .nav-group-start')].map(group=>{
     const previous=group.previousElementSibling.querySelector('button').getBoundingClientRect(),next=group.querySelector('button').getBoundingClientRect(),style=getComputedStyle(group,'::before');
     const y=group.getBoundingClientRect().top+parseFloat(style.top),height=parseFloat(style.height);return {above:y-previous.bottom,below:next.top-y-height};
    })});if(dividers.some(value=>Math.abs(value.above-value.below)>1))throw Error('Navigation dividers are not centered: '+JSON.stringify(dividers));
-   await page.getByRole('button',{name:'Settings',exact:true}).scrollIntoViewIfNeeded();await page.getByRole('button',{name:'Settings',exact:true}).click();
+   await page.getByRole('button',{name:'Settings',exact:true}).click();
    if(await page.evaluate(()=>window.selected)!=='settings')throw Error('Settings navigation failed');
-   await page.getByRole('button',{name:'Open Chat Core',exact:true}).scrollIntoViewIfNeeded();
    await page.evaluate(()=>window.addEventListener('opencore-open-groups',()=>window.groupOpened=true,{once:true}));
    await page.getByRole('button',{name:'Open Chat Core',exact:true}).click();if(!await page.evaluate(()=>window.groupOpened))throw Error('Chat Core entry failed');
-   await page.getByRole('dialog',{name:'Chat Core',exact:true}).waitFor();
-   await page.getByRole('button',{name:'Close Chat Core',exact:true}).click();
+   if(await page.getByRole('dialog',{name:'Chat Core',exact:true}).count())throw Error('Chat Core must not open a modal');
    const overviewOrder=await page.locator('.overview-grid > button strong').allTextContents();
    if(JSON.stringify(overviewOrder.slice(0,3))!==JSON.stringify(['Conversations','Chat Core','Scheduled tasks']))throw Error('Unexpected overview order: '+overviewOrder.join(', '));
    await page.getByRole('button',{name:'Open Chat Core group chats',exact:true}).click();
-   await page.getByRole('dialog',{name:'Chat Core',exact:true}).waitFor();
-   await page.getByRole('button',{name:'Close Chat Core',exact:true}).click();
+   if(await page.getByRole('dialog',{name:'Chat Core',exact:true}).count())throw Error('Overview entry must not open a modal');
    if(!await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))throw Error('Horizontal overflow');
   }
   await page.close();

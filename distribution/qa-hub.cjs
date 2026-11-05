@@ -8,7 +8,7 @@ const app=fs.readFileSync(path.join(directory,'assets',appName),'utf8')+'\nexpor
 const fixture=`
 window.fixture={catalog:[],progress:null,calls:[],token:false};
 window.fixtureProfile=id=>'api:provider-fixture:'+Array.from(new TextEncoder().encode(id),byte=>byte.toString(16).padStart(2,'0')).join('');
-fixture.variants=['Q4_K_M','Q8_0'].map((q,j)=>({id:'hf-'+String(j+1).repeat(24),repository:'fixture/tiny-model',revision:'a'.repeat(40),variantKey:'gguf:'+q,name:'tiny-model',quantization:q,format:'gguf',subdirectory:'',bytes:100+j,files:[{filename:'model-'+q+'.gguf',bytes:100+j,role:'model',sha256:'b'.repeat(64)}],installable:true,runtime:{adapter:'gguf'},sourceUrl:'https://huggingface.co/fixture/tiny-model',status:'not-installed'}));
+fixture.variants=['Q4_K_M','Q8_0'].map((q,j)=>({id:'hf-'+String(j+1).repeat(24),repository:'fixture/tiny-model',revision:'a'.repeat(40),variantKey:'gguf:'+q,name:'tiny-model',quantization:q,format:'gguf',subdirectory:'',bytes:100+j,files:[{filename:'model-'+q+'.gguf',bytes:100+j,role:'model',sha256:'b'.repeat(64)}],installable:true,runtime:{adapter:'gguf'},runtimeChoices:['auto','cuda','vulkan','cpu'],runtimePreference:'auto',sourceUrl:'https://huggingface.co/fixture/tiny-model',status:'not-installed'}));
 window.__TAURI_INTERNALS__={invoke:async(command,args={})=>{fixture.calls.push({command,args});switch(command){
 case 'get_snapshot':return{runtime:{status:'stopped'},conversations:[],activeConversationIds:[]};
 case 'runtime_setup_probe':return{hubBridge:{available:true,url:'http://127.0.0.1:59999',secret:'fixture-secret-secret-secret-secret',authHeader:'X-OpenCore-Hub-Secret'}};
@@ -31,6 +31,7 @@ else if(route==='/install'){fixture.progress={id:body.id,jobId:'download-fixture
 else if(route==='/pause'){fixture.progress={...fixture.progress,status:'paused',stage:'paused'};value={paused:true};}
 else if(route==='/prepare'){fixture.progress={id:body.id,jobId:'prepare-fixture',kind:'prepare',status:'running',stage:'loading-model',bytesDone:0,bytesTotal:0};value=fixture.progress;}
 else if(route==='/catalog/profile'){Object.assign(fixture.catalog.find(v=>v.id===body.id),body);value=fixture.catalog.find(v=>v.id===body.id);}
+else if(route==='/runtime/backend'){Object.assign(fixture.catalog.find(v=>v.id===body.id),{runtimePreference:body.runtimePreference});value=fixture.catalog.find(v=>v.id===body.id);}
 else if(route==='/token'){if(options.method==='PUT')fixture.token=true;if(options.method==='DELETE')fixture.token=false;value={configured:fixture.token};}
 return{ok:true,json:async()=>structuredClone(value)};};
 `;
@@ -46,6 +47,7 @@ record('metadata check does not download weights',await page.evaluate(()=>!fixtu
 await page.getByRole('button',{name:'Add 2 variants',exact:true}).click();await page.getByRole('heading',{name:'tiny-model',exact:true}).waitFor();
 record('all variants share a regular library card',await page.getByRole('article').count()===1&&await page.getByLabel('Quantization for fixture/tiny-model').locator('option').count()===2);
 record('imported models use the regular card and quantization field styling',await page.getByRole('article').evaluate(card=>card.classList.contains('model-library-card')&&parseFloat(getComputedStyle(card).borderTopWidth)>=1&&parseFloat(getComputedStyle(card.querySelector('select')).minHeight)>=36));
+await page.getByLabel('Runtime for fixture/tiny-model',{exact:true}).selectOption('cuda');await page.waitForFunction(()=>fixture.calls.some(c=>c.route==='/runtime/backend'&&c.body.runtimePreference==='cuda'));record('runtime preference is saved before downloading the chosen model',await page.evaluate(()=>fixture.catalog[0].runtimePreference==='cuda'&&!fixture.calls.some(c=>c.route==='/install')));
 await page.getByRole('button',{name:'Install',exact:true}).click();await page.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('install immediately locks its card',await page.getByRole('button',{name:'Installing…',exact:true}).isDisabled());
 await page.waitForTimeout(1400);record('Hub progress uses the shared top panel',await page.locator('.model-install-progress').first().locator('progress').getAttribute('value')==='30');

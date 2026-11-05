@@ -9,6 +9,7 @@ import zipfile
 
 import managed_engines as engines
 from hf_bridge import BridgeState
+from hf_runtime import runtime_plan
 
 
 class ManagedEngineTests(unittest.TestCase):
@@ -28,6 +29,36 @@ class ManagedEngineTests(unittest.TestCase):
                        {'repository': 'XHToken/Spark-X2.6-4B-GGUF'}):
             self.assertEqual(engines.engine_for({'format': 'gguf', **fields}), 'flint-cpu-v1')
         self.assertIsNone(engines.engine_for({'format': 'safetensors', 'modelType': 'spark2_5'}))
+
+    def test_standard_publisher_engine_uses_the_matching_vulkan_build_only_with_a_gpu(self):
+        folder=self.root/'models/hub/fixture';folder.mkdir(parents=True)
+        entry={'format':'gguf','modelType':'lfm3','contextTokens':8192,'localDirectory':str(folder),
+               'files':[{'filename':'model.gguf','role':'model'}]}
+        with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=True):
+            plan=runtime_plan(entry,self.root,self.root/'resources')
+            self.assertEqual(plan['publisherEngine'],'lfm3-vulkan-v1')
+            self.assertEqual(plan['publisherCpuFallback'],'lfm3-cpu-v1')
+            self.assertEqual(plan['command'][plan['command'].index('--gpu-layers')+1],'auto')
+            self.assertEqual(plan['command'][plan['command'].index('--fit')+1],'on')
+            fallback=runtime_plan(entry,self.root,self.root/'resources',prefer_gpu=False)
+            self.assertEqual(fallback['publisherEngine'],'lfm3-cpu-v1')
+            self.assertEqual(fallback['command'][fallback['command'].index('--gpu-layers')+1],'0')
+        with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=False):
+            self.assertEqual(runtime_plan(entry,self.root,self.root/'resources')['publisherEngine'],'lfm3-cpu-v1')
+
+    def test_automatic_and_manual_runtime_choices_respect_hardware_and_publisher(self):
+        with patch.object(engines,'cuda_driver_version',return_value=13040), patch.object(engines,'vulkan_gpu_available',return_value=True):
+            self.assertEqual(engines.select_engine('lfm3-cpu-v1','auto'),'lfm3-cuda13-v1')
+            self.assertEqual(engines.select_engine('lfm3-cpu-v1','vulkan'),'lfm3-vulkan-v1')
+            self.assertEqual(engines.select_engine('lfm3-cpu-v1','cpu'),'lfm3-cpu-v1')
+            with self.assertRaisesRegex(ValueError,'publisher-specific'):
+                engines.select_engine('raon-cpu-v1','cuda')
+        with patch.object(engines,'cuda_driver_version',return_value=12040), patch.object(engines,'vulkan_gpu_available',return_value=True):
+            self.assertEqual(engines.select_engine('flint-cpu-v1','auto'),'flint-cuda12-v1')
+        with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=False):
+            self.assertEqual(engines.select_engine('lfm3-cpu-v1','auto'),'lfm3-cpu-v1')
+            with self.assertRaisesRegex(ValueError,'NVIDIA'):
+                engines.select_engine('lfm3-cpu-v1','cuda')
 
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -100,6 +131,23 @@ class ManagedEngineTests(unittest.TestCase):
 
 
 class PublisherCatalogTests(unittest.TestCase):
+    def test_runtime_preference_is_persisted_and_does_not_remove_downloaded_files(self):
+        source = Path(__file__).resolve().parents[3] / 'src-tauri/resources/runtime-setup/hf-extension/publisher-models.json'
+        entries = json.loads(source.read_text())['entries']
+        entry = next(x for x in entries if x['format']=='gguf' and engines.engine_for(x)=='lfm3-cpu-v1')
+        with tempfile.TemporaryDirectory() as temporary:
+            state=BridgeState(temporary,temporary);self.addCleanup(state.close)
+            state.entries[entry['id']]=entry
+            receipt={'localDirectory':'kept','receiptPath':'kept'}
+            with patch.object(state,'_receipt',return_value=receipt):
+                state.entries[entry['id']]['runtimePreparation']={'runtimeReady':True,'receiptRevision':entry['revision']}
+                result=state.runtime_backend(entry['id'],'cuda')
+                self.assertEqual(result['runtimePreference'],'cuda')
+                self.assertEqual(result['status'],'installed')
+                self.assertFalse(result['runtimeReady'])
+                self.assertEqual(state.entries[entry['id']]['runtimePreference'],'cuda')
+                with self.assertRaises(ValueError):state.runtime_backend(entry['id'],'invalid')
+
     def test_seed_is_idempotent_and_preserves_verified_user_profile(self):
         source = Path(__file__).resolve().parents[3] / 'src-tauri/resources/runtime-setup/hf-extension/publisher-models.json'
         seed = json.loads(source.read_text())

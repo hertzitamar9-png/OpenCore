@@ -95,7 +95,7 @@ const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false,
       })),null,2));
     }
     await page.screenshot({path:process.env.OPENCORE_MOBILE_SCREENSHOT||path.join(require('os').tmpdir(),'opencore-mobile-overview.png')});
-    assert.deepEqual(names,['Overview','Conversations','Scheduled tasks','Spaces','Live Context','Memory','Runtime & Logs','Models','Learning Studio','Music Studio','Game Dev Studio','Media Studio','Connectors','Settings','Troubleshooting']);
+    assert.deepEqual(names,['Overview','Conversations','Chat Core','Scheduled tasks','Spaces','Live Context','Memory','Runtime & Logs','Models','Learning Studio','Music Studio','Game Dev Studio','Media Studio','Connectors','Settings','Troubleshooting']);
     const labels=await page.locator('.assistant-disclosure.kind-thinking>summary>strong').evaluateAll(items=>items.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).fontSize)})));
     assert.ok(labels.length&&labels.every(item=>item.height<item.line*1.7),'Phone reasoning labels must fit on one line');
     await page.getByLabel('Message OpenCore').fill('PHONE_FIXTURE_MESSAGE');

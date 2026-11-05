@@ -185,6 +185,37 @@ class Workspace(unittest.TestCase):
         self.message(requestId='urgent',agentIds=[next(a['id'] for a in agents if a['name']=='High')])
         self.assertEqual(self.rpc(self.owner,'claim')['task']['agentName'],'High')
 
+    def test_channel_delete_preserves_other_channels_and_requires_authority(self):
+        channel=self.channel()
+        self.message(channelId=channel['id'], requestId='in-channel')
+        self.message(requestId='in-general')
+        with self.assertRaises(PermissionError):
+            self.rpc(self.other, 'channel-delete', channelId=channel['id'])
+        with self.assertRaises(ValueError):
+            self.rpc(self.owner, 'channel-delete', channelId='general')
+        view=self.rpc(self.owner, 'channel-delete', channelId=channel['id'])
+        self.assertEqual(view['channel']['id'], 'general')
+        self.assertEqual([item['text'] for item in view['messages']], ['Build the page'])
+        self.assertNotIn(channel['id'], [item['id'] for item in view['channels']])
+
+    def test_channel_delete_refuses_active_tasks(self):
+        channel=self.channel();agent=self.share()
+        self.message(channelId=channel['id'],agentIds=[agent['id']])
+        with self.assertRaisesRegex(ValueError, 'Cancel active'):
+            self.rpc(self.owner, 'channel-delete', channelId=channel['id'])
+        task=self.rpc(self.owner, 'claim')['task']
+        self.rpc(self.owner, 'cancel', taskId=task['id'])
+        self.rpc(self.owner, 'channel-delete', channelId=channel['id'])
+        self.assertEqual(self.rpc(self.owner, 'view')['tasks'], [])
+
+    def test_message_preferences_are_validated_and_passed_to_the_worker(self):
+        agent=self.share()
+        self.message(agentIds=[agent['id']], requestSettings={'effort':'high','approval':'ask-every-time'})
+        task=self.rpc(self.owner, 'claim')['task']
+        self.assertEqual(task['requestSettings'], {'effort':'high','approval':'ask-every-time'})
+        with self.assertRaises(ValueError):
+            self.message(requestId='bad-options',requestSettings={'approval':'bypass'})
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -141,6 +141,20 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(self.manager.local('worker/poll',{})['jobs'],[])
         self.assertEqual(self.manager.local('view',{'id':self.group})['agents'],[])
 
+    def test_project_binding_is_local_and_does_not_change_agent_sharing(self):
+        project=self.manager.local('project-save',{'id':self.group,'name':'Website'})['project']
+        result=self.manager.local('project-bind',{'id':self.group,'projectId':project['id'],'localProjectId':'local-project'})
+        self.assertTrue(result['localOnly'])
+        self.assertFalse(result['sharing']['enabled'])
+        self.assertEqual(result['sharing']['projectBindings'][project['id']], 'local-project')
+        connection=self.manager._connection(self.group)
+        public=self.manager.store.request(self.group,connection['token'],'view',{})
+        self.assertNotIn('local-project',json.dumps(public))
+        self.manager.local('project-bind',{'id':self.group,'projectId':project['id'],'localProjectId':None})
+        self.assertEqual(self.manager.local('view',{'id':self.group})['sharing']['projectBindings'],{})
+        with self.assertRaises(ValueError):
+            self.manager.local('project-bind',{'id':self.group,'projectId':'missing','localProjectId':'local-project'})
+
     def start_job(self):
         view=self.manager.local('sharing',{'id':self.group,'enabled':True,'models':[{'id':'model-a','label':'Model A'}],'approvalMode':'ask-every-time'})
         self.manager.local('message',{'id':self.group,'text':'Shared task','requestId':'request','agentIds':[view['agents'][0]['id']]})
@@ -272,6 +286,8 @@ class ManagerTests(unittest.TestCase):
         good={'url':'https://127.0.0.1:12345','pin':'ab'*32,'group':'group','code':'x'*32}
         link=lambda data:'opencore://group?'+urlencode(data)
         self.assertEqual(parse_invite(link(good))['group'],'group')
+        self.assertEqual(parse_invite(link({**good,'channel':'project-room'}))['channel'],'project-room')
+        with self.assertRaises(ValueError):parse_invite(link({**good,'channel':'../private'}))
         for value in [link({}),link({**good,'url':'http://127.0.0.1'}),link({**good,'url':'https://evil/path'}),link({**good,'pin':'bad'}),link(good)+'&code=duplicate']:
             with self.assertRaises(ValueError):parse_invite(value)
 
@@ -289,9 +305,11 @@ class PinnedTransport(unittest.TestCase):
             server=RemoteServer(('127.0.0.1',0),remote,tls);cleanup.callback(server.server_close);cleanup.callback(server.shutdown)
             threading.Thread(target=server.serve_forever,daemon=True).start();url='https://127.0.0.1:'+str(server.server_port)
             owner=host.local('create',{'name':'Friends','displayName':'Owner'});connection=host._connection(owner['id'])
+            channel=host.local('channel-save',{'id':owner['id'],'name':'Projects'})['channel']
             invite=host.store.invite(owner['id'],connection['token'])
             guest=GroupManager(root/'guest',Remote(),context_root=root/'guest-contexts');cleanup.callback(guest.close)
-            joined=guest.local('join',{'invite':'opencore://group?'+urlencode({'url':url,'pin':pin,'group':owner['id'],'code':invite['code']}),'displayName':'Guest'})
+            joined=guest.local('join',{'invite':'opencore://group?'+urlencode({'url':url,'pin':pin,'group':owner['id'],'code':invite['code'],'channel':channel['id']}),'displayName':'Guest'})
+            self.assertEqual(joined['channelId'],channel['id'])
             shared=guest.local('sharing',{'id':joined['id'],'enabled':True,'models':[{'id':'local-guest-model','label':'Guest model'}]})
             host.local('message',{'id':owner['id'],'requestId':'network-message','text':'Run on guest PC','agentIds':[shared['agents'][0]['id']]})
             job=guest.local('worker/poll',{})['jobs'][0]

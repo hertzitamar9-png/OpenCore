@@ -518,7 +518,7 @@ class BridgeState:
             existing = self.entries.get(value['id'])
             entry = copy.deepcopy(value)
             if existing and existing['revision'] == value['revision']:
-                for key in ('providerId', 'profileId', 'runtimePreparation', 'runtimePreparations', 'operatingMode', 'specialistPreparation'):
+                for key in ('providerId', 'profileId', 'runtimePreparation', 'runtimePreparations', 'operatingMode', 'specialistPreparation', 'runtimePreference'):
                     if key in existing:
                         entry[key] = copy.deepcopy(existing[key])
             if existing != entry:
@@ -569,14 +569,21 @@ class BridgeState:
         if preparation.get('operatingMode','echo')!=mode:preparation={}
         result['runtimePreparation']=copy.deepcopy(preparation)
         result['operatingMode']=mode
+        if entry.get('format') == 'gguf' and supports_text_generation(entry):
+            from managed_engines import engine_for, VULKAN_VARIANTS
+            base = engine_for(entry) or 'lfm3-cpu-v1'
+            result['runtimePreference'] = entry.get('runtimePreference', 'auto')
+            result['runtimeChoices'] = ['auto', 'cuda', 'vulkan', 'cpu'] if base in VULKAN_VARIANTS else ['auto', 'cpu']
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
         if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
         if result['runtimeReady'] and entry.get('category') in ('text','brain','omni','ocr','computer-use') and supports_text_generation(entry) and mode=='echo' and preparation.get('echoMode')!='main-context-v1':
             result['runtimeReady']=False
         if result['runtimeReady']:
-            from managed_engines import engine_for, definition
+            from managed_engines import engine_for, engine_variants, definition
             selected = engine_for(entry)
-            if selected and (preparation.get('engineArchiveSha256') != definition(selected)['sha256'] or mode=='echo' and preparation.get('echoMode') != 'main-context-v1'):
+            if not selected and preparation.get('engineId'):selected = 'lfm3-cpu-v1'
+            recorded = preparation.get('engineId') or selected
+            if selected and (recorded not in engine_variants(selected) or preparation.get('engineArchiveSha256') != definition(recorded)['sha256'] or mode=='echo' and preparation.get('echoMode') != 'main-context-v1'):
                 result['runtimeReady'] = False
         if receipt:
             result.update(localDirectory=receipt["localDirectory"], receiptPath=receipt["receiptPath"], installReceipt=copy.deepcopy(receipt))
@@ -672,7 +679,7 @@ class BridgeState:
                     for field in ('familyId', 'familyLabel', 'nativeModelIds'):
                         if field in family:
                             entry[field] = copy.deepcopy(family[field])
-                for field in ("profileId", "providerId", "familyId", "familyLabel", "nativeModelIds"):
+                for field in ("profileId", "providerId", "familyId", "familyLabel", "nativeModelIds", "runtimePreference"):
                     if previous.get(field):
                         entry[field] = previous[field]
                 if previous.get("revision") == entry["revision"] and previous.get("files") == entry["files"] and previous.get("runtimePreparation"):
@@ -741,6 +748,29 @@ class BridgeState:
                 if old:saved.setdefault('runtimePreparations',{})[old.get('operatingMode','echo')]=copy.deepcopy(old)
                 saved['operatingMode']=mode
                 saved['runtimePreparation']=copy.deepcopy(saved.get('runtimePreparations',{}).get(mode,{}))
+                self.persist_catalog()
+            return self.entry(model_id)
+
+    def runtime_backend(self, model_id, preference):
+        with self.lock:
+            entry = self.entry(model_id)
+            choices = entry.get('runtimeChoices', [])
+            if preference not in choices:
+                raise ValueError('This runtime is not available for the selected model format')
+            if self.progress and self.progress.get('status') in ACTIVE:
+                raise Conflict('Wait for model installation before changing its runtime')
+            queue = self.download_queue.snapshot()
+            if any(item.get('modelId') == model_id and item.get('id') in queue.get('activeIds', []) for item in queue.get('items', [])):
+                raise Conflict('Wait for this model installation before changing its runtime')
+            if entry.get('runtimePreference', 'auto') != preference:
+                change = getattr(self.runtime, 'change_backend', None)
+                if change:
+                    try:change(entry)
+                    except RuntimeError as error:raise Conflict(str(error)) from error
+                saved=self.entries[model_id]
+                saved['runtimePreference']=preference
+                saved.pop('runtimePreparation', None)
+                saved.pop('runtimePreparations', None)
                 self.persist_catalog()
             return self.entry(model_id)
 
@@ -1285,6 +1315,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.connectors.enable_history(body.get('id')))
         elif route == '/runtime/mode':
             self._send(200, state.runtime_mode(body.get('id'),body.get('operatingMode',body.get('mode'))))
+        elif route == '/runtime/backend':
+            self._send(200, state.runtime_backend(body.get('id'),body.get('runtimePreference')))
         elif route == '/runtime/native-profile':
             from native_modes import activate
             self._send(200,activate(state.root,state.resources,body.get('id'),body.get('operatingMode')))

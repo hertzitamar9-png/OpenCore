@@ -7,7 +7,7 @@ fixture=fixture.replace("const dir=path.join(__dirname,'candidate-dist')","const
 fixture=fixture.replace('const html=`','app+="\\nexport{l8 as TestSidebar};";\nconst html=`');
 fixture=fixture.replace('import{TestComposer,TestFooter,TestChanges}','import{TestComposer,TestFooter,TestChanges,TestSidebar}');
 fixture=fixture.replace(/function Fixture\(\)\{[\s\S]*?\}TestDOM\.createRoot/,
-  "function Fixture(){return h(React.Fragment,null,h('header',{className:'section-header'},h('div',{className:'section-heading'},h('button',{'aria-label':'Open conversations'},'Chats'),h('strong',null,'Conversations'))),h(TestSidebar,{conversations:[],projects:[],onSelect:()=>{},onNew:()=>{},onExit:()=>{},onCreateProject:async()=>true,onTogglePin:()=>{},onEditProject:()=>{},onRemoveProject:()=>{},onOpenProjectFolder:async()=>'',onChangeProjectFolder:async()=>'',importRevision:0}),globalThis.__opencoreGroupHost?h(globalThis.__opencoreGroupHost):null)}TestDOM.createRoot");
+  "function Fixture(){const[open,setOpen]=React.useState(false);React.useEffect(()=>{const show=()=>setOpen(true),hide=()=>setOpen(false);window.addEventListener('opencore-open-groups',show);window.addEventListener('qa-close-group',hide);return()=>{window.removeEventListener('opencore-open-groups',show);window.removeEventListener('qa-close-group',hide)}},[]);return h('div',{className:'opencore-section',style:{display:'flex',flexDirection:'column',flex:1,minHeight:0,boxSizing:'border-box'}},h('header',{className:'section-header'},h('div',{className:'section-heading'},h('button',{'aria-label':'Open conversations'},'Chats'),h('strong',null,'Conversations'))),!open?h(TestSidebar,{conversations:[],projects:[],onSelect:()=>{},onNew:()=>{},onExit:()=>{},onCreateProject:async()=>true,onTogglePin:()=>{},onEditProject:()=>{},onRemoveProject:()=>{},onOpenProjectFolder:async()=>'',onChangeProjectFolder:async()=>'',importRevision:0}):h('main',{style:{flex:1,minHeight:0}},h(globalThis.__opencoreGroupPage)),globalThis.__opencoreGroupHost?h(globalThis.__opencoreGroupHost):null)}TestDOM.createRoot");
 fixture=fixture.replace('</script><script type=module>',String.raw`
 fixture.groupCalls=[];fixture.groups=[];fixture.groupMessages=[];fixture.sharing={enabled:false,models:[],approvalMode:'ask-every-time',maxSubagents:3};
 fixture.snapshot=id=>({group:{id,name:fixture.groups.find(group=>group.id===id).name},self:{id:'me',name:'Owner',role:fixture.groups.find(group=>group.id===id).hosting?'owner':'member'},
@@ -37,8 +37,8 @@ fixture+=String.raw`
   await page.addInitScript(mobile=>{globalThis.__OPENCORE_MOBILE__=mobile},width<600);
   await page.goto('http://127.0.0.1:'+server.address().port);
   if(width<600)await page.getByRole('button',{name:'Open conversations',exact:true}).click();
-  await page.getByRole('button',{name:'Chat Core',exact:true}).click({timeout:12000});
-  const dialog=page.getByRole('dialog',{name:'Chat Core'});await dialog.waitFor();
+  await page.locator('button.group-entry[aria-label="Chat Core"]').click({timeout:12000});
+  const dialog=page.getByRole('region',{name:'Chat Core'});await dialog.waitFor();
   await dialog.getByRole('button',{name:'Create group',exact:true}).click();
   await dialog.getByLabel('Group name',{exact:true}).fill('Friends QA');
   await dialog.getByLabel('Your name',{exact:true}).fill('Owner');
@@ -95,7 +95,7 @@ fixture+=String.raw`
   const bounds=await dialog.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   if(process.env.OPENCORE_GROUP_QA_SCREENSHOTS)await page.screenshot({path:path.join(process.env.OPENCORE_GROUP_QA_SCREENSHOTS,'groups-'+width+'.png')});
-  await dialog.getByRole('button',{name:'Close Chat Core',exact:true}).click();await dialog.waitFor({state:'hidden'});
+  await page.evaluate(()=>window.dispatchEvent(new Event('qa-close-group')));await dialog.waitFor({state:'hidden'});
   assert.deepEqual(errors,[]);console.log('PASS packaged shared-group create/join/sharing/mention/task UI at '+width+'px');
   await page.close();
  }}finally{await browser.close();server.close();}

@@ -200,6 +200,7 @@ body.oc-chats-open .conversation-list .conversation-scroll{padding-bottom:16px!i
   const TABS=[
     {label:'Overview',section:'Overview'},
     {label:'Conversations',section:'Conversations'},
+    {label:'Chat Core',section:'Chat Core'},
     {label:'Scheduled tasks',section:'Jobs'},
     {label:'Spaces',section:'Spaces'},
     {label:'Live Context',section:'Live Context'},

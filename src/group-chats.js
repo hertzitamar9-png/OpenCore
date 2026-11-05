@@ -214,6 +214,12 @@ export function createGroupWorker({ invoke, service, listen, storage = globalThi
       const config = latest.models.find(model => model.enabled !== false && model.id === task.modelId && (!task.agentKey || model.key === task.agentKey));
       if (!config) throw Error("The shared agent's configuration changed before execution.");
       if (["ask-every-time", "allow-chat", "allow-all"].includes(config.approvalMode)) approvalMode = config.approvalMode;
+      // Group members may request stricter approval, never bypass this PC's policy.
+      const approvalRank = ["ask-every-time", "allow-chat", "allow-all"];
+      const requestedApproval = task.requestSettings?.approval;
+      if (approvalRank.includes(requestedApproval)) approvalMode = approvalRank[Math.min(approvalRank.indexOf(approvalMode), approvalRank.indexOf(requestedApproval))];
+      const requestedEffort = task.requestSettings?.effort;
+      const reasoningEffort = ["off", "low", "medium", "high", "ultra"].includes(requestedEffort) ? requestedEffort : config.reasoningEffort || "medium";
       maxSubagents = Math.min(maxSubagents, Math.max(1, Math.min(8, Math.floor(Number(config.maxSubagents) || 3))));
       const projectId = config.projectBindings?.[task.projectId] || latest.projectBindings?.[task.projectId];
       if (task.projectId && !projectId) throw Error("Map this shared project to a local project in Share my PC before running its agents.");
@@ -231,7 +237,7 @@ export function createGroupWorker({ invoke, service, listen, storage = globalThi
       submitted = true;
       await invoke("send_chat_message", { request: {
         conversationId, text: [config.instructions ? "PC owner's agent instructions:\n" + config.instructions : "", task.context, task.text].filter(Boolean).join("\n"),
-        files: [], reasoningEffort: config.reasoningEffort || "medium", approvalMode, skills: config.skills || [], subagentsEnabled: config.subagentsEnabled !== false,
+        files: [], reasoningEffort, approvalMode, skills: config.skills || [], subagentsEnabled: config.subagentsEnabled !== false,
         maxSubagents, projectSkillsEnabled: true, compactAtTokens: 27852, submissionId: task.id,
       } });
       for (;;) {
@@ -359,7 +365,10 @@ export function installGroupFeatures(React, listen, preparation) {
         task.progress?.entries?.length ? h("details", null, h("summary", null, "Task activity"),
           task.progress.entries.map((entry, index) => h("p", { key: entry.id || index }, h("strong", null, entry.title || entry.kind || "Activity"), " ", entry.content))) : null)));
   }
-  const GroupPanel = installGroupWorkspaceUI(React, {service,invoke,worker,Dialog,Board,groupReadyModels,resolveGroupTargets});
+  function EmbeddedWorkspace({ label, className = "", children }) {
+    return h("div", { className: "group-dialog group-embedded " + className, role: "region", "aria-label": label }, children);
+  }
+  const GroupPanel = installGroupWorkspaceUI(React, {service,invoke,worker,Dialog,EmbeddedWorkspace,Board,groupReadyModels,resolveGroupTargets,SpeechButton: preparation?.speechButton});
   function Approval({ request }) {
     const [busy, setBusy] = React.useState(false), [error, setError] = React.useState("");
     const answer = async approved => {
@@ -380,25 +389,26 @@ export function installGroupFeatures(React, listen, preparation) {
       h("path", { d: "M7.3 20v-1.1c0-2.5 2.1-4.5 4.7-4.5s4.7 2 4.7 4.5V20" }),
       h("path", { d: "M1.5 19.5v-.7c0-1.8 1.5-3.2 3.3-3.2.6 0 1.2.2 1.7.4M22.5 19.5v-.7c0-1.8-1.5-3.2-3.3-3.2-.6 0-1.2.2-1.7.4" }));
   }
-  function GroupEntry({ navigation = false, overview = false } = {}) {
+  function GroupEntry({ navigation = false, overview = false, selected = false } = {}) {
     const state = useWorker();
     const caption = "Chat Core" + (state.approvals.length ? " · " + state.approvals.length : "");
     const content = overview
       ? h(React.Fragment, null, h(GroupIcon), h("span", null, h("strong", null, caption), h("small", null, "Group chats with people and agents")))
       : navigation ? h(React.Fragment, null, h(GroupIcon), h("span", null, caption)) : caption;
     return button(content,
-      () => window.dispatchEvent(new Event("opencore-open-groups")),
-      { className: overview ? "overview-group-entry" : navigation ? "nav-item group-nav-entry" : "new-chat-button group-entry", "aria-label": overview ? "Open Chat Core group chats" : navigation ? "Open Chat Core" : "Chat Core", title: "Chat Core" });
+      () => { document.body.classList.remove("oc-chats-open", "oc-more-open"); window.dispatchEvent(new Event("opencore-open-groups")); },
+      { className: overview ? "overview-group-entry" : navigation ? "nav-item group-nav-entry" + (selected ? " active" : "") : "new-chat-button group-entry", "aria-label": overview ? "Open Chat Core group chats" : navigation ? "Open Chat Core" : "Chat Core", "aria-current": selected ? "page" : undefined, title: "Chat Core" });
+  }
+  function GroupPage() {
+    const state = useWorker();
+    return h(GroupPanel, { embedded: true, workerState: state });
   }
   function GroupHost() {
-    const [open, setOpen] = React.useState(false), state = useWorker();
-    React.useEffect(() => {
-      const show = () => setOpen(true); window.addEventListener("opencore-open-groups", show);
-      return () => window.removeEventListener("opencore-open-groups", show);
-    }, []);
-    return h(React.Fragment, null, open ? h(GroupPanel, { close: () => setOpen(false), workerState: state }) : null,
+    const state = useWorker();
+    return h(React.Fragment, null,
       state.approvals[0] ? h(Approval, { request: state.approvals[0], key: state.approvals[0].requestId }) : null);
   }
   globalThis.__opencoreGroupEntry = GroupEntry;
+  globalThis.__opencoreGroupPage = GroupPage;
   globalThis.__opencoreGroupHost = GroupHost;
 }

@@ -7,6 +7,18 @@ import {selectChatImageModel,clearChatImageSelection} from './image-generation-p
 afterEach(() => {cleanup();clearChatImageSelection();vi.restoreAllMocks();});
 
 describe("downloaded model choices", () => {
+  it('shows downloaded weights that still need a runtime and opens Models when chosen', async () => {
+    const inventory=await api.modelLibrary();
+    const pending={...inventory.models[0],id:'pending-model',label:'Downloaded model',category:'text' as const,installed:true,selectable:false};
+    vi.spyOn(api,'modelLibrary').mockResolvedValue({...inventory,models:[pending]});
+    const listener=vi.fn();window.addEventListener('opencore-open-models',listener);
+    try {
+      render(<ModelProfileOptions selectedProfile="stopped" onSelect={()=>{}} />);
+      const item=await screen.findByRole('button',{name:/Downloaded model.*prepare runtime in Models/i});
+      fireEvent.click(item);expect(listener).toHaveBeenCalledOnce();
+      expect(screen.queryByText(/No downloaded text models/)).toBeNull();
+    } finally {window.removeEventListener('opencore-open-models',listener);}
+  });
   it('marks exactly one image or text model as selected',async()=>{
     const inventory=await api.modelLibrary();
     const image={...inventory.models[0],id:'qa-image',label:'QA image',category:'image' as const,installed:true,selectable:false};
@@ -46,7 +58,7 @@ describe("downloaded model choices", () => {
     await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ });
     unmount();
     render(<ModelProfileOptions selectedProfile="echo" onSelect={() => {}} />);
-    expect(await screen.findByText(/No downloaded text models/)).toBeVisible();
+    expect(await screen.findByText(/No ready text model/)).toBeVisible();
     expect(screen.queryByRole("button", { name: /ECHO 3T/ })).toBeNull();
   });
 

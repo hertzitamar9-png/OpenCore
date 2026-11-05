@@ -94,12 +94,28 @@ class RuntimeSafetyTests(unittest.TestCase):
             checked_model_files(self.entry, self.root)
 
     def test_gguf_plan_bounds_context_threads_and_uses_installed_engine(self):
-        plan = runtime_plan(self.entry, self.root, self.resources)
+        with patch('hf_runtime._bundled_cuda_available',return_value=True):
+            plan = runtime_plan(self.entry, self.root, self.resources)
         self.assertEqual(Path(plan['command'][0]), self.root / 'runtime/llama-server.exe')
         self.assertLessEqual(plan['context'], 32768)
         self.assertIn('--fit', plan['command'])
         self.assertIn('--no-webui', plan['command'])
         self.assertNotIn('--trust-remote-code', plan['command'])
+
+    def test_automatic_backend_falls_back_but_manual_cuda_does_not_change_choice(self):
+        import managed_engines
+        for preference, expected in [('auto',['lfm3-cuda13-v1','lfm3-vulkan-v1','lfm3-cpu-v1']),('cuda',['lfm3-cuda13-v1'])]:
+            self.entry['runtimePreference']=preference;calls=[]
+            def fail(_root, engine_id, *args):
+                calls.append(engine_id)
+                raise OSError('Unavailable test runtime')
+            runtime=RuntimeManager(self.root,self.resources)
+            with patch('hf_runtime._available_memory',return_value=None), patch('hf_runtime._bundled_cuda_available',return_value=False), \
+                 patch.object(managed_engines,'cuda_driver_version',return_value=13040), patch.object(managed_engines,'vulkan_gpu_available',return_value=True), \
+                 patch.object(managed_engines,'ensure',side_effect=fail):
+                with self.assertRaisesRegex(OSError,'Unavailable test runtime'):runtime.prepare(self.entry)
+            self.assertEqual(calls,expected)
+            self.assertTrue(self.path.is_file(), 'Runtime preparation never removes the downloaded checkpoint')
 
     def test_generic_gguf_runtime_reserves_the_full_context_for_one_echo_slot(self):
         plan=runtime_plan(self.entry,self.root,self.resources)
@@ -131,7 +147,7 @@ class RuntimeSafetyTests(unittest.TestCase):
             return io.BytesIO(json.dumps(value).encode())
         runtime._request=request
         before=self.path.stat()
-        with patch('hf_runtime._available_memory',return_value=None):proof=runtime.prepare(self.entry)
+        with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime._bundled_cuda_available',return_value=True):proof=runtime.prepare(self.entry)
         self.assertEqual(len(spawned),1)
         self.assertEqual(proof['operatingMode'],'native')
         self.assertEqual(proof['contextTokens'],131072)
@@ -198,7 +214,7 @@ class RuntimeSafetyTests(unittest.TestCase):
                     raise RuntimeError('ECHO smoke test did not bound its total output')
             return io.BytesIO(json.dumps({'choices':[{'message':{'content':'Hello'}}],'usage':{'completion_tokens':1}}).encode())
         runtime._request=request
-        with patch('hf_runtime._available_memory',return_value=None):
+        with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime._bundled_cuda_available',return_value=True):
             proof=runtime.prepare(self.entry)
         self.assertTrue(proof['echoReady'])
         self.assertTrue(proof['contextVerified'])
@@ -232,7 +248,8 @@ class RuntimeSafetyTests(unittest.TestCase):
         bundled=self.resources/'opencore/runtime/llama-server.exe'
         bundled.parent.mkdir(parents=True)
         bundled.write_bytes(b'owned-engine')
-        plan=runtime_plan(self.entry,self.root,self.resources)
+        with patch('hf_runtime._bundled_cuda_available',return_value=True):
+            plan=runtime_plan(self.entry,self.root,self.resources)
         self.assertEqual(Path(plan['command'][0]),bundled)
 
     def test_explicit_nvfp4_checkpoint_does_not_fall_back_to_plain_transformers(self):

@@ -62,7 +62,19 @@ index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement
 index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 app=replaceOnce(app,'const Xf=()=>{try{const t=window.localStorage.getItem("opencore.model-profile");if(t&&g2(t))return t}catch{}return"doucode"}',
-  'const Xf=()=>{const e=globalThis.__OPENCORE_PHONE__===true;try{const t=window.localStorage.getItem("opencore.model-profile");if(e)return t||"stopped";if(t&&g2(t))return t}catch{}return e?"stopped":"doucode"}');
+  'const Xf=()=>{const e=globalThis.__OPENCORE_PHONE__===true;try{const t=window.localStorage.getItem("opencore.model-profile");if(e)return t||"stopped";if(t&&g2(t))return t}catch{}return "stopped"}');
+app=replaceOnce(app,'t==="stopped"?"Stopped":t','t==="stopped"?"No model selected":t');
+app=editFunction(app,'w8',text=>replaceOnce(text,'!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch',
+  'v==="stopped"||!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch'));
+app=editFunction(app,'Gp',text=>replaceOnce(text,
+  'f&&(an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])',
+  'f&&(globalThis.__opencoreUnreadyTextModels=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&!g.selectable&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,precision:g.precision})):[],an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])'));
+app=editFunction(app,'Hp',text=>{
+  text=replaceOnce(text,'No downloaded text models or API providers. Download a local model in Models or add a provider in API.',
+    'No ready text model or API provider. Download a model, or prepare a downloaded model in Models.');
+  return replaceOnce(text,'c.map(({id:d,label:u,description:b})=>',
+    '(globalThis.__opencoreUnreadyTextModels||[]).map(d=>i.jsxs("button",{className:"model-picker-option",type:"button",disabled:n,onClick:()=>window.dispatchEvent(new Event("opencore-open-models")),children:[i.jsxs("span",{children:[i.jsx("strong",{children:d.label}),i.jsx("small",{children:"Downloaded · prepare runtime in Models"})]})]},"unready-"+d.id)),c.map(({id:d,label:u,description:b})=>');
+});
 index=editFunction(index,'kp',text=>replaceOnce(text,'if(i==="stopped")throw new Error(',
   'if(i==="stopped"&&globalThis.__OPENCORE_PHONE__!==true)throw new Error('));
 app=editFunction(app,'Kp',text=>replaceOnce(text,'function Kp(t){','function Kp(t){if(globalThis.__opencoreHubEchoProfiles?.has(t))return true;'));

@@ -35,12 +35,12 @@ describe('device-owned model selection', () => {
     expect(readProfilePreference()).toBe('stopped');
   });
 
-  it('retains the desktop and paired-PC first-run default', () => {
+  it('keeps a fresh desktop or paired PC unselected until a model is chosen', () => {
     vi.stubGlobal('__OPENCORE_PHONE__', false);
     window.localStorage.removeItem('opencore.model-profile');
-    expect(readProfilePreference()).toBe('doucode');
+    expect(readProfilePreference()).toBe('stopped');
     window.localStorage.setItem('opencore.model-profile', 'invalid-profile');
-    expect(readProfilePreference()).toBe('doucode');
+    expect(readProfilePreference()).toBe('stopped');
   });
 
   it('sends the valid idle Phone selection through native IPC', async () => {

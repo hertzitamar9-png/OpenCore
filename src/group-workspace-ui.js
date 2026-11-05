@@ -1,4 +1,4 @@
-export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog, Board, groupReadyModels, resolveGroupTargets }) {
+export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog, EmbeddedWorkspace, Board, groupReadyModels, resolveGroupTargets, SpeechButton }) {
   const h = React.createElement, selectionKey = 'opencore.group.workspace.v2', draftKey = 'opencore.group.drafts.v2', displayKey = 'opencore.chat-core.display.v1';
   const read = (key, fallback) => { try { const value = JSON.parse(localStorage.getItem(key)); return value && typeof value === 'object' && !Array.isArray(value) ? value : fallback; } catch { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
@@ -20,7 +20,7 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     Tester: 'Exercise the requested behavior, record observed results, and report failures with reproduction steps.',
   };
 
-  function WorkspacePanel({ close, workerState = {} }) {
+  function WorkspacePanel({ close, embedded = false, workerState = {} }) {
     const saved = React.useRef(read(selectionKey, {}));
     const [groups, setGroups] = React.useState([]), [id, setId] = React.useState(saved.current.id || '');
     const [channelId, setChannelId] = React.useState(saved.current.channels?.[saved.current.id] || 'general');
@@ -30,10 +30,12 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     const [pending, setPending] = React.useState(false), [models, setModels] = React.useState([]), [localProjects, setLocalProjects] = React.useState([]), [modelError, setModelError] = React.useState('');
     const [sharing, setSharing] = React.useState(null), [dirty, setDirty] = React.useState(false), [addModel, setAddModel] = React.useState('');
     const [drafts, setDrafts] = React.useState(() => read(draftKey, {})), [targets, setTargets] = React.useState({}), [routes, setRoutes] = React.useState({});
+    const [requestOptions, setRequestOptions] = React.useState({}), [mentions, setMentions] = React.useState({});
+    const [mentionMenu, setMentionMenu] = React.useState(null), [mentionIndex, setMentionIndex] = React.useState(0), [channelMenu, setChannelMenu] = React.useState(false);
     const [channelName, setChannelName] = React.useState(''), [channelProject, setChannelProject] = React.useState(''), [editingChannel, setEditingChannel] = React.useState('');
     const [projectName, setProjectName] = React.useState(''), [editingProject, setEditingProject] = React.useState(''), [localResult, setLocalResult] = React.useState(null);
     const [display, setDisplay] = React.useState(() => ({ density: 'comfortable', showTimestamps: true, showPCNames: true, ...read(displayKey, {}) }));
-    const current = React.useRef({ id, channelId }), epoch = React.useRef(0), busy = React.useRef(false), alive = React.useRef(true), messagesRef = React.useRef(null), previousMessages = React.useRef(0);
+    const current = React.useRef({ id, channelId }), epoch = React.useRef(0), busy = React.useRef(false), alive = React.useRef(true), messagesRef = React.useRef(null), composerRef = React.useRef(null), pendingCaret = React.useRef(null), previousMessages = React.useRef(0);
     current.current = { id, channelId };
     React.useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
     React.useEffect(() => {
@@ -47,6 +49,7 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
       const groupChanged = nextId !== current.current.id;
       current.current = { id: nextId, channelId: nextChannel }; epoch.current++;
       setId(nextId); setChannelId(nextChannel); setData(null); setTab(nextId ? nextTab : 'Groups'); setMode(''); setError(''); setNotice(''); previousMessages.current = 0;
+      setMentionMenu(null); setChannelMenu(false);
       if (groupChanged) { setSharing(null); setDirty(false); setInvite(null); }
     };
     const adopt = (value, scope, jump = false) => {
@@ -104,6 +107,12 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     const channel = data?.channel || channels.find(item => item.id === channelId), owner = data?.self?.role === 'owner';
     const selectedGroup = groups.find(group => group.id === id), selectedProject = projects.find(project => project.id === channel?.projectId);
     const key = id + ':' + channelId, draft = drafts[key]?.text || '', route = routes[key] || (channel?.private && !channel.agentIds?.length ? 'humans-only' : 'auto'), selectedTargets = targets[key] || [];
+    React.useLayoutEffect(() => {
+      if (pendingCaret.current === null || !composerRef.current) return;
+      const position = pendingCaret.current; pendingCaret.current = null;
+      composerRef.current.focus(); composerRef.current.setSelectionRange(position, position);
+    }, [draft, key]);
+    const options = requestOptions[key] || { effort: 'owner-default', approval: 'owner-default' };
     const allowed = agent => agent.enabled !== false && (!agent.allowedMembers?.length || agent.allowedMembers.includes(data?.self?.id)) && (!agent.allowedChannels?.length || agent.allowedChannels.includes(channelId)) && (!channel?.private || channel.memberIds?.includes(agent.memberId));
     const eligible = agents.filter(allowed), editSharing = patch => { setDirty(true); setSharing(old => ({ ...localDefaults(old), ...patch })); };
     const configured = list(sharing?.models), activeTasks = list(data?.tasks).filter(task => !['completed', 'failed', 'cancelled'].includes(task.status));
@@ -124,7 +133,7 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     const createOrJoin = event => {
       event.preventDefault(); const creating = mode === 'create';
       act(creating ? 'create' : 'join', creating ? { name: groupName.trim(), displayName: displayName.trim() } : { invite: joinCode.trim(), displayName: displayName.trim() }, value => {
-        setGroups(old => [...old.filter(group => group.id !== value.id), value]); select(value.id); setJoinCode(''); setGroupName('');
+        setGroups(old => [...old.filter(group => group.id !== value.id), value]); select(value.id, value.channelId || 'general'); setJoinCode(''); setGroupName('');
       });
     };
     const openChannel = value => select(id, value);
@@ -134,18 +143,36 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     });
     const askAgent = agent => {
       setDrafts(old => ({ ...old, [key]: { text: (old[key]?.text || '') + (old[key]?.text ? ' ' : '') + '@' + agent.name + ' ' } }));
-      setTargets(old => ({ ...old, [key]: [...new Set([...(old[key] || []), agent.id])].slice(0, 8) })); setRoutes(old => ({ ...old, [key]: 'selected' })); setTab('Chat');
+      setMentions(old => ({ ...old, [key]: [...(old[key] || []).filter(item => item.id !== agent.id), { id: agent.id, name: agent.name }] })); setRoutes(old => ({ ...old, [key]: 'auto' })); setTab('Chat');
+    };
+    const mentionPresent = (text, name) => new RegExp('(^|\\s)@' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|$|[.,!?])', 'i').test(text);
+    const mentionCandidates = mentionMenu ? eligible.filter(agent => [agent.name, ...(agent.aliases || [])].some(name => name.toLocaleLowerCase().startsWith(mentionMenu.query.toLocaleLowerCase()))).slice(0, 12) : [];
+    const changeDraft = (text, cursor = text.length) => {
+      setDrafts(old => ({ ...old, [key]: { text } }));
+      const match = text.slice(0, cursor).match(/(^|\s)@([^@\n]{0,80})$/);
+      const query = match?.[2] || '';
+      const partial = eligible.some(agent => [agent.name, ...(agent.aliases || [])].some(name => name.toLocaleLowerCase().startsWith(query.toLocaleLowerCase())));
+      setMentionMenu(match && (!/\s/.test(query) || partial) ? { start: cursor - query.length - 1, end: cursor, query } : null); setMentionIndex(0);
+    };
+    const chooseMention = agent => {
+      if (!mentionMenu || !agent.online) return;
+      const before = draft.slice(0, mentionMenu.start), insert = '@' + agent.name + ' ', after = draft.slice(mentionMenu.end);
+      pendingCaret.current = before.length + insert.length;
+      setDrafts(old => ({ ...old, [key]: { text: before + insert + after } }));
+      setMentions(old => ({ ...old, [key]: [...(old[key] || []).filter(item => item.id !== agent.id), { id: agent.id, name: agent.name }] }));
+      setRoutes(old => ({ ...old, [key]: 'auto' })); setMentionMenu(null);
     };
     const send = event => {
       event?.preventDefault(); if (!draft.trim() || !data || busy.current) return;
-      const resolved = route === 'auto' ? resolveGroupTargets(draft, eligible, selectedTargets) : { agentIds: route === 'selected' ? selectedTargets.filter(value => eligible.some(agent => agent.id === value)) : [], error: '' };
-      if (resolved.error) { setError(resolved.error); return; }
+      const mentionedIds = (mentions[key] || []).filter(item => mentionPresent(draft, item.name)).map(item => item.id);
+      const resolved = route === 'auto' ? resolveGroupTargets(draft, eligible, [...selectedTargets, ...mentionedIds]) : { agentIds: route === 'selected' ? selectedTargets.filter(value => eligible.some(agent => agent.id === value)) : [], error: '' };
+      if (resolved.error) { setMentionMenu(null); setError(resolved.error); return; }
       if (route === 'selected' && !resolved.agentIds.length) { setError('Choose an agent or select Humans only.'); return; }
       if (resolved.agentIds.length > 8) { setError('Choose up to eight agents for one message.'); return; }
-      const signature = JSON.stringify([draft, route, resolved.agentIds]), requestId = drafts[key]?.signature === signature ? drafts[key].requestId : uuid();
+      const signature = JSON.stringify([draft, route, resolved.agentIds, options]), requestId = drafts[key]?.signature === signature ? drafts[key].requestId : uuid();
       setDrafts(old => ({ ...old, [key]: { ...old[key], text: draft, signature, requestId } }));
-      act('message', { id, channelId, text: draft, routing: route, agentIds: resolved.agentIds, requestId }, (value, scope) => {
-        adopt(value, scope); setDrafts(old => old[key]?.text === draft ? { ...old, [key]: { text: '' } } : old);
+      act('message', { id, channelId, text: draft, routing: route, agentIds: resolved.agentIds, requestId, requestSettings: options }, (value, scope) => {
+        adopt(value, scope); setDrafts(old => old[key]?.text === draft ? { ...old, [key]: { text: '' } } : old); setMentions(old => ({ ...old, [key]: [] })); setMentionMenu(null);
       });
     };
     const startChannel = item => { setChannelName(item?.name || ''); setChannelProject(item?.projectId || ''); setEditingChannel(item?.id || ''); setMode('channel'); setTab('Groups'); };
@@ -153,9 +180,18 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     const projectOptions = [h('option', { key: '', value: '' }, 'No shared project'), ...projects.map(project => h('option', { key: project.id, value: project.id }, project.name))];
     const saveChannel = event => { event.preventDefault(); act('channel-save', { id, name: channelName.trim(), ...(editingChannel ? { channelId: editingChannel } : {}), projectId: channelProject || null }, (value, scope) => { adopt(value, scope, true); setMode(''); }); };
     const saveProject = event => { event.preventDefault(); act('project-save', { id, channelId, name: projectName.trim(), ...(editingProject ? { projectId: editingProject } : {}) }, (value, scope) => { adopt(value, scope); setMode(''); }); };
-    const bindProject = (projectId, localId) => { const bindings = { ...sharing?.projectBindings }; if (localId) bindings[projectId] = localId; else delete bindings[projectId]; editSharing({ projectBindings: bindings }); };
+    const bindProject = (projectId, localId) => act('project-bind', { id, channelId, projectId, localProjectId: localId || null }, (value, scope) => {
+      if (scope.id !== current.current.id) return;
+      setSharing(old => ({ ...localDefaults(old), projectBindings: value.sharing?.projectBindings || {} }));
+      adopt(value, scope); setNotice(value.notice || 'Project connection saved on this PC.');
+    });
     const mapping = project => field('Local project for ' + project.name, h('select', { 'aria-label': 'Local project for ' + project.name, value: sharing?.projectBindings?.[project.id] || '', onChange: event => bindProject(project.id, event.target.value) },
-      h('option', { value: '' }, 'No local project'), localProjects.map(local => h('option', { key: local.id, value: local.id }, local.name))), 'Only the project name is shared. Your local folder stays on this PC.');
+      h('option', { value: '' }, 'Not connected to this PC'), localProjects.map(local => h('option', { key: local.id, value: local.id, disabled: local.folderAvailable === false }, local.name + (local.folderAvailable === false ? ' · folder unavailable' : '')))), 'This connection stays on this PC.');
+    const deleteChannel = () => {
+      if (!channel || channel.private || channel.id === 'general') return;
+      if (confirm('Delete #' + channel.name + ' for everyone? Its messages and completed activity will be permanently deleted.'))
+        act('channel-delete', { id, channelId }, (value, scope) => { adopt(value, scope, true); setChannelMenu(false); setNotice('Channel deleted.'); });
+    };
     const pendingButton = { disabled: pending };
     const editor = mode === 'create' || mode === 'join' ? h('form', { className: 'gw-editor', onSubmit: createOrJoin },
       h('h3', null, mode === 'create' ? 'Create a shared workspace' : 'Join your friends'),
@@ -192,9 +228,25 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
         h('div', { className: 'gw-avatar', 'aria-hidden': true }, message.kind === 'agent' ? '✦' : (message.authorName || 'G').slice(0, 1)), h('div', { className: 'gw-message-body' }, h('header', null, h('strong', null, message.authorName || 'Group'), message.kind === 'agent' ? badge(display.showPCNames ? agents.find(agent => agent.id === message.agentId)?.pcName || 'Agent' : 'Agent') : null, display.showTimestamps ? h('time', { dateTime: message.createdAt }, Number.isFinite(Date.parse(message.createdAt)) ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '') : null), h('div', { className: 'gw-message-text' }, message.text),
           /opencore-group-local:\/\/conversation\/([^\s]+)/.test(message.text) ? button('Open complete result on this PC', async () => { try { const match = message.text.match(/opencore-group-local:\/\/conversation\/([^\s]+)/); setLocalResult(await worker?.readResult(id, decodeURIComponent(match[1])) || 'The complete result is on the agent owner’s PC.'); } catch (failure) { setError(String(failure)); } }) : null)))
         : h('div', { className: 'gw-chat-welcome' }, h('span', { className: 'gw-channel-mark', 'aria-hidden': true }, channel?.private ? '↗' : '#'), h('h3', null, channel?.name || 'General'), h('p', null, selectedProject ? 'Work together on ' + selectedProject.name + '.' : 'A place for people and agents to work together.'), h('small', null, 'Mention an @agent, choose one below, or send a message to people.'))),
-      h('form', { className: 'gw-composer', onSubmit: send }, h('div', { className: 'gw-route-row' }, h('select', { 'aria-label': 'Message routing', value: route, onChange: event => setRoutes(old => ({ ...old, [key]: event.target.value })) }, h('option', { value: 'auto' }, 'Follow agent rules'), h('option', { value: 'selected' }, 'Selected agents only'), h('option', { value: 'humans-only' }, 'Humans only')), targetControls),
-        h('div', { className: 'gw-compose-row' }, h('textarea', { 'aria-label': 'Group message', placeholder: channel?.private ? 'Message this private chat…' : 'Message #' + (channel?.name || 'General') + ', or @agent…', rows: 2, maxLength: 16000, value: draft, onChange: event => { const text = event.target.value; setDrafts(old => ({ ...old, [key]: { text } })); }, onKeyDown: event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(); } } }), button(pending ? 'Sending…' : 'Send', null, { type: 'submit', 'aria-label': 'Send group message', disabled: pending || !draft.trim() })),
-        h('small', { className: 'gw-compose-hint' }, route === 'humans-only' ? 'Only people receive this message. Agents will not be started.' : route === 'selected' ? 'Only checked agents receive a task. Each uses its owner’s tool policy.' : 'Agent owners choose reply rules. Busy PCs queue work.'))), h('aside', { className: 'gw-plan-sidebar', 'aria-label': 'Channel activity' }, activity));
+      h('form', { className: 'gw-composer', onSubmit: send },
+        globalThis.__opencorePromptTools ? h(globalThis.__opencorePromptTools, { prompt: draft, onPrompt: text => changeDraft(text), conversationId: undefined }) : null,
+        h('div', { className: 'gw-route-row' }, h('select', { 'aria-label': 'Message routing', value: route, onChange: event => setRoutes(old => ({ ...old, [key]: event.target.value })) }, h('option', { value: 'auto' }, 'Follow agent rules'), h('option', { value: 'selected' }, 'Selected agents only'), h('option', { value: 'humans-only' }, 'Humans only')), targetControls),
+        h('div', { className: 'gw-compose-box' },
+          mentionMenu ? h('div', { className: 'gw-mention-menu', role: 'listbox', 'aria-label': 'Mention an agent' },
+            h('strong', null, 'Agents'), mentionCandidates.length ? mentionCandidates.map((agent, index) => h('button', { type: 'button', key: agent.id, role: 'option', 'aria-selected': index === mentionIndex, disabled: !agent.online, onMouseDown: event => event.preventDefault(), onClick: () => chooseMention(agent) }, h('span', { className: 'gw-avatar agent', 'aria-hidden': true }, '✦'), h('span', null, h('strong', null, '@' + agent.name), h('small', null, agent.pcName + ' · ' + (agent.online ? agent.modelLabel || agent.modelId : 'Offline'))))) : h('small', null, 'No matching agents')) : null,
+          h('textarea', { ref: composerRef, 'aria-label': 'Group message', 'aria-autocomplete': 'list', 'aria-expanded': !!mentionMenu, placeholder: channel?.private ? 'Message this private chat…' : 'Message #' + (channel?.name || 'General') + ', or @agent…', rows: 2, maxLength: 16000, value: draft, onChange: event => changeDraft(event.target.value, event.target.selectionStart), onKeyDown: event => {
+            if (mentionMenu && event.key === 'Escape') { event.preventDefault(); setMentionMenu(null); return; }
+            if (mentionMenu && mentionCandidates.length && ['ArrowDown', 'ArrowUp'].includes(event.key)) { event.preventDefault(); setMentionIndex(old => (old + (event.key === 'ArrowDown' ? 1 : -1) + mentionCandidates.length) % mentionCandidates.length); return; }
+            if (mentionMenu && mentionCandidates[mentionIndex]?.online && (event.key === 'Tab' || event.key === 'Enter') && !event.nativeEvent.isComposing) { event.preventDefault(); chooseMention(mentionCandidates[mentionIndex]); return; }
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(); }
+          } }),
+          h('div', { className: 'gw-compose-toolbar' },
+            button('@', () => { const at = composerRef.current?.selectionStart ?? draft.length, before = draft.slice(0, at), inserted = (before && !/\s$/.test(before) ? ' ' : '') + '@'; pendingCaret.current = before.length + inserted.length; changeDraft(before + inserted + draft.slice(at), pendingCaret.current); }, { 'aria-label': 'Mention an agent', title: 'Mention an agent' }),
+            SpeechButton ? h(SpeechButton, { onTranscript: text => changeDraft(draft + (draft && !/\s$/.test(draft) ? ' ' : '') + text), onError: failure => setError(String(failure)) }) : null,
+            h('select', { 'aria-label': 'Group approval', title: 'The PC owner can always require stricter approval', value: options.approval, onChange: event => setRequestOptions(old => ({ ...old, [key]: { ...options, approval: event.target.value } })) }, h('option', { value: 'owner-default' }, 'Approval · PC default'), h('option', { value: 'ask-every-time' }, 'Approval · Ask'), h('option', { value: 'allow-chat' }, 'Approval · Chat'), h('option', { value: 'allow-all' }, 'Approval · All')),
+            h('select', { 'aria-label': 'Group effort', value: options.effort, onChange: event => setRequestOptions(old => ({ ...old, [key]: { ...options, effort: event.target.value } })) }, h('option', { value: 'owner-default' }, 'Effort · PC default'), ['off', 'low', 'medium', 'high', 'ultra'].map(value => h('option', { key: value, value }, 'Effort · ' + value[0].toUpperCase() + value.slice(1)))),
+            button(pending ? '…' : '➤', null, { type: 'submit', 'aria-label': 'Send group message', disabled: pending || !draft.trim() }))),
+        h('small', { className: 'gw-compose-hint' }, route === 'humans-only' ? 'People only' : route === 'selected' ? 'Selected agents · PC owners control tools' : 'Mention an agent · PC owners control tools'))), h('aside', { className: 'gw-plan-sidebar', 'aria-label': 'Channel activity' }, activity));
 
     const people = h('div', { className: 'gw-people' }, h('div', { className: 'gw-page-heading' }, h('div', null, h('h3', null, 'People & agents'), h('p', null, 'Talk directly, or bring an agent into this channel.')), button('Configure my agents', () => setTab('Share my PC'))),
       h('div', { className: 'gw-agent-grid' }, agents.map(agent => h('article', { className: 'gw-person-card', key: agent.id }, h('header', null, h('span', { className: 'gw-avatar agent', 'aria-hidden': true }, '✦'), h('div', null, h('h3', null, '@' + agent.name), h('small', null, agent.modelLabel || agent.modelId)), badge(agent.online ? 'Online' : 'Offline', agent.online ? 'online' : '')),
@@ -257,15 +309,16 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
       mode === 'project' ? editor : null, !projects.length ? h('p', { className: 'gw-empty' }, owner ? 'Create a named project, then connect a channel to it.' : 'The group owner can create shared project names.') : projects.map(project => h('article', { className: 'gw-project-card', key: project.id }, h('header', null, h('h3', null, project.name), owner ? button('Rename', () => startProject(project), { 'aria-label': 'Rename project ' + project.name }) : null), h('small', null, channels.filter(item => item.projectId === project.id).length + ' linked channels'), mapping(project))),
       dirty ? h('div', { className: 'gw-save-bar' }, h('small', null, 'Save this PC’s project mappings.'), button('Save sharing', saveSharing, { disabled: pending || !validSharing })) : null);
 
-    return h(Dialog, { label: 'Chat Core', className: 'group-workspace gw-density-' + display.density, close },
-      h('header', { className: 'gw-header' }, h('div', { className: 'gw-brand' }, h('img', { src: '/opencore-logo.png', alt: 'OpenCore', width: 36, height: 36 }), h('div', null, h('h1', null, 'Chat Core'), h('p', null, 'People, local models and shared roles'))), button('×', close, { className: 'gw-close', 'aria-label': 'Close Chat Core' })),
+    return h(embedded && EmbeddedWorkspace ? EmbeddedWorkspace : Dialog, { label: 'Chat Core', className: 'group-workspace gw-density-' + display.density, close },
+      !embedded ? h('header', { className: 'gw-header' }, h('div', { className: 'gw-brand' }, h('img', { src: '/opencore-logo.png', alt: 'OpenCore', width: 36, height: 36 }), h('div', null, h('h1', null, 'Chat Core'), h('p', null, 'People, local models and shared roles'))), button('×', close, { className: 'gw-close', 'aria-label': 'Close Chat Core' })) : null,
       h('div', { className: 'gw-shell' }, h('div', { className: 'gw-desktop-rail' }, sidebar), h('main', { className: 'gw-main' },
         h('header', { className: 'gw-main-header' }, h('div', null, h('h2', null, data?.group?.name || selectedGroup?.name || 'Your groups'), h('small', null, selectedGroup ? selectedGroup.hosting ? 'Hosted on this PC' : selectedGroup.connected ? 'Connected to host' : 'Reconnecting to host…' : 'Create or join a group to get started')), id ? h('div', { className: 'group-header-actions gw-actions' }, owner ? button('Create invite', () => act('invite', { id }, value => setInvite(value)), pendingButton) : null, button('Leave', () => { if (confirm('Leave this group?')) act('leave', { id }, () => { setGroups(old => old.filter(group => group.id !== id)); select(''); }); }, { disabled: pending || owner, title: owner ? 'The hosting PC cannot leave its own group' : undefined })) : null),
         h('nav', { className: 'group-tabs gw-tabs', role: 'tablist', 'aria-label': 'Group views' }, ['Groups', 'Chat', 'Team builder', 'Agents', 'Plan', 'Projects', 'Share my PC', 'Advanced'].map(value => button(value, () => { setTab(value); if (value !== 'Groups' && mode !== 'project') setMode(''); }, { key: value, role: 'tab', 'aria-selected': value === tab, disabled: value !== 'Groups' && !id }))),
         (error || refreshError) ? h('p', { className: 'gw-banner gw-error', role: 'alert' }, error || refreshError) : null, notice ? h('p', { className: 'gw-banner', role: 'status' }, notice) : null,
         workerState.task ? h('p', { className: 'gw-banner' }, 'This PC is working · ' + (workerState.task.agentName || workerState.task.modelId || 'Group agent')) : null, workerState.error ? h('p', { className: 'gw-banner gw-error' }, workerState.error) : null,
         invite ? h('section', { className: 'gw-invite' }, field('Group invite', input('Group invite', invite.invite, () => {}, { readOnly: true })), button('Copy invite', async () => { try { await navigator.clipboard.writeText(invite.invite); setNotice('Invite copied.'); } catch { setNotice('Select and copy the invite above.'); } }), button('Dismiss invite', () => setInvite(null)), h('small', null, 'One-time invite · expires in ' + Math.ceil((invite.expiresIn || 300) / 60) + ' minutes. Your friend must be able to reach this group’s host.')) : null,
-        id && tab === 'Chat' ? h('div', { className: 'gw-channel-heading' }, h('span', { className: 'gw-channel-prefix', 'aria-hidden': true }, channel?.private ? '↗' : '#'), h('select', { 'aria-label': 'Current channel', value: channelId, onChange: event => openChannel(event.target.value) }, channels.map(item => h('option', { key: item.id, value: item.id }, (item.private ? 'Private · ' : '# ') + item.name))), selectedProject ? badge(selectedProject.name) : null, !channel?.private && (owner || channel?.createdBy === data?.self?.id) ? button('Edit', () => startChannel(channel), { 'aria-label': 'Edit current channel' }) : null, button('Activity' + (activeTasks.length ? ' · ' + activeTasks.length : ''), () => setTab('Plan'), { className: 'gw-mobile-activity' })) : null,
+        id && tab === 'Chat' ? h('div', { className: 'gw-channel-heading' }, h('span', { className: 'gw-channel-prefix', 'aria-hidden': true }, channel?.private ? '↗' : '#'), h('select', { 'aria-label': 'Current channel', value: channelId, onChange: event => openChannel(event.target.value) }, channels.map(item => h('option', { key: item.id, value: item.id }, (item.private ? 'Private · ' : '# ') + item.name))), selectedProject ? button('📁 ' + selectedProject.name + (sharing?.projectBindings?.[selectedProject.id] ? ' · Linked' : ' · Connect PC'), () => setTab('Projects'), { className: 'gw-project-link', title: 'Connect this shared project to a folder on this PC' }) : null,
+          h('div', { className: 'gw-channel-menu' }, button('⋯', () => setChannelMenu(old => !old), { 'aria-label': 'Channel actions', 'aria-expanded': channelMenu, title: 'Channel actions' }), channelMenu ? h('div', { className: 'gw-channel-menu-items' }, owner && !channel?.private ? button('Invite to channel', () => { setChannelMenu(false); act('invite', { id, channelId }, value => setInvite(value)); }, pendingButton) : null, !channel?.private && (owner || channel?.createdBy === data?.self?.id) ? button('Edit channel', () => { setChannelMenu(false); startChannel(channel); }, { 'aria-label': 'Edit current channel' }) : null, !channel?.private && channel?.id !== 'general' && (owner || channel?.createdBy === data?.self?.id) ? button('Delete channel', deleteChannel, { disabled: pending }) : null) : null), button('Activity' + (activeTasks.length ? ' · ' + activeTasks.length : ''), () => setTab('Plan'), { className: 'gw-mobile-activity' })) : null,
         h('div', { className: 'gw-content gw-content-' + tab.toLowerCase().replace(/\s/g, '-') }, tab === 'Groups' ? h('div', { className: 'gw-groups-view' }, h('div', { className: 'gw-mobile-rail' }, sidebar), h('section', { className: 'gw-overview' }, mode && mode !== 'project' ? editor : h(React.Fragment, null, h('div', { className: 'gw-overview-mark', 'aria-hidden': true }, '◈'), h('h3', null, id ? 'One workspace. Many ways to work.' : 'Bring your people and agents together.'), h('p', null, id ? 'Choose a channel, start a direct chat, or give shared agents a task. Everyone keeps control of their own PC.' : 'Create a group to host a shared workspace, or join a friend’s invite.'), id ? h('div', { className: 'gw-overview-cards' }, button(h(React.Fragment, null, h('strong', null, channels.filter(item => !item.private).length + ' channels'), h('small', null, 'Projects and team conversations')), () => setTab('Chat')), button(h(React.Fragment, null, h('strong', null, agents.length + ' shared agents'), h('small', null, 'Local and configured API models')), () => setTab('Agents')), button(h(React.Fragment, null, h('strong', null, activeTasks.length + ' active tasks'), h('small', null, 'Plans, tools and progress')), () => setTab('Plan'))) : null)))
           : !data ? h('p', { className: 'gw-empty' }, 'Loading workspace…') : tab === 'Chat' ? chat : tab === 'Team builder' ? teamPanel : tab === 'Agents' ? people : tab === 'Plan' ? activity : tab === 'Projects' ? projectPanel : tab === 'Advanced' ? preferences : sharingPanel))),
       localResult !== null ? h(Dialog, { label: 'Complete local group result', className: 'gw-local-result', close: () => setLocalResult(null) }, h('header', { className: 'gw-header' }, h('h2', null, 'Complete result on this PC'), button('Close', () => setLocalResult(null))), h('pre', null, localResult)) : null);
@@ -290,8 +343,8 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
       return () => { live = false; };
     }, []);
     if (capability?.available) return h(WorkspacePanel, props);
-    return h(Dialog, { label: 'Chat Core', className: 'group-workspace', close: props.close },
-      h('header', { className: 'gw-header' }, h('div', { className: 'gw-brand' }, h('img', { src: '/opencore-logo.png', alt: 'OpenCore', width: 36, height: 36 }), h('div', null, h('h1', null, 'Chat Core'), h('p', null, 'People, local models and shared roles'))), button('×', props.close, { className: 'gw-close', 'aria-label': 'Close Chat Core' })),
+    return h(props.embedded && EmbeddedWorkspace ? EmbeddedWorkspace : Dialog, { label: 'Chat Core', className: 'group-workspace', close: props.close },
+      !props.embedded ? h('header', { className: 'gw-header' }, h('div', { className: 'gw-brand' }, h('img', { src: '/opencore-logo.png', alt: 'OpenCore', width: 36, height: 36 }), h('div', null, h('h1', null, 'Chat Core'), h('p', null, 'People, local models and shared roles'))), button('×', props.close, { className: 'gw-close', 'aria-label': 'Close Chat Core' })) : null,
       h('main', { className: 'gw-main' }, h('div', { className: 'gw-content' }, h('section', { className: 'gw-overview' },
         h('h2', null, capability ? 'Chat Core runs on your PC' : 'Checking Chat Core availability…'),
         h('p', { role: 'status' }, capability ? capability.reason : 'Checking the group service for this execution device…'),

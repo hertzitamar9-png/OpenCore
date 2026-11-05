@@ -19,10 +19,12 @@ type InstalledModelProfile = { id: string; label: string; description: string };
 
 export function useInstalledModelProfiles() {
   const [installedProfiles, setInstalledProfiles] = useState<InstalledModelProfile[] | null>(null);
+  const [downloadedUnready, setDownloadedUnready] = useState<{id:string;label:string}[]>([]);
   const [error, setError] = useState(false);
   useEffect(() => {
     let active = true;
     void modelLibrary({ fresh: true }).then(library => {
+      if (active) setDownloadedUnready(library.models.filter(model => model.installed && !model.selectable && ['text','brain','omni'].includes(model.category || '')).map(model => ({id:model.id,label:model.label})));
       if (active) setInstalledProfiles(library.models.filter(model => model.installed && model.selectable)
         .map(model => ({ id: model.id,
           label: model.variantOf && model.backend==='gguf'
@@ -32,7 +34,7 @@ export function useInstalledModelProfiles() {
     }).catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, []);
-  return { installedProfiles, error };
+  return { installedProfiles, downloadedUnready, error };
 }
 
 export function profilesForInstalledModels(installedProfiles: InstalledModelProfile[]) {
@@ -72,7 +74,7 @@ export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | 
   { id: "ornith-1-5-9b-mtp", label: "Ornith 1.5 9B MTP · ECHO", description: "Optional Q4_K_M with MTP draft head · ECHO archive · 16K attention" },
 ];
 
-export const profileLabel = (profile: string) => selectableModelProfiles.find((item) => item.id === profile)?.label ?? catalogProfiles.get(profile)?.label ?? (profile === "unsloth-echo" ? "Unsloth + ECHO" : "Stopped");
+export const profileLabel = (profile: string) => selectableModelProfiles.find((item) => item.id === profile)?.label ?? catalogProfiles.get(profile)?.label ?? (profile === "unsloth-echo" ? "Unsloth + ECHO" : profile === "stopped" ? "No model selected" : "Stopped");
 
 export const profileDescription = (profile: RuntimeProfile) =>
   selectableModelProfiles.find((item) => item.id === profile)?.description ?? catalogProfiles.get(profile)?.description ?? "Unsloth backend · ECHO archive";
@@ -91,7 +93,7 @@ export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, 
   id?: string;
   className?: string;
 }) {
-  const { installedProfiles, error } = useInstalledModelProfiles();
+  const { installedProfiles, downloadedUnready, error } = useInstalledModelProfiles();
   const profiles = profilesForInstalledModels(installedProfiles || []);
   const image=useChatImageSelection(),active=Boolean(onSelectImage)&&(imageActive??Boolean(image));
   const selectedText=active?'stopped':selectedProfile;
@@ -99,7 +101,8 @@ export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, 
     {onSelectImage?<ChatImageModelOptions onSelect={onSelectImage} disabled={disabled} loadModels={modelLibrary} selectedId={active?imageModelId||image?.id:null} selectedAdapterId={active?imageAdapterId??image?.adapterId:null}/>:null}
     {error ? <p className="model-picker-empty" role="alert">Could not check downloaded models. Close and reopen to retry.</p>
       : installedProfiles === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>
-      : profiles.length === 0 ? <p className="model-picker-empty" role="status">No downloaded text models. Install one in Models.</p> : null}
+      : profiles.length === 0 ? <p className="model-picker-empty" role="status">No ready text model. Download a model, or prepare a downloaded model in Models.</p> : null}
+    {downloadedUnready.map(model => <button key={'unready-'+model.id} className="model-picker-option" type="button" disabled={disabled} onClick={() => window.dispatchEvent(new Event('opencore-open-models'))}><span><strong>{model.label}</strong><small>Downloaded · prepare runtime in Models</small></span></button>)}
     {profiles.map(({ id: profile, label, description }) => <button
       key={profile}
       className={`model-picker-option ${selectedText === profile ? "selected" : ""}`}
