@@ -120,17 +120,17 @@ export function AgentPlatformSettings({ onConfigurationChange, initialConfigurat
     setLibraryLoading(true);
     const [skillResult, pluginResult] = await Promise.allSettled([listPlatformSkills(), listPlatformPlugins()]);
     if (request !== libraryRequest.current) return;
-    if (skillResult.status === "fulfilled") { setSkills(skillResult.value); setSkillError(""); }
-    else setSkillError(errorMessage(skillResult.reason));
-    if (pluginResult.status === "fulfilled") { setPlugins(pluginResult.value); setPluginError(""); }
-    else setPluginError(errorMessage(pluginResult.reason));
+    if (skillResult.status === "fulfilled" && Array.isArray(skillResult.value)) { setSkills(skillResult.value); setSkillError(""); }
+    else setSkillError(skillResult.status === 'rejected' ? errorMessage(skillResult.reason) : 'Skill inventory is unavailable from this runtime.');
+    if (pluginResult.status === "fulfilled" && Array.isArray(pluginResult.value)) { setPlugins(pluginResult.value); setPluginError(""); }
+    else setPluginError(pluginResult.status === 'rejected' ? errorMessage(pluginResult.reason) : 'Plugin inventory is unavailable from this runtime.');
     setLibraryLoading(false);
   }, []);
   const refreshActivity = useCallback(async (query = "") => {
     const request = ++activityRequest.current;
     activitySearch.current = query;
     setActivityLoading(true); setActivityError("");
-    try { const records = await searchPlatformActivity(query); if (request === activityRequest.current) setActivity(records); }
+    try { const records = await searchPlatformActivity(query); if (!Array.isArray(records)) throw new Error('Activity history is unavailable from this runtime'); if (request === activityRequest.current) setActivity(records); }
     catch (cause) { if (request === activityRequest.current) setActivityError(errorMessage(cause)); }
     finally { if (request === activityRequest.current) setActivityLoading(false); }
   }, []);
@@ -138,7 +138,7 @@ export function AgentPlatformSettings({ onConfigurationChange, initialConfigurat
     const request = ++memoryRequest.current;
     memorySearch.current = query;
     setMemoryLoading(true); setMemoryError("");
-    try { const records = await searchPlatformMemories(query); if (request === memoryRequest.current) setMemories(records); }
+    try { const records = await searchPlatformMemories(query); if (!Array.isArray(records)) throw new Error('Memory records are unavailable from this runtime'); if (request === memoryRequest.current) setMemories(records); }
     catch (cause) { if (request === memoryRequest.current) setMemoryError(errorMessage(cause)); }
     finally { if (request === memoryRequest.current) setMemoryLoading(false); }
   }, []);
@@ -164,7 +164,7 @@ export function AgentPlatformSettings({ onConfigurationChange, initialConfigurat
       }
       catch (cause) { setLabError(errorMessage(cause)); }
     }).then(stop => { if (active) unlisten = stop; else stop(); }).catch(() => {});
-    loadTestingLabProfiles().then(profiles => { if (active && !changed) { setLabProfiles(profiles); setLabText(pretty(profiles)); } })
+    loadTestingLabProfiles().then(profiles => { if (!Array.isArray(profiles)) throw new Error('Testing Lab profiles are unavailable from this runtime'); if (active && !changed) { setLabProfiles(profiles); setLabText(pretty(profiles)); } })
       .catch(cause => { if (active) setLabError(errorMessage(cause)); })
       .finally(() => { if (active) setLabLoading(false); });
     return () => { active = false; unlisten?.(); };

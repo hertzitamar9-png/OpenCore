@@ -32,8 +32,9 @@ jobs:
           targets: x86_64-pc-windows-msvc
       - name: Test GGUF quantization catalog refresh
         run: python -m unittest scripts.test_sync_gguf_variants -v
-      - name: Refresh published GGUF quantizations before native validation
-        run: python scripts/sync_gguf_variants.py
+      # Validate pinned catalog parsers above without refreshing third-party model
+      # repositories. PR validation must not require authenticated Hugging Face
+      # access or mutate the reviewed model catalog from live external metadata.
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64

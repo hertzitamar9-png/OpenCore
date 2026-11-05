@@ -21,7 +21,7 @@ export function ComputerAccessSettings({ onNotice }: Props) {
     if (!alive.current || (next.revision ?? 0) < (applied.current?.revision ?? 0)) return;
     applied.current = next; setPolicy(next);
   };
-  const refreshApps = () => api.computerAccessWindows().then(windows => { if (alive.current) setApps(windows); }).catch(e => { if (alive.current) setError(String(e)); });
+  const refreshApps = () => api.computerAccessWindows().then(windows => { if (alive.current) { if (Array.isArray(windows)) setApps(windows); else setError("Running applications are unavailable from this runtime"); } }).catch(e => { if (alive.current) setError(String(e)); });
   useEffect(() => {
     alive.current = true;
     void api.computerAccess().then(accept).catch(e => { if (alive.current) setError(String(e)); });
@@ -87,9 +87,10 @@ export function BrowserAccessSettings({ onNotice }: Props) {
       try {
         const next = await api.browserBridgeStatus();
         if (!alive || version !== revision.current) return;
+        if (!next || typeof next !== "object") throw new Error("Browser status is unavailable from this runtime");
         setStatus(next); if (!next.connected || next.enabled === false) setTabs([]);
         const listed = next.connected && next.enabled !== false ? await api.browserCommand<{tabs: api.BrowserTab[]}>('list') : { tabs: [] };
-        if (alive && version === revision.current) { setTabs(listed.tabs); setError(''); }
+        if (alive && version === revision.current) { setTabs(Array.isArray(listed?.tabs) ? listed.tabs : []); setError(Array.isArray(listed?.tabs) ? "" : "Browser tab list is unavailable"); }
       } catch (e) { if (alive && version === revision.current) { setError(String(e)); setTabs([]); } }
       finally { pending = false; }
     };
