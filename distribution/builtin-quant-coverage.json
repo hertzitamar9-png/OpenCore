@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 586,
-  "withFive": 232,
+  "families": 587,
+  "withFive": 233,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5955,6 +5955,17 @@
       "source": "bundled packages",
       "repositories": [
         "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-twil-8b",
+      "label": "TwIL-8B",
+      "category": "text",
+      "quantizations": 6,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "webAI-Official/TwIL-8B"
       ]
     },
     {

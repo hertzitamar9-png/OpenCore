@@ -2725,6 +2725,62 @@
           "managedEngine": "flint-cpu-v1"
         }
       ]
+    },
+    {
+      "repository": "webAI-Official/TwIL-8B",
+      "familyId": "publisher-twil-8b",
+      "label": "TwIL-8B",
+      "category": "text",
+      "description": "Granite-based reasoning model in balanced and verbose editions. Non-commercial publisher license applies. Runtime compatibility and a real generation must be verified after installation.",
+      "supportedContextTokens": 131072,
+      "sources": [
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "onlyVariantKeys": [
+            "gguf:TwIL-8B-Q4_K_M-balanced.gguf"
+          ],
+          "quantization": "Q4_K_M Balanced",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "onlyVariantKeys": [
+            "gguf:TwIL-8B-Q4_K_M-verbose.gguf"
+          ],
+          "quantization": "Q4_K_M Verbose",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "onlyVariantKeys": [
+            "gguf:TwIL-8B-Q8_0-verbose.gguf"
+          ],
+          "quantization": "Q8_0 Verbose",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "onlyVariantKeys": [
+            "gguf:TwIL-8B-F16-verbose.gguf"
+          ],
+          "quantization": "F16 Verbose",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "onlyVariantKeys": [
+            "safetensors:."
+          ],
+          "quantization": "BF16 Balanced"
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "onlyVariantKeys": [
+            "safetensors:verbose"
+          ],
+          "quantization": "BF16 Verbose"
+        }
+      ]
     }
   ]
 }

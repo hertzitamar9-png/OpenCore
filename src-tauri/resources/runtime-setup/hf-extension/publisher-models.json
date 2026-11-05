@@ -140966,6 +140966,670 @@
       "publishedContextTokens": 262144
     },
     {
+      "id": "hf-cbf0b028bb57dc470fa49677",
+      "repository": "webAI-Official/TwIL-8B",
+      "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+      "variantKey": "gguf:TwIL-8B-Q4_K_M-verbose.gguf",
+      "name": "TwIL-8B · Q4_K_M Verbose",
+      "quantization": "Q4_K_M Verbose",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5347917248,
+      "files": [
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "TwIL-8B-Q4_K_M-verbose.gguf",
+          "bytes": 5347917248,
+          "sha256": "5646abbb98f6ab81cfb9f7590aef894011ba50a259fb5d5aac8284d154e64ef0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "granite",
+      "architectures": [
+        "GraniteForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/webAI-Official/TwIL-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1.0,
+        "top_p": 0.95
+      },
+      "familyId": "publisher-twil-8b",
+      "familyLabel": "TwIL-8B",
+      "originalRepository": "webAI-Official/TwIL-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Granite-based reasoning model in balanced and verbose editions. Non-commercial publisher license applies. Runtime compatibility and a real generation must be verified after installation.",
+      "license": "other",
+      "supportedContextTokens": 131072,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 131072,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 131072
+    },
+    {
+      "id": "hf-f0f9b7b992ad3e36aff63c6b",
+      "repository": "webAI-Official/TwIL-8B",
+      "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+      "variantKey": "gguf:TwIL-8B-Q4_K_M-balanced.gguf",
+      "name": "TwIL-8B · Q4_K_M Balanced",
+      "quantization": "Q4_K_M Balanced",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5347917568,
+      "files": [
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "TwIL-8B-Q4_K_M-balanced.gguf",
+          "bytes": 5347917568,
+          "sha256": "17bda82d2608ca61b6aca48394f212349ef1515d0d9a2e6edee06619152faa0e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "granite",
+      "architectures": [
+        "GraniteForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/webAI-Official/TwIL-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1.0,
+        "top_p": 0.95
+      },
+      "familyId": "publisher-twil-8b",
+      "familyLabel": "TwIL-8B",
+      "originalRepository": "webAI-Official/TwIL-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Granite-based reasoning model in balanced and verbose editions. Non-commercial publisher license applies. Runtime compatibility and a real generation must be verified after installation.",
+      "license": "other",
+      "supportedContextTokens": 131072,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 131072,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 131072
+    },
+    {
+      "id": "hf-2d8fb8f9c23d30ac6cf8e49e",
+      "repository": "webAI-Official/TwIL-8B",
+      "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+      "variantKey": "gguf:TwIL-8B-Q8_0-verbose.gguf",
+      "name": "TwIL-8B · Q8_0 Verbose",
+      "quantization": "Q8_0 Verbose",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 9345613248,
+      "files": [
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "TwIL-8B-Q8_0-verbose.gguf",
+          "bytes": 9345613248,
+          "sha256": "6242f84e5d9854ca54a9f39dd14dadbd9eaad5b3d2bc6195d408cae69e8f85d6",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "granite",
+      "architectures": [
+        "GraniteForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/webAI-Official/TwIL-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1.0,
+        "top_p": 0.95
+      },
+      "familyId": "publisher-twil-8b",
+      "familyLabel": "TwIL-8B",
+      "originalRepository": "webAI-Official/TwIL-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Granite-based reasoning model in balanced and verbose editions. Non-commercial publisher license applies. Runtime compatibility and a real generation must be verified after installation.",
+      "license": "other",
+      "supportedContextTokens": 131072,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 131072,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 131072
+    },
+    {
+      "id": "hf-224d66ce45ae2ad430f9a087",
+      "repository": "webAI-Official/TwIL-8B",
+      "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+      "variantKey": "gguf:TwIL-8B-F16-verbose.gguf",
+      "name": "TwIL-8B · F16 Verbose",
+      "quantization": "F16 Verbose",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 17587420608,
+      "files": [
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "TwIL-8B-F16-verbose.gguf",
+          "bytes": 17587420608,
+          "sha256": "c5d8f7d35d82c38e845f23612513ac49333e5fa23a1788d843449124e13b64bd",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "granite",
+      "architectures": [
+        "GraniteForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/webAI-Official/TwIL-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1.0,
+        "top_p": 0.95
+      },
+      "familyId": "publisher-twil-8b",
+      "familyLabel": "TwIL-8B",
+      "originalRepository": "webAI-Official/TwIL-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Granite-based reasoning model in balanced and verbose editions. Non-commercial publisher license applies. Runtime compatibility and a real generation must be verified after installation.",
+      "license": "other",
+      "supportedContextTokens": 131072,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 131072,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 131072
+    },
+    {
+      "id": "hf-32f833211e7a476a4e8811ac",
+      "repository": "webAI-Official/TwIL-8B",
+      "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+      "variantKey": "safetensors:.",
+      "name": "TwIL-8B · BF16 Balanced",
+      "quantization": "BF16 Balanced",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 17590420085,
+      "files": [
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "model-balanced.safetensors",
+          "bytes": 17583228544,
+          "sha256": "79fe4b7e42b45d15f43c10e1e2fa0602409bcc8cad03911aa0d8c4a0846e3532",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "chat_template.jinja",
+          "bytes": 9013,
+          "sha256": null,
+          "gitBlobSha1": "e5c9466d5347257b44a8991b3d24219bf9c0ad1b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "config.json",
+          "bytes": 827,
+          "sha256": null,
+          "gitBlobSha1": "13afa23ab942089cdf16465d252d5958faac161f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "generation_config.json",
+          "bytes": 206,
+          "sha256": null,
+          "gitBlobSha1": "e4155b6544f0016ad330155fb3364dcd070be447",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "model.safetensors.index.json",
+          "bytes": 27715,
+          "sha256": null,
+          "gitBlobSha1": "4024fc722edc05531450d8102aec4e145ac7ded8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "tokenizer.json",
+          "bytes": 7153414,
+          "sha256": null,
+          "gitBlobSha1": "109016081083c2a3bba91a2111acb68656426fde",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "tokenizer_config.json",
+          "bytes": 366,
+          "sha256": null,
+          "gitBlobSha1": "ce5861432fa5af58fcc2df5d4159b950fb1ebce2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "granite",
+      "architectures": [
+        "GraniteForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/webAI-Official/TwIL-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1.0,
+        "top_p": 0.95
+      },
+      "familyId": "publisher-twil-8b",
+      "familyLabel": "TwIL-8B",
+      "originalRepository": "webAI-Official/TwIL-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Granite-based reasoning model in balanced and verbose editions. Non-commercial publisher license applies. Runtime compatibility and a real generation must be verified after installation.",
+      "license": "other",
+      "supportedContextTokens": 131072,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 131072,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 131072
+    },
+    {
+      "id": "hf-c2fc4f40f2745ad2b4f5fdf8",
+      "repository": "webAI-Official/TwIL-8B",
+      "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+      "variantKey": "safetensors:verbose",
+      "name": "TwIL-8B · BF16 Verbose",
+      "quantization": "BF16 Verbose",
+      "format": "safetensors",
+      "subdirectory": "verbose",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 17597611263,
+      "files": [
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "verbose/model-verbose.safetensors",
+          "bytes": 17583228544,
+          "sha256": "f582543fcb077e8672e6c05aba680e3d90b35601390817cea1af20ff2733fbd1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "chat_template.jinja",
+          "bytes": 9013,
+          "sha256": null,
+          "gitBlobSha1": "e5c9466d5347257b44a8991b3d24219bf9c0ad1b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "config.json",
+          "bytes": 827,
+          "sha256": null,
+          "gitBlobSha1": "13afa23ab942089cdf16465d252d5958faac161f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "generation_config.json",
+          "bytes": 206,
+          "sha256": null,
+          "gitBlobSha1": "e4155b6544f0016ad330155fb3364dcd070be447",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "model.safetensors.index.json",
+          "bytes": 27715,
+          "sha256": null,
+          "gitBlobSha1": "4024fc722edc05531450d8102aec4e145ac7ded8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "tokenizer.json",
+          "bytes": 7153414,
+          "sha256": null,
+          "gitBlobSha1": "109016081083c2a3bba91a2111acb68656426fde",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "tokenizer_config.json",
+          "bytes": 366,
+          "sha256": null,
+          "gitBlobSha1": "ce5861432fa5af58fcc2df5d4159b950fb1ebce2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "verbose/chat_template.jinja",
+          "bytes": 9013,
+          "sha256": null,
+          "gitBlobSha1": "e5c9466d5347257b44a8991b3d24219bf9c0ad1b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "verbose/config.json",
+          "bytes": 827,
+          "sha256": null,
+          "gitBlobSha1": "13afa23ab942089cdf16465d252d5958faac161f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "verbose/generation_config.json",
+          "bytes": 206,
+          "sha256": null,
+          "gitBlobSha1": "e4155b6544f0016ad330155fb3364dcd070be447",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "verbose/model.safetensors.index.json",
+          "bytes": 27352,
+          "sha256": null,
+          "gitBlobSha1": "b39eb2226e058a060b3f8bbf84cd136283234052",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "verbose/tokenizer.json",
+          "bytes": 7153414,
+          "sha256": null,
+          "gitBlobSha1": "109016081083c2a3bba91a2111acb68656426fde",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "webAI-Official/TwIL-8B",
+          "revision": "58d49f0d9909e62f9c2fb09e99fc5c76f3f2d630",
+          "filename": "verbose/tokenizer_config.json",
+          "bytes": 366,
+          "sha256": null,
+          "gitBlobSha1": "ce5861432fa5af58fcc2df5d4159b950fb1ebce2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "granite",
+      "architectures": [
+        "GraniteForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/webAI-Official/TwIL-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1.0,
+        "top_p": 0.95
+      },
+      "familyId": "publisher-twil-8b",
+      "familyLabel": "TwIL-8B",
+      "originalRepository": "webAI-Official/TwIL-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Granite-based reasoning model in balanced and verbose editions. Non-commercial publisher license applies. Runtime compatibility and a real generation must be verified after installation.",
+      "license": "other",
+      "supportedContextTokens": 131072,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 131072,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 131072
+    },
+    {
       "id": "hf-7baefbb2d1bf1bedf992295b",
       "repository": "baidu/Unlimited-OCR-2",
       "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
