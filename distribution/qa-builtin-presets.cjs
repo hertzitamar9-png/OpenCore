@@ -79,9 +79,12 @@ await manoCard.getByRole('combobox',{name:/^Quantization for /}).selectOption(ma
 await manoCard.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('requested model installation uses its selected preset and locks duplicate installs',await manoCard.getByRole('button',{name:'Installing…',exact:true}).isDisabled()&&await page.evaluate(id=>fixture.calls.some(call=>call.route==='/install'&&call.body.id===id),mano.id));
 await page.locator('.model-install-progress').first().locator('progress').waitFor();
+await page.waitForFunction(()=>document.querySelector('.model-install-progress progress')?.getAttribute('value')==='30',null,{timeout:10000});
 record('requested model installation appears in the shared progress panel',await page.locator('.model-install-progress').first().locator('progress').getAttribute('value')==='30');
 await page.locator('.model-install-progress').first().getByRole('button',{name:'Pause installation',exact:true}).click();await manoCard.getByRole('button',{name:'Install',exact:true}).waitFor();
-record('pausing the requested download releases its Install button',await manoCard.getByRole('button',{name:'Install',exact:true}).isEnabled());
+// A released label can render before coordinator admission confirms the pause.
+await (await manoCard.getByRole('button',{name:'Install',exact:true}).elementHandle()).waitForElementState('enabled');
+record('pausing the requested download releases its Install button',await manoCard.getByRole('button',{name:'Install',exact:true}).isEnabled()&&await page.evaluate(()=>fixture.calls.some(c=>c.route==='/pause')));
 const kestrel=presetCatalog.entries.find(entry=>entry.familyId==='publisher-kestrel-4b-coder'&&entry.format==='gguf'&&entry.quantization==='Q4_K_M');
 await searches.fill(kestrel.familyLabel);const kestrelCard=page.getByRole('article',{name:kestrel.familyLabel,exact:true});
 await kestrelCard.getByRole('combobox',{name:/^Quantization for /}).selectOption(kestrel.id);await kestrelCard.getByRole('button',{name:'Install',exact:true}).click();
