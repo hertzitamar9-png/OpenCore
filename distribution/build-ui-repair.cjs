@@ -137,6 +137,8 @@ app=editFunction(app,'yj',text=>{
     'p.useEffect(()=>{J()},[J])');
   return text;
 });
+// The recovered release frontend, not src/App.tsx, is the shipped UI.
+app=require('./release-mobile-navigation-patches.cjs')(app,{editFunction,replaceOnce});
 app=editFunction(app,'h8',retainSupportPage);
 app=editFunction(app,'w8',text=>replaceOnce(text,
   'className:"section-main",children:tr','className:"section-main",children:i.jsx($RetainedViews,{view:d,content:tr})'));

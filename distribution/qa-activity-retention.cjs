@@ -27,6 +27,8 @@ code+=String.raw`
    await page.goto('http://127.0.0.1:'+server.address().port+'/index.html');
    await page.locator('.opencore-shell').waitFor({timeout:15000});
    await page.waitForFunction(()=>fixture.emit&&fixture.listeners['opencore-tool-progress']&&fixture.listeners['opencore-generation']);
+   await page.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Conversations',exact:true}).click();
+   await page.getByRole('textbox',{name:'Message OpenCore',exact:true}).waitFor();
    const emit=async(event,payload)=>page.evaluate(({event,payload})=>fixture.emit(event,payload),{event,payload});
    const expand=async()=>{for(const group of await page.locator('details.tool-group').all())if(!await group.evaluate(e=>e.open))await group.locator(':scope>summary').click();for(const activity of await page.locator('details.tool-activity').all())if(!await activity.evaluate(e=>e.open))await activity.locator(':scope>summary').click();};
    const checkFirst=async()=>{await expand();const activity=page.locator('.tool-activity').filter({hasText:'qa_exec_tool'}).first();await activity.waitFor();const text=await activity.innerText();assert.ok(text.includes('FIRST_OUTPUT'),'Early output disappeared');assert.ok(text.includes('FINAL_OUTPUT'),'Final output disappeared');assert.ok(text.includes('verify-fixture'),'Tool arguments disappeared');assert.ok(await activity.isVisible());};
@@ -55,7 +57,9 @@ code+=String.raw`
    await page.getByText('All fixture checks finished.',{exact:true}).waitFor();await checkFirst();
    assert.equal(await page.getByText(summaryOne,{exact:true}).count(),1);assert.equal(await page.getByText(summaryTwo,{exact:true}).count(),1);
    await page.evaluate(()=>{window.name=JSON.stringify(fixture.timeline)});await page.reload();
-   await page.locator('.opencore-shell').waitFor({timeout:15000});await page.getByText('All fixture checks finished.',{exact:true}).waitFor();
+   await page.locator('.opencore-shell').waitFor({timeout:15000});
+   await page.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Conversations',exact:true}).click();
+   await page.getByText('All fixture checks finished.',{exact:true}).waitFor();
    await page.waitForFunction(()=>document.querySelectorAll('.tool-activity').length===2);await checkFirst();await expand();
    assert.ok((await page.locator('.tool-activity').filter({hasText:'qa_offscreen_tool'}).innerText()).includes('OFFSCREEN_LAST'));
    assert.equal(await page.getByText(summaryOne,{exact:true}).count(),1);assert.equal(await page.getByText(summaryTwo,{exact:true}).count(),1);
