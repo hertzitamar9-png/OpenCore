@@ -85,7 +85,7 @@ public final class MainActivity extends Activity {
         content.addView(label("1  On your PC, open OpenCore → Settings → Remote access, then choose Reveal QR code."));
         content.addView(label("2  Tap Scan QR code and point your camera at the code. Check the PC name and approve the connection."));
         content.addView(label("3  OpenCore saves this PC on your phone. It reconnects when the PC is online."));
-        content.addView(button("Check for app updates",()->AppUpdates.check(this,true)));
+        content.addView(button("Android native shell update (manual)",()->AppUpdates.check(this,true)));
         content.addView(button("Keep using this phone",()->DeviceRouting.select(this,"phone")));
         content.addView(button("Scan QR code", () -> startActivityForResult(new Intent(this, ScannerActivity.class), SCAN_PAIRING)));
         TextView fallback = label("If you can’t scan, paste the pairing code from OpenCore on your PC.");

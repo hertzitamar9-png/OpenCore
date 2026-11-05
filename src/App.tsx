@@ -636,6 +636,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       pending = true;
       try {
         const next = await api.listOperations();
+        if (!Array.isArray(next)) throw new Error('Operation status is unavailable from this runtime');
         if (!active) return;
         const previous = new Map(operationsRef.current.map((item) => [item.id, item.status]));
         operationsRef.current = next;

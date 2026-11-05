@@ -6,6 +6,7 @@
   let port,sequence=0,callbackSequence=0,connectionError=null,appReady=false,rootObserver;
   const nonce=document.querySelector('meta[name="opencore-native-nonce"]')?.content;
   const waiting=new Map(),callbacks=new Map(),listeners=new Map(),streams=new Map();
+  let activeGenerations=0;
   const storage=window.localStorage,storagePrototype=Object.getPrototypeOf(storage);
   const originalSet=storagePrototype.setItem,originalRemove=storagePrototype.removeItem,originalClear=storagePrototype.clear;
   const preferenceSeed=globalThis.__OPENCORE_PC_PREFS__&&typeof globalThis.__OPENCORE_PC_PREFS__==='object'?globalThis.__OPENCORE_PC_PREFS__:{};
@@ -36,6 +37,7 @@
   function startupError(message){if(port&&!appReady)port.postMessage(JSON.stringify({id:'phone-startup-error',kind:'phone-startup-error',error:message}));}
   function request(value){
     if(connectionError)return Promise.reject(new Error(connectionError));
+    if(value.command==='send_chat_message')activeGenerations=Math.max(1,activeGenerations);
     const id='phone-'+(++sequence);
     return new Promise((resolve,reject)=>{
       const startup=value.command==='startup_status'||value.command==='account_action'&&value.args?.action==='startup_status';
@@ -44,11 +46,11 @@
         const message='The PC did not respond in time. Keep OpenCore open on the PC, then retry.';
         reject(new Error(message));if(startup)startupError(message);
       },startup?18000:180000);
-      waiting.set(id,{resolve,reject,timer});
+      waiting.set(id,{resolve,reject,timer,command:value.command});
       ready.then(()=>{if(waiting.has(id))port.postMessage(JSON.stringify({id,...value}));}).catch(error=>{clearTimeout(timer);waiting.delete(id);reject(error);});
     });
   }
-  globalThis.__opencoreCheckAppUpdates=()=>request({kind:'phone-app-update'});
+  globalThis.__opencoreCheckAppUpdates=()=>request({kind:'phone-ui-check'});
   globalThis.__opencoreDisconnectPhone=()=>request({kind:'phone-disconnect'});
   globalThis.__opencoreExecutionSettings=()=>request({kind:'phone-execution-settings'});
   function executionSettings(){
@@ -72,6 +74,15 @@
   rootObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','style','open']});
   window.addEventListener('resize',browserVisibility);
   function deliver(packet){
+    if(packet.type==='ui-reload-probe'){
+      // Do not destroy a draft, a live generation, a pending command or a
+      // browser/file/permission workflow when the backend publishes new UI.
+      const editing=[...(document.querySelectorAll?.('textarea,input,[contenteditable="true"]')||[])].some(node=>
+        (!node.getClientRects||node.getClientRects().length)&&(node.value||node.textContent||'').trim()&&node.type!=='hidden'&&node.type!=='checkbox'&&node.type!=='radio');
+      const overlay=[...(document.querySelectorAll?.('[role="dialog"],[role="menu"],.native-browser-stage')||[])].some(node=>!node.getClientRects||node.getClientRects().length);
+      const safe=appReady&&!document.hidden&&!editing&&!overlay&&!activeGenerations&&!waiting.size&&!streams.size;
+      port?.postMessage(JSON.stringify({id:'phone-ui-safe',kind:'phone-ui-safe',ticket:packet.ticket,safe}));return;
+    }
     if(packet.type==='connection-lost'){
       connectionError=packet.error||'PC disconnected. Reconnecting…';
       for(const item of waiting.values()){clearTimeout(item.timer);item.reject(new Error(connectionError));}
@@ -86,10 +97,15 @@
       for(const [key,oldValue] of old){const newValue=storage.getItem(key);if(newValue!==oldValue)window.dispatchEvent(new StorageEvent('storage',{key,oldValue,newValue,url:location.href,storageArea:storage}));}
       return;
     }
-    if(packet.type==='event'){callbacks.get(packet.handler)?.(packet.payload);return;}
+    if(packet.type==='event'){
+      const event=packet.payload;if(event?.event==='opencore-generation')activeGenerations=event.payload?.done?Math.max(0,activeGenerations-1):Math.max(1,activeGenerations);
+      callbacks.get(packet.handler)?.(packet.payload);return;
+    }
     const item=waiting.get(packet.id);
     if(packet.type==='result'){
+      if(packet.value?.activeConversationIds)activeGenerations=packet.value.activeConversationIds.length;
       if(!item)return;clearTimeout(item.timer);waiting.delete(packet.id);
+      if(!packet.ok&&item.command==='send_chat_message')activeGenerations=Math.max(0,activeGenerations-1);
       if(packet.ok)item.resolve(packet.value);else item.reject(new Error(packet.error||'PC request failed.'));
     }else if(packet.type==='stream-start'){
       if(!item)return;
@@ -103,8 +119,17 @@
     }
   }
   window.addEventListener('message',event=>{
-    if(!nonce||event.data!=='opencore-mobile-port:'+nonce||!event.ports?.length||port)return;
+    const reconnect=event.data==='opencore-mobile-reconnect:'+nonce;
+    if(!nonce||(!reconnect&&event.data!=='opencore-mobile-port:'+nonce)||!event.ports?.length||port&&!reconnect)return;
+    if(reconnect){if(!connectionError)deliver({type:'connection-lost'});port?.close?.();}
     port=event.ports[0];port.onmessage=event=>{try{deliver(JSON.parse(event.data));}catch{}};port.start();resolvePort();checkAppReady();
+    if(reconnect){
+      connectionError=null;
+      // Recreate subscriptions only. Never replay a send, download or other
+      // command whose outcome was lost with the old connection.
+      for(const record of listeners.values())request({kind:'invoke',command:'plugin:event|listen',args:record.args}).then(id=>{record.current=id;}).catch(()=>{});
+      port.postMessage(JSON.stringify({id:'phone-ready',kind:'phone-ready'}));
+    }
   });
   window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener(){}};
   window.__TAURI_INTERNALS__={
@@ -116,8 +141,8 @@
       if(command==='plugin:webview|get_all_webviews')return Promise.resolve([]);
       if(command.startsWith('plugin:dialog|'))return request({kind:'phone-dialog',command,args});
       if(command.startsWith('plugin:opener|'))return request({kind:'phone-open',command,args});
-      if(command==='plugin:event|listen')return request({kind:'invoke',command,args}).then(id=>{listeners.set(id,args.handler);return id;});
-      if(command==='plugin:event|unlisten')return request({kind:'invoke',command,args}).finally(()=>{callbacks.delete(listeners.get(args.eventId));listeners.delete(args.eventId);});
+      if(command==='plugin:event|listen')return request({kind:'invoke',command,args}).then(id=>{listeners.set(id,{handler:args.handler,args,current:id});return id;});
+      if(command==='plugin:event|unlisten'){const record=listeners.get(args.eventId);return request({kind:'invoke',command,args:{...args,eventId:record?.current??args.eventId}}).finally(()=>{callbacks.delete(record?.handler);listeners.delete(args.eventId);});}
       return request({kind:'invoke',command,args});
     }
   };

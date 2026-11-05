@@ -38,7 +38,7 @@ function phone(rootChildren = 1) {
   scope.window = scope; scope.globalThis = scope;
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../assets/mobile-shim.js'), 'utf8'), scope);
   events.get('message')({data: 'opencore-mobile-port:trusted-page', ports: [port]});
-  return {scope, port, outgoing, root, timers, mutate: () => mutation?.()};
+  return {scope, port, outgoing, root, timers, events, mutate: () => mutation?.()};
 }
 
 test('native loading stays visible until the real app root renders', () => {
@@ -93,4 +93,39 @@ test('execution settings use a phone-native action and never a forwarded PC comm
   const outgoing=client.outgoing.find(item=>item.kind==='phone-execution-settings');
   assert.ok(outgoing);assert.equal(outgoing.command,undefined);
   client.port.onmessage({data:JSON.stringify({type:'result',id:outgoing.id,ok:true,value:null})});await pending;
+});
+
+test('routine update action requests only web UI assets', async () => {
+  const client=phone(),pending=client.scope.__opencoreCheckAppUpdates();await Promise.resolve();
+  const outgoing=client.outgoing.find(item=>item.kind==='phone-ui-check');assert.ok(outgoing);
+  assert.equal(client.outgoing.some(item=>item.kind==='phone-app-update'),false);
+  client.port.onmessage({data:JSON.stringify({type:'result',id:outgoing.id,ok:true})});await pending;
+});
+
+test('live reload waits for a ready idle page, empty drafts and finished commands', async () => {
+  const client=phone();let fields=[];client.scope.document.querySelectorAll=()=>fields;
+  const probe=()=>{client.port.onmessage({data:JSON.stringify({type:'ui-reload-probe',ticket:'next'})});return client.outgoing.at(-1).safe;};
+  assert.equal(probe(),false);client.root.workspace=true;client.mutate();assert.equal(probe(),true);
+  fields=[{value:'Unsent private draft',type:'text'}];assert.equal(probe(),false);fields=[];
+  const pending=client.scope.__TAURI_INTERNALS__.invoke('get_snapshot');await Promise.resolve();assert.equal(probe(),false);
+  const request=client.outgoing.find(item=>item.command==='get_snapshot');
+  client.port.onmessage({data:JSON.stringify({type:'result',id:request.id,ok:true,value:{activeConversationIds:['running']}})});await pending;assert.equal(probe(),false);
+  client.port.onmessage({data:JSON.stringify({type:'event',payload:{event:'opencore-generation',payload:{done:true}}})});assert.equal(probe(),true);
+});
+
+test('reconnect retains the document, restores subscriptions and never replays a send', async () => {
+  const client=phone();client.root.workspace=true;client.mutate();
+  const listen=client.scope.__TAURI_INTERNALS__.invoke('plugin:event|listen',{event:'opencore-generation',handler:17});await Promise.resolve();
+  let request=client.outgoing.find(item=>item.command==='plugin:event|listen');client.port.onmessage({data:JSON.stringify({type:'result',id:request.id,ok:true,value:3})});await listen;
+  const send=client.scope.__TAURI_INTERNALS__.invoke('send_chat_message',{request:{text:'Send exactly once'}});await Promise.resolve();
+  client.port.onmessage({data:JSON.stringify({type:'connection-lost'})});await assert.rejects(send,/disconnect/i);
+  const next=[],port={postMessage:raw=>next.push(JSON.parse(raw)),start(){}};
+  client.events.get('message')({data:'opencore-mobile-reconnect:trusted-page',ports:[port]});await Promise.resolve();
+  assert.equal(client.root.workspace,true,'No page reload or composer replacement');
+  assert.equal(next.filter(item=>item.command==='plugin:event|listen').length,1);
+  assert.equal(next.some(item=>item.command==='send_chat_message'),false);
+  request=next.find(item=>item.command==='plugin:event|listen');port.onmessage({data:JSON.stringify({type:'result',id:request.id,ok:true,value:9})});await Promise.resolve();await Promise.resolve();
+  const unlisten=client.scope.__TAURI_INTERNALS__.invoke('plugin:event|unlisten',{eventId:3});await Promise.resolve();
+  request=next.find(item=>item.command==='plugin:event|unlisten');assert.equal(request.args.eventId,9);
+  port.onmessage({data:JSON.stringify({type:'result',id:request.id,ok:true})});await unlisten;
 });

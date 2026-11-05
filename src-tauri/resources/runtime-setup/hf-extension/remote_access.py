@@ -885,20 +885,30 @@ class RemoteAccess:
 
     def ui_revision(self):
         try:
-            data=(self.resources/'runtime-setup/mobile-ui/manifest.json').read_bytes()
-            return hashlib.sha256(data).hexdigest() if len(data)<=65536 else ''
-        except OSError:return ''
+            return hashlib.sha256(self.ui_manifest()).hexdigest()
+        except (OSError, ValueError):return ''
 
-    def mobile_asset(self, relative):
+    def ui_manifest(self, revision=None):
+        base = (self.resources/'runtime-setup/mobile-ui').resolve()
+        if not base.is_relative_to(self.resources): raise ValueError('Mobile interface is unavailable')
+        path = (base/'manifest.json').resolve(strict=True)
+        if not path.is_relative_to(base): raise ValueError('Mobile manifest is redirected')
+        if path.stat().st_size > 128 * 1024: raise ValueError('Mobile manifest is too large')
+        data = path.read_bytes()
+        if len(data) > 128 * 1024 or revision is not None and revision != hashlib.sha256(data).hexdigest():
+            raise ValueError('Mobile interface revision changed; retry the complete bundle')
+        return data
+
+    def mobile_asset(self, relative, revision=None):
         if not isinstance(relative, str) or len(relative) > 160 or '\\' in relative:
             raise ValueError('Invalid mobile interface asset')
         base = (self.resources/'runtime-setup/mobile-ui').resolve()
         if not base.is_relative_to(self.resources): raise ValueError('Mobile interface is unavailable')
         try:
-            manifest = json.loads((base/'manifest.json').read_text(encoding='utf-8'))
+            manifest = json.loads(self.ui_manifest(revision))
             item = manifest['files'][relative]
             path = (base/relative).resolve(strict=True)
-            if not path.is_relative_to(base) or not path.is_file() or item['bytes'] > 8 * 1024 * 1024:
+            if not path.is_relative_to(base) or not path.is_file() or type(item['bytes']) is not int or not 0 < item['bytes'] <= 8 * 1024 * 1024 or path.stat().st_size != item['bytes']:
                 raise ValueError('Invalid mobile interface asset')
             data = path.read_bytes()
             if len(data) != item['bytes'] or hashlib.sha256(data).hexdigest() != item['sha256']:
@@ -1050,8 +1060,13 @@ class RemoteHandler(BaseHTTPRequestHandler):
         if self.command == 'POST' and parsed.path == '/folder':
             return self.send(200, state.folder_upload(device, self.body(12 * 1024 * 1024)))
         if self.command == 'POST' and parsed.path == '/ui':
-            data, mime = state.mobile_asset(self.body().get('path'))
+            body = self.body()
+            data, mime = state.mobile_asset(body.get('path'), body.get('revision'))
             return self.send(200, data, mime)
+        if self.command == 'POST' and parsed.path == '/uimanifest':
+            revision = self.body().get('revision')
+            if not isinstance(revision, str) or not re.fullmatch('[a-f0-9]{64}', revision): raise ValueError('A UI revision is required')
+            return self.send(200, state.ui_manifest(revision), 'application/json; charset=utf-8')
         if self.command == 'GET' and parsed.path == '/info': return self.send(200, {'name': state.pc_name,'uiRevision':state.ui_revision()})
         if self.command == 'POST' and parsed.path == '/rename':
             state.rename(self.body().get('name')); return self.send(200, {'name': state.pc_name})

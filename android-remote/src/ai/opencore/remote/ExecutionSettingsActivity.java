@@ -35,7 +35,9 @@ public final class ExecutionSettingsActivity extends Activity {
             getSharedPreferences("paired-pc",0).edit().clear().apply();getSharedPreferences("execution-device",0).edit().putString("target","phone").apply();
             java.util.concurrent.ExecutorService task=Executors.newSingleThreadExecutor();task.execute(()->{try{pc.json("/unpair",new JSONObject());}catch(Exception ignored){}finally{task.shutdown();}});DeviceRouting.route(this);
         }).show()));
-        body.addView(button("Check for Android app updates",()->AppUpdates.check(this,true)));
+        body.addView(text("Interface updates arrive automatically from your paired PC. Phone inference and chats stay on this phone. Java, permissions and native libraries require a separate Android shell update.",14));
+        body.addView(button("Interface update source",()->UiSourceSettings.show(this)));
+        body.addView(button("Android native shell update (manual)",()->AppUpdates.check(this,true)));
         body.addView(button("Back",()->finish()));
     }
     void choose(String target){

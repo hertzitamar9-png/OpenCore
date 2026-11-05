@@ -41,7 +41,8 @@ public final class MobileActivity extends Activity {
     volatile String uiRevision="";
     final RemoteSession remoteSession=new RemoteSession();
     final ImageMemoryCache imageCache=new ImageMemoryCache(40*1024*1024);
-    final UiAssetCache uiCache=new UiAssetCache(16*1024*1024);
+    LiveUi ui;
+    boolean opened;
     ConnectionPanel connectionPanel;
     WebView web;
     PhoneBrowser browser;
@@ -77,6 +78,12 @@ public final class MobileActivity extends Activity {
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);settings.setMediaPlaybackRequiresUserGesture(true);
         settings.setSupportMultipleWindows(false);
         web.setWebViewClient(new LocalClient());web.setWebChromeClient(new PhoneChrome());
+        try{ui=new LiveUi(this,"pc",new LiveUi.Host(){
+            public boolean busy(){return dialogId!=null||webFiles!=null||microphone!=null||!uploads.isEmpty()||reconnecting.get()||session==null;}
+            public void reload(){connect();}
+            public void probe(String ticket){try{send(new JSONObject().put("type","ui-reload-probe").put("ticket",ticket),generation);}catch(Exception ignored){}}
+            public void notice(String message){status(message);}
+        });}catch(Exception error){connectionPanel.showError("Couldn’t open the interface","Your data is kept. Reopen OpenCore to retry.",1);return;}
         connect();
         polling.scheduleWithFixedDelay(this::poll,0,450,TimeUnit.MILLISECONDS);
     }
@@ -86,19 +93,29 @@ public final class MobileActivity extends Activity {
         final Connection selected=connection;if(selected==null){reconnecting.set(false);return;}
         final int attempt=remoteSession.begin();session=null;status("");
         nextReconnectAt=SystemClock.elapsedRealtime()+30000;
-        runOnUiThread(()->connectionPanel.showProgress("Connecting","Keep OpenCore open on your PC. Connecting securely…",0));
+        runOnUiThread(()->{if(port!=null)try{port.postMessage(new WebMessage("{\"type\":\"connection-lost\",\"error\":\"PC disconnected. Reconnecting…\"}"));}catch(Exception ignored){}connectionPanel.showProgress("Connecting","Keep OpenCore open on your PC. Connecting securely…",0);});
         io.execute(()->{try{
             JSONObject sessionResult=selected.json("/session",new JSONObject());String next=sessionResult.getString("session");
             runOnUiThread(()->{if(remoteSession.isCurrent(attempt))connectionPanel.showProgress("Loading OpenCore","Getting the latest interface and your saved settings from the PC…",1);});
-            uiCache.select(selected.pin,sessionResult.optString("uiRevision",""));
-            if(uiCache.get("index.html")==null)uiCache.put("index.html",selected.bytes("/ui",new JSONObject().put("path","index.html"),1024*1024));
             JSONObject preferences=selected.json("/preferences",new JSONObject().put("session",next));
             byte[] random=new byte[18];new SecureRandom().nextBytes(random);String nextNonce=Base64.encodeToString(random,Base64.NO_WRAP|Base64.URL_SAFE|Base64.NO_PADDING);
             if(!remoteSession.accept(attempt,next,sessionResult.optString("uiRevision","")))return;
-            session=next;uiRevision=sessionResult.optString("uiRevision","");nonce=nextNonce;preferencesSeed=preferences.optJSONObject("values");pollFailures=0;wasOffline=false;
-            runOnUiThread(()->{if(destroyed||connection!=selected||!remoteSession.isCurrent(attempt))return;generation++;if(port!=null){port.close();port=null;}web.clearCache(true);connectionPanel.showProgress("Opening your app","Loading conversations, models and tools. You’ll be ready in a moment.",2);web.loadUrl(ORIGIN+"/index.html");});
-        }catch(Exception error){runOnUiThread(()->{if(!destroyed&&remoteSession.isCurrent(attempt))connectionPanel.showError("Couldn’t connect to your PC",ConnectionMessages.forError(error),0);});}
+            session=next;uiRevision=sessionResult.optString("uiRevision","");if(!opened||!ui.ready)nonce=nextNonce;preferencesSeed=preferences.optJSONObject("values");pollFailures=0;wasOffline=false;
+            runOnUiThread(()->{if(destroyed||connection!=selected||!remoteSession.isCurrent(attempt))return;if(opened&&ui.ready){generation++;bindPage(true);connectionPanel.setVisibility(View.GONE);}else{connectionPanel.showProgress("Opening your app","Loading conversations, models and tools. You’ll be ready in a moment.",2);openPage();}ui.refresh();});
+        }catch(Exception error){runOnUiThread(()->{if(!destroyed&&remoteSession.isCurrent(attempt)){if(!opened)openPage();connectionPanel.setVisibility(View.GONE);status("PC offline · cached interface. PC actions need a connection. "+ConnectionMessages.forError(error));}});}
         finally{reconnecting.set(false);}});
+    }
+
+    void openPage(){
+        generation++;if(port!=null){port.close();port=null;}web.stopLoading();browser.beginPage();
+        if(nonce==null){byte[] random=new byte[18];new SecureRandom().nextBytes(random);nonce=Base64.encodeToString(random,Base64.NO_WRAP|Base64.URL_SAFE|Base64.NO_PADDING);}
+        opened=true;web.loadUrl(ORIGIN+"/index.html");ui.loading();
+    }
+    void bindPage(boolean reconnect){
+        if(port!=null)port.close();final int currentGeneration=generation;WebMessagePort[] pair=web.createWebMessageChannel();port=pair[0];
+        port.setWebMessageCallback(new WebMessagePort.WebMessageCallback(){@Override public void onMessage(WebMessagePort source,WebMessage message){if(source==port&&currentGeneration==generation)MobileActivity.this.message(message.getData(),currentGeneration);}});
+        web.postWebMessage(new WebMessage((reconnect?"opencore-mobile-reconnect:":"opencore-mobile-port:")+nonce,new WebMessagePort[]{pair[1]}),Uri.parse(ORIGIN));
+        if(reconnect)try{send(new JSONObject().put("type","preferences").put("values",preferencesSeed==null?new JSONObject():preferencesSeed),currentGeneration);}catch(Exception ignored){}
     }
 
     void poll(){
@@ -107,16 +124,18 @@ public final class MobileActivity extends Activity {
         if(current==null){if(SystemClock.elapsedRealtime()>=nextReconnectAt){nextReconnectAt=SystemClock.elapsedRealtime()+5000;connect();}return;}
         try{
             JSONArray items=selected.json("/updates",new JSONObject().put("session",current)).getJSONArray("items");
+            if(!current.equals(session)||currentGeneration!=generation)return;
             pollFailures=0;
             if(wasOffline){wasOffline=false;status("");}
-            if(SystemClock.elapsedRealtime()>=nextInfoAt){nextInfoAt=SystemClock.elapsedRealtime()+20000;JSONObject info=selected.json("/info",null);selected.name=info.optString("name",selected.name);if(remoteSession.observeRevision(info.optString("uiRevision",""))){session=null;connect();return;}}
+            if(SystemClock.elapsedRealtime()>=nextInfoAt){nextInfoAt=SystemClock.elapsedRealtime()+20000;ui.refresh();}
             for(int i=0;i<items.length();i++){
                 JSONObject item=items.getJSONObject(i);String id=item.optString("id","");FileBatch batch=uploads.remove(id);
                 if(batch!=null)finishFile(batch,item,currentGeneration);else send(item,currentGeneration);
             }
-        }catch(Connection.SessionExpired expired){session=null;connect();}
-        catch(Connection.NotPaired error){forgetPairing();}
+        }catch(Connection.SessionExpired expired){if(remoteSession.invalidate(current)){session=null;connect();}}
+        catch(Connection.NotPaired error){if(!destroyed&&current.equals(session))forgetPairing();}
         catch(Exception error){
+            if(!current.equals(session))return;
             String detail=error.getMessage()==null?"":error.getMessage();
             if(detail.contains("This phone is not paired")){forgetPairing();return;}
             wasOffline=true;
@@ -133,11 +152,12 @@ public final class MobileActivity extends Activity {
     void message(String raw,int targetGeneration){
         try{
             JSONObject value=new JSONObject(raw);String id=value.getString("id"),kind=value.getString("kind");
-            if(kind.equals("phone-app-update")){AppUpdates.check(this,true);ok(id,null,targetGeneration);return;}
+            if(kind.equals("phone-app-update")||kind.equals("phone-ui-check")){ui.refresh();ok(id,null,targetGeneration);return;}
+            if(kind.equals("phone-ui-safe")){ui.safe(value.optString("ticket"),value.optBoolean("safe"));return;}
             if(kind.equals("phone-execution-settings")){ok(id,null,targetGeneration);DeviceRouting.settings(this);return;}
             if(kind.equals("phone-disconnect")){ok(id,null,targetGeneration);removePc();return;}
-            if(kind.equals("phone-ready")){connectionPanel.setVisibility(View.GONE);status("");return;}
-            if(kind.equals("phone-startup-error")){connectionPanel.showError("Your PC is connected","The workspace did not respond yet. Press Retry now to reopen it.",2);return;}
+            if(kind.equals("phone-ready")){connectionPanel.setVisibility(View.GONE);if(session!=null)status("");ui.healthy();return;}
+            if(kind.equals("phone-startup-error")){if(session!=null)ui.startupFailed();connectionPanel.setVisibility(View.GONE);status("The PC workspace is unavailable. Reconnecting keeps your saved chats and models.");return;}
             if(kind.equals("phone-dialog")){showPhoneDialog(id,value.optString("command",""),value.optJSONObject("args"),targetGeneration);return;}
             if(kind.equals("phone-open")){openLink(id,value.optJSONObject("args"),targetGeneration);return;}
             if(PhoneBrowserRoute.matches(value)){
@@ -155,7 +175,7 @@ public final class MobileActivity extends Activity {
     void submit(JSONObject value,int targetGeneration){
         final Connection selected=connection;final String current=session;String id=value.optString("id","");
         if(selected==null||current==null){fail(id,"PC unavailable. Reconnecting…",targetGeneration);return;}
-        io.execute(()->{try{value.put("session",current);selected.json("/request",value);}catch(Connection.SessionExpired expired){fail(id,"PC reconnected. Please retry this action.",targetGeneration);session=null;connect();}
+        io.execute(()->{try{value.put("session",current);selected.json("/request",value);}catch(Connection.SessionExpired expired){fail(id,"PC reconnected. Please retry this action.",targetGeneration);if(remoteSession.invalidate(current)){session=null;connect();}}
             catch(Exception error){fail(id,error.getMessage()==null?"PC unavailable. Please retry.":error.getMessage(),targetGeneration);}});
     }
 
@@ -180,15 +200,9 @@ public final class MobileActivity extends Activity {
             String relative=uri.getPath();if(relative==null)return denied();if(relative.startsWith("/"))relative=relative.substring(1);
             try{
                 byte[] data;String mime,encoding="UTF-8";
-                if(relative.equals("phone/mobile-shim.js")||relative.equals("phone/mobile.css")){
-                    try(InputStream input=getAssets().open(relative)){data=read(input,2*1024*1024);}
-                    mime=relative.endsWith(".css")?"text/css":"text/javascript";
-                }else{
+                {
                     if(relative.isEmpty())relative="index.html";
-                    Connection selected=connection;if(selected==null)return denied();
-                    data=uiCache.get(relative);
-                    if(data==null){data=selected.bytes("/ui",new JSONObject().put("path",relative),8*1024*1024);uiCache.put(relative,data);}
-                    mime=relative.endsWith(".html")?"text/html":relative.endsWith(".js")?"text/javascript":relative.endsWith(".css")?"text/css":relative.endsWith(".png")?"image/png":"application/octet-stream";
+                    data=ui.read(relative);mime=LiveUiStore.mime(relative).split(";",2)[0];
                     if(relative.equals("index.html")){
                         String html=new String(data,StandardCharsets.UTF_8);
                         String preferenceJson=preferencesSeed==null?"{}":preferencesSeed.toString().replace("<","\\u003c");
@@ -205,13 +219,11 @@ public final class MobileActivity extends Activity {
         @Override public void onPageFinished(WebView view,String url){
             if(!url.equals(ORIGIN+"/index.html")||destroyed)return;
             browser.beginPage();
-            final int currentGeneration=generation;WebMessagePort[] pair=view.createWebMessageChannel();port=pair[0];
-            port.setWebMessageCallback(new WebMessagePort.WebMessageCallback(){@Override public void onMessage(WebMessagePort source,WebMessage message){if(source==port&&currentGeneration==generation)MobileActivity.this.message(message.getData(),currentGeneration);}});
-            view.postWebMessage(new WebMessage("opencore-mobile-port:"+nonce,new WebMessagePort[]{pair[1]}),Uri.parse(ORIGIN));
+            final int currentGeneration=generation;bindPage(false);
             view.postDelayed(()->{if(!destroyed&&currentGeneration==generation&&connectionPanel.getVisibility()==View.VISIBLE)connectionPanel.showError("OpenCore is taking longer to open","Your PC connected, but the app interface did not finish loading. Retry to get a fresh copy from the PC.",2);},45000);
         }
-        @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){if(request.isForMainFrame())runOnUiThread(()->connectionPanel.showError("Couldn’t open OpenCore","The connection interrupted while loading the app. Keep OpenCore open on the PC and retry.",1));}
-        @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse response){if(request.isForMainFrame())runOnUiThread(()->connectionPanel.showError("Couldn’t load the PC interface","Retry after OpenCore finishes updating on your PC.",1));}
+        @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){if(request.isForMainFrame()&&ui!=null)ui.failed();}
+        @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse response){if(request.isForMainFrame()&&ui!=null)ui.failed();}
         WebResourceResponse denied(){return new WebResourceResponse("text/plain","UTF-8",403,"Unavailable",Collections.singletonMap("Cache-Control","no-store"),new ByteArrayInputStream(new byte[0]));}
     }
 
@@ -393,8 +405,8 @@ public final class MobileActivity extends Activity {
         connection=null;session=null;getSharedPreferences("paired-pc",MODE_PRIVATE).edit().clear().apply();
         runOnUiThread(()->{if(!destroyed){startActivity(new Intent(this,MainActivity.class));finish();}});
     }
-    @Override public void onResume(){super.onResume();if(DeviceRouting.target(this).equals("phone")){DeviceRouting.route(this);return;}resumed=true;nextInfoAt=0;notifications.firstLaunch(()->{if(resumed&&!destroyed&&!isFinishing()){AppUpdates.resume(this);AppUpdates.startWatching(this);}});}
-    @Override public void onPause(){AppUpdates.stopWatching(this);resumed=false;super.onPause();}
-    @Override public void onDestroy(){destroyed=true;remoteSession.cancel();imageCache.clear();if(port!=null)port.close();polling.shutdownNow();io.shutdownNow();if(browser!=null)browser.destroy();if(web!=null)web.destroy();super.onDestroy();}
+    @Override public void onResume(){super.onResume();if(DeviceRouting.target(this).equals("phone")){DeviceRouting.route(this);return;}resumed=true;nextInfoAt=0;if(ui!=null)ui.resume();notifications.firstLaunch(()->AppUpdates.startWatching(this));}
+    @Override public void onPause(){if(ui!=null)ui.pause();AppUpdates.stopWatching(this);resumed=false;super.onPause();}
+    @Override public void onDestroy(){destroyed=true;if(ui!=null)ui.close();remoteSession.cancel();imageCache.clear();if(port!=null)port.close();polling.shutdownNow();io.shutdownNow();if(browser!=null)browser.destroy();if(web!=null)web.destroy();super.onDestroy();}
     @Override public void onBackPressed(){if(browser!=null&&browser.back())return;if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
 }

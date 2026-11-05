@@ -29,7 +29,8 @@ export function RuntimeSetupControls({targetId, label, installed = false, autoSt
         const next = await setup.runtimeSetupStatus();
         if (!alive) return;
         setSnapshot(next);
-        const job = [...next.jobs].reverse().find(value => value.targetId === targetId);
+        const jobs = Array.isArray(next?.jobs) ? next.jobs : [];
+        const job = [...jobs].reverse().find(value => value.targetId === targetId);
         if (job && !setup.isSetupActive(job) && job.id !== reported.current) {
           reported.current = job.id;
           if (job.status === 'dependencies-verified') {
@@ -43,9 +44,9 @@ export function RuntimeSetupControls({targetId, label, installed = false, autoSt
     const timer = setInterval(() => void refresh(), 1500);
     return () => { alive = false; clearInterval(timer); };
   }, [targetId, label]);
-  const recipe = snapshot?.recipes.find(value => value.modelIds.includes(targetId));
-  const job = snapshot ? [...snapshot.jobs].reverse().find(value => value.targetId === targetId) : undefined;
-  const receipt = snapshot?.receipts.find(value => value.targetId === targetId);
+  const recipe = (Array.isArray(snapshot?.recipes) ? snapshot.recipes : []).find(value => value.modelIds.includes(targetId));
+  const job = [...(Array.isArray(snapshot?.jobs) ? snapshot.jobs : [])].reverse().find(value => value.targetId === targetId);
+  const receipt = (Array.isArray(snapshot?.receipts) ? snapshot.receipts : []).find(value => value.targetId === targetId);
   const active = setup.isSetupActive(job);
   const otherSetup = !!snapshot?.activeJobId && snapshot.activeJobId !== job?.id;
   const isModel = recipe?.kind === 'studio' || recipe?.kind === 'speech';

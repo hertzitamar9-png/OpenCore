@@ -12,7 +12,7 @@ module.exports=({snapshot,timeline,mode='pc',firstRun=false,startupDelay=0,hangS
     fixture.populate=(next,entries)=>{fixture.snapshot=next;fixture.timeline=entries;fixture.models=[model];fixture.emit('opencore-bridge-activity',{conversationId:next.conversations[0]?.id||''});};
     fixture.stream=content=>{fixture.content=content;fixture.emit('opencore-generation',{conversationId:fixture.conversationId,runId:'fixture-run',content,phase:'generating'});};
     fixture.complete=()=>{fixture.timeline.push({id:++fixture.nextEntryId,conversationId:fixture.conversationId,timestamp:new Date().toISOString(),kind:'message',role:'assistant',source:'OpenCore',title:'Assistant',content:fixture.content||'Fixture completed reply',metadata:{}});fixture.snapshot.activeConversationIds=[];fixture.emit('opencore-generation',{conversationId:fixture.conversationId,runId:'fixture-run',done:true});fixture.emit('opencore-bridge-activity',{conversationId:fixture.conversationId});};
-    const channel=new MessageChannel();channel.port1.onmessage=async event=>{
+    const channel=new MessageChannel();fixture.packet=value=>channel.port1.postMessage(JSON.stringify(value));channel.port1.onmessage=async event=>{
       const request=JSON.parse(event.data);fixture.calls.push(request);let value=null;
       if(request.kind==='invoke'){
         const command=request.command,args=request.args||{};
