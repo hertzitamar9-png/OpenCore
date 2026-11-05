@@ -49,6 +49,13 @@ class ReleasePublicationTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.folder = Path(self.temporary.name).resolve()
+        # Fixture APK is deliberately from a previously signed release. Its
+        # embedded source manifest is immutable; newer checkout sources must
+        # still be checked against a newly built APK by production validation.
+        receipt = json.loads((publish.HERE / 'mobile/android-client.json').read_text(encoding='utf-8'))
+        fixture_sources = patch('mobile_client.source_hashes', return_value=receipt['sources'])
+        fixture_sources.start()
+        self.addCleanup(fixture_sources.stop)
         publish.prepare_mobile(self.folder)
         self.version = '0.3.145'
         self.commit = 'a' * 40

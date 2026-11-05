@@ -78,6 +78,8 @@ jobs:
           Push-Location distribution
           python -m unittest -v test_publish
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest -v test_minico_m1_1105
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_permanent_bootstrap
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_bootstrap_bridge_policy
