@@ -1509,7 +1509,7 @@ def _startup_lock(directory):
         if path.stat().st_size == 0:
             stream.write(b"\0")
             stream.flush()
-        deadline = time.monotonic() + 8
+        deadline = time.monotonic() + 70
         while True:
             try:
                 stream.seek(0)
@@ -1577,7 +1577,10 @@ def ensure_service(root, resources):
             else:
                 options["start_new_session"] = True
             process = subprocess.Popen(command, **options)
-            deadline = time.monotonic() + 8
+            # Initial catalog and remote-access setup can take longer on a cold
+            # machine. Keep the lock while the child is starting so concurrent
+            # callers do not start duplicate services.
+            deadline = time.monotonic() + 60
             while time.monotonic() < deadline:
                 existing = _existing_descriptor(descriptor, root, resources, owner)
                 if existing:

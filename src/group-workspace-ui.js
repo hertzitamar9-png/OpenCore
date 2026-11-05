@@ -26,7 +26,7 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
     const [channelId, setChannelId] = React.useState(saved.current.channels?.[saved.current.id] || 'general');
     const [tab, setTab] = React.useState(saved.current.id ? 'Chat' : 'Groups'), [data, setData] = React.useState(null);
     const [mode, setMode] = React.useState(''), [groupName, setGroupName] = React.useState(''), [displayName, setDisplayName] = React.useState('');
-    const [joinCode, setJoinCode] = React.useState(''), [invite, setInvite] = React.useState(null), [error, setError] = React.useState(''), [notice, setNotice] = React.useState('');
+    const [joinCode, setJoinCode] = React.useState(''), [invite, setInvite] = React.useState(null), [error, setError] = React.useState(''), [refreshError, setRefreshError] = React.useState(''), [notice, setNotice] = React.useState('');
     const [pending, setPending] = React.useState(false), [models, setModels] = React.useState([]), [localProjects, setLocalProjects] = React.useState([]), [modelError, setModelError] = React.useState('');
     const [sharing, setSharing] = React.useState(null), [dirty, setDirty] = React.useState(false), [addModel, setAddModel] = React.useState('');
     const [drafts, setDrafts] = React.useState(() => read(draftKey, {})), [targets, setTargets] = React.useState({}), [routes, setRoutes] = React.useState({});
@@ -77,7 +77,8 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
             const view = await service('view', scope);
             if (live && epoch.current === version && current.current.id === id && current.current.channelId === channelId) setData(view);
           }
-        } catch (failure) { if (live && epoch.current === version) setError(String(failure)); }
+          if (live && epoch.current === version) setRefreshError('');
+        } catch (failure) { if (live && epoch.current === version) setRefreshError(String(failure)); }
         if (live) timer = setTimeout(refresh, 2000);
       };
       refresh(); return () => { live = false; clearTimeout(timer); };
@@ -261,7 +262,7 @@ export function installGroupWorkspaceUI(React, { service, invoke, worker, Dialog
       h('div', { className: 'gw-shell' }, h('div', { className: 'gw-desktop-rail' }, sidebar), h('main', { className: 'gw-main' },
         h('header', { className: 'gw-main-header' }, h('div', null, h('h2', null, data?.group?.name || selectedGroup?.name || 'Your groups'), h('small', null, selectedGroup ? selectedGroup.hosting ? 'Hosted on this PC' : selectedGroup.connected ? 'Connected to host' : 'Reconnecting to host…' : 'Create or join a group to get started')), id ? h('div', { className: 'group-header-actions gw-actions' }, owner ? button('Create invite', () => act('invite', { id }, value => setInvite(value)), pendingButton) : null, button('Leave', () => { if (confirm('Leave this group?')) act('leave', { id }, () => { setGroups(old => old.filter(group => group.id !== id)); select(''); }); }, { disabled: pending || owner, title: owner ? 'The hosting PC cannot leave its own group' : undefined })) : null),
         h('nav', { className: 'group-tabs gw-tabs', role: 'tablist', 'aria-label': 'Group views' }, ['Groups', 'Chat', 'Team builder', 'Agents', 'Plan', 'Projects', 'Share my PC', 'Advanced'].map(value => button(value, () => { setTab(value); if (value !== 'Groups' && mode !== 'project') setMode(''); }, { key: value, role: 'tab', 'aria-selected': value === tab, disabled: value !== 'Groups' && !id }))),
-        error ? h('p', { className: 'gw-banner gw-error', role: 'alert' }, error) : null, notice ? h('p', { className: 'gw-banner', role: 'status' }, notice) : null,
+        (error || refreshError) ? h('p', { className: 'gw-banner gw-error', role: 'alert' }, error || refreshError) : null, notice ? h('p', { className: 'gw-banner', role: 'status' }, notice) : null,
         workerState.task ? h('p', { className: 'gw-banner' }, 'This PC is working · ' + (workerState.task.agentName || workerState.task.modelId || 'Group agent')) : null, workerState.error ? h('p', { className: 'gw-banner gw-error' }, workerState.error) : null,
         invite ? h('section', { className: 'gw-invite' }, field('Group invite', input('Group invite', invite.invite, () => {}, { readOnly: true })), button('Copy invite', async () => { try { await navigator.clipboard.writeText(invite.invite); setNotice('Invite copied.'); } catch { setNotice('Select and copy the invite above.'); } }), button('Dismiss invite', () => setInvite(null)), h('small', null, 'One-time invite · expires in ' + Math.ceil((invite.expiresIn || 300) / 60) + ' minutes. Your friend must be able to reach this group’s host.')) : null,
         id && tab === 'Chat' ? h('div', { className: 'gw-channel-heading' }, h('span', { className: 'gw-channel-prefix', 'aria-hidden': true }, channel?.private ? '↗' : '#'), h('select', { 'aria-label': 'Current channel', value: channelId, onChange: event => openChannel(event.target.value) }, channels.map(item => h('option', { key: item.id, value: item.id }, (item.private ? 'Private · ' : '# ') + item.name))), selectedProject ? badge(selectedProject.name) : null, !channel?.private && (owner || channel?.createdBy === data?.self?.id) ? button('Edit', () => startChannel(channel), { 'aria-label': 'Edit current channel' }) : null, button('Activity' + (activeTasks.length ? ' · ' + activeTasks.length : ''), () => setTab('Plan'), { className: 'gw-mobile-activity' })) : null,
