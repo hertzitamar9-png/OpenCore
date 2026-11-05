@@ -90,15 +90,15 @@ const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false,
       })),null,2));
     }
     await page.screenshot({path:process.env.OPENCORE_MOBILE_SCREENSHOT||path.join(require('os').tmpdir(),'opencore-mobile-overview.png')});
-    assert.deepEqual(names,['Chats','Overview','Models','Settings','More']);
+    assert.deepEqual(names,['Overview','Conversations','Scheduled tasks','Spaces','Live Context','Memory','Runtime & Logs','Models','Learning Studio','Music Studio','Game Dev Studio','Media Studio','Connectors','Settings','Troubleshooting']);
     const labels=await page.locator('.assistant-disclosure.kind-thinking>summary>strong').evaluateAll(items=>items.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).fontSize)})));
     assert.ok(labels.length&&labels.every(item=>item.height<item.line*1.7),'Phone reasoning labels must fit on one line');
     await page.getByLabel('Message OpenCore').fill('PHONE_FIXTURE_MESSAGE');
     await page.getByRole('button',{name:'Send message'}).click();
     await page.waitForFunction(()=>fixture.calls.some(item=>item.command==='send_chat_message'&&item.args?.request?.text==='PHONE_FIXTURE_MESSAGE'),null,{timeout:10000});
     await page.getByText('PHONE_FIXTURE_REPLY').first().waitFor({timeout:10000});
-    await nav.getByRole('button',{name:'Chats'}).click();
-    assert.equal(await page.evaluate(()=>document.body.classList.contains('oc-chats-open')),false,'Chats returns to the conversation; the history button opens its list');
+    await nav.getByRole('button',{name:'Conversations',exact:true}).click();
+    assert.equal(await page.evaluate(()=>document.body.classList.contains('oc-chats-open')),false,'Conversations returns to the conversation; the history button opens its list');
     await page.locator('.section-header .section-heading button').click();
     if(process.env.OPENCORE_MOBILE_TRACE) console.log('Conversation drawer:',await page.locator('.conversation-list').evaluate(e=>{const a=[];for(let p=e;p;p=p.parentElement)a.push({tag:p.tagName,cls:p.className,display:getComputedStyle(p).display});return a;}));
     assert.ok(await page.locator('.conversation-list').isVisible(),'The explicit history button must show the conversation list');
@@ -114,16 +114,13 @@ const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false,
     await page.locator('.section-header').getByText('Settings',{exact:true}).waitFor({timeout:10000});
     await page.getByRole('button',{name:'Choose Phone or Paired PC',exact:true}).click();
     await page.waitForFunction(()=>fixture.calls.some(item=>item.kind==='phone-execution-settings'));
-    await nav.getByRole('button',{name:'More'}).click();
-    await page.getByRole('dialog',{name:'All OpenCore sections'}).waitFor({timeout:10000});
-    if(process.env.OPENCORE_MOBILE_TRACE) console.log('More sections:',await page.getByRole('dialog',{name:'All OpenCore sections'}).getByRole('button').allTextContents());
-    for(const [index,section] of ['Game Dev Studio','Media Studio','Music Studio'].entries()){
-      if(index)await nav.getByRole('button',{name:'More'}).click();
-      await page.getByRole('dialog',{name:'All OpenCore sections'}).getByRole('button',{name:section,exact:true}).click();
+    for(const section of ['Game Dev Studio','Media Studio','Music Studio']){
+      await nav.getByRole('button',{name:section,exact:true}).click();
       await page.locator('.section-header').getByText(section,{exact:true}).waitFor({timeout:10000});
     }
+    assert.deepEqual(await page.getByRole('dialog',{name:'All OpenCore sections'}).count(),0,'No old More navigation drawer is present');
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({loaded:true,navigation:names,chat:'request sent and fixture reply rendered',models:true,settings:true,more:true,studios:['Game Dev Studio','Media Studio','Music Studio'],errors},null,2));
+    console.log(JSON.stringify({loaded:true,navigation:names,chat:'request sent and fixture reply rendered',models:true,settings:true,directNavigation:true,studios:['Game Dev Studio','Media Studio','Music Studio'],errors},null,2));
   }catch(error){console.error(String(error));console.error('Errors:',errors);console.error('Calls:',await page.evaluate(()=>fixture.calls.slice(0,20)));console.error((await page.locator('body').innerText()).slice(0,3000));process.exitCode=1;}
   finally{await browser.close();server.close();}
 })();

@@ -152,8 +152,9 @@ body.oc-chats-open .conversation-list .conversation-row{min-height:58px!importan
 .oc-drawer-close{display:none;position:fixed;z-index:9700;top:calc(env(safe-area-inset-top) + 10px);left:min(calc(min(88vw,370px) - 46px),calc(100vw - 46px));width:36px;height:36px;border-radius:50%;border:1px solid #ffffff2e;background:#10171fd9;color:#fff;font-size:20px;line-height:1;align-items:center;justify-content:center;padding:0;backdrop-filter:blur(8px)}
 body.oc-chats-open .oc-drawer-close{display:flex}
 @keyframes oc-drawer-in{from{transform:translateX(-102%)}to{transform:none}}
-.oc-tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9200;display:flex;align-items:stretch;height:calc(58px + env(safe-area-inset-bottom));padding:0 2px env(safe-area-inset-bottom);background:var(--theme-panel,#0c1823);border-top:1px solid var(--theme-border-soft,#1b2d3c);box-shadow:0 -10px 30px #0007}
-.oc-tab{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 0 4px;background:none;border:0;color:var(--theme-muted,#8da2b5);font:inherit;font-size:10px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.oc-tabbar{position:fixed;left:0;right:0;bottom:0;z-index:9200;display:flex;align-items:stretch;height:calc(58px + env(safe-area-inset-bottom));padding:0 2px env(safe-area-inset-bottom);background:var(--theme-panel,#0c1823);border-top:1px solid var(--theme-border-soft,#1b2d3c);box-shadow:0 -10px 30px #0007;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x}
+.oc-tabbar::-webkit-scrollbar{display:none}
+.oc-tab{position:relative;flex:0 0 70px;min-width:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 0 4px;background:none;border:0;color:var(--theme-muted,#8da2b5);font:inherit;font-size:10px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .oc-tab svg{width:22px;height:22px;flex:none}
 .oc-tab-icon{display:flex;align-items:center;justify-content:center;height:22px}
 .oc-tab-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -194,9 +195,25 @@ body.oc-chats-open .conversation-list .conversation-scroll{padding-bottom:16px!i
   const sectionTitle=()=>{const node=q('.section-header .section-heading strong');return node&&node.textContent?node.textContent.trim():'';};
   const navItems=()=>qa('.conversation-app-rail nav .nav-item').filter(button=>(button.getAttribute('aria-label')||'')!=='More sections'&&(button.title||'').trim());
   const navFor=name=>navItems().find(button=>(button.title||'').trim()===name);
-  const PRIMARY=['Conversations','Overview','Models','Settings'];
-  const MORE_ICON='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg>';
-  const TABS=[{label:'Chats',section:'Conversations'},{label:'Overview',section:'Overview'},{label:'Models',section:'Models'},{label:'Settings',section:'Settings'},{label:'More',more:true}];
+  // Match the shipped desktop sections directly. The old five-tab/More
+  // overlay hid the real Phone navigation and broke live-update releases.
+  const TABS=[
+    {label:'Overview',section:'Overview'},
+    {label:'Conversations',section:'Conversations'},
+    {label:'Scheduled tasks',section:'Jobs'},
+    {label:'Spaces',section:'Spaces'},
+    {label:'Live Context',section:'Live Context'},
+    {label:'Memory',section:'Memory / ECHO'},
+    {label:'Runtime & Logs',section:'Runtime & Logs'},
+    {label:'Models',section:'Models'},
+    {label:'Learning Studio',section:'Learning Studio'},
+    {label:'Music Studio',section:'Music Studio'},
+    {label:'Game Dev Studio',section:'Game Dev Studio'},
+    {label:'Media Studio',section:'Media Studio'},
+    {label:'Connectors',section:'Connectors'},
+    {label:'Settings',section:'Settings'},
+    {label:'Troubleshooting',section:'Troubleshooting'},
+  ];
   let tabbar=null,sheet=null,sheetGrid=null,moreBackdrop=null,drawerBackdrop=null,closeButton=null,observer=null,frame=0,lastTitle=null;
   const host=()=>q('.app-window-frame')||document.body;
   const closeChats=()=>document.body.classList.remove('oc-chats-open');
@@ -208,9 +225,9 @@ body.oc-chats-open .conversation-list .conversation-scroll{padding-bottom:16px!i
   function go(section){closeMore();closeChats();const item=navFor(section);if(item){item.click();return;}const overview=navItems().find(button=>/overview/i.test(button.title||''));if(overview)overview.click();}
   function openMore(){buildMore();document.body.classList.add('oc-more-open');document.body.classList.remove('oc-chats-open');}
   function syncIcons(){if(!tabbar)return;for(const button of qa('.oc-tab',tabbar)){const section=button.dataset.section;if(!section)continue;const slot=button.querySelector('.oc-tab-icon');if(!slot)continue;const item=navFor(section);const svg=item&&item.querySelector('svg');if(svg&&slot.innerHTML!==svg.outerHTML)slot.innerHTML=svg.outerHTML;}}
-  function buildTabs(){if(tabbar)return;tabbar=document.createElement('nav');tabbar.className='oc-tabbar';tabbar.setAttribute('aria-label','OpenCore sections');for(const tab of TABS){const button=document.createElement('button');button.type='button';button.className='oc-tab';button.dataset.label=tab.label;if(tab.section)button.dataset.section=tab.section;button.innerHTML='<span class="oc-tab-icon">'+(tab.more?MORE_ICON:iconFor(tab.section))+'</span><span class="oc-tab-label">'+tab.label+'</span>';button.addEventListener('click',()=>{if(tab.more){toggleMore();return;}if(tab.section==='Conversations'){closeMore();closeChats();if(sectionTitle()!=='Conversations')go('Conversations');return;}go(tab.section);});tabbar.appendChild(button);}host().appendChild(tabbar);syncIcons();}
+  function buildTabs(){if(tabbar)return;tabbar=document.createElement('nav');tabbar.className='oc-tabbar';tabbar.setAttribute('aria-label','OpenCore sections');for(const tab of TABS){const button=document.createElement('button');button.type='button';button.className='oc-tab';button.dataset.label=tab.label;button.dataset.section=tab.section;button.innerHTML='<span class="oc-tab-icon">'+iconFor(tab.section)+'</span><span class="oc-tab-label">'+tab.label+'</span>';button.addEventListener('click',()=>{if(tab.section==='Conversations'){closeChats();if(sectionTitle()!=='Conversations')go('Conversations');return;}go(tab.section);});tabbar.appendChild(button);}host().appendChild(tabbar);syncIcons();}
   function buildMore(){if(!sheet){moreBackdrop=document.createElement('div');moreBackdrop.className='oc-more-backdrop';moreBackdrop.addEventListener('click',closeMore);host().appendChild(moreBackdrop);sheet=document.createElement('div');sheet.className='oc-more-sheet';sheet.setAttribute('role','dialog');sheet.setAttribute('aria-label','All OpenCore sections');const title=document.createElement('h3');title.textContent='All sections';sheet.appendChild(title);const close=document.createElement('button');close.type='button';close.className='oc-more-close';close.setAttribute('aria-label','Close sections');close.textContent='×';close.addEventListener('click',closeMore);sheet.appendChild(close);sheetGrid=document.createElement('div');sheetGrid.className='oc-more-grid';sheet.appendChild(sheetGrid);host().appendChild(sheet);}sheetGrid.textContent='';for(const item of navItems()){const label=(item.title||'').trim();if(!label)continue;const button=document.createElement('button');button.type='button';button.className='oc-more-item';const svg=item.querySelector('svg');button.innerHTML=(svg?svg.outerHTML:'')+'<span>'+label+'</span>';button.addEventListener('click',()=>{closeMore();closeChats();if(label!==sectionTitle()){const nav=navFor(label);if(nav)nav.click();}});sheetGrid.appendChild(button);}}
-  function syncActive(){if(!tabbar)return;const title=sectionTitle();lastTitle=title;document.body.classList.toggle('oc-on-chats',title==='Conversations');for(const button of qa('.oc-tab',tabbar)){const label=button.dataset.label;const active=label==='Chats'?title==='Conversations':label==='More'?!PRIMARY.includes(title):label===title;button.classList.toggle('active',active);button.setAttribute('aria-current',active?'page':'false');}}
+  function syncActive(){if(!tabbar)return;const title=sectionTitle();lastTitle=title;document.body.classList.toggle('oc-on-chats',title==='Conversations');for(const button of qa('.oc-tab',tabbar)){const active=button.dataset.section===title;button.classList.toggle('active',active);button.setAttribute('aria-current',active?'page':'false');}}
   function ensure(){const root=host();if(!root)return;const legacy=q('#oc-more');if(legacy)legacy.remove();if(!drawerBackdrop){drawerBackdrop=document.createElement('div');drawerBackdrop.className='oc-drawer-backdrop';drawerBackdrop.addEventListener('click',closeChats);}if(drawerBackdrop.parentElement!==root)root.appendChild(drawerBackdrop);if(!closeButton){closeButton=document.createElement('button');closeButton.type='button';closeButton.className='oc-drawer-close';closeButton.setAttribute('aria-label','Close conversations');closeButton.textContent='×';closeButton.addEventListener('click',closeChats);}if(closeButton.parentElement!==root)root.appendChild(closeButton);buildTabs();if(tabbar.parentElement!==root)root.appendChild(tabbar);if(sheet&&sheet.parentElement!==root)root.appendChild(sheet);if(moreBackdrop&&moreBackdrop.parentElement!==root)root.appendChild(moreBackdrop);syncIcons();syncActive();}
   function schedule(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;ensure();});}
   document.addEventListener('click',event=>{if(!phone())return;const toggle=event.target.closest('.section-header .section-heading button');if(toggle&&sectionTitle()==='Conversations'){event.preventDefault();event.stopImmediatePropagation();toggleChats();return;}if(document.body.classList.contains('oc-chats-open')){const row=event.target.closest('.conversation-row');if(row){setTimeout(closeChats,90);}}},true);
