@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
 
-/** Updates the existing signed package without removing its pairing or settings. */
+/** Explicit native-shell maintenance only. Routine updates belong to LiveUi. */
 final class AppUpdates {
     static final String RELEASES="https://api.github.com/repos/hertzitamar9-png/OpenCore/releases/latest";
     static final String LATEST="https://github.com/hertzitamar9-png/OpenCore/releases/latest";
@@ -84,16 +84,11 @@ final class AppUpdates {
     static void setBusyProbe(BooleanSupplier probe){busy=probe==null?()->false:probe;}
     static boolean isBusy(){try{return busy.getAsBoolean();}catch(Exception ignored){return true;}}
     static void schedule(Context context){
-        try{JobScheduler jobs=(JobScheduler)context.getSystemService(Context.JOB_SCHEDULER_SERVICE);if(jobs==null||jobs.getPendingJob(JOB_ID)!=null)return;
-            JobInfo job=new JobInfo.Builder(JOB_ID,new ComponentName(context,"ai.opencore.remote.AppUpdateJob"))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).setPeriodic(JobInfo.getMinPeriodMillis()).setPersisted(true).build();jobs.schedule(job);
-        }catch(RuntimeException ignored){/* Foreground checks still work if this device disallows background jobs. */}
+        // Cancel a job persisted by an older APK, including after migration.
+        try{JobScheduler jobs=(JobScheduler)context.getSystemService(Context.JOB_SCHEDULER_SERVICE);if(jobs!=null)jobs.cancel(JOB_ID);}catch(RuntimeException ignored){}
     }
     static synchronized void startWatching(Activity activity){
-        foreground=new WeakReference<>(activity);schedule(activity.getApplicationContext());
-        if(watcher==null)watcher=new Handler(Looper.getMainLooper());if(watchTick!=null)watcher.removeCallbacks(watchTick);
-        watchTick=new Runnable(){public void run(){Activity a=foreground.get();if(a==null||!alive(a))return;resume(a);check(a,false);watcher.postDelayed(this,CHECK_INTERVAL);}};
-        watcher.post(watchTick);
+        schedule(activity.getApplicationContext());
     }
     static synchronized void stopWatching(Activity activity){
         if(foreground.get()!=activity)return;foreground.clear();if(watcher!=null&&watchTick!=null)watcher.removeCallbacks(watchTick);watchTick=null;
@@ -152,6 +147,8 @@ final class AppUpdates {
         }finally{if(!complete&&file.exists())file.delete();}
     }
     static void check(Activity a,boolean force){
+        if(!force)return; // Only an explicit native maintenance button may start this path.
+        File ready=pending;if(ready!=null){install(a,ready);return;}
         if(!begin(force))return;
         if(force)Toast.makeText(a,"Checking OpenCore app updates…",Toast.LENGTH_SHORT).show();
         IO.execute(()->{try{
@@ -163,27 +160,7 @@ final class AppUpdates {
     }
     /** Scheduled by Android; the OS may defer background work for battery or connectivity. */
     static void checkBackground(Context context,Runnable done){
-        Context app=context.getApplicationContext();
-        File ready=pending;String readyTag=pendingTag;
-        if(ready!=null&&app.getPackageManager().canRequestPackageInstalls()&&!isBusy()){
-            IO.execute(()->{try{submitInstall(app,ready,readyTag);}catch(Exception error){knownTag="";}finally{done.run();}});return;
-        }
-        if(!begin(false)){done.run();return;}
-        IO.execute(()->{try{
-            JSONObject update=candidate(app,false);if(update==null)return;
-            if(!app.getPackageManager().canRequestPackageInstalls()){
-                notify(app,"OpenCore update ready","Open OpenCore to allow its updates.",null,false,-1);return;
-            }
-            synchronized(AppUpdates.class){if(updating)return;updating=true;}
-            try{
-                File file=receiveUpdate(app,update,value->notify(app,"Updating OpenCore","Downloading update · "+value+"%",null,true,value));
-                pendingTag=update.optString("_releaseTag");pending=file;
-                if(isBusy()){notify(app,"OpenCore update ready","It will install when the current phone task finishes.",null,false,-1);}
-                else submitInstall(app,file,pendingTag);
-            }catch(Exception error){notify(app,"OpenCore update could not finish","Open OpenCore to retry the update.",null,false,-1);}
-            finally{updating=false;}
-        }catch(Exception ignored){/* Retry on the next scheduled or foreground check. */}
-        finally{checking=false;done.run();}});
+        schedule(context);done.run();
     }
     static void error(Activity a,String title,Exception e){if(alive(a))new AlertDialog.Builder(a).setTitle(title).setMessage(e.getMessage()).setPositiveButton("OK",null).show();}
     static void download(Activity a,JSONObject release){
@@ -219,7 +196,7 @@ final class AppUpdates {
             catch(Exception error){pending=null;knownTag="";a.runOnUiThread(()->error(a,"Update not installed",error));}
             finally{updating=false;}});
     }
-    static void resume(Activity a){if(pending!=null&&a.getPackageManager().canRequestPackageInstalls()&&!isBusy())install(a,pending);}
+    static void resume(Activity a){schedule(a);}
     static synchronized void submitInstall(Context context,File file,String tag)throws Exception{
         if(pending==null||!pending.equals(file)||isBusy())return;
         PackageInstaller installer=context.getPackageManager().getPackageInstaller();PackageInstaller.SessionParams options=new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);

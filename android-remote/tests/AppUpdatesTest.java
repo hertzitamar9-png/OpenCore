@@ -27,6 +27,11 @@ public final class AppUpdatesTest {
     }
     static String zerosHash(long count)throws Exception{MessageDigest digest=MessageDigest.getInstance("SHA-256");byte[] bytes=new byte[32768];while(count>0){int used=(int)Math.min(count,bytes.length);digest.update(bytes,0,used);count-=used;}return AppUpdates.hex(digest.digest());}
     public static void main(String[] args)throws Exception{
+        AppUpdates.pending=new File("never-install-automatically.apk");
+        AppUpdates.check(null,false);AppUpdates.resume(null);
+        final boolean[] finished={false};AppUpdates.checkBackground(null,()->finished[0]=true);
+        check(finished[0],"Legacy background jobs finish without downloading or installing even with a pending APK");AppUpdates.pending=null;
+        System.out.println("AUTOMATIC_APK_PATHS_DISABLED");
         JSONObject selected=AppUpdates.release(github(),receipt());
         check(selected.getString("_apkUrl").equals("https://github.com/hertzitamar9-png/OpenCore/releases/download/app-v0.3.294/OpenCore.Remote.apk"),"APK must be pinned to the selected immutable release");
         check(selected.getLong("bytes")>16*1024*1024,"The complete SDK APK must be accepted above the old 16 MB limit");

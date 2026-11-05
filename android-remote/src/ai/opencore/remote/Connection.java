@@ -126,14 +126,16 @@ final class Connection {
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build());generator.generateKey();
         }return (SecretKey)store.getKey("opencore-pc",null);
     }
-    void save(Context context)throws Exception{
+    void save(Context context)throws Exception{save(context,"paired-pc");}
+    void save(Context context,String preferenceFile)throws Exception{
         Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.ENCRYPT_MODE,key());
         String iv=Base64.encodeToString(cipher.getIV(),Base64.NO_WRAP),data=Base64.encodeToString(cipher.doFinal(value().toString().getBytes(StandardCharsets.UTF_8)),Base64.NO_WRAP);
-        if(!context.getSharedPreferences("paired-pc",Context.MODE_PRIVATE).edit().putString("iv",iv).putString("data",data).commit())
+        if(!context.getSharedPreferences(preferenceFile,Context.MODE_PRIVATE).edit().putString("iv",iv).putString("data",data).commit())
             throw new IOException("Could not save the paired PC on this phone.");
     }
-    static Connection load(Context context)throws Exception{
-        android.content.SharedPreferences prefs=context.getSharedPreferences("paired-pc",Context.MODE_PRIVATE);
+    static Connection load(Context context)throws Exception{return load(context,"paired-pc");}
+    static Connection load(Context context,String preferenceFile)throws Exception{
+        android.content.SharedPreferences prefs=context.getSharedPreferences(preferenceFile,Context.MODE_PRIVATE);
         if(!prefs.contains("data"))return null;
         Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.DECRYPT_MODE,key(),new GCMParameterSpec(128,Base64.decode(prefs.getString("iv",""),Base64.NO_WRAP)));
         JSONObject value=new JSONObject(new String(cipher.doFinal(Base64.decode(prefs.getString("data",""),Base64.NO_WRAP)),StandardCharsets.UTF_8));

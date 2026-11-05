@@ -41,6 +41,7 @@ class AppUpdatesTests(unittest.TestCase):
                 'ai.opencore.remote.AppUpdatesTest', str(output)], capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn('PINNED_RELEASE_AND_ORIGINAL_CERT_VERIFIED', result.stdout)
+            self.assertIn('AUTOMATIC_APK_PATHS_DISABLED', result.stdout)
             self.assertIn('STREAMED_APK_OVER_16_MB_AND_TAMPER_REJECTION_VERIFIED', result.stdout)
 
 

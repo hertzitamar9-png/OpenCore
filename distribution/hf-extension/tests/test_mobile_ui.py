@@ -1,4 +1,6 @@
 import sys
+import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +12,31 @@ from remote_access import RemoteAccess
 
 
 class MobileUiTests(unittest.TestCase):
+    def test_revision_bound_bundle_includes_new_chunks_and_the_web_bridge(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);source=root/'source';target=root/'runtime-setup/mobile-ui'
+            (source/'assets').mkdir(parents=True)
+            (source/'index.html').write_text('<html><head></head></html>')
+            (source/'assets/app-newhash.js').write_text('window.feature="one"')
+            first=prepare(target,source)
+            self.assertEqual(first['shellApi'],1)
+            self.assertEqual(first['modes'],['pc','phone'])
+            self.assertIn('assets/app-newhash.js',first['files'])
+            self.assertIn('phone/mobile-shim.js',first['files'])
+            self.assertIn('phone/mobile.css',first['files'])
+            remote=RemoteAccess(root,root,surface=object())
+            try:
+                raw=remote.ui_manifest();revision=hashlib.sha256(raw).hexdigest()
+                self.assertEqual(remote.ui_revision(),revision)
+                self.assertEqual(json.loads(remote.ui_manifest(revision)),first)
+                self.assertEqual(remote.mobile_asset('assets/app-newhash.js',revision)[0],b'window.feature="one"')
+                (source/'assets/app-newhash.js').write_text('window.feature="two"')
+                prepare(target,source)
+                with self.assertRaises(ValueError):remote.mobile_asset('assets/app-newhash.js',revision)
+                with self.assertRaises(ValueError):remote.ui_manifest(revision)
+                self.assertNotEqual(remote.ui_revision(),revision)
+            finally:remote.shutdown()
+
     def test_only_the_verified_built_interface_is_served(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);source=root/'source';target=root/'runtime-setup/mobile-ui'

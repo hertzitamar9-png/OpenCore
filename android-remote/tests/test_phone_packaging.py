@@ -27,14 +27,21 @@ class PhonePackagingTests(unittest.TestCase):
         self.assertIn('"execution-device"',source)
         self.assertNotIn('"opencore.',source)
         phone=(ROOT/'src/ai/opencore/remote/PhoneActivity.java').read_text()
-        self.assertIn('phone/shared-ui/manifest.json',phone)
+        self.assertIn('new LiveUi(this,"phone"',phone)
+        self.assertIn('phone/shared-ui/manifest.json',(ROOT/'src/ai/opencore/remote/LiveUi.java').read_text())
         self.assertIn('SystemInsets.apply(this,root)',phone)
         self.assertNotIn('addJavascriptInterface',phone)
         self.assertNotIn('selected.json("/request"',phone)
 
     def test_phone_reuses_desktop_assets_and_has_no_replacement_composer(self):
         manifest=json.loads((ROOT/'shared-ui/manifest.json').read_text())
-        self.assertEqual(set(manifest['files']),{'index.html','assets/index-CD0EH-dA.js','assets/App-kNA9sRUP.js','assets/model-catalog-B8SfuDgQ.js','assets/index-CsoxYKnK.css','assets/App-C9duitZV.css','opencore-logo.png'})
+        self.assertTrue({'index.html','opencore-logo.png'}.issubset(manifest['files']))
+        self.assertTrue(any(name.startswith('assets/') and name.endswith('.js') for name in manifest['files']))
+        self.assertTrue(any(name.startswith('assets/') and name.endswith('.css') for name in manifest['files']))
+        if 'shellApi' in manifest:
+            self.assertEqual(manifest['shellApi'],1)
+            self.assertEqual(set(manifest['modes']),{'pc','phone'})
+            self.assertTrue({'phone/mobile-shim.js','phone/mobile.css'}.issubset(manifest['files']))
         for name,record in manifest['files'].items():
             data=(ROOT/'shared-ui'/name).read_bytes()
             self.assertEqual(len(data),record['bytes']);self.assertEqual(hashlib.sha256(data).hexdigest(),record['sha256'])
