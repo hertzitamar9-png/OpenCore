@@ -15,7 +15,7 @@ code+=String.raw`
  const browser=await chromium.launch({headless:true,args:['--mute-audio']});
  const out=process.env.OPENCORE_RAIL_QA_DIR||path.join(__dirname,'.output/navigation-rail');fs.mkdirSync(out,{recursive:true});
  const samples=[],errors=[];
- try{for(const [width,height,expanded=false] of [[1366,1080],[1366,900],[1366,700],[1000,720],[800,600],[700,600],[1366,1080,true],[1366,900,true],[1000,720,true],[800,600,true]]){
+ try{for(const [width,height,expanded=false] of [[1366,1100],[1366,1080],[1366,1040],[1366,900],[1366,700],[1000,720],[800,600],[700,600],[800,1200,true],[1366,1100,true],[1366,1080,true],[1366,1040,true],[1366,900,true],[1000,720,true],[800,600,true]]){
   const page=await browser.newPage({viewport:{width,height}});page.on('pageerror',error=>errors.push(error.message));
   if(expanded)await page.addInitScript(()=>document.addEventListener('DOMContentLoaded',()=>document.documentElement.dataset.windowExpanded='true'));
   await page.goto('http://127.0.0.1:'+server.address().port);await page.getByRole('button',{name:'Open Chat Core',exact:true}).waitFor();
@@ -26,7 +26,7 @@ code+=String.raw`
   });sample.expanded=expanded;samples.push(sample);
   await page.screenshot({path:path.join(out,'rail-'+width+'x'+height+(expanded?'-expanded':'')+'.png')});
   if(!process.argv.includes('--before')){
-   const twoColumns=height<=1000,expectedHeight=twoColumns?44:expanded?(width<=900?64:48):44,expectedRail=twoColumns?(expanded?184:112):expanded?(width<=900?96:184):64;
+   const twoColumns=height<=1080||width<=900,expectedHeight=twoColumns?44:expanded?48:44,expectedRail=twoColumns?(expanded?184:112):expanded?184:64;
    const order=sample.buttons.slice(0,4).map(button=>button.label);
    if(JSON.stringify(order)!==JSON.stringify(['Overview','Conversations','Open Chat Core','Scheduled tasks']))throw Error('Unexpected navigation order: '+order.join(', '));
    if(sample.rail.width!==expectedRail)throw Error('The packaged shell rail width is '+sample.rail.width+', expected '+expectedRail);

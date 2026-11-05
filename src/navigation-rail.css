@@ -24,7 +24,7 @@ html[data-window-expanded=true] .conversation-app-rail .nav-item { flex:0 0 48px
 
 /* At common laptop heights a single column hides sections. Keep the same
    top-to-bottom order in two columns instead of shrinking or hiding buttons. */
-@media (max-height:1000px) {
+@media (max-height:1080px), (max-width:900px) {
   html { --oc-rail-width:112px; }
   html[data-window-expanded=true] { --oc-rail-width:184px; }
   .opencore-shell, html[data-window-expanded=true] .opencore-shell { grid-template-columns:var(--oc-rail-width) minmax(0,1fr); }
