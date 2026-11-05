@@ -70,8 +70,14 @@ async function phoneStartupRegressions(browser){
   // Navigation no longer has a More drawer; Chat Core capability behavior is
   // separately tested in the group workspace suite, not via a removed entry.
   const freshNav=fresh.getByRole('navigation',{name:'OpenCore sections',exact:true});
+  // The shell can mount before navigation has become accessible in the CI
+  // browser. Assert the real interactive controls after hydration, rather
+  // than using a non-waiting count() during this startup transition.
+  await freshNav.waitFor({state:'visible',timeout:20000});
   for(const name of ['Overview','Conversations','Models','Settings','Learning Studio','Media Studio']){
-   assert.equal(await freshNav.getByRole('button',{name,exact:true}).count(),1,'Current Phone navigation exposes '+name);
+   const button=freshNav.getByRole('button',{name,exact:true});
+   await button.waitFor({state:'visible',timeout:10000});
+   assert.equal(await button.count(),1,'Current Phone navigation exposes '+name);
   }
   await freshNav.getByRole('button',{name:'Settings',exact:true}).click();
   await fresh.locator('[data-phone-execution]').waitFor({timeout:6000});
