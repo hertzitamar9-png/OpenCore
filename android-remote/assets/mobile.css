@@ -70,3 +70,14 @@ body{touch-action:pan-x pan-y}
   display:flex!important;align-items:center!important;justify-content:space-evenly!important;gap:4px!important
 }
 .opencore-shell .chat-composer>.send-button{grid-column:6!important;grid-row:2!important;justify-self:center!important}
+
+/* The native phone's compact Tools launcher gives each shared workspace
+   surface an explicit, touch-sized entry point without covering the composer. */
+.opencore-section>.section-header{position:relative;z-index:25}
+.mobile-workspace-tools{position:relative;display:block;flex:none}
+.mobile-tools-trigger{display:flex;align-items:center;justify-content:center;gap:5px;min-width:44px;min-height:44px;padding:0 7px!important}
+.mobile-tools-trigger span{font-size:12px}
+.mobile-tools-menu{position:absolute;z-index:50;right:0;top:calc(100% + 5px);width:min(260px,calc(100vw - 16px));padding:6px;display:flex;flex-direction:column;gap:3px;border:1px solid var(--theme-border,#46525e);border-radius:12px;background:var(--theme-panel,#1c222a);box-shadow:0 12px 26px #0009}
+.mobile-tools-menu>button{width:100%;min-height:48px;text-align:left;justify-content:flex-start;padding:10px 12px!important;background:transparent;border:0;border-radius:8px;white-space:normal}
+.mobile-tools-menu>button:hover,.mobile-tools-menu>button:focus-visible{background:var(--theme-raised,#293b4d)}
+@media(max-width:390px){.mobile-tools-trigger span{display:none}}
