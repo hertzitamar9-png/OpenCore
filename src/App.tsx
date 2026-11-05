@@ -1260,11 +1260,11 @@ function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, block
   </footer>;
 }
 
-export default function App() {
+export default function App({ initialView = "overview" }: { initialView?: View } = {}) {
   const platform=usePlatformConfiguration();
   const updatingApp = useAppUpdateInstalling();
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
-  const [view, setView] = useState<View>("overview");
+  const [view, setView] = useState<View>(initialView);
   useEffect(()=>{const open=(event:Event)=>{if((event as CustomEvent).detail?.primary!==false&&!event.defaultPrevented)setView('conversations');};window.addEventListener('opencore-chat-image-selected',open);return()=>window.removeEventListener('opencore-chat-image-selected',open);},[]);
   const [assetCategory,setAssetCategory]=useState('image');
   const [mediaCategory,setMediaCategory]=useState('video');

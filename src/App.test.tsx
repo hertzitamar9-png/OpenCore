@@ -30,6 +30,14 @@ function mockFooterModels() {
 }
 
 describe("OpenCore", () => {
+  it("opens Overview first and keeps Conversations immediately accessible", async () => {
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "OpenCore" })).toBeVisible();
+    const nav = screen.getByRole("navigation", { name: "OpenCore sections" });
+    expect(within(nav).getAllByRole("button").slice(0, 2).map(button => button.getAttribute("aria-label"))).toEqual(["Overview", "Conversations"]);
+    fireEvent.click(within(nav).getByRole("button", { name: "Conversations" }));
+    expect(await screen.findByLabelText("Message OpenCore")).toBeVisible();
+  });
   it("identifies the connector on an old failed import without claiming an app is open", () => {
     const legacy = "Close Hermes/OpenCode before importing its database, or use a JSON/JSONL export.";
     expect(historySyncFailure(legacy, "Hermes")).toContain("Last Hermes sync failed");
@@ -51,7 +59,7 @@ describe("OpenCore", () => {
     const select = vi.spyOn(api, "selectProfile").mockImplementation(async profile => { calls.push(`select:${profile}`); });
     const start = vi.spyOn(api, "startProfile").mockImplementation(async profile => { calls.push(`start:${profile}`); runtime = { ...runtime, status: "running", profile }; });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       const trigger = await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" });
       expect(trigger).toBeEnabled();
       fireEvent.click(trigger);
@@ -76,7 +84,7 @@ describe("OpenCore", () => {
     const stop = vi.spyOn(api, "stopRuntime").mockResolvedValue();
     const start = vi.spyOn(api, "startProfile").mockResolvedValue();
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       fireEvent.click(await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
       const menu = await screen.findByRole("group", { name: "Choose model profile" });
       const alternate = await within(menu).findByRole("button", { name: /^Swift 1\.5/ });
@@ -98,7 +106,7 @@ describe("OpenCore", () => {
     const stop = vi.spyOn(api, 'stopRuntime').mockResolvedValue();
     const start = vi.spyOn(api, 'startProfile').mockResolvedValue();
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
       expect(await screen.findByRole('button', { name: 'Updating…' })).toBeDisabled();
       expect(install).toHaveBeenCalledOnce();
@@ -122,7 +130,7 @@ describe("OpenCore", () => {
     const select = vi.spyOn(api, 'selectProfile').mockResolvedValue();
     const start = vi.spyOn(api, 'startProfile').mockResolvedValue();
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       fireEvent.click(await screen.findByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
       const menu = await screen.findByRole('group', { name: 'Choose model profile' });
       fireEvent.click(await within(menu).findByRole('button', { name: /^Swift 1\.5/ }));
@@ -151,7 +159,7 @@ describe("OpenCore", () => {
     const chat=initial.conversations[0];
     const conversation=vi.spyOn(api,"conversation").mockResolvedValue([{id:998,conversationId:chat.id,timestamp:"2026-10-02T12:00:00Z",kind:"message",role:"assistant",source:"OpenCore",title:"Background job",content:"[Open 3D generation](opencore-studio://3d)",metadata:{}}]);
     try {
-      render(<App/>);
+      render(<App initialView="conversations"/>);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getAllByText(chat.title,{selector:"strong"})[0]);
       fireEvent.click(await screen.findByRole("link",{name:"Open 3D generation"}));
@@ -160,7 +168,7 @@ describe("OpenCore", () => {
     } finally {conversation.mockRestore();}
   });
   it("announces a finished studio job while chat remains open", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText("Message OpenCore");
     await waitFor(() => expect(eventHandlers.has("opencore-studio-job")).toBe(true));
     act(() => eventHandlers.get("opencore-studio-job")?.({payload:{id:"music-finished",category:"music",status:"completed"}}));
@@ -178,7 +186,7 @@ describe("OpenCore", () => {
     const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "frozen research.md", mime: "text/plain", size: 20, dataUrl: "", text: "Original research source" });
     const disposeLinks = installExternalLinkGuard(vi.fn().mockResolvedValue(undefined));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getAllByText(older.title, { selector: "strong" })[0]);
       await screen.findByRole("heading", { name: older.title, level: 2 });
@@ -192,7 +200,7 @@ describe("OpenCore", () => {
     } finally { disposeLinks(); snapshot.mockRestore(); conversation.mockRestore(); preview.mockRestore(); }
   });
   it("shows the installed app version rather than a hard-coded release", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText("Message OpenCore");
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(await screen.findByText("OpenCore v0.2.58")).toBeInTheDocument();
@@ -205,7 +213,7 @@ describe("OpenCore", () => {
     });
     const open = vi.spyOn(api, "openLocalPath").mockResolvedValue();
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getByRole("button", { name: "Settings" }));
       fireEvent.click(await screen.findByRole("button", { name: "Open extension folder" }));
@@ -216,7 +224,7 @@ describe("OpenCore", () => {
   it("shows the bundled OpenCore logo while runtime state is still loading", () => {
     const snapshot = vi.spyOn(api, "snapshot").mockImplementation(() => new Promise(() => {}));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       expect(screen.getByText("Loading runtime state…")).toBeInTheDocument();
       expect(screen.getByRole("img", { name: "OpenCore" })).toHaveAttribute("src", opencoreLogo);
     } finally { snapshot.mockRestore(); }
@@ -225,7 +233,7 @@ describe("OpenCore", () => {
   it("opens model installation from a failed send and preserves the unsent draft", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockRejectedValue(new Error("DuoCore is not installed. Open Models and choose Install."));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       const input = await screen.findByLabelText("Message OpenCore");
       fireEvent.change(input, { target: { value: "Keep this question for DuoCore" } });
       fireEvent.click(screen.getByTitle("Send"));
@@ -239,7 +247,7 @@ describe("OpenCore", () => {
   });
 
   it("returns keyboard focus to the draft after an attachment dialog is cancelled or fails", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     const input = await screen.findByLabelText('Message OpenCore');
     input.focus();
     fireEvent.change(input, { target: { value: 'Keep my draft' } });
@@ -256,7 +264,7 @@ describe("OpenCore", () => {
     expect(input).toHaveValue('Edited');
   });
   it('does not focus the desktop editor while its window is in the background',async()=>{
-    render(<App />);
+    render(<App initialView="conversations" />);
     const input=await screen.findByLabelText('Message OpenCore');
     const active=vi.spyOn(document,'hasFocus').mockReturnValue(false);
     const focus=vi.spyOn(input,'focus');
@@ -283,7 +291,7 @@ describe("OpenCore", () => {
     stageClipboardAttachment.mockResolvedValueOnce("C:\\temp\\clipboard-image.png");
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       const input = await screen.findByLabelText("Message OpenCore");
       const file = new File(["image bytes"], "clipboard-image.png", { type: "image/png" });
       const transfer = { files: [], items: [{ kind: "file", getAsFile: () => file }], types: ["Files"], getData: () => "" };
@@ -300,7 +308,7 @@ describe("OpenCore", () => {
     } finally { send.mockRestore(); }
   });
   it("keeps ordinary text paste in the composer", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     const input = await screen.findByLabelText("Message OpenCore");
     const transfer = { files: [], items: [{ kind: "string", getAsFile: () => null }], types: ["text/plain"], getData: () => "keep this text" };
     const paste = new Event("paste", { bubbles: true, cancelable: true });
@@ -311,7 +319,7 @@ describe("OpenCore", () => {
     expect(stageClipboardAttachment).not.toHaveBeenCalled();
   });
   it("keeps a text paste below the large-paste threshold inline", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     const input = await screen.findByLabelText("Message OpenCore");
     const content = "x".repeat(11_999);
     const transfer = { files: [], items: [{ kind: "string", getAsFile: () => null }], types: ["text/plain"], getData: () => content };
@@ -324,7 +332,7 @@ describe("OpenCore", () => {
   });
   it("turns a text paste at the large-paste threshold into a .txt attachment", async () => {
     stageClipboardAttachment.mockResolvedValueOnce("C:\\temp\\pasted-text.txt");
-    render(<App />);
+    render(<App initialView="conversations" />);
     const input = await screen.findByLabelText("Message OpenCore");
     const content = "x".repeat(12_000);
     const transfer = { files: [], items: [{ kind: "string", getAsFile: () => null }], types: ["text/plain"], getData: () => content };
@@ -348,7 +356,7 @@ describe("OpenCore", () => {
   });
   it("shows a drop target and attaches files dropped on the composer", async () => {
     stageClipboardAttachment.mockResolvedValueOnce("C:\\temp\\dropped-notes.txt");
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText("Message OpenCore");
     const target = document.querySelector(".chat-composer")!;
     const file = new File(["notes"], "dropped-notes.txt", { type: "text/plain" });
@@ -371,7 +379,7 @@ describe("OpenCore", () => {
     const picker = vi.mocked(dialog.open).mockResolvedValueOnce(path);
     const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "notes.txt", mime: "text/plain", size: 18, dataUrl: "data:text/plain;base64,cHJldmlldyB0ZXh0", text: "preview text" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
       fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
@@ -388,7 +396,7 @@ describe("OpenCore", () => {
     const picker = vi.mocked(dialog.open).mockResolvedValueOnce(path);
     const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "game.html", mime: "text/html", size: 16, dataUrl: "data:text/html;base64,PGgxPlBsYXk8L2gxPg==", text: "<h1>Play</h1>" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
       fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
@@ -402,7 +410,7 @@ describe("OpenCore", () => {
   it("streams answer and reasoning segments live in their actual order", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockImplementation(() => new Promise(() => {}));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Add walking" } });
       fireEvent.click(screen.getByTitle("Send"));
@@ -424,7 +432,7 @@ describe("OpenCore", () => {
   });
   it("keeps later live text when a slow checkpoint refresh finishes", async () => {
     const saved = await api.conversation("preview");
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText(/Create a Python script to analyze a CSV/);
     await waitFor(() => expect(eventHandlers.has("opencore-generation")).toBe(true));
     let finish!: (entries: typeof saved) => void;
@@ -441,7 +449,7 @@ describe("OpenCore", () => {
     } finally { history.mockRestore(); }
   });
   it("keeps the visible final answer when reading the saved response fails", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText(/Create a Python script to analyze a CSV/);
     await waitFor(() => expect(eventHandlers.has("opencore-generation")).toBe(true));
     act(() => eventHandlers.get("opencore-generation")!({ payload: { conversationId: "preview", runId: "final-read", phase: "answering", content: "Keep this completed response visible." } }));
@@ -456,7 +464,7 @@ describe("OpenCore", () => {
   it("passes a chosen reasoning mode through the chat request", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       expect(screen.getByRole("button", { name: "Maximize OpenCore" })).toBeVisible();
       expect(screen.queryByRole("button", { name: /Move conversations|Dock conversations/ })).not.toBeInTheDocument();
@@ -475,7 +483,7 @@ describe("OpenCore", () => {
   it("sends zero reasoning budget when Off is selected", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: /Effort/ }));
       const selector = screen.getByRole("slider", { name: "Reasoning effort" });
@@ -490,7 +498,7 @@ describe("OpenCore", () => {
   it("defaults to Off for faster replies and keeps Fast mode out of the composer", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       expect(screen.getByRole("button", { name: "Effort: Off" })).toBeVisible();
       expect(screen.queryByRole("button", { name: "Fast mode" })).not.toBeInTheDocument();
@@ -501,7 +509,7 @@ describe("OpenCore", () => {
   });
 
   it("keeps effort and approval controls in the send bar and opens one padded panel at a time", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     const composer = document.querySelector(".chat-composer");
     expect(composer).toContainElement(screen.getByRole("button", { name: /Approval/ }));
@@ -521,7 +529,7 @@ describe("OpenCore", () => {
   });
 
   it("commits a dragged approval level only when the drag ends", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: /Approval/ }));
     const range = screen.getByRole("slider", { name: "Approval level" });
@@ -535,7 +543,7 @@ describe("OpenCore", () => {
     const start = vi.spyOn(api, "startProfile").mockImplementation(() => new Promise(() => {}));
     const stop = vi.spyOn(api, "stopRuntime").mockResolvedValue();
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Runtime & Logs" }));
       fireEvent.click(screen.getByRole("button", { name: "Start model" }));
@@ -550,7 +558,7 @@ describe("OpenCore", () => {
     const send = vi.spyOn(api, "sendChatMessage").mockImplementation(() => new Promise(() => {}));
     const cancel = vi.spyOn(api, "cancelChatMessage").mockResolvedValue(true);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Please work" } });
       fireEvent.click(screen.getByTitle("Send"));
@@ -564,7 +572,7 @@ describe("OpenCore", () => {
     const send = vi.spyOn(api, "sendChatMessage").mockImplementation(() => new Promise((_resolve, reject) => { rejectSend = reject; }));
     const cancel = vi.spyOn(api, "cancelChatMessage").mockResolvedValue(true);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Keep this prompt" } });
       fireEvent.click(screen.getByTitle("Send"));
@@ -577,7 +585,7 @@ describe("OpenCore", () => {
   it("dismisses a notice after five seconds", async () => {
     const open = vi.spyOn(api, "openLocalPath").mockRejectedValue(new Error("unavailable"));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Memory" }));
       vi.useFakeTimers();
@@ -593,7 +601,7 @@ describe("OpenCore", () => {
     const search = vi.spyOn(api, "searchArchive").mockResolvedValue([{ archiveFile: "preview.db", pageId: "a".repeat(64), conversationId: "preview", offsetStart: 0, preview: "print('ECHO')" }]);
     const read = vi.spyOn(api, "readArchivePage").mockResolvedValue("```python\nprint('ECHO')\n```");
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Memory" }));
       expect(await screen.findByText("2", { selector: ".memory-summary strong" })).toBeInTheDocument();
@@ -611,7 +619,7 @@ describe("OpenCore", () => {
     const overview = vi.spyOn(api, "archiveOverview").mockResolvedValue({ archives: 1, pages: 1, sourceBytes: 20, storedBytes: 20, conversations: [{ conversationId: "preview", pages: 1, sourceBytes: 20, storedBytes: 20, lastTimestamp: 1 }], summaries: [], toolCalls: 1, toolResults: 0, imageAssets: 0, fileEvents: 0 });
     const events = vi.spyOn(api, "listArchiveEvents").mockResolvedValue([{ eventId: "a".repeat(64), conversationId: "preview", timestamp: 1, kind: "tool_call", role: "assistant", source: "OpenCore", title: "read_file", content: "src/main.ts", metadata: {}, contentBytes: 11, truncated: false }]);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Memory" }));
       fireEvent.click(screen.getByRole("button", { name: /General ECHO archive/ }));
@@ -627,7 +635,7 @@ describe("OpenCore", () => {
     const list = vi.spyOn(api, "listArchivePages").mockResolvedValue([{ archiveFile: "orphan.db", pageId: "b".repeat(64), conversationId: "orphan-archive", offsetStart: 0, offsetEnd: 42, timestamp: 1 }, { archiveFile: "orphan.db", pageId: "c".repeat(64), conversationId: "orphan-archive", offsetStart: 42, offsetEnd: 84, timestamp: 2 }]);
     const read = vi.spyOn(api, "readArchivePage").mockImplementation(async (_file, pageId) => pageId.startsWith("b") ? "Exact orphan archive text and code" : "Second exact archived page");
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Memory" }));
       expect(await screen.findByRole("option", { name: "Archived chat · orphan-archive" })).toBeInTheDocument();
@@ -670,7 +678,7 @@ describe("OpenCore", () => {
       return promise;
     });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Memory" }));
       await screen.findByRole("option", { name: "Archived chat · first-archive" });
@@ -726,7 +734,7 @@ describe("OpenCore", () => {
   });
 
   it("requires an explicit confirmation before enabling an allow everything mode", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: /Approval/ }));
     fireEvent.click(screen.getByRole("button", { name: "Allow everything in this chat" }));
@@ -739,7 +747,7 @@ describe("OpenCore", () => {
   it("sends the chosen approval mode with the message", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: /Approval/ }));
       fireEvent.click(screen.getByRole("button", { name: "Approve for me" }));
@@ -754,7 +762,7 @@ describe("OpenCore", () => {
     const models=vi.spyOn(api,'installedSkillModels').mockResolvedValue(library.models.filter(model=>model.category==='computer-use').map(model=>({id:model.id,category:'computer-use',installed:true})));
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "/computer-use open Calculator" } });
       expect(await screen.findByRole("listbox", { name: "Skills" })).toBeInTheDocument();
@@ -768,7 +776,7 @@ describe("OpenCore", () => {
   it("sends tool choices configured in Settings and the exact context threshold", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Settings" }));
       fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
@@ -794,7 +802,7 @@ describe("OpenCore", () => {
     const preview = vi.spyOn(api, "previewArtifact").mockResolvedValue({ id, name: "game.html", mime: "text/html", size: 29, dataUrl: "data:text/html;base64,PGgxPlBsYXk8L2gxPg==", text: "<h1>Play</h1>" });
     const download = vi.spyOn(api, "downloadArtifact").mockResolvedValue("C:\\Downloads\\game.html");
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       expect(await screen.findByText("game.html")).toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Preview" }));
       const browser = await screen.findByRole("complementary", { name: "Workspace" });
@@ -813,7 +821,7 @@ describe("OpenCore", () => {
     ]);
     const preview = vi.spyOn(api, "previewArtifact").mockResolvedValue({ id, name: "chart.svg", mime: "image/svg+xml", size: 12, dataUrl: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=", text: "<svg></svg>" });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       const image = await screen.findByRole("img", { name: "Generated chart" });
       expect(image).toHaveAttribute("src", "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=");
       fireEvent.click(screen.getByRole("button", { name: "Preview Generated chart" }));
@@ -833,7 +841,7 @@ describe("OpenCore", () => {
     ]);
     const preview = vi.spyOn(api, "previewArtifact").mockImplementation(async (id) => ({ id, name: id === sentId ? "sample.png" : "result.png", mime: "image/png", size: 12, dataUrl: imageUrl, text: null }));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       expect(await screen.findByRole("img", { name: "sample.png" })).toHaveAttribute("src", imageUrl);
       expect(await screen.findByRole("img", { name: "result.png" })).toHaveAttribute("src", imageUrl);
       expect(preview).toHaveBeenCalledWith(sentId);
@@ -848,7 +856,7 @@ describe("OpenCore", () => {
     const preview = vi.spyOn(api, "previewAttachmentImage").mockResolvedValue(dataUrl);
     const openPreview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "draft.png", mime: "image/png", size: 12, dataUrl, text: null });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
       fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
@@ -880,7 +888,7 @@ describe("OpenCore", () => {
       }] : rows;
     });
     try {
-      const view = render(<App />);
+      const view = render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Read the project" } });
       fireEvent.click(screen.getByTitle("Send"));
@@ -905,7 +913,7 @@ describe("OpenCore", () => {
       row(7, "tool_result", "tool", "browser_use", "{}"),
     ]);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findAllByText("Used 1 tool");
       expect(screen.queryByText("I'll check which Windows apps are open.")).not.toBeInTheDocument();
       expect(Array.from(document.querySelector(".assistant-response")!.children).map((node) =>
@@ -936,14 +944,14 @@ describe("OpenCore", () => {
         content: "Indexed 3/10 imported turns", metadata: { status: "indexing", current: 3, total: 10 } },
     ]);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       expect(await screen.findByText("Indexed 3/10 imported turns")).toBeInTheDocument();
       expect(screen.getByRole("progressbar", { name: "ECHO import progress" })).toHaveAttribute("value", "3");
     } finally { history.mockRestore(); }
   });
 
   it("uses the focused, fast conversation surface", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     expect(await screen.findByText("Build a data analysis script", { selector: "h2" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Recent" })).toBeInTheDocument();
@@ -974,7 +982,7 @@ describe("OpenCore", () => {
       return {conversations:matches.slice(offset,offset+limit),total:matches.length,offset,limit};
     });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       for (const [label,source] of [["Hermes","hermes"],["OpenCode","opencode"],["Codex","codex"],["Claude Code","claude"]]) {
         const group = await screen.findByRole("region",{name:`${label} chats`});
@@ -1014,7 +1022,7 @@ describe("OpenCore", () => {
     const history = vi.spyOn(api,"conversation").mockResolvedValue([]);
     const pin = vi.spyOn(api,"setConversationPinned").mockImplementation(async (id,pinned)=>{ imported.find(item=>item.id===id)!.pinned=pinned; });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getByRole("button",{name:"Hermes"}));
       const region = screen.getByRole("region",{name:"Hermes chats"});
@@ -1038,7 +1046,7 @@ describe("OpenCore", () => {
   });
 
   it("opens the full OpenCore workspace only when requested", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Runtime & Logs" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Runtime & Logs", level: 1 })).toBeInTheDocument());
@@ -1055,7 +1063,7 @@ describe("OpenCore", () => {
     const snapshot = vi.spyOn(api, 'snapshot').mockResolvedValue({ ...initial,
       runtime: { ...initial.runtime, profile, status, modelPid: 1234, echoPid: null } });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       fireEvent.click(await screen.findByRole('button', { name: 'Runtime & Logs' }));
       const row = (await screen.findByText('ECHO proxy')).closest('.runtime-row') as HTMLElement;
       expect(within(row).getByText(expected)).toBeVisible();
@@ -1071,7 +1079,7 @@ describe("OpenCore", () => {
       models: inventory.models.map(model => ({ ...model, installed: ["echo", "doucode"].includes(model.id) })),
     });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Conversations", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Runtime & Logs" }));
       const profileSwitch = document.querySelector(".profile-switch") as HTMLElement;
@@ -1082,7 +1090,7 @@ describe("OpenCore", () => {
   });
 
   it("exposes Claude Code and Codex connectors without extra conversation tabs", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
     expect(await screen.findByText("Claude Code", { selector: "h2" })).toBeInTheDocument();
@@ -1094,7 +1102,7 @@ describe("OpenCore", () => {
   it("opens the styled model picker with DuoCore selectable and keeps Unsloth out of runtime profiles", async () => {
     const inventory = await api.modelLibrary();
     const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ ...inventory, models: inventory.models.map(model => ({ ...model, installed: ["echo", "native1m", "doucode"].includes(model.id) })) });
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
     const topbar = within(document.querySelector(".statusbar") as HTMLElement);
@@ -1118,7 +1126,7 @@ describe("OpenCore", () => {
   it("opens upload and model choices from the composer and switches models from the footer", async () => {
     const inventory = await api.modelLibrary();
     const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ ...inventory, models: inventory.models.map(model => ({ ...model, installed: ["echo", "native1m", "doucode"].includes(model.id) })) });
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
 
     fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
@@ -1157,7 +1165,7 @@ describe("OpenCore", () => {
       removeItem: (key: string) => { values.delete(key); },
     } });
     try {
-      const { unmount } = render(<App />);
+      const { unmount } = render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       const extendedStatusbar = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(extendedStatusbar).findByText(/3T archive goal/)).toBeVisible();
@@ -1165,7 +1173,7 @@ describe("OpenCore", () => {
 
       unmount();
       values.set("opencore.model-profile", "echo");
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       const statusbar = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(statusbar).findByText(/3T archive goal/)).toBeVisible();
@@ -1182,7 +1190,7 @@ describe("OpenCore", () => {
   });
 
   it("shows ECHO's addressable history target in the bottom status bar for DuoCore", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Conversations", { selector: "h2" });
     const target = await screen.findByLabelText("ECHO context and archive");
     const statusbar = target.closest("footer");
@@ -1208,7 +1216,7 @@ describe("OpenCore", () => {
       removeItem: (key: string) => { values.delete(key); },
     } });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Conversations", { selector: "h2" });
       const footer = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(footer).findByLabelText("ECHO context and archive")).toBeVisible();
@@ -1235,7 +1243,7 @@ describe("OpenCore", () => {
       removeItem: (key: string) => { values.delete(key); },
     } });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Conversations", { selector: "h2" });
       const footer = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(footer).findByText(/Auto compact · 200,000/)).toBeVisible();
@@ -1266,7 +1274,7 @@ describe("OpenCore", () => {
       removeItem: (key: string) => { values.delete(key); },
     } });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       const statusbar = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(statusbar).findByText(/3T archive goal/)).toBeVisible();
@@ -1285,7 +1293,7 @@ describe("OpenCore", () => {
   });
 
   it("uses an OpenCore rename modal instead of a browser hostname prompt", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByTitle("Rename"));
     expect(screen.getByRole("dialog", { name: "Rename conversation" })).toBeInTheDocument();
@@ -1294,7 +1302,7 @@ describe("OpenCore", () => {
   });
 
   it("keeps every app system reachable and supports collapsible source and project groups", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     for (const name of ["Overview", "Conversations", "Memory", "Runtime & Logs", "Models", "Connectors", "Settings", "Troubleshooting"]) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
@@ -1311,7 +1319,7 @@ describe("OpenCore", () => {
   });
 
   it("uses a styled project menu with a real create flow instead of a native select", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     expect(screen.queryByRole("combobox", { name: "Conversation project" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Project: OpenCore" }));
@@ -1322,7 +1330,7 @@ describe("OpenCore", () => {
   });
 
   it("requires a chosen folder before creating a project", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "+ Project" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Project name" }), { target: { value: "Research" } });
@@ -1331,7 +1339,7 @@ describe("OpenCore", () => {
   });
 
   it("keeps an imported Codex project bound to its source folder", async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Projects group, 3" }));
     fireEvent.click(screen.getByRole("button", { name: "Options for Work" }));
@@ -1352,7 +1360,7 @@ describe("OpenCore", () => {
     let currentConfiguration = source;
     const state = { configuration: source, loading: false, error: '', preview: true, reload: vi.fn(async () => {}), save: vi.fn(async () => source), savePatch: vi.fn(async () => source), getCurrentConfiguration: () => currentConfiguration };
     const sourceHook = vi.spyOn(platform, 'usePlatformConfiguration').mockReturnValue(state);
-    const view = render(<App />);
+    const view = render(<App initialView="conversations" />);
     try {
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
@@ -1362,7 +1370,7 @@ describe("OpenCore", () => {
     fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
     currentConfiguration = { ...source, compactAtTokens: 250000, appearance: { ...source.appearance, fontSize: 17, density: 'compact' } };
     sourceHook.mockReturnValue({ ...state, configuration: currentConfiguration });
-    view.rerender(<App />);
+    view.rerender(<App initialView="conversations" />);
     await waitFor(() => expect(screen.getByText(/Effective trigger for the configured .* model window:/)).toHaveTextContent('209,716 tokens'));
     fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
     await waitFor(() => expect(document.querySelector(".app-window-frame")).toHaveClass("compact-messages"));
@@ -1375,7 +1383,7 @@ describe("OpenCore", () => {
     let finish!: (operations: OperationRecord[]) => void;
     const operations = vi.spyOn(api, "listOperations").mockImplementationOnce(() =>
       new Promise(resolve => { finish = resolve; })).mockResolvedValue([]);
-    const view = render(<App />);
+    const view = render(<App initialView="conversations" />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     const intervals: (() => void)[] = [];
     const originalInterval = window.setInterval.bind(window);
@@ -1403,7 +1411,7 @@ describe("OpenCore", () => {
       startedAt: "2026-09-22T12:00:00Z", lastProgressAt: new Date().toISOString(), finishedAt: null,
     }]);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
       expect(await screen.findByRole("button", { name: "Importing transcripts · 3/10 files" })).toBeDisabled();
@@ -1422,7 +1430,7 @@ describe("OpenCore", () => {
     const clear = vi.spyOn(api, "clearImportedHistory").mockResolvedValue("History cleared");
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
       const card = screen.getByRole("heading", { name: "OpenCode" }).closest("article") as HTMLElement;
@@ -1446,7 +1454,7 @@ describe("OpenCore", () => {
       observable: true, details: "OpenCore profile is installed. Requests observed.", custom: false,
     }] });
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
       const card = screen.getByRole("heading", { name: "Hermes Agent" }).closest("article") as HTMLElement;
@@ -1458,7 +1466,7 @@ describe("OpenCore", () => {
   it("handles a failed Settings history sync without an unhandled action promise", async () => {
     const sync = vi.spyOn(api, "startHistorySync").mockRejectedValue(new Error("Source history is unavailable"));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getByRole("button", { name: "Settings" }));
       fireEvent.click(await screen.findByRole("button", { name: "Sync local histories" }));
@@ -1470,7 +1478,7 @@ describe("OpenCore", () => {
   it("opens the actual Windows model directory and reports Explorer failures", async () => {
     const opener = vi.spyOn(api, "openLocalPath").mockRejectedValue(new Error("Explorer unavailable"));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Models" }));
       fireEvent.click(screen.getByRole("button", { name: "Open model folder" }));
@@ -1487,7 +1495,7 @@ describe("OpenCore", () => {
       startedAt: "2026-09-22T12:00:00Z", finishedAt: "2026-09-22T12:00:10Z",
     }]);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
       expect(await screen.findByRole("button", { name: "Imported 2 · Updated 3 · Skipped 5" })).toBeEnabled();
@@ -1499,7 +1507,7 @@ describe("OpenCore", () => {
     let finish!: (message: string) => void;
     const probe = vi.spyOn(api, "testConnector").mockReturnValue(new Promise((resolve) => { finish = resolve; }));
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
       const card = screen.getByRole("heading", { name: "LM Studio" }).closest("article");
@@ -1524,7 +1532,7 @@ describe("OpenCore", () => {
     const clear = vi.spyOn(api, "clearImportedHistory").mockResolvedValue("Cleared 2 imported codex conversations from OpenCore and ECHO");
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
       const codex = screen.getByRole("heading", { name: "Codex" }).closest("article") as HTMLElement;
