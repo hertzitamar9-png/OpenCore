@@ -27,6 +27,8 @@ code+=String.raw`
       await page.goto('http://127.0.0.1:'+server.address().port+'/index.html');
       await page.locator('.opencore-shell').waitFor({timeout:15000});
       await page.waitForFunction(()=>fixture.listeners['opencore-generation']&&fixture.emit);
+      await page.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Conversations',exact:true}).click();
+      await page.getByRole('textbox',{name:'Message OpenCore',exact:true}).waitFor();
       const meter=page.locator('progress[aria-label="Model context usage"]');
       await page.waitForFunction(()=>document.querySelector('progress[aria-label="Model context usage"]')?.getAttribute('value')==='12400');
       assert.equal(await meter.getAttribute('max'),'32768');
@@ -81,10 +83,13 @@ code+=String.raw`
       const cards=await page.getByText('I will inspect the file that was found.',{exact:true}).evaluateAll(items=>new Set(items.map(item=>item.closest('details'))).size);
       assert.equal(cards,1,'The saved reasoning and its preview must share one disclosure');
       await page.evaluate(()=>{fixture.snapshot.runtime.status='stopped';fixture.context={available:true,active:false,modelSessionActive:false,contextMode:'persistent_echo',windowTokens:16384,modelActiveTokens:16384,modelUsageKind:'live'};});
-      await page.waitForFunction(()=>{const bar=document.querySelector('progress[aria-label="Model context usage"]');return bar?.getAttribute('max')==='32768'&&!bar.hasAttribute('value');});
+      // After unloading, retain the last measured 16K window as historical
+      // usage, rather than claiming a live 32K model allocation.
+      await page.waitForFunction(()=>{const bar=document.querySelector('progress[aria-label="Model context usage"]');return bar?.getAttribute('max')==='16384'&&bar.getAttribute('value')==='16384';});
+      await page.getByText('16.4K / 16.4K last',{exact:false}).waitFor();
       assert.deepEqual(errors,[]);
       await page.screenshot({path:path.join(folder,'context-activity-'+width+'.png')});
-      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedCatalogLimitVerified:true,liveContextSamples:[12480,12520],liveHardwareSamples:[87,63],liveOutputRates:[35,40],sharedHighlightsVerified:width>767,errors});
+      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedLastWindowVerified:true,liveContextSamples:[12480,12520],liveHardwareSamples:[87,63],liveOutputRates:[35,40],sharedHighlightsVerified:width>767,errors});
       await page.close();
     }
     fs.writeFileSync(path.join(folder,'context-activity-render.json'),JSON.stringify({passed:true,proof},null,2));

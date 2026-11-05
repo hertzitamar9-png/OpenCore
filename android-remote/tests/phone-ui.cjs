@@ -162,6 +162,8 @@ async function phoneStartupRegressions(browser){
     const toolsMenu=page.getByRole('menu',{name:'Mobile workspace tools'});
     await toolsMenu.getByRole('menuitem',{name:'Files and comparisons'}).click();
     await page.locator('#opencore-workspace').waitFor({state:'visible'});
+    const workspaceGeometry=await page.locator('#opencore-workspace').boundingBox();
+    assert.ok(workspaceGeometry && workspaceGeometry.width>=width-2,'Opened mobile workspace must fill phone width, not a collapsed sidebar');
     assert.equal(await page.getByRole('tab',{name:'Files',exact:true}).getAttribute('aria-selected'),'true','Files workspace opened from Phone tools');
     await tools.click();
     await toolsMenu.getByRole('menuitem',{name:'In-app browser'}).click();

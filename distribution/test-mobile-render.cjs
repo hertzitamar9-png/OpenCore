@@ -72,6 +72,11 @@ const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false,
     await page.getByRole('navigation',{name:'OpenCore sections'}).waitFor({timeout:10000});
     const nav=page.getByRole('navigation',{name:'OpenCore sections'});
     const names=await nav.getByRole('button').allTextContents();
+    // The release interface now launches into Overview, then lets users
+    // enter Conversations. Keep testing the real composer after navigation.
+    await page.locator('.section-header').getByText('Overview',{exact:true}).waitFor({timeout:10000});
+    await nav.getByRole('button',{name:'Conversations',exact:true}).click();
+    await page.getByLabel('Message OpenCore').waitFor({timeout:10000});
     const composerButtons=page.locator('.chat-composer').getByRole('button');
     const composerBounds=await composerButtons.evaluateAll(items=>items.filter(e=>e.offsetParent!==null).map(e=>{const r=e.getBoundingClientRect();return {name:e.getAttribute('aria-label')||e.textContent.trim(),x:r.x,y:r.y,width:r.width,height:r.height};}));
     assert.ok(composerBounds.length>=5,'Composer controls must be present');
