@@ -1,5 +1,6 @@
 import { installGroupWorkspaceUI } from "./group-workspace-ui.js";
 import { prepareGroupModel } from "./group-model-preparation.js";
+import { createNavigationItems } from "./navigation-items.js";
 
 export function invokeGroupNative(command, args = {}) {
   if (command === "group_prepare_model") {
@@ -409,6 +410,7 @@ export function installGroupFeatures(React, listen, preparation) {
       state.approvals[0] ? h(Approval, { request: state.approvals[0], key: state.approvals[0].requestId }) : null);
   }
   globalThis.__opencoreGroupEntry = GroupEntry;
+  globalThis.__opencoreNavigationItems = createNavigationItems(React, GroupEntry);
   globalThis.__opencoreGroupPage = GroupPage;
   globalThis.__opencoreGroupHost = GroupHost;
 }

@@ -26,11 +26,14 @@ code+=String.raw`
   });sample.expanded=expanded;samples.push(sample);
   await page.screenshot({path:path.join(out,'rail-'+width+'x'+height+(expanded?'-expanded':'')+'.png')});
   if(!process.argv.includes('--before')){
-   const twoColumns=height<=1080||width<=900,expectedHeight=twoColumns?44:expanded?48:44,expectedRail=twoColumns?(expanded?184:112):expanded?184:64;
+   const expectedRail=expanded?(width<=900?96:184):64;
    const order=sample.buttons.slice(0,4).map(button=>button.label);
    if(JSON.stringify(order)!==JSON.stringify(['Overview','Conversations','Open Chat Core','Scheduled tasks']))throw Error('Unexpected navigation order: '+order.join(', '));
    if(sample.rail.width!==expectedRail)throw Error('The packaged shell rail width is '+sample.rail.width+', expected '+expectedRail);
-   for(const item of sample.buttons){if(item.height!==expectedHeight||item.width<44)throw Error(item.label+' has uneven size '+item.width+'x'+item.height+' at '+width+'x'+height);if(item.svg.width!==22||item.svg.height!==22)throw Error('Squashed icon: '+item.label);}
+   if(sample.buttons.length!==14)throw Error('Expected fourteen single-column shortcuts, got '+sample.buttons.length);
+   for(const item of sample.buttons){if(item.height<28||item.height>45||item.width<44)throw Error(item.label+' has unusable size '+item.width+'x'+item.height+' at '+width+'x'+height);if(item.svg.width!==22||item.svg.height!==22)throw Error('Squashed icon: '+item.label);}
+   if(sample.buttons.some(item=>Math.abs(item.x+item.width/2-(sample.buttons[0].x+sample.buttons[0].width/2))>1))throw Error('Navigation must be one vertical column');
+   if(sample.buttons.some((item,index)=>index>0&&item.y<sample.buttons[index-1].y+sample.buttons[index-1].height-1))throw Error('Navigation buttons overlap vertically');
    if(sample.nav.scrollHeight>sample.nav.clientHeight)throw Error('Navigation must fit without scrolling at '+width+'x'+height);
    for(const item of sample.buttons)if(item.y<sample.nav.y-1||item.y+item.height>sample.nav.y+sample.nav.height+1)throw Error(item.label+' is outside the visible navigation');
    const hitTargets=await page.evaluate(()=>[...document.querySelectorAll('.conversation-app-rail nav button')].every(button=>{
@@ -45,6 +48,13 @@ code+=String.raw`
    await page.evaluate(()=>window.addEventListener('opencore-open-groups',()=>window.groupOpened=true,{once:true}));
    await page.getByRole('button',{name:'Open Chat Core',exact:true}).click();if(!await page.evaluate(()=>window.groupOpened))throw Error('Chat Core entry failed');
    if(await page.getByRole('dialog',{name:'Chat Core',exact:true}).count())throw Error('Chat Core must not open a modal');
+   for(const [label,id] of [['Learning Studio','learning'],['Music Studio','music'],['Game Dev Studio','assets'],['Media Studio','media']]){
+    await page.getByRole('button',{name:'Studios',exact:true}).click();
+    await page.getByRole('menu',{name:'Studios'}).getByRole('menuitem',{name:label,exact:true}).click();
+    if(await page.evaluate(()=>window.selected)!==id)throw Error(label+' was not opened from Studios');
+   }
+   await page.getByRole('button',{name:'Studios',exact:true}).click();await page.keyboard.press('Escape');
+   if(await page.getByRole('menu',{name:'Studios'}).count())throw Error('Escape did not close Studios');
    const overviewOrder=await page.locator('.overview-grid > button strong').allTextContents();
    if(JSON.stringify(overviewOrder.slice(0,3))!==JSON.stringify(['Conversations','Chat Core','Scheduled tasks']))throw Error('Unexpected overview order: '+overviewOrder.join(', '));
    await page.getByRole('button',{name:'Open Chat Core group chats',exact:true}).click();

@@ -2,7 +2,9 @@ import { EchoContextStatus } from "./EchoContextStatus";
 import {useChatImageSelection,selectChatImageModel,ImageSamplingStats,imageSelectionLabel} from './image-generation-panel.js';
 import { EchoMemorySettings } from "./EchoMemorySettings";
 import { ClaudeBridgePanel } from "./ClaudeBridgePanel";
+import * as React from "react";
 import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createNavigationItems } from "./navigation-items.js";
 import { createPortal } from "react-dom";
 import type { CSSProperties } from "react";
 import { listen } from "@tauri-apps/api/event";
@@ -151,6 +153,7 @@ const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }
   { id: "settings", label: "Settings", icon: Settings },
   { id: "troubleshooting", label: "Troubleshooting", icon: CircleAlert, group: true },
 ];
+const NavigationItems = createNavigationItems<View>(React);
 
 const shortTime = (value?: string | null) => {
   if (!value) return "—";
@@ -239,11 +242,7 @@ function Navigation({ active, onChange, running, compact = false }: { active: Vi
   return <aside className={`nav-rail ${compact ? "conversation-app-rail" : ""}`}>
     <button className="brand-mini" onClick={() => onChange("overview")} title="OpenCore overview"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><span>OpenCore</span></button>
     <nav aria-label="OpenCore sections">
-      {nav.map((item) => <div key={item.id} className={item.group ? "nav-group-start" : ""}>
-        <button title={item.label} aria-label={item.label} className={`nav-item ${active === item.id ? "active" : ""}`} onClick={() => onChange(item.id)}>
-          <item.icon size={17} /><span>{item.label}</span>
-        </button>
-      </div>)}
+      <NavigationItems items={nav} active={active} onChange={onChange} />
     </nav>
     <div className="nav-footer">
       <div><StatusDot state={running ? "running" : "stopped"} />{running ? "Runtime active" : "Runtime stopped"}</div>
