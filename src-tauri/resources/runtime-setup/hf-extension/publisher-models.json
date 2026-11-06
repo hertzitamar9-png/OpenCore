@@ -77305,6 +77305,441 @@
       "publishedContextTokens": null
     },
     {
+      "id": "hf-b558ae5f9f71a51a00377034",
+      "repository": "169Pi/Alpie_Seed_GGUF",
+      "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+      "variantKey": "gguf:alpie_seed-grpo-Q2_K.gguf",
+      "name": "Alpie Seed 9B · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 4748978112,
+      "files": [
+        {
+          "repository": "169Pi/Alpie_Seed_GGUF",
+          "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+          "filename": "alpie_seed-grpo-Q2_K.gguf",
+          "bytes": 3827273728,
+          "sha256": "bf531b2ec9c6c36e3a79969663279267415777e1c8d821b590ccf9ec401e8d32",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_Seed_GGUF",
+          "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+          "filename": "alpie_seed-vl-mmproj-f16.gguf",
+          "bytes": 921704384,
+          "sha256": "9f30c824cfe85e1d9a0ab21ebef98f948492d700e2558804a20e644d49289285",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/169Pi/Alpie_Seed_GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-alpie-seed-9b",
+      "familyLabel": "Alpie Seed 9B",
+      "originalRepository": "169Pi/Alpie_seed",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "169Pi AI's Qwen3.5-9B vision-language model for reasoning, coding and multilingual conversations. Includes the original BF16 checkpoint and all three publisher GGUF quants (Q2_K, Q3_K_M, Q4_K_M), each with the matching vision projector. Native context is 262,144 tokens subject to device memory; ECHO uses a 32K working window. Text generation is verified after installation; image and video understanding have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-5efb07d0c1e71dfcb84e6fa4",
+      "repository": "169Pi/Alpie_Seed_GGUF",
+      "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+      "variantKey": "gguf:alpie_seed-text-q3_k_m.gguf",
+      "name": "Alpie Seed 9B · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5545221760,
+      "files": [
+        {
+          "repository": "169Pi/Alpie_Seed_GGUF",
+          "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+          "filename": "alpie_seed-text-q3_k_m.gguf",
+          "bytes": 4623517376,
+          "sha256": "b28f68da974b6344f1d99509c425d0b7c7758613e41a0d8b16b41b94becaa0a3",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_Seed_GGUF",
+          "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+          "filename": "alpie_seed-vl-mmproj-f16.gguf",
+          "bytes": 921704384,
+          "sha256": "9f30c824cfe85e1d9a0ab21ebef98f948492d700e2558804a20e644d49289285",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/169Pi/Alpie_Seed_GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-alpie-seed-9b",
+      "familyLabel": "Alpie Seed 9B",
+      "originalRepository": "169Pi/Alpie_seed",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "169Pi AI's Qwen3.5-9B vision-language model for reasoning, coding and multilingual conversations. Includes the original BF16 checkpoint and all three publisher GGUF quants (Q2_K, Q3_K_M, Q4_K_M), each with the matching vision projector. Native context is 262,144 tokens subject to device memory; ECHO uses a 32K working window. Text generation is verified after installation; image and video understanding have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-94af3bd6148c81dbcc6edd8f",
+      "repository": "169Pi/Alpie_Seed_GGUF",
+      "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+      "variantKey": "gguf:alpie_seed-text-q4_k_m.gguf",
+      "name": "Alpie Seed 9B · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6550813568,
+      "files": [
+        {
+          "repository": "169Pi/Alpie_Seed_GGUF",
+          "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+          "filename": "alpie_seed-text-q4_k_m.gguf",
+          "bytes": 5629109184,
+          "sha256": "98128c03fcaab06254937cd62bfe75ab34f3aa07c0c262e0f379136513193900",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_Seed_GGUF",
+          "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+          "filename": "alpie_seed-vl-mmproj-f16.gguf",
+          "bytes": 921704384,
+          "sha256": "9f30c824cfe85e1d9a0ab21ebef98f948492d700e2558804a20e644d49289285",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/169Pi/Alpie_Seed_GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-alpie-seed-9b",
+      "familyLabel": "Alpie Seed 9B",
+      "originalRepository": "169Pi/Alpie_seed",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "169Pi AI's Qwen3.5-9B vision-language model for reasoning, coding and multilingual conversations. Includes the original BF16 checkpoint and all three publisher GGUF quants (Q2_K, Q3_K_M, Q4_K_M), each with the matching vision projector. Native context is 262,144 tokens subject to device memory; ECHO uses a 32K working window. Text generation is verified after installation; image and video understanding have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-5277ba4c8669d767b16badad",
+      "repository": "169Pi/Alpie_seed",
+      "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+      "variantKey": "safetensors:.",
+      "name": "Alpie Seed 9B · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 18849803494,
+      "files": [
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "model.safetensors",
+          "bytes": 18819722392,
+          "sha256": "ef01c8a3a2b1d150fe140c4e9bb62c5fb8e74d163af22e441ef5237997a22f2e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "chat_template.jinja",
+          "bytes": 9588,
+          "sha256": null,
+          "gitBlobSha1": "690202498d73b96d7d1790deba22e44818801554",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "config.json",
+          "bytes": 2824,
+          "sha256": null,
+          "gitBlobSha1": "4130edd0294f7af07ca3c265fb27b3226ecb9e39",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "generation_config.json",
+          "bytes": 115,
+          "sha256": null,
+          "gitBlobSha1": "affcdf188ba614483df3d704e436a8e2da880075",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "merges.txt",
+          "bytes": 3353259,
+          "sha256": null,
+          "gitBlobSha1": "a494e019ca1502219fd0128658b979e5f05ae8e8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": null,
+          "gitBlobSha1": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "processor_config.json",
+          "bytes": 1300,
+          "sha256": null,
+          "gitBlobSha1": "7ad6acdf4203f22b7b990e36ccc3a1fe38563d5e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "tokenizer.json",
+          "bytes": 19989343,
+          "sha256": "87a7830d63fcf43bf241c3c5242e96e62dd3fdc29224ca26fed8ea333db72de4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "tokenizer_config.json",
+          "bytes": 1139,
+          "sha256": null,
+          "gitBlobSha1": "a068e2468cff426a9b105006e74e044030a6faf4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "vocab.json",
+          "bytes": 6722759,
+          "sha256": null,
+          "gitBlobSha1": "0aa0ce0658d60ac4a5d609f4eadb0e8e43514176",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "revision": "1cacbe1a206611a433d849e9a92a44d1db5bce1c",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 385,
+          "sha256": null,
+          "gitBlobSha1": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/169Pi/Alpie_seed",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-alpie-seed-9b",
+      "familyLabel": "Alpie Seed 9B",
+      "originalRepository": "169Pi/Alpie_seed",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "169Pi AI's Qwen3.5-9B vision-language model for reasoning, coding and multilingual conversations. Includes the original BF16 checkpoint and all three publisher GGUF quants (Q2_K, Q3_K_M, Q4_K_M), each with the matching vision projector. Native context is 262,144 tokens subject to device memory; ECHO uses a 32K working window. Text generation is verified after installation; image and video understanding have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
       "id": "hf-0fe408f033686cc9c34ec0a2",
       "repository": "bartowski/Apexintelligence-AI_Apex-35B-V1.0-GGUF",
       "revision": "3676b9bcacc1b6d0478d9bd7bbceba53398c0ef4",

@@ -2783,6 +2783,24 @@
       ]
     },
     {
+      "repository": "169Pi/Alpie_seed",
+      "familyId": "publisher-alpie-seed-9b",
+      "label": "Alpie Seed 9B",
+      "category": "text",
+      "description": "169Pi AI's Qwen3.5-9B vision-language model for reasoning, coding and multilingual conversations. Includes the original BF16 checkpoint and all three publisher GGUF quants (Q2_K, Q3_K_M, Q4_K_M), each with the matching vision projector. Native context is 262,144 tokens subject to device memory; ECHO uses a 32K working window. Text generation is verified after installation; image and video understanding have not been verified in OpenCore.",
+      "supportedContextTokens": 262144,
+      "sources": [
+        {
+          "repository": "169Pi/Alpie_Seed_GGUF",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "169Pi/Alpie_seed",
+          "quantization": "BF16"
+        }
+      ]
+    },
+    {
       "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
       "familyId": "publisher-herculis-cua-gui-actioner-4b",
       "label": "Herculis CUA GUI Actioner 4B",

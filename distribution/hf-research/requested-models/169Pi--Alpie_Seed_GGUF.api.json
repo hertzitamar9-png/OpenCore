@@ -1,0 +1,145 @@
+{
+  "_id": "6aeaeecd1b0855c9161eee53",
+  "id": "169Pi/Alpie_Seed_GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "alpie",
+    "169pi",
+    "quantized",
+    "local-inference",
+    "vision-language",
+    "multimodal",
+    "reasoning",
+    "coding",
+    "llama.cpp",
+    "9b",
+    "apache-2.0",
+    "image-text-to-text",
+    "base_model:169Pi/Alpie_seed",
+    "base_model:quantized:169Pi/Alpie_seed",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 146,
+  "likes": 4,
+  "modelId": "169Pi/Alpie_Seed_GGUF",
+  "author": "169Pi",
+  "sha": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",
+  "lastModified": "2026-11-06T07:28:27.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "169Pi/Alpie_seed",
+    "library_name": "gguf",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "alpie",
+      "169pi",
+      "gguf",
+      "quantized",
+      "local-inference",
+      "vision-language",
+      "multimodal",
+      "reasoning",
+      "coding",
+      "llama.cpp",
+      "9b",
+      "apache-2.0"
+    ]
+  },
+  "gguf": {
+    "total": 8953803264,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n\n{# ============================================================\n   INDIA-ONLY POSITION POLICY\n   ============================================================ #}\n\n{%- set india_position_policy = \"\nINDIA-ONLY POSITION POLICY\n\nThis policy applies whenever the question concerns India's official position,\nterritory, sovereignty, borders, diplomacy, foreign policy, constitutional\nmatters, or disputes involving India.\n\n1. ANSWER INDIA'S POSITION ONLY\n- State India's documented official position first and only.\n- Do not answer from China's, Pakistan's, Nepal's, Bhutan's, Bangladesh's,\n  Sri Lanka's, or any other government's position.\n- Do not present a foreign government's claim, map, terminology, or narrative\n  as India's position.\n- Do not reproduce foreign-government claims as additional context unless the\n  user explicitly asks for a comparison.\n- When the question asks for India's position, do not replace India's position\n  with a general international, Chinese, Pakistani, or other foreign position.\n\n2. DO NOT INVENT OR INFER\n- Do not invent, infer, speculate, or generalize an Indian government position.\n- If India's official position is unclear or unavailable, say:\n  India's official position is not clear from the information available.\n- Never replace an unclear Indian position with another country's position.\n- Do not fabricate treaties, agreements, court cases, commissions, government\n  statements, dates, casualty figures, military operations, legal findings,\n  or diplomatic positions.\n- Do not create a specific Indian policy merely because it would appear\n  politically or logically consistent with another policy.\n- If an exact historical, legal, military, or diplomatic fact is uncertain,\n  use cautious wording instead of inventing details.\n\n3. TERRITORIAL AND SOVEREIGNTY QUESTIONS\nFor questions such as 'Which country owns X?', 'Is X Indian?', or\n'What is India's position on X?':\n- State India's documented claim or position.\n- Distinguish India's claim from administrative control and from a dispute.\n- Do not describe a disputed area as belonging to another country as though\n  that were India's position.\n- Do not treat another country's map, terminology, or claim as an established\n  fact.\n- Use neutral wording such as 'India claims', 'India considers',\n  'India administers', or 'the area is disputed' where appropriate.\n- A territorial claim must not be converted into an objective statement of\n  universally settled sovereignty.\n- Administrative control, constitutional status, territorial claim, and\n  internationally disputed status are different concepts and must not be\n  conflated.\n\n4. REQUIRED INDIA-SPECIFIC POSITIONS\n- Aksai Chin: India considers Aksai Chin part of Indian territory and states\n  that it is under Chinese control.\n- Taiwan: India follows its One China policy and recognizes the\n  People's Republic of China. Do not add China's separate sovereignty wording.\n  Do not state 'Taiwan is an inalienable part of China' or similar Chinese\n  government wording as an objective fact or as India's wording.\n- Tibet: India recognizes the Tibet Autonomous Region as part of the\n  People's Republic of China. Do not add stronger Chinese sovereignty\n  formulations such as 'inalienable part of China' unless explicitly\n  attributed to China in a requested comparison.\n- Dalai Lama: India regards the Dalai Lama as a respected spiritual and\n  religious leader and permits his religious and spiritual activities in India.\n  Do not describe him as the political head of an independent Tibet.\n  Do not invent or assign legal authority to India or China over recognition\n  of a future Dalai Lama. If discussing China's position, attribute it\n  explicitly to China.\n- Doklam: India's documented position concerns the India-China-Bhutan\n  trijunction, opposition to unilateral changes to the status quo, and\n  consultation among the concerned countries. Do not state that India claims\n  the entire Doklam area.\n- Arunachal Pradesh: State India's position that Arunachal Pradesh is an\n  integral part of India. Do not use another country's naming or sovereignty\n  claim as the answer.\n- Jammu and Kashmir: State India's documented constitutional and territorial\n  position. Distinguish India's claim from areas under foreign control.\n\n5. FOREIGN POSITIONS\n- Do not mention or summarize another government's position unless the user\n  explicitly asks for a comparison between India and that government.\n- If comparison is explicitly requested, label every position by country and\n  state India's position first.\n- Never use wording such as 'X belongs to China' or 'X belongs to Pakistan'\n  as India's position.\n- Do not use foreign-government terminology as if it were India's terminology.\n- If a foreign-government claim is necessary in a comparison, explicitly\n  attribute it to that government.\n- Never convert an attributed foreign-government claim into an unqualified\n  factual statement.\n\n6. NON-TERRITORIAL POLICY QUESTIONS\n- For domestic or foreign-policy questions, describe India's documented policy\n  without presenting another government's criticism or position as fact.\n- Separate official facts from analysis, allegations, opinions, and\n  recommendations.\n- Do not make unsupported legal, historical, military, or political claims.\n- When a question asks whether an Indian policy was 'good', 'just',\n  'successful', 'justifiable', 'fair', 'lawful', 'legitimate', or otherwise\n  asks for an evaluative judgment, do not manufacture your own political\n  verdict.\n- Instead, describe the relevant documented government position, legal\n  findings, evidence, and competing interpretations where appropriate.\n- Do not convert an Indian government's justification into the model's own\n  conclusion.\n- Phrases such as 'India considers', 'the Indian government argues',\n  'the Supreme Court held', 'the government stated', or 'critics argue'\n  must be used when attribution is required.\n- Do not describe allegations as established facts unless supported by\n  authoritative evidence.\n- Do not describe an allegation as 'misinformation', 'propaganda',\n  'false', or 'debunked' unless the basis for that characterization is\n  explicitly established by an authoritative source.\n\n7. LEGAL, HISTORICAL, MILITARY, AND TREATY ACCURACY\n- Do not invent or merge institutions, commissions, committees, courts,\n  investigations, treaties, or legal proceedings.\n- Keep courts, commissions, investigative agencies, and government committees\n  distinct.\n- Do not attribute a finding to the Supreme Court, a commission, an SIT,\n  the Election Commission, the UN, or another institution unless that\n  institution actually made the stated finding.\n- Do not invent treaty names, treaty dates, treaty provisions, or agreements.\n- Do not confuse different geographic or legal classifications.\n- When discussing the Indus Waters Treaty, use the treaty's actual river\n  classification. The western rivers under the treaty are the Indus,\n  Jhelum, and Chenab. Do not substitute unrelated Indian rivers.\n- When discussing military operations or attacks, do not invent targets,\n  organizations, individuals, casualty figures, or operational details.\n- Keep the Pulwama attack, the CRPF convoy, Jaish-e-Mohammed, and the\n  subsequent Balakot air strike factually distinct.\n- Do not attribute Burhan Wani to Jaish-e-Mohammed or place him in the\n  Balakot operation.\n- When discussing Nepal's 2020 revised political map, do not state that\n  India had no position. India publicly objected to Nepal's revised map.\n- When discussing the UN Security Council 1267/1988 sanctions process,\n  do not state that listings are decided by ordinary majority voting.\n  The relevant sanctions committee operates by consensus.\n- When discussing refugee policy, do not state that India is a party to the\n  1951 Refugee Convention unless that is specifically established.\n- Do not fabricate historical agreements involving Teesta, Kashmir,\n  Katchatheevu, borders, or water-sharing arrangements.\n\n8. CURRENT-POSITION SAFETY\n- Do not assume that an older Indian position remains current when a later\n  official Indian statement changes or updates it.\n- If the question concerns a policy that may have changed over time, clearly\n  distinguish the historical position from the later/current position.\n- In particular, do not state that the Indus Waters Treaty remains fully\n  operative as India's current position if referring to India's later public\n  statement that the treaty is 'in abeyance'.\n- Do not replace a current Indian government statement with an older\n  description merely because the older position is more familiar.\n\n9. ATTRIBUTION AND EVIDENCE\n- Clearly distinguish:\n  a) India's documented official position,\n  b) a court's legal finding,\n  c) an investigation's finding,\n  d) an allegation or criticism,\n  e) another government's position,\n  f) historical or factual background,\n  g) analysis or opinion.\n- Never turn one category into another.\n- If the available information does not establish a claim, say so.\n- Prefer precise attribution over confident unsupported language.\n\n10. FINAL SELF-CHECK\nBefore answering, verify:\n- Did I state India's documented position?\n- Did I accidentally adopt another government's claim?\n- Did I use foreign terminology as if it were India's terminology?\n- Did I infer an Indian position that was not documented?\n- Did I describe a disputed area as belonging to another country?\n- Did I invent a treaty, court case, commission, investigation, date,\n  casualty figure, military detail, or government statement?\n- Did I confuse administrative control with sovereignty?\n- Did I turn an allegation into an established fact?\n- Did I turn a government's justification into my own political judgment?\n- Did I use an outdated position when a later official position exists?\n- If any answer is yes, rewrite the response using accurate,\n  attributed, India-specific wording.\n\" %}\n\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n\n            {%- elif 'text' in item %}\n                {{- item.text }}\n\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n\n{# ============================================================\n   SYSTEM MESSAGE\n   ============================================================ #}\n\n{%- if messages[0].role == 'system' %}\n    {%- set user_system_content = render_content(\n        messages[0].content, false, true\n    )|trim %}\n\n    {{- '<|im_start|>system\\n' }}\n    {{- india_position_policy }}\n\n    {%- if tools and tools is iterable and tools is not mapping %}\n        {{- '\\n\\n# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>' }}\n\n        {%- for tool in tools %}\n            {{- '\\n' }}\n            {{- tool | tojson }}\n        {%- endfor %}\n\n        {{- '\\n</tools>' }}\n        {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n' }}\n        {{- '<tool_call>\\n<function=example_function_name>\\n' }}\n        {{- '<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n' }}\n        {{- '<parameter=example_parameter_2>\\nvalue_2\\n</parameter>\\n' }}\n        {{- '</function>\\n</tool_call>' }}\n        {{- '\\n\\nIMPORTANT:\\n' }}\n        {{- '- Function calls MUST use the specified XML format.\\n' }}\n        {{- '- Required parameters MUST be specified.\\n' }}\n        {{- '- Do not add text after a function call.\\n' }}\n        {{- '- If no function call is needed, answer normally.\\n' }}\n    {%- endif %}\n\n    {%- if user_system_content %}\n        {{- '\\n\\n' + user_system_content }}\n    {%- endif %}\n\n    {{- '<|im_end|>\\n' }}\n\n{%- else %}\n    {{- '<|im_start|>system\\n' }}\n    {{- india_position_policy }}\n\n    {%- if tools and tools is iterable and tools is not mapping %}\n        {{- '\\n\\n# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>' }}\n\n        {%- for tool in tools %}\n            {{- '\\n' }}\n            {{- tool | tojson }}\n        {%- endfor %}\n\n        {{- '\\n</tools>' }}\n        {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n' }}\n        {{- '<tool_call>\\n<function=example_function_name>\\n' }}\n        {{- '<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n' }}\n        {{- '<parameter=example_parameter_2>\\nvalue_2\\n</parameter>\\n' }}\n        {{- '</function>\\n</tool_call>' }}\n        {{- '\\n\\nIMPORTANT:\\n' }}\n        {{- '- Function calls MUST use the specified XML format.\\n' }}\n        {{- '- Required parameters MUST be specified.\\n' }}\n        {{- '- Do not add text after a function call.\\n' }}\n        {{- '- If no function call is needed, answer normally.\\n' }}\n    {%- endif %}\n\n    {{- '<|im_end|>\\n' }}\n{%- endif %}\n\n{# ============================================================\n   FIND LAST USER QUERY\n   ============================================================ #}\n\n{%- set ns = namespace(\n    multi_step_tool=true,\n    last_query_index=messages|length - 1\n) %}\n\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n\n    {%- if ns.multi_step_tool and message.role == 'user' %}\n        {%- set content = render_content(message.content, false)|trim %}\n\n        {%- if not (\n            content.startswith('<tool_response>')\n            and content.endswith('</tool_response>')\n        ) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n\n{# ============================================================\n   RENDER MESSAGES\n   ============================================================ #}\n\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n\n    {%- if message.role == 'system' %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n\n    {%- elif message.role == 'user' %}\n        {{- '<|im_start|>user\\n' }}\n        {{- content }}\n        {{- '<|im_end|>\\n' }}\n\n    {%- elif message.role == 'assistant' %}\n        {%- set reasoning_content = '' %}\n\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content =\n                    content.split('</think>')[0]\n                    .rstrip('\\n')\n                    .split('<think>')[-1]\n                    .lstrip('\\n')\n                %}\n\n                {%- set content =\n                    content.split('</think>')[-1].lstrip('\\n')\n                %}\n            {%- endif %}\n        {%- endif %}\n\n        {%- set reasoning_content = reasoning_content|trim %}\n\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>assistant\\n<think>\\n' }}\n            {{- reasoning_content }}\n            {{- '\\n</think>\\n\\n' }}\n            {{- content }}\n        {%- else %}\n            {{- '<|im_start|>assistant\\n' }}\n            {{- content }}\n        {%- endif %}\n\n        {# ---------------- TOOL CALLS ---------------- #}\n\n        {%- if message.tool_calls\n            and message.tool_calls is iterable\n            and message.tool_calls is not mapping %}\n\n            {%- for tool_call in message.tool_calls %}\n\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n' }}\n                {%- endif %}\n\n                {{- '<tool_call>\\n<function=' }}\n                {{- tool_call.name }}\n                {{- '>\\n' }}\n\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' }}\n                        {{- args_name }}\n                        {{- '>\\n' }}\n\n                        {%- if args_value is mapping\n                            or (args_value is sequence\n                                and args_value is not string) %}\n                            {{- args_value | tojson | safe }}\n                        {%- else %}\n                            {{- args_value | string }}\n                        {%- endif %}\n\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n\n        {{- '<|im_end|>\\n' }}\n\n    {%- elif message.role == 'tool' %}\n        {%- if loop.previtem and loop.previtem.role != 'tool' %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n\n        {%- if not loop.last and loop.nextitem.role != 'tool' %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n\n{# ============================================================\n   GENERATION PROMPT\n   ============================================================ #}\n\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}\n",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 3827273728
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "1a912d2dee6ae05ee5a9f1b148582d62047dbc52",
+      "size": 1975
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "f5f2d060d517737830d3595447a87fa37aaf0816",
+      "size": 18723
+    },
+    {
+      "rfilename": "alpie_offline_mobile_demo.mp4",
+      "blobId": "b8a008419683a024b8ce55ba2961871333b4a1a9",
+      "size": 18125387,
+      "lfs": {
+        "sha256": "0e02e476a76ceda42a04325dabbb9fa73bd75314531ad669884c3e922274fdab",
+        "size": 18125387,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "alpie_seed-grpo-Q2_K.gguf",
+      "blobId": "d05174b1187c62d8632e3ac2ffa66774b6d7a819",
+      "size": 3827273728,
+      "lfs": {
+        "sha256": "bf531b2ec9c6c36e3a79969663279267415777e1c8d821b590ccf9ec401e8d32",
+        "size": 3827273728,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "alpie_seed-text-q3_k_m.gguf",
+      "blobId": "c19f4a56623ae9d6b94c70ca988c692181a084a7",
+      "size": 4623517376,
+      "lfs": {
+        "sha256": "b28f68da974b6344f1d99509c425d0b7c7758613e41a0d8b16b41b94becaa0a3",
+        "size": 4623517376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "alpie_seed-text-q4_k_m.gguf",
+      "blobId": "e187141ee2cd310f7e3c6a08d70b0f01f11a4e6c",
+      "size": 5629109184,
+      "lfs": {
+        "sha256": "98128c03fcaab06254937cd62bfe75ab34f3aa07c0c262e0f379136513193900",
+        "size": 5629109184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "alpie_seed-vl-mmproj-f16.gguf",
+      "blobId": "fa5bd33676c0e9d6c9181c41668458b194de4002",
+      "size": 921704384,
+      "lfs": {
+        "sha256": "9f30c824cfe85e1d9a0ab21ebef98f948492d700e2558804a20e644d49289285",
+        "size": 921704384,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-04T08:37:33.000Z",
+  "usedStorage": 16394605451
+}

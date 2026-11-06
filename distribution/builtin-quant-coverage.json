@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 589,
+  "families": 590,
   "withFive": 235,
   "models": [
     {
@@ -5176,6 +5176,18 @@
         "KRAFTON/Raon-1-mini-preview-gguf",
         "KRAFTON/Raon-1-mini-preview-mlx",
         "KRAFTON/Raon-1-mini-preview-nvfp4"
+      ]
+    },
+    {
+      "id": "publisher-alpie-seed-9b",
+      "label": "Alpie Seed 9B",
+      "category": "text",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "169Pi/Alpie_Seed_GGUF",
+        "169Pi/Alpie_seed"
       ]
     },
     {
