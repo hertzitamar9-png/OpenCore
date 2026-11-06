@@ -3,6 +3,7 @@ import { AppWindow, Check, Copy, Globe2, RefreshCw, ShieldOff, Square } from 'lu
 import { listen } from '@tauri-apps/api/event';
 import * as api from './api';
 import './AutomationSettings.css';
+import { ComputerDriverSettings } from './ComputerDriverSettings';
 
 type Props = { onNotice: (message: string) => void };
 
@@ -54,7 +55,7 @@ export function ComputerAccessSettings({ onNotice }: Props) {
     const identity = (path: string) => path.replaceAll('/', '\\').toLowerCase();
     void save({ ...policy, apps: [...policy.apps.filter(item => identity(item.path) !== identity(app.path)), { path: app.path, name: app.name, access }] });
   };
-  return <div className="automation-settings">
+  return <div className="automation-settings"><ComputerDriverSettings />
     <div className="automation-heading"><div><strong>Enable computer use</strong><p className="appearance-note">Allow OpenCore to inspect and control permitted Windows apps. New apps require permission, even when tool approval is set to All.</p></div>
       <button role="switch" aria-label="Enable computer use" aria-checked={policy?.enabled ?? false} className="automation-switch" disabled={!policy || busy} onClick={() => policy && void save({ ...policy, enabled: !policy.enabled })}><span /></button>
     </div>

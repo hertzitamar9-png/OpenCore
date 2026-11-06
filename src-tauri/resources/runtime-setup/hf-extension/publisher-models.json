@@ -89959,6 +89959,2169 @@
       "operatingModes": []
     },
     {
+      "id": "hf-a34e7cae77310fa8d0a4c4d2",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q2_K.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 4370103360,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q2_K.gguf",
+          "bytes": 3015939744,
+          "sha256": "93850881fdc85bcb2eae4c4931919e54212923bbdfeb99c2e42f9fc35351d874",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-aae8998b3d87ba39e4d7df73",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q3_K_S.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 4846531648,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q3_K_S.gguf",
+          "bytes": 3492368032,
+          "sha256": "8ca3308031e591a1e40f1499662e720516f06b1ba4bbb1418a2a7c7ae06edf2b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-51d4636ae391f84beac74727",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q3_K_M.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5162554432,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q3_K_M.gguf",
+          "bytes": 3808390816,
+          "sha256": "2e66c1a82032f74fa819568c5044a811c365b789263375892f99b1631719bbcf",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-e72ac1eeab942fc9bf6e0df6",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q3_K_L.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5442622528,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q3_K_L.gguf",
+          "bytes": 4088458912,
+          "sha256": "c7ec125faaddab2c448cf69c7871b9ba57b9dba64a8695556ba23701c18742df",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-29b3eb1863e3e73c542ed4b6",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.IQ4_XS.gguf",
+      "name": "Gliese CUA Tool Call 8B · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5604461632,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.IQ4_XS.gguf",
+          "bytes": 4250298016,
+          "sha256": "36cdff9a5fe7b1a43b2d931242893121199606963868fd70aeaf707a111fb17d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-f9352dd00c6b8a3a88feb3c9",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q4_K_S.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5811932224,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q4_K_S.gguf",
+          "bytes": 4457768608,
+          "sha256": "7179def525ddc63a517188330fc1a1c4d872b952bcfbbb7286836127b9f971a7",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-5f2b606cfaa4a03ff55a54c2",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q4_K_M.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6037236800,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q4_K_M.gguf",
+          "bytes": 4683073184,
+          "sha256": "8d3eb3caf2d6f0b76598fa1df3b1a33debb5a9bb4e17d8319c7298f949323c57",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-d4889a049862968a0ce7e032",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q5_K_S.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6669339712,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q5_K_S.gguf",
+          "bytes": 5315176096,
+          "sha256": "9c7aa769f54840a24e6d0fa1589cc6aa010ecd4cc57ab7221fa8d2bda5e0568b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-518b24e727b657e515010ed6",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q5_K_M.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6798994496,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q5_K_M.gguf",
+          "bytes": 5444830880,
+          "sha256": "ff71f33b36126c691a20fbb31ff8c9610321165ed2844d9495540e32a6ba4807",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-46396d37773fae40419f471f",
+      "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q6_K.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 7608362048,
+      "files": [
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q6_K.gguf",
+          "bytes": 6254198432,
+          "sha256": "22f8049e79d44b39160e9ffd01896e21becb19c0d872fd4dbc322254c13d1ed8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+          "bytes": 1354163616,
+          "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-26709163e2aa9bddc1af1436",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+      "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B-Localization.Q8_0.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q8_0 Localization",
+      "quantization": "Q8_0 Localization",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 9455697152,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+          "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+          "filename": "Gliese-CUA-Tool-Call-8B-Localization.Q8_0.gguf",
+          "bytes": 8098523680,
+          "sha256": "d9e6a30da20250351c61046f916e4a34111cc8d18b9769e6fdc41be1fb9ea91f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+          "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+          "filename": "Gliese-CUA-Tool-Call-8B-Localization.mmproj-bf16.gguf",
+          "bytes": 1357173472,
+          "sha256": "5f4fea3e1b4a7e7b350748e9bf31d2c41156bc3b46e5119f042385aee00ceed5",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-05a61cf2eaf26dca1a2bb7fc",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.Q8_0.gguf",
+      "name": "Gliese CUA Tool Call 8B · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 9455698528,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+          "filename": "Gliese-CUA-Tool-Call-8B.Q8_0.gguf",
+          "bytes": 8098524352,
+          "sha256": "6dc7ffc756afd683063f789333af8f98f7d84284f0de2103f01dd903eedbd232",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-bf16.gguf",
+          "bytes": 1357174176,
+          "sha256": "19aeae991530ac9866947fcf5451cf862e5bf79fbe5ac22225571a728bacf38a",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-b8631f71d3c722de691f2227",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+      "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B-Localization.F16.gguf",
+      "name": "Gliese CUA Tool Call 8B · F16 Localization",
+      "quantization": "F16 Localization",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 16595025152,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+          "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+          "filename": "Gliese-CUA-Tool-Call-8B-Localization.F16.gguf",
+          "bytes": 15237851680,
+          "sha256": "bff1f9285ffd86adc7095502e7b4b05cc7f21cbd1f9a71075a1171d35ccbf9be",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+          "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+          "filename": "Gliese-CUA-Tool-Call-8B-Localization.mmproj-bf16.gguf",
+          "bytes": 1357173472,
+          "sha256": "5f4fea3e1b4a7e7b350748e9bf31d2c41156bc3b46e5119f042385aee00ceed5",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-d27a47673978345befdcfb01",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+      "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B-Localization.BF16.gguf",
+      "name": "Gliese CUA Tool Call 8B · BF16 Localization",
+      "quantization": "BF16 Localization",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 16595025152,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+          "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+          "filename": "Gliese-CUA-Tool-Call-8B-Localization.BF16.gguf",
+          "bytes": 15237851680,
+          "sha256": "fd30d3f86035cf233d6700743a3758354ff568fbf05db37a9c908a9405948fde",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+          "revision": "9b1ab0991eeaf68739ae0b3d08e287335ee92ca9",
+          "filename": "Gliese-CUA-Tool-Call-8B-Localization.mmproj-bf16.gguf",
+          "bytes": 1357173472,
+          "sha256": "5f4fea3e1b4a7e7b350748e9bf31d2c41156bc3b46e5119f042385aee00ceed5",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-10f196dd45873158411f3cae",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.BF16.gguf",
+      "name": "Gliese CUA Tool Call 8B · BF16",
+      "quantization": "BF16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 16595026528,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+          "filename": "Gliese-CUA-Tool-Call-8B.BF16.gguf",
+          "bytes": 15237852352,
+          "sha256": "d89f08c4914c4aed7c519adfb06d39f77902856fa8e509798a6c29c57bc5514b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-bf16.gguf",
+          "bytes": 1357174176,
+          "sha256": "19aeae991530ac9866947fcf5451cf862e5bf79fbe5ac22225571a728bacf38a",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-a2a06069aaf12bbd224d6e9c",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+      "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+      "variantKey": "gguf:Gliese-CUA-Tool-Call-8B.F16.gguf",
+      "name": "Gliese CUA Tool Call 8B · F16",
+      "quantization": "F16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 16595026528,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+          "filename": "Gliese-CUA-Tool-Call-8B.F16.gguf",
+          "bytes": 15237852352,
+          "sha256": "279806401be064689440c9f30b0f90fdb571bb2f9f4a320f1b8753b40775d8ba",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+          "revision": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+          "filename": "Gliese-CUA-Tool-Call-8B.mmproj-bf16.gguf",
+          "bytes": 1357174176,
+          "sha256": "19aeae991530ac9866947fcf5451cf862e5bf79fbe5ac22225571a728bacf38a",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-87827d563deb5d0fb77dcc22",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+      "variantKey": "safetensors:.",
+      "name": "Gliese CUA Tool Call 8B · BF16 Tool calling",
+      "quantization": "BF16 Tool calling",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 16598681405,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "model-00001-of-00004.safetensors",
+          "bytes": 4976698776,
+          "sha256": "8bd58a48d3089357001d040615446c38a8b36dd9f0605296c3796958d1634881",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "model-00002-of-00004.safetensors",
+          "bytes": 4932751032,
+          "sha256": "889765edcdf0c96bb55a5132b30501b1af91ffb613d45aa74c4726032df439b4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "model-00003-of-00004.safetensors",
+          "bytes": 4991495808,
+          "sha256": "4e6ed1023f64afd982e45608e8b06fd9ba7cd0bbba2ea4e4229ee8aab91f5d45",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "model-00004-of-00004.safetensors",
+          "bytes": 1683468512,
+          "sha256": "b064fa49948e5987fed52a45ea9a10040686ad4179b7ee2201eac86cc544a808",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "added_tokens.json",
+          "bytes": 605,
+          "sha256": null,
+          "gitBlobSha1": "482ced4679301bf287ebb310bdd1790eb4514232",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "config.json",
+          "bytes": 3108,
+          "sha256": null,
+          "gitBlobSha1": "c411fedbeff704a1bef5bf659cd0dab4c97d3565",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "generation_config.json",
+          "bytes": 216,
+          "sha256": null,
+          "gitBlobSha1": "f3847b578292281a38c21fa3caf4ce2e67a8a55f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "model.safetensors.index.json",
+          "bytes": 57651,
+          "sha256": null,
+          "gitBlobSha1": "2cc76becb6b067d5fdd69497e550f1934bdf1c31",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "preprocessor_config.json",
+          "bytes": 575,
+          "sha256": null,
+          "gitBlobSha1": "ee08cdd031dd2f138ce236b0c995b34b4b34a6a4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "tokenizer.json",
+          "bytes": 11421896,
+          "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "tokenizer_config.json",
+          "bytes": 4730,
+          "sha256": null,
+          "gitBlobSha1": "40c4c3bf9593c5ca542bfff57a1b95f37f570e25",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "chat_template.json",
+          "bytes": 1050,
+          "sha256": null,
+          "gitBlobSha1": "732bd68bc5427d1fb6c06a59b3bf2456b2155d24",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [
+        "Qwen2_5_VLForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-aeb90932dec5b0a070816837",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+      "variantKey": "safetensors:Localization-8B",
+      "name": "Gliese CUA Tool Call 8B · BF16 Localization",
+      "quantization": "BF16 Localization",
+      "format": "safetensors",
+      "subdirectory": "Localization-8B",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 16612947632,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/model-00001-of-00004.safetensors",
+          "bytes": 4976698776,
+          "sha256": "1ffbc75f60606f9930dc4c95fe5075db13ca3b7f45a2dc20d828302e465d46ee",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/model-00002-of-00004.safetensors",
+          "bytes": 4932751032,
+          "sha256": "f6a4c8b0c5e888799c7af4e21e309ca42f8c3324535e49905b11188e97da63f5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/model-00003-of-00004.safetensors",
+          "bytes": 4991495808,
+          "sha256": "6b8def64a44e8242ea7ee9cdfeed365f79e4c1cc64acddccc6b6bf75471f9972",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/model-00004-of-00004.safetensors",
+          "bytes": 1683468512,
+          "sha256": "acc5de8fc0c71c8b7d40dc2291f9081283e65f75d489556ce2407f87640400d0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/added_tokens.json",
+          "bytes": 605,
+          "sha256": null,
+          "gitBlobSha1": "482ced4679301bf287ebb310bdd1790eb4514232",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/config.json",
+          "bytes": 3108,
+          "sha256": null,
+          "gitBlobSha1": "c411fedbeff704a1bef5bf659cd0dab4c97d3565",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/generation_config.json",
+          "bytes": 216,
+          "sha256": null,
+          "gitBlobSha1": "f3847b578292281a38c21fa3caf4ce2e67a8a55f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/model.safetensors.index.json",
+          "bytes": 57651,
+          "sha256": null,
+          "gitBlobSha1": "2cc76becb6b067d5fdd69497e550f1934bdf1c31",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/preprocessor_config.json",
+          "bytes": 575,
+          "sha256": null,
+          "gitBlobSha1": "ee08cdd031dd2f138ce236b0c995b34b4b34a6a4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/tokenizer.json",
+          "bytes": 11421896,
+          "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/tokenizer_config.json",
+          "bytes": 4730,
+          "sha256": null,
+          "gitBlobSha1": "40c4c3bf9593c5ca542bfff57a1b95f37f570e25",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "added_tokens.json",
+          "bytes": 605,
+          "sha256": null,
+          "gitBlobSha1": "482ced4679301bf287ebb310bdd1790eb4514232",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "config.json",
+          "bytes": 3108,
+          "sha256": null,
+          "gitBlobSha1": "c411fedbeff704a1bef5bf659cd0dab4c97d3565",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "generation_config.json",
+          "bytes": 216,
+          "sha256": null,
+          "gitBlobSha1": "f3847b578292281a38c21fa3caf4ce2e67a8a55f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "model.safetensors.index.json",
+          "bytes": 57651,
+          "sha256": null,
+          "gitBlobSha1": "2cc76becb6b067d5fdd69497e550f1934bdf1c31",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "preprocessor_config.json",
+          "bytes": 575,
+          "sha256": null,
+          "gitBlobSha1": "ee08cdd031dd2f138ce236b0c995b34b4b34a6a4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "tokenizer.json",
+          "bytes": 11421896,
+          "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "tokenizer_config.json",
+          "bytes": 4730,
+          "sha256": null,
+          "gitBlobSha1": "40c4c3bf9593c5ca542bfff57a1b95f37f570e25",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "revision": "6f9d87647b09e8eb126cc925649fc1b52fa67ace",
+          "filename": "Localization-8B/chat_template.json",
+          "bytes": 1050,
+          "sha256": null,
+          "gitBlobSha1": "732bd68bc5427d1fb6c06a59b3bf2456b2155d24",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [
+        "Qwen2_5_VLForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-ba90a1a87690217581e4f423",
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+      "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+      "variantKey": "safetensors:.",
+      "name": "Gliese CUA Tool Call 8B · FP8 W8A8",
+      "quantization": "FP8 W8A8",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 10077895436,
+      "files": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "model-00001-of-00003.safetensors",
+          "bytes": 4940102568,
+          "sha256": "26a211c1439bc6ee1304ad17f8df88b4ab2719e7ac28f04af89fece935f510f8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "model-00002-of-00003.safetensors",
+          "bytes": 4031832312,
+          "sha256": "e3e1edc97f9cc5fcc5d4067015c98fbc628838bb0ad13ec7def7b24afb9e62bc",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "model-00003-of-00003.safetensors",
+          "bytes": 1089994880,
+          "sha256": "b6cb51f954444bf261a1c5f3ec59b0d0ab2ebc71a30356fa71aa0f33f13e5d64",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "added_tokens.json",
+          "bytes": 605,
+          "sha256": null,
+          "gitBlobSha1": "482ced4679301bf287ebb310bdd1790eb4514232",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "chat_template.jinja",
+          "bytes": 1017,
+          "sha256": null,
+          "gitBlobSha1": "6c226632394ae7474b0d4b13e15793eac2e21ee9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "config.json",
+          "bytes": 11452,
+          "sha256": null,
+          "gitBlobSha1": "684c84b9acc1ebfd2fd61c0bf6b10f60b409789d",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "generation_config.json",
+          "bytes": 214,
+          "sha256": null,
+          "gitBlobSha1": "eafd39770ab560d0f85d01c2f31663ebe9eff98e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "merges.txt",
+          "bytes": 1671853,
+          "sha256": null,
+          "gitBlobSha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "model.safetensors.index.json",
+          "bytes": 74721,
+          "sha256": null,
+          "gitBlobSha1": "dcb66224c9baa0c6b6b00c3c11864523e10334a7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "preprocessor_config.json",
+          "bytes": 829,
+          "sha256": null,
+          "gitBlobSha1": "dad4fd31ef14174034bf8d5451f9aad60d1a9337",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "tokenizer.json",
+          "bytes": 11421896,
+          "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "tokenizer_config.json",
+          "bytes": 4730,
+          "sha256": null,
+          "gitBlobSha1": "40c4c3bf9593c5ca542bfff57a1b95f37f570e25",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "revision": "700de222153709a3aeb2bcd3f2716d9315951589",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 913,
+          "sha256": null,
+          "gitBlobSha1": "61f537edd12465081e18147f52e1018b4b252dc7",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [
+        "Qwen2_5_VLForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "This publisher edition uses compressed-tensors W8A8 FP8 and needs a compatible quantized Qwen2.5-VL adapter. The managed BF16 Transformers runtime cannot load it. Choose a GGUF or original BF16 package for the integrated text runtime; FP8 generation has not been verified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "familyLabel": "Gliese CUA Tool Call 8B",
+      "originalRepository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 128000,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
       "id": "hf-c8fb19cbef6e4a770b09174c",
       "repository": "bartowski/GrootTeam_Groot-19B-A3B-261023-GGUF",
       "revision": "0025df0d03fb385344394f4e5afd73ce47da0680",
@@ -93257,6 +95420,1447 @@
       "supportsTextGeneration": false,
       "operatingModes": [],
       "computerBaseBytes": 608863580
+    },
+    {
+      "id": "hf-6811cd67cfbae2b0ff86f89a",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q2_K.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 2613184032,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q2_K.gguf",
+          "bytes": 1274755200,
+          "sha256": "751167ba6e564a1afb88a2ea022bfafa8a0dcd9b60293cbe303e834f9d152cbd",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-92e794d8cfcf303800c87ff4",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q3_K_S.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 2792785440,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q3_K_S.gguf",
+          "bytes": 1454356608,
+          "sha256": "39d0e722c5820dc3718d21610a0828ce47fcfcc2fa94901f66559955555c5cdb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-ab0238027358ae9b8f161065",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q3_K_M.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 2928903712,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q3_K_M.gguf",
+          "bytes": 1590474880,
+          "sha256": "18bf07f7743fd8a691f7463a645e15408760e0971335b332fd9e9432328d865c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-5717809973e1ccea2e3f790d",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q3_K_L.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3045819936,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q3_K_L.gguf",
+          "bytes": 1707391104,
+          "sha256": "19da7c3afed678c3a0a9e668689ce2e31fcdbe78edacf4dc3458e0ca83dfdfc9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-f0671ff5f8498ef5c4cd67a6",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.IQ4_XS.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3091613216,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.IQ4_XS.gguf",
+          "bytes": 1753184384,
+          "sha256": "a467aaea87676670a583d73a419ec930cd4a7dc0e14fa54b3fad300abb23e31f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-aeae54ab2bca2d70f4cae452",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q4_K_S.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3172812320,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q4_K_S.gguf",
+          "bytes": 1834383488,
+          "sha256": "3da7b950d37fa6c8aa66bcf83d7da22cd8ea8d38388e68d89b1c35e9da8799e8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-fde2b2927f047d5336964b7e",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q4_K_M.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3268331040,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q4_K_M.gguf",
+          "bytes": 1929902208,
+          "sha256": "498d151a06fde7db48a1a00fbc992c05543ccfe4a3040dbb7c15268130bb9cee",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-252d6bf771c7764fd7001360",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q5_K_S.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3508094496,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q5_K_S.gguf",
+          "bytes": 2169665664,
+          "sha256": "bf37ec9d4bfb0c802690067a56828541662b1ca1d77d46f5b45c98c615ba37b0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-3c4035c9410b42ac259ebf10",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q5_K_M.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3563243040,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q5_K_M.gguf",
+          "bytes": 2224814208,
+          "sha256": "0d69130275d4ad262e27383fdee258391baf98fdaa9eb16c0a37686809418ff8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-c6c1914719b8b0c552612788",
+      "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q6_K.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3876587040,
+      "files": [
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q6_K.gguf",
+          "bytes": 2538158208,
+          "sha256": "209b1dd75263385d5424df59257ae7c4273401233e9dec4625206bc774708e30",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+          "bytes": 1338428832,
+          "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-d500203ce60f7cd05610250f",
+      "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.Q8_0.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 4626913024,
+      "files": [
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.Q8_0.gguf",
+          "bytes": 3285474304,
+          "sha256": "0292453cb071811c29dc808fe1859255580857b76e14cf7cd3cd178d194bee4a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-bf16.gguf",
+          "bytes": 1341438720,
+          "sha256": "e7a9400e51da5a5f021a053dc1f818ad3286fe2153677e6b649ea64b7d7a61a4",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-a7c45749d245e520ec4e6e76",
+      "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.F16.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · F16",
+      "quantization": "F16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 7519753984,
+      "files": [
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.F16.gguf",
+          "bytes": 6178315264,
+          "sha256": "73f2266b8f6df3aa4ce1d10012d2978c924ece0bae56f5eececde3c7bcc1729c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-bf16.gguf",
+          "bytes": 1341438720,
+          "sha256": "e7a9400e51da5a5f021a053dc1f818ad3286fe2153677e6b649ea64b7d7a61a4",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-c81ee6e4b639200a66364003",
+      "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.BF16.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · BF16",
+      "quantization": "BF16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 7519753984,
+      "files": [
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.BF16.gguf",
+          "bytes": 6178315264,
+          "sha256": "570e79bae78b336e2c6da41784d701e756dec17c360023d7d029e147077a977a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-bf16.gguf",
+          "bytes": 1341438720,
+          "sha256": "e7a9400e51da5a5f021a053dc1f818ad3286fe2153677e6b649ea64b7d7a61a4",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-23a631798c5ce70f4b7865df",
+      "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+      "variantKey": "gguf:Herculis-CUA-GUI-Actioner-4B.F32.gguf",
+      "name": "Herculis CUA GUI Actioner 4B · F32",
+      "quantization": "F32",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 13691148032,
+      "files": [
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.F32.gguf",
+          "bytes": 12349709312,
+          "sha256": "549a71ebfc9bb1d48f09a081d2c616af477e8080dc99c68984354f598dd51368",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "revision": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+          "filename": "Herculis-CUA-GUI-Actioner-4B.mmproj-bf16.gguf",
+          "bytes": 1341438720,
+          "sha256": "e7a9400e51da5a5f021a053dc1f818ad3286fe2153677e6b649ea64b7d7a61a4",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
+    },
+    {
+      "id": "hf-4740af1006dc5d5dc1e746e5",
+      "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+      "variantKey": "safetensors:.",
+      "name": "Herculis CUA GUI Actioner 4B · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 7525221083,
+      "files": [
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "model.safetensors",
+          "bytes": 7509338080,
+          "sha256": "29d9f68176bf294382b719f680d3965e384769fec7e3cf61254f17f6069167df",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "added_tokens.json",
+          "bytes": 605,
+          "sha256": null,
+          "gitBlobSha1": "482ced4679301bf287ebb310bdd1790eb4514232",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "chat_template.jinja",
+          "bytes": 1017,
+          "sha256": null,
+          "gitBlobSha1": "6c226632394ae7474b0d4b13e15793eac2e21ee9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "config.json",
+          "bytes": 3318,
+          "sha256": null,
+          "gitBlobSha1": "33d0feb379fcfb1528f24fb1359c46a929c95d94",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "generation_config.json",
+          "bytes": 260,
+          "sha256": null,
+          "gitBlobSha1": "182b64d0ae2682bd69c31ff0f16de06955365e62",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "merges.txt",
+          "bytes": 1671853,
+          "sha256": null,
+          "gitBlobSha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "preprocessor_config.json",
+          "bytes": 827,
+          "sha256": null,
+          "gitBlobSha1": "7590af8a52c55cd012460af6e40f1d8ca46ddc93",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "tokenizer.json",
+          "bytes": 11421896,
+          "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "tokenizer_config.json",
+          "bytes": 4870,
+          "sha256": null,
+          "gitBlobSha1": "5f21dd20a92c59ae0bc8666bcc12910d6834009c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "revision": "071b6ff60ec22e6969dbec6cb6447214850dbbcd",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 911,
+          "sha256": null,
+          "gitBlobSha1": "367fae634c0bcf48d5fe96a1fdea13e0afc922b6",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen2_5_vl",
+      "architectures": [
+        "Qwen2_5_VLForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "generationDefaults": {
+        "temperature": 1e-06,
+        "repeat_penalty": 1.05
+      },
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "familyLabel": "Herculis CUA GUI Actioner 4B",
+      "originalRepository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "license": "other",
+      "supportedContextTokens": 128000,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 128000,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 128000
     },
     {
       "id": "hf-fa73f86b61e5193610deaac2",

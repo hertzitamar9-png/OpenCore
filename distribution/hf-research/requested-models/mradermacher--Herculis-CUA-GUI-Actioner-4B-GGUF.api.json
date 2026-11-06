@@ -1,0 +1,232 @@
+{
+  "_id": "69414ed0bc2ea1af4c791928",
+  "id": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "text-generation-inference",
+    "agent",
+    "pytorch",
+    "computer-use-agent",
+    "gui-actioning",
+    "ui-localization",
+    "multimodal-agent",
+    "screen-understanding",
+    "task-automation",
+    "desktop-agent",
+    "ui-vqa",
+    "layout",
+    "en",
+    "base_model:prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+    "base_model:quantized:prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 249,
+  "likes": 1,
+  "modelId": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+  "author": "mradermacher",
+  "sha": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
+  "lastModified": "2026-11-05T03:15:28.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "other",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "text-generation-inference",
+      "agent",
+      "pytorch",
+      "computer-use-agent",
+      "gui-actioning",
+      "ui-localization",
+      "multimodal-agent",
+      "screen-understanding",
+      "task-automation",
+      "desktop-agent",
+      "ui-vqa",
+      "layout"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 3085938688,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 6178316416
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "eddb701fd7d8096a7ff7de9affc304c001fa0ae3",
+      "size": 2597
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.IQ4_XS.gguf",
+      "blobId": "77722241de492834fc519344d5e9134e08accfdf",
+      "size": 1753184384,
+      "lfs": {
+        "sha256": "a467aaea87676670a583d73a419ec930cd4a7dc0e14fa54b3fad300abb23e31f",
+        "size": 1753184384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q2_K.gguf",
+      "blobId": "10d70161ddc5442bf48faa135b31cf9742e14a63",
+      "size": 1274755200,
+      "lfs": {
+        "sha256": "751167ba6e564a1afb88a2ea022bfafa8a0dcd9b60293cbe303e834f9d152cbd",
+        "size": 1274755200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q3_K_L.gguf",
+      "blobId": "5c1835af300cd2a523c552a7a4129b18c52865aa",
+      "size": 1707391104,
+      "lfs": {
+        "sha256": "19da7c3afed678c3a0a9e668689ce2e31fcdbe78edacf4dc3458e0ca83dfdfc9",
+        "size": 1707391104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q3_K_M.gguf",
+      "blobId": "0a43a2b28bec098f6d8cb6ff5180ec2ad2e6d2d7",
+      "size": 1590474880,
+      "lfs": {
+        "sha256": "18bf07f7743fd8a691f7463a645e15408760e0971335b332fd9e9432328d865c",
+        "size": 1590474880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q3_K_S.gguf",
+      "blobId": "f3c7decb79b7df6fe07b1e43bec3036e1a396b59",
+      "size": 1454356608,
+      "lfs": {
+        "sha256": "39d0e722c5820dc3718d21610a0828ce47fcfcc2fa94901f66559955555c5cdb",
+        "size": 1454356608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q4_K_M.gguf",
+      "blobId": "c64405652a6bff9252d4ec48d3c9401d1372821b",
+      "size": 1929902208,
+      "lfs": {
+        "sha256": "498d151a06fde7db48a1a00fbc992c05543ccfe4a3040dbb7c15268130bb9cee",
+        "size": 1929902208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q4_K_S.gguf",
+      "blobId": "b16d1a9854d8e9045f170d273a2461c6ca1c2a6b",
+      "size": 1834383488,
+      "lfs": {
+        "sha256": "3da7b950d37fa6c8aa66bcf83d7da22cd8ea8d38388e68d89b1c35e9da8799e8",
+        "size": 1834383488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q5_K_M.gguf",
+      "blobId": "ce9af047eebbeb99df5a94bfc7e2d0136bdf1b54",
+      "size": 2224814208,
+      "lfs": {
+        "sha256": "0d69130275d4ad262e27383fdee258391baf98fdaa9eb16c0a37686809418ff8",
+        "size": 2224814208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q5_K_S.gguf",
+      "blobId": "4552a863b2a54fc385fd13618b8ee7c51c74ae75",
+      "size": 2169665664,
+      "lfs": {
+        "sha256": "bf37ec9d4bfb0c802690067a56828541662b1ca1d77d46f5b45c98c615ba37b0",
+        "size": 2169665664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q6_K.gguf",
+      "blobId": "982afea041a889db735a7b4402c5710bb39589a5",
+      "size": 2538158208,
+      "lfs": {
+        "sha256": "209b1dd75263385d5424df59257ae7c4273401233e9dec4625206bc774708e30",
+        "size": 2538158208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q8_0.gguf",
+      "blobId": "f9d445934af916cc5b0c10a7dd940086e0bfefb4",
+      "size": 3285475456,
+      "lfs": {
+        "sha256": "7b8bd0880058c610ce9e730ee73a12d923030682e01b862f5d5298b2d8f94e84",
+        "size": 3285475456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.f16.gguf",
+      "blobId": "6b2a0f6806a88edf90544339a54a7e8fe15f8bf3",
+      "size": 6178316416,
+      "lfs": {
+        "sha256": "5e18ff2e0872c2c0e370970ac32d4b9d97330ff314289c3a3e53dc3a69fde735",
+        "size": 6178316416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.mmproj-Q8_0.gguf",
+      "blobId": "e5d032045b0c7552fb7cfc65e58f883522486972",
+      "size": 847768992,
+      "lfs": {
+        "sha256": "cc46413c7023a9641d83989e2ef4e919ebbaf581ad3adf7e0c20b5b902efe7fe",
+        "size": 847768992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+      "blobId": "f2e6e2066834bed185fdd9a7ed5031028ed3f46a",
+      "size": 1338428832,
+      "lfs": {
+        "sha256": "588ac13b4ec7e00c44206c882aa97430887e1661be85128eaa4732c793a5c0dc",
+        "size": 1338428832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "39a137b9b3b084f177b29830451f2c0a46cbdedd",
+      "size": 4656
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-16T12:21:36.000Z",
+  "usedStorage": 30127075648
+}

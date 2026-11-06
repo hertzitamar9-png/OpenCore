@@ -37,6 +37,7 @@ from hf_chat_media import ChatMedia, saved_conversations_page, delete_empty_proj
 from hf_connectors import ConnectorProfiles
 from hf_telemetry import LiveTelemetry
 from hf_computer_runtime import ComputerManager, supports as supports_computer
+from hf_computer_driver import ComputerDriverManager
 from model_modes import apply_operating_modes, supports_text_generation, mode_context
 from hf_download_queue import DownloadQueue
 
@@ -92,6 +93,7 @@ class BridgeState:
         self.images=ImageRuntimeManager(self.root,self.resources)
         self.connectors = ConnectorProfiles(self.root)
         self.computer = ComputerManager(self.root, self.resources, self.downloader)
+        self.computer_driver = ComputerDriverManager(self.root, self.resources)
         self.owner, self.remote, self.private, self.groups = None, None, None, None
         self.memory_repair = None
         self.prompt_assistant = None
@@ -1000,6 +1002,7 @@ class BridgeState:
 
     def close(self):
         self.download_queue.close()
+        self.computer_driver.cancel()
         if self.closed:
             return
         if self.groups: self.groups.close()
@@ -1201,6 +1204,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.ocr.status())
             elif route == '/specialist/computer/status':
                 self._send(200, state.computer.status())
+            elif route == '/computer-driver/status':
+                self._send(200, state.computer_driver.status())
             elif route == '/images/jobs':
                 self._send(200, {'jobs':state.images.list()})
             elif route == '/images/conversations':
@@ -1225,6 +1230,14 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.tokens.save(body.get("token"), state.client))
         elif self.command != "POST":
             self._send(405, {"error": "Method not allowed"})
+        elif route == '/computer-driver/install':
+            self._send(202, state.computer_driver.start())
+        elif route == '/computer-driver/cancel':
+            self._send(200, state.computer_driver.cancel())
+        elif route == '/computer-driver/connection':
+            self._send(200, state.computer_driver.connection())
+        elif route == '/computer-driver/disconnect':
+            self._send(200, state.computer_driver.disconnect())
         elif route.startswith('/groups/'):
             self._send(200, state.groups.local(route[len('/groups/'):], body,
                 base_url='http://127.0.0.1:' + str(self.server.server_port)))

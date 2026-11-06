@@ -1,0 +1,576 @@
+{
+  "_id": "6999f7515390e02222ecc5f0",
+  "id": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_5_vl",
+    "image-text-to-text",
+    "text-generation-inference",
+    "pytorch",
+    "agent",
+    "tool-calling",
+    "ui-localization",
+    "computer-use-agent",
+    "gui-actioning",
+    "multimodal-agent",
+    "screen-understanding",
+    "task-automation",
+    "desktop-agent",
+    "ui-vqa",
+    "layout",
+    "fp8",
+    "W8A8",
+    "conversational",
+    "en",
+    "base_model:prithivMLmods/Gliese-CUA-Tool-Call-8B",
+    "base_model:quantized:prithivMLmods/Gliese-CUA-Tool-Call-8B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "compressed-tensors",
+    "region:us"
+  ],
+  "downloads": 24,
+  "likes": 2,
+  "modelId": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+  "author": "prithivMLmods",
+  "sha": "700de222153709a3aeb2bcd3f2716d9315951589",
+  "lastModified": "2026-02-25T17:05:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "model_type": "qwen2_5_vl",
+    "quantization_config": {
+      "config_groups": {
+        "group_0": {
+          "format": "float-quantized",
+          "input_activations": {
+            "actorder": null,
+            "block_structure": null,
+            "dynamic": true,
+            "group_size": null,
+            "num_bits": 8,
+            "observer": null,
+            "observer_kwargs": {},
+            "scale_dtype": null,
+            "strategy": "token",
+            "symmetric": true,
+            "type": "float",
+            "zp_dtype": null
+          },
+          "output_activations": null,
+          "targets": [
+            "Linear"
+          ],
+          "weights": {
+            "actorder": null,
+            "block_structure": null,
+            "dynamic": false,
+            "group_size": null,
+            "num_bits": 8,
+            "observer": "memoryless_minmax",
+            "observer_kwargs": {},
+            "scale_dtype": null,
+            "strategy": "channel",
+            "symmetric": true,
+            "type": "float",
+            "zp_dtype": null
+          }
+        }
+      },
+      "format": "float-quantized",
+      "global_compression_ratio": null,
+      "ignore": [
+        "model.visual.blocks.0.attn.qkv",
+        "model.visual.blocks.0.attn.proj",
+        "model.visual.blocks.0.mlp.gate_proj",
+        "model.visual.blocks.0.mlp.up_proj",
+        "model.visual.blocks.0.mlp.down_proj",
+        "model.visual.blocks.1.attn.qkv",
+        "model.visual.blocks.1.attn.proj",
+        "model.visual.blocks.1.mlp.gate_proj",
+        "model.visual.blocks.1.mlp.up_proj",
+        "model.visual.blocks.1.mlp.down_proj",
+        "model.visual.blocks.2.attn.qkv",
+        "model.visual.blocks.2.attn.proj",
+        "model.visual.blocks.2.mlp.gate_proj",
+        "model.visual.blocks.2.mlp.up_proj",
+        "model.visual.blocks.2.mlp.down_proj",
+        "model.visual.blocks.3.attn.qkv",
+        "model.visual.blocks.3.attn.proj",
+        "model.visual.blocks.3.mlp.gate_proj",
+        "model.visual.blocks.3.mlp.up_proj",
+        "model.visual.blocks.3.mlp.down_proj",
+        "model.visual.blocks.4.attn.qkv",
+        "model.visual.blocks.4.attn.proj",
+        "model.visual.blocks.4.mlp.gate_proj",
+        "model.visual.blocks.4.mlp.up_proj",
+        "model.visual.blocks.4.mlp.down_proj",
+        "model.visual.blocks.5.attn.qkv",
+        "model.visual.blocks.5.attn.proj",
+        "model.visual.blocks.5.mlp.gate_proj",
+        "model.visual.blocks.5.mlp.up_proj",
+        "model.visual.blocks.5.mlp.down_proj",
+        "model.visual.blocks.6.attn.qkv",
+        "model.visual.blocks.6.attn.proj",
+        "model.visual.blocks.6.mlp.gate_proj",
+        "model.visual.blocks.6.mlp.up_proj",
+        "model.visual.blocks.6.mlp.down_proj",
+        "model.visual.blocks.7.attn.qkv",
+        "model.visual.blocks.7.attn.proj",
+        "model.visual.blocks.7.mlp.gate_proj",
+        "model.visual.blocks.7.mlp.up_proj",
+        "model.visual.blocks.7.mlp.down_proj",
+        "model.visual.blocks.8.attn.qkv",
+        "model.visual.blocks.8.attn.proj",
+        "model.visual.blocks.8.mlp.gate_proj",
+        "model.visual.blocks.8.mlp.up_proj",
+        "model.visual.blocks.8.mlp.down_proj",
+        "model.visual.blocks.9.attn.qkv",
+        "model.visual.blocks.9.attn.proj",
+        "model.visual.blocks.9.mlp.gate_proj",
+        "model.visual.blocks.9.mlp.up_proj",
+        "model.visual.blocks.9.mlp.down_proj",
+        "model.visual.blocks.10.attn.qkv",
+        "model.visual.blocks.10.attn.proj",
+        "model.visual.blocks.10.mlp.gate_proj",
+        "model.visual.blocks.10.mlp.up_proj",
+        "model.visual.blocks.10.mlp.down_proj",
+        "model.visual.blocks.11.attn.qkv",
+        "model.visual.blocks.11.attn.proj",
+        "model.visual.blocks.11.mlp.gate_proj",
+        "model.visual.blocks.11.mlp.up_proj",
+        "model.visual.blocks.11.mlp.down_proj",
+        "model.visual.blocks.12.attn.qkv",
+        "model.visual.blocks.12.attn.proj",
+        "model.visual.blocks.12.mlp.gate_proj",
+        "model.visual.blocks.12.mlp.up_proj",
+        "model.visual.blocks.12.mlp.down_proj",
+        "model.visual.blocks.13.attn.qkv",
+        "model.visual.blocks.13.attn.proj",
+        "model.visual.blocks.13.mlp.gate_proj",
+        "model.visual.blocks.13.mlp.up_proj",
+        "model.visual.blocks.13.mlp.down_proj",
+        "model.visual.blocks.14.attn.qkv",
+        "model.visual.blocks.14.attn.proj",
+        "model.visual.blocks.14.mlp.gate_proj",
+        "model.visual.blocks.14.mlp.up_proj",
+        "model.visual.blocks.14.mlp.down_proj",
+        "model.visual.blocks.15.attn.qkv",
+        "model.visual.blocks.15.attn.proj",
+        "model.visual.blocks.15.mlp.gate_proj",
+        "model.visual.blocks.15.mlp.up_proj",
+        "model.visual.blocks.15.mlp.down_proj",
+        "model.visual.blocks.16.attn.qkv",
+        "model.visual.blocks.16.attn.proj",
+        "model.visual.blocks.16.mlp.gate_proj",
+        "model.visual.blocks.16.mlp.up_proj",
+        "model.visual.blocks.16.mlp.down_proj",
+        "model.visual.blocks.17.attn.qkv",
+        "model.visual.blocks.17.attn.proj",
+        "model.visual.blocks.17.mlp.gate_proj",
+        "model.visual.blocks.17.mlp.up_proj",
+        "model.visual.blocks.17.mlp.down_proj",
+        "model.visual.blocks.18.attn.qkv",
+        "model.visual.blocks.18.attn.proj",
+        "model.visual.blocks.18.mlp.gate_proj",
+        "model.visual.blocks.18.mlp.up_proj",
+        "model.visual.blocks.18.mlp.down_proj",
+        "model.visual.blocks.19.attn.qkv",
+        "model.visual.blocks.19.attn.proj",
+        "model.visual.blocks.19.mlp.gate_proj",
+        "model.visual.blocks.19.mlp.up_proj",
+        "model.visual.blocks.19.mlp.down_proj",
+        "model.visual.blocks.20.attn.qkv",
+        "model.visual.blocks.20.attn.proj",
+        "model.visual.blocks.20.mlp.gate_proj",
+        "model.visual.blocks.20.mlp.up_proj",
+        "model.visual.blocks.20.mlp.down_proj",
+        "model.visual.blocks.21.attn.qkv",
+        "model.visual.blocks.21.attn.proj",
+        "model.visual.blocks.21.mlp.gate_proj",
+        "model.visual.blocks.21.mlp.up_proj",
+        "model.visual.blocks.21.mlp.down_proj",
+        "model.visual.blocks.22.attn.qkv",
+        "model.visual.blocks.22.attn.proj",
+        "model.visual.blocks.22.mlp.gate_proj",
+        "model.visual.blocks.22.mlp.up_proj",
+        "model.visual.blocks.22.mlp.down_proj",
+        "model.visual.blocks.23.attn.qkv",
+        "model.visual.blocks.23.attn.proj",
+        "model.visual.blocks.23.mlp.gate_proj",
+        "model.visual.blocks.23.mlp.up_proj",
+        "model.visual.blocks.23.mlp.down_proj",
+        "model.visual.blocks.24.attn.qkv",
+        "model.visual.blocks.24.attn.proj",
+        "model.visual.blocks.24.mlp.gate_proj",
+        "model.visual.blocks.24.mlp.up_proj",
+        "model.visual.blocks.24.mlp.down_proj",
+        "model.visual.blocks.25.attn.qkv",
+        "model.visual.blocks.25.attn.proj",
+        "model.visual.blocks.25.mlp.gate_proj",
+        "model.visual.blocks.25.mlp.up_proj",
+        "model.visual.blocks.25.mlp.down_proj",
+        "model.visual.blocks.26.attn.qkv",
+        "model.visual.blocks.26.attn.proj",
+        "model.visual.blocks.26.mlp.gate_proj",
+        "model.visual.blocks.26.mlp.up_proj",
+        "model.visual.blocks.26.mlp.down_proj",
+        "model.visual.blocks.27.attn.qkv",
+        "model.visual.blocks.27.attn.proj",
+        "model.visual.blocks.27.mlp.gate_proj",
+        "model.visual.blocks.27.mlp.up_proj",
+        "model.visual.blocks.27.mlp.down_proj",
+        "model.visual.blocks.28.attn.qkv",
+        "model.visual.blocks.28.attn.proj",
+        "model.visual.blocks.28.mlp.gate_proj",
+        "model.visual.blocks.28.mlp.up_proj",
+        "model.visual.blocks.28.mlp.down_proj",
+        "model.visual.blocks.29.attn.qkv",
+        "model.visual.blocks.29.attn.proj",
+        "model.visual.blocks.29.mlp.gate_proj",
+        "model.visual.blocks.29.mlp.up_proj",
+        "model.visual.blocks.29.mlp.down_proj",
+        "model.visual.blocks.30.attn.qkv",
+        "model.visual.blocks.30.attn.proj",
+        "model.visual.blocks.30.mlp.gate_proj",
+        "model.visual.blocks.30.mlp.up_proj",
+        "model.visual.blocks.30.mlp.down_proj",
+        "model.visual.blocks.31.attn.qkv",
+        "model.visual.blocks.31.attn.proj",
+        "model.visual.blocks.31.mlp.gate_proj",
+        "model.visual.blocks.31.mlp.up_proj",
+        "model.visual.blocks.31.mlp.down_proj",
+        "model.visual.merger.mlp.0",
+        "model.visual.merger.mlp.2",
+        "lm_head"
+      ],
+      "kv_cache_scheme": null,
+      "quant_method": "compressed-tensors",
+      "quantization_status": "compressed",
+      "sparsity_config": {},
+      "transform_config": {},
+      "version": "0.13.1.a20260219"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "unk_token": null,
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "hidden_act": "silu",
+    "hidden_size": 3584,
+    "initializer_range": 0.02,
+    "intermediate_size": 18944,
+    "max_position_embeddings": 128000,
+    "max_window_layers": 28,
+    "num_attention_heads": 28,
+    "num_hidden_layers": 28,
+    "num_key_value_heads": 4,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_section": [
+        16,
+        24,
+        24
+      ],
+      "rope_type": "default",
+      "type": "default"
+    },
+    "rope_theta": 1000000.0,
+    "sliding_window": 32768,
+    "text_config": {
+      "_name_or_path": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "architectures": [
+        "Qwen2_5_VLForConditionalGeneration"
+      ],
+      "attention_dropout": 0.0,
+      "bos_token_id": 151643,
+      "dtype": "bfloat16",
+      "eos_token_id": 151645,
+      "hidden_act": "silu",
+      "hidden_size": 3584,
+      "image_token_id": 151655,
+      "initializer_range": 0.02,
+      "intermediate_size": 18944,
+      "layer_types": [
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention"
+      ],
+      "max_position_embeddings": 128000,
+      "max_window_layers": 28,
+      "model_type": "qwen2_5_vl_text",
+      "num_attention_heads": 28,
+      "num_hidden_layers": 28,
+      "num_key_value_heads": 4,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": {
+        "mrope_section": [
+          16,
+          24,
+          24
+        ],
+        "rope_type": "default",
+        "type": "default"
+      },
+      "rope_theta": 1000000.0,
+      "sliding_window": null,
+      "use_cache": true,
+      "use_sliding_window": false,
+      "video_token_id": 151656,
+      "vision_end_token_id": 151653,
+      "vision_start_token_id": 151652,
+      "vision_token_id": 151654,
+      "vocab_size": 152064
+    },
+    "tie_word_embeddings": false,
+    "transformers_version": "4.57.6",
+    "use_cache": true,
+    "use_sliding_window": false,
+    "vision_config": {
+      "depth": 32,
+      "fullatt_block_indexes": [
+        7,
+        15,
+        23,
+        31
+      ],
+      "hidden_act": "silu",
+      "hidden_size": 1280,
+      "in_channels": 3,
+      "in_chans": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 3420,
+      "model_type": "qwen2_5_vl",
+      "num_heads": 16,
+      "out_hidden_size": 3584,
+      "patch_size": 14,
+      "spatial_merge_size": 2,
+      "spatial_patch_size": 14,
+      "temporal_patch_size": 2,
+      "tokens_per_second": 2,
+      "window_size": 112
+    },
+    "vision_token_id": 151654,
+    "vocab_size": 152064
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "tags": [
+      "text-generation-inference",
+      "pytorch",
+      "agent",
+      "tool-calling",
+      "ui-localization",
+      "computer-use-agent",
+      "gui-actioning",
+      "multimodal-agent",
+      "screen-understanding",
+      "task-automation",
+      "desktop-agent",
+      "ui-vqa",
+      "layout",
+      "fp8",
+      "W8A8"
+    ],
+    "base_model": [
+      "prithivMLmods/Gliese-CUA-Tool-Call-8B"
+    ],
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a0759cc7521fb9c24fc34797c994c77ed04214f9",
+      "size": 4966
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "482ced4679301bf287ebb310bdd1790eb4514232",
+      "size": 605
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "6c226632394ae7474b0d4b13e15793eac2e21ee9",
+      "size": 1017
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "684c84b9acc1ebfd2fd61c0bf6b10f60b409789d",
+      "size": 11452
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "eafd39770ab560d0f85d01c2f31663ebe9eff98e",
+      "size": 214
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00003.safetensors",
+      "blobId": "99b44417a3f695c6661a861472c8b1b097294579",
+      "size": 4940102568,
+      "lfs": {
+        "sha256": "26a211c1439bc6ee1304ad17f8df88b4ab2719e7ac28f04af89fece935f510f8",
+        "size": 4940102568,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00003.safetensors",
+      "blobId": "0a1fa8bcf9def8fd94e2e72e77eeb70fe3bc79bf",
+      "size": 4031832312,
+      "lfs": {
+        "sha256": "e3e1edc97f9cc5fcc5d4067015c98fbc628838bb0ad13ec7def7b24afb9e62bc",
+        "size": 4031832312,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00003.safetensors",
+      "blobId": "b5d503f7b4e337674d931f50dd5e7732dc296d39",
+      "size": 1089994880,
+      "lfs": {
+        "sha256": "b6cb51f954444bf261a1c5f3ec59b0d0ab2ebc71a30356fa71aa0f33f13e5d64",
+        "size": 1089994880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "dcb66224c9baa0c6b6b00c3c11864523e10334a7",
+      "size": 74721
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "dad4fd31ef14174034bf8d5451f9aad60d1a9337",
+      "size": 829
+    },
+    {
+      "rfilename": "recipe.yaml",
+      "blobId": "4b8a098f5e019357171623263529b6e062f99486",
+      "size": 212
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "51ebb3ba93988c73bbd83a3c163a14343fbc5b06",
+      "size": 11421896,
+      "lfs": {
+        "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+        "size": 11421896,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "40c4c3bf9593c5ca542bfff57a1b95f37f570e25",
+      "size": 4730
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "61f537edd12465081e18147f52e1018b4b252dc7",
+      "size": 913
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-02-21T18:20:01.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1768268800,
+      "F8_E4M3": 6525288448
+    },
+    "total": 8293557248
+  },
+  "usedStorage": 10073351656,
+  "generation_config": {
+    "bos_token_id": 151643,
+    "do_sample": true,
+    "eos_token_id": [
+      151645,
+      151643
+    ],
+    "pad_token_id": 151643,
+    "repetition_penalty": 1.05,
+    "temperature": 1e-06,
+    "transformers_version": "4.57.6"
+  }
+}

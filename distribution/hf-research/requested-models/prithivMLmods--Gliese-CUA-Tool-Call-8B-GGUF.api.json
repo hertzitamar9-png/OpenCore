@@ -1,0 +1,175 @@
+{
+  "_id": "693fb360ea6f9cc3df26ded7",
+  "id": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "qwen2_5_vl",
+    "text-generation-inference",
+    "tool-calling",
+    "ui-localization",
+    "agent",
+    "computer-use-agent",
+    "gui-actioning",
+    "multimodal-agent",
+    "screen-understanding",
+    "task-automation",
+    "desktop-agent",
+    "ui-vqa",
+    "llama.cpp",
+    "image-text-to-text",
+    "en",
+    "base_model:prithivMLmods/Gliese-CUA-Tool-Call-8B",
+    "base_model:quantized:prithivMLmods/Gliese-CUA-Tool-Call-8B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 321,
+  "likes": 2,
+  "modelId": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+  "author": "prithivMLmods",
+  "sha": "2fd1a6b3eb7476bf6db0d2d3e4b2d714491bea77",
+  "lastModified": "2025-12-15T19:02:52.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "model_type": "qwen2_5_vl"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "base_model": [
+      "prithivMLmods/Gliese-CUA-Tool-Call-8B"
+    ],
+    "tags": [
+      "text-generation-inference",
+      "tool-calling",
+      "ui-localization",
+      "agent",
+      "computer-use-agent",
+      "gui-actioning",
+      "multimodal-agent",
+      "screen-understanding",
+      "task-automation",
+      "desktop-agent",
+      "ui-vqa",
+      "llama.cpp"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 15237852352
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ab6660d19dd303df23b7f4f536ebffdf13a3b14d",
+      "size": 1958
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.BF16.gguf",
+      "blobId": "0868917409f56f8936791023bd5de95e356ece32",
+      "size": 15237852352,
+      "lfs": {
+        "sha256": "d89f08c4914c4aed7c519adfb06d39f77902856fa8e509798a6c29c57bc5514b",
+        "size": 15237852352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.F16.gguf",
+      "blobId": "be0c6384e2f17e323fdd325e7180644b8ae992e2",
+      "size": 15237852352,
+      "lfs": {
+        "sha256": "279806401be064689440c9f30b0f90fdb571bb2f9f4a320f1b8753b40775d8ba",
+        "size": 15237852352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q8_0.gguf",
+      "blobId": "c12113b32782a60d91957b8c82beb22bebfe70fa",
+      "size": 8098524352,
+      "lfs": {
+        "sha256": "6dc7ffc756afd683063f789333af8f98f7d84284f0de2103f01dd903eedbd232",
+        "size": 8098524352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.mmproj-bf16.gguf",
+      "blobId": "bb5dd15a0c7dd346c0099428e9b7107fb0172d82",
+      "size": 1357174176,
+      "lfs": {
+        "sha256": "19aeae991530ac9866947fcf5451cf862e5bf79fbe5ac22225571a728bacf38a",
+        "size": 1357174176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+      "blobId": "2eb406c8eb4d5416e8a98296960af86d5bd40092",
+      "size": 1354163616,
+      "lfs": {
+        "sha256": "b67d8b586ea130be6ef1dda5b80aba381e45fe1aeda95f922aaf7540b08dca2f",
+        "size": 1354163616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.mmproj-q8_0.gguf",
+      "blobId": "5993925b19f1cf11f51f7aabdaf265a3365e9495",
+      "size": 856130976,
+      "lfs": {
+        "sha256": "7fcc8db26a7916af7b72bfa031f859c773e64c230c928e499938333ff45307fc",
+        "size": 856130976,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "0606dc7e9e9e5618b22cbc79f1a44b197f29fc92",
+      "size": 2446
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "671cb881d7d4a3d0951057864358f916633ec244",
+      "size": 35
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-15T07:06:08.000Z",
+  "usedStorage": 42141697824
+}

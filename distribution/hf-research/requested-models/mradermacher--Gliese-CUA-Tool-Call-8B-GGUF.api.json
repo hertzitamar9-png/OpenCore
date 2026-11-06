@@ -1,0 +1,234 @@
+{
+  "_id": "69415692557c0438afb4801c",
+  "id": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "text-generation-inference",
+    "pytorch",
+    "agent",
+    "tool-calling",
+    "ui-localization",
+    "computer-use-agent",
+    "gui-actioning",
+    "multimodal-agent",
+    "screen-understanding",
+    "task-automation",
+    "desktop-agent",
+    "ui-vqa",
+    "layout",
+    "en",
+    "base_model:prithivMLmods/Gliese-CUA-Tool-Call-8B",
+    "base_model:quantized:prithivMLmods/Gliese-CUA-Tool-Call-8B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 623,
+  "likes": 1,
+  "modelId": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+  "author": "mradermacher",
+  "sha": "878c47d976e26b0a13e657d3d72ebd0dc8a24754",
+  "lastModified": "2026-11-05T03:15:21.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "text-generation-inference",
+      "pytorch",
+      "agent",
+      "tool-calling",
+      "ui-localization",
+      "computer-use-agent",
+      "gui-actioning",
+      "multimodal-agent",
+      "screen-understanding",
+      "task-automation",
+      "desktop-agent",
+      "ui-vqa",
+      "layout"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 15237852832
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9f14538a50145c0eb07c6b13ca4e46f9e5c8ebb5",
+      "size": 2527
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.IQ4_XS.gguf",
+      "blobId": "5e57c272d1036001d8692dfc84d712db2463af31",
+      "size": 4250298016,
+      "lfs": {
+        "sha256": "36cdff9a5fe7b1a43b2d931242893121199606963868fd70aeaf707a111fb17d",
+        "size": 4250298016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q2_K.gguf",
+      "blobId": "6bdc082de5a1faa2a0701813f29402296f5a28fd",
+      "size": 3015939744,
+      "lfs": {
+        "sha256": "93850881fdc85bcb2eae4c4931919e54212923bbdfeb99c2e42f9fc35351d874",
+        "size": 3015939744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q3_K_L.gguf",
+      "blobId": "fee856a035ebee203de4fb212ebcf267eb812ae7",
+      "size": 4088458912,
+      "lfs": {
+        "sha256": "c7ec125faaddab2c448cf69c7871b9ba57b9dba64a8695556ba23701c18742df",
+        "size": 4088458912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q3_K_M.gguf",
+      "blobId": "f77491a1021783ee336a574a522e55c8b2aaa887",
+      "size": 3808390816,
+      "lfs": {
+        "sha256": "2e66c1a82032f74fa819568c5044a811c365b789263375892f99b1631719bbcf",
+        "size": 3808390816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q3_K_S.gguf",
+      "blobId": "026a4252410857e803d077fa807273b8f514c40f",
+      "size": 3492368032,
+      "lfs": {
+        "sha256": "8ca3308031e591a1e40f1499662e720516f06b1ba4bbb1418a2a7c7ae06edf2b",
+        "size": 3492368032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q4_K_M.gguf",
+      "blobId": "f9e135d03dcd6bbbe0abbd3869d8683996060447",
+      "size": 4683073184,
+      "lfs": {
+        "sha256": "8d3eb3caf2d6f0b76598fa1df3b1a33debb5a9bb4e17d8319c7298f949323c57",
+        "size": 4683073184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q4_K_S.gguf",
+      "blobId": "b25bc84465b02a599d8c1665273d245a8fa62112",
+      "size": 4457768608,
+      "lfs": {
+        "sha256": "7179def525ddc63a517188330fc1a1c4d872b952bcfbbb7286836127b9f971a7",
+        "size": 4457768608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q5_K_M.gguf",
+      "blobId": "23009bfc09bfe027f23f3227f22781ac5eab2c46",
+      "size": 5444830880,
+      "lfs": {
+        "sha256": "ff71f33b36126c691a20fbb31ff8c9610321165ed2844d9495540e32a6ba4807",
+        "size": 5444830880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q5_K_S.gguf",
+      "blobId": "a7bcf7d93bb06dcbb9760ff92c348c8f696da522",
+      "size": 5315176096,
+      "lfs": {
+        "sha256": "9c7aa769f54840a24e6d0fa1589cc6aa010ecd4cc57ab7221fa8d2bda5e0568b",
+        "size": 5315176096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q6_K.gguf",
+      "blobId": "60ff6c1c719cd1e8374fb47ba5c5221f6fe2b83f",
+      "size": 6254198432,
+      "lfs": {
+        "sha256": "22f8049e79d44b39160e9ffd01896e21becb19c0d872fd4dbc322254c13d1ed8",
+        "size": 6254198432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.Q8_0.gguf",
+      "blobId": "f47f745cd520da1f3cf7cd17fa33374097a5910c",
+      "size": 8098524832,
+      "lfs": {
+        "sha256": "634650c3633702bdb63067004c000bfce95978035b4c93c3fef78057d3a8690d",
+        "size": 8098524832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.f16.gguf",
+      "blobId": "92ce133b154f4486a7ecf8a26e42239212792e36",
+      "size": 15237852832,
+      "lfs": {
+        "sha256": "8991946f3be2374233505e96e8530b249b59d5d8d5fa3fdc2efa25064ef1a97d",
+        "size": 15237852832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.mmproj-Q8_0.gguf",
+      "blobId": "a31f5408b7c278835147031fe09498e0a73532be",
+      "size": 856130976,
+      "lfs": {
+        "sha256": "83722f2a5e654f7cf5ddd27b3eac6bd05dcb28cda600279e588e092778004192",
+        "size": 856130976,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Gliese-CUA-Tool-Call-8B.mmproj-f16.gguf",
+      "blobId": "17e8d72295af6c61d2bd76bbd9fc9929cfdb868e",
+      "size": 1354163616,
+      "lfs": {
+        "sha256": "c45cac0d4b3366e26deccf77d6bc78bbbe4c0e3511f241ec5724ddb2d0f8c705",
+        "size": 1354163616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "55ca1255182b132288ca4996f5661d5189555ab7",
+      "size": 4517
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-16T12:54:42.000Z",
+  "usedStorage": 70357174976
+}

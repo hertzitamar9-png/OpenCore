@@ -1,0 +1,12 @@
+.computer-driver-panel{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--theme-border,#344352);border-radius:12px;background:var(--theme-panel,#101720);margin-bottom:16px;min-width:0}
+.computer-driver-panel p{margin:0;font-size:13px;line-height:1.5}
+.computer-driver-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.computer-driver-heading>div{display:flex;flex-direction:column;gap:5px}
+.computer-driver-heading small{font-size:12px;color:var(--theme-muted,#9babbc)}
+.computer-driver-badge{padding:4px 8px;border:1px solid var(--theme-accent,#6dacf5);border-radius:7px;font-size:12px}
+.computer-driver-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.computer-driver-actions button{min-height:36px}
+.computer-driver-actions a{font-size:12px}
+.computer-driver-progress{display:flex;flex-direction:column;gap:7px}
+.computer-driver-progress progress{width:100%;accent-color:var(--theme-accent,#6dacf5)}
+.computer-driver-panel [role=alert]{overflow-wrap:anywhere;color:var(--theme-danger,#ff9292)}

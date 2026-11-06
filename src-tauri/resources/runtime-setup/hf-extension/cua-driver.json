@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "version": "0.40.2",
+  "sourceRepository": "https://github.com/trycua/cua",
+  "sourceCommit": "dd0f673f2ea6352e767d89800d4636d73cf82a3c",
+  "archiveUrl": "https://github.com/trycua/cua/releases/download/cua-driver-rs-v0.40.2/cua-driver-rs-0.40.2-windows-x86_64-binary.zip",
+  "archiveBytes": 35951555,
+  "archiveSha256": "65c1858ad38e2931e75b8afc9277d2a37edefd9b244168decdbe07ffc1038959",
+  "files": {
+    "cua-driver.exe": {
+      "bytes": 38716240,
+      "sha256": "c39103b04cc24d8a88909445425e53b55c31e867d983718a842c8386adceca98"
+    },
+    "cua-cursor-theme.exe": {
+      "bytes": 2982736,
+      "sha256": "6c6bc4e25e00810b9cea4ab78da4f4ed1a276b62fe66260cb52ae8178bed91ab"
+    },
+    "cua-driver-uia.exe": {
+      "bytes": 25242448,
+      "sha256": "b3391484cabf525c0dd8cc0d376bcf60233454ba7a498a1b71c7a367ff098443"
+    },
+    "cua_driver_sdk.dll": {
+      "bytes": 30607696,
+      "sha256": "27ab12abbe0708f119a652dd97e5033e23729c481ecafa7ce7dfc77af5fa252e"
+    },
+    "cua_driver_node_runtime.node": {
+      "bytes": 637776,
+      "sha256": "d2d88c6a73ddf2d1535c92d3a9acc0e32e35def9a48bce18d9ff02b48bde7cf7"
+    },
+    "cua_driver_abi.h": {
+      "bytes": 7998,
+      "sha256": "c17169f41da321baa5e7e953323c3ad660b00790176ba381e93189fba3506587"
+    }
+  }
+}

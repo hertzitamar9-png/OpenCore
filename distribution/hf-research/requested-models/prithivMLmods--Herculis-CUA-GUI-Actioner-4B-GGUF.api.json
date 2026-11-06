@@ -1,0 +1,193 @@
+{
+  "_id": "693d856879eda6c269997644",
+  "id": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "qwen2_5_vl",
+    "text-generation-inference",
+    "agent",
+    "llama.cpp",
+    "computer-use-agent",
+    "gui-actioning",
+    "ui-localization",
+    "multimodal-agent",
+    "screen-understanding",
+    "task-automation",
+    "desktop-agent",
+    "ui-vqa",
+    "image-text-to-text",
+    "en",
+    "base_model:prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+    "base_model:quantized:prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 431,
+  "likes": 1,
+  "modelId": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+  "author": "prithivMLmods",
+  "sha": "22bac6f39586bbdf3065a961f455bd5d1f60b0e3",
+  "lastModified": "2025-12-15T19:00:50.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "model_type": "qwen2_5_vl"
+  },
+  "cardData": {
+    "license": "other",
+    "language": [
+      "en"
+    ],
+    "base_model": [
+      "prithivMLmods/Herculis-CUA-GUI-Actioner-4B"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "transformers",
+    "tags": [
+      "text-generation-inference",
+      "agent",
+      "llama.cpp",
+      "computer-use-agent",
+      "gui-actioning",
+      "ui-localization",
+      "multimodal-agent",
+      "screen-understanding",
+      "task-automation",
+      "desktop-agent",
+      "ui-vqa"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 3085938688,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 6178315264
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "fdf6578f2acd1cf5d2e438c8f064903102467148",
+      "size": 2143
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.BF16.gguf",
+      "blobId": "faae21f0402bf74b1cd0324411c22a30c43ac849",
+      "size": 6178315264,
+      "lfs": {
+        "sha256": "570e79bae78b336e2c6da41784d701e756dec17c360023d7d029e147077a977a",
+        "size": 6178315264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.F16.gguf",
+      "blobId": "c3b8d6ff77f057a04ff39bf8f5f989a1f95083df",
+      "size": 6178315264,
+      "lfs": {
+        "sha256": "73f2266b8f6df3aa4ce1d10012d2978c924ece0bae56f5eececde3c7bcc1729c",
+        "size": 6178315264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.F32.gguf",
+      "blobId": "39c9469365a8b9f9b62d8aed245a2e2912557b6b",
+      "size": 12349709312,
+      "lfs": {
+        "sha256": "549a71ebfc9bb1d48f09a081d2c616af477e8080dc99c68984354f598dd51368",
+        "size": 12349709312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.Q8_0.gguf",
+      "blobId": "b841407b6b765fc41a2a4859217230f7cba6bbf4",
+      "size": 3285474304,
+      "lfs": {
+        "sha256": "0292453cb071811c29dc808fe1859255580857b76e14cf7cd3cd178d194bee4a",
+        "size": 3285474304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.mmproj-bf16.gguf",
+      "blobId": "23c1e15a9a8dea2f3bf9de3f288dd573d28e04be",
+      "size": 1341438720,
+      "lfs": {
+        "sha256": "e7a9400e51da5a5f021a053dc1f818ad3286fe2153677e6b649ea64b7d7a61a4",
+        "size": 1341438720,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f16.gguf",
+      "blobId": "679b9f95ac004f7d409e36c04cdc375ef531e338",
+      "size": 1338428160,
+      "lfs": {
+        "sha256": "a5461f9c4d1f946f115ff66904884801097ff64c6569e32b292729a06103b69a",
+        "size": 1338428160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.mmproj-f32.gguf",
+      "blobId": "482e9bd78fa978818f74eb655b133447e6316bd6",
+      "size": 2674768640,
+      "lfs": {
+        "sha256": "a98d2b530282c369f373fb4c59810677d444364c5ee9acdd2d3e23d24ed84284",
+        "size": 2674768640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Herculis-CUA-GUI-Actioner-4B.mmproj-q8_0.gguf",
+      "blobId": "397485423918af412fa39aa816212ba13e4d9b28",
+      "size": 847768320,
+      "lfs": {
+        "sha256": "fef996b61bb141741d1d19e53266509760a0bc1702e49a5daf7fab87c77f057b",
+        "size": 847768320,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "f21cc071110de8eaec358acbe0409f62f5ed93a5",
+      "size": 3021
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "671cb881d7d4a3d0951057864358f916633ec244",
+      "size": 35
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-13T15:25:28.000Z",
+  "usedStorage": 34194217984
+}

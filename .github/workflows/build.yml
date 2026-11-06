@@ -226,6 +226,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-computer-models.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-computer-driver.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node connector-research/qa-connectors.cjs --patched
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-footer.cjs

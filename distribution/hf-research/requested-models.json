@@ -2781,6 +2781,80 @@
           "quantization": "BF16 Verbose"
         }
       ]
+    },
+    {
+      "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+      "familyId": "publisher-herculis-cua-gui-actioner-4b",
+      "label": "Herculis CUA GUI Actioner 4B",
+      "category": "computer-use",
+      "description": "Publisher Qwen2.5-VL screenshot and GUI-action model. Includes the original BF16 checkpoint and verified publisher/community GGUF quantizations with their vision projector. Text generation uses the managed runtime; screenshot grounding and autonomous computer operation have not been verified in OpenCore. Publisher-specific license applies.",
+      "supportedContextTokens": 128000,
+      "sources": [
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "prithivMLmods/Herculis-CUA-GUI-Actioner-4B",
+          "quantization": "BF16"
+        }
+      ]
+    },
+    {
+      "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+      "familyId": "publisher-gliese-cua-tool-call-8b",
+      "label": "Gliese CUA Tool Call 8B",
+      "category": "computer-use",
+      "description": "Publisher Qwen2.5-VL model with separately labeled tool-calling and Localization editions. Includes their original BF16 checkpoints, published GGUFs and verified community quants; each GGUF retains its matching vision projector. The managed text runtime verifies generation after installation. Screenshot actions and autonomous execution remain unverified; compressed-tensors FP8 requires a separate adapter.",
+      "supportedContextTokens": 128000,
+      "sources": [
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-GGUF",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "mradermacher/Gliese-CUA-Tool-Call-8B-GGUF",
+          "managedEngine": "flint-cpu-v1"
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-Localization-GGUF",
+          "managedEngine": "flint-cpu-v1",
+          "quantizationLabels": {
+            "BF16": "BF16 Localization",
+            "F16": "F16 Localization",
+            "Q8_0": "Q8_0 Localization"
+          }
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "onlyVariantKeys": [
+            "safetensors:."
+          ],
+          "quantization": "BF16 Tool calling",
+          "supportFiles": [
+            "chat_template.json"
+          ]
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B",
+          "onlyVariantKeys": [
+            "safetensors:Localization-8B"
+          ],
+          "quantization": "BF16 Localization",
+          "supportFiles": [
+            "Localization-8B/chat_template.json"
+          ]
+        },
+        {
+          "repository": "prithivMLmods/Gliese-CUA-Tool-Call-8B-FP8",
+          "quantization": "FP8 W8A8",
+          "runtimeReason": "This publisher edition uses compressed-tensors W8A8 FP8 and needs a compatible quantized Qwen2.5-VL adapter. The managed BF16 Transformers runtime cannot load it. Choose a GGUF or original BF16 package for the integrated text runtime; FP8 generation has not been verified."
+        }
+      ]
     }
   ]
 }
