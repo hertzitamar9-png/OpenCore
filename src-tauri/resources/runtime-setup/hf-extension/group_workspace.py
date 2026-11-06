@@ -64,7 +64,7 @@ def agent_config(value, *, local=False):
         result.update(catalogId=bounded(value.get('catalogId') or model_id,200),prepareIfMissing=boolean(value,'prepareIfMissing',False),
                       reasoningEffort=value.get('reasoningEffort','medium'),approvalMode=value.get('approvalMode','inherit'),
                       subagentsEnabled=boolean(value,'subagentsEnabled',True),maxSubagents=integer(value,'maxSubagents',3,1,8))
-        if result['reasoningEffort'] not in ('off','low','medium','high','ultra') or result['approvalMode'] not in ('inherit','ask-every-time','allow-chat','allow-all'):
+        if result['reasoningEffort'] not in ('off','low','medium','high','extra-high','max','opencore','ultra') or result['approvalMode'] not in ('inherit','ask-every-time','approve-for-me','allow-chat','allow-all'):
             raise ValueError('Choose a supported reasoning effort and tool approval policy')
         skills=value.get('skills',[])
         if not isinstance(skills,list) or any(skill not in ('computer-use','browser-use','chrome-control') for skill in skills):

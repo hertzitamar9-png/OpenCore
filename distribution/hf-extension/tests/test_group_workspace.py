@@ -216,6 +216,14 @@ class Workspace(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.message(requestId='bad-options',requestSettings={'approval':'bypass'})
 
+    def test_conversation_effort_values_and_auto_approval_reach_tasks(self):
+        agent=self.share()
+        for i,effort in enumerate(('off','low','medium','high','extra-high','max','opencore')):
+            self.message(requestId='effort-'+str(i),agentIds=[agent['id']],requestSettings={'effort':effort,'approval':'approve-for-me'})
+            task=self.rpc(self.owner,'claim')['task']
+            self.assertEqual(task['requestSettings'],{'effort':effort,'approval':'approve-for-me'})
+            self.rpc(self.owner,'update',taskId=task['id'],leaseToken=task['leaseToken'],status='completed',text='done')
+
 
 if __name__ == '__main__':
     unittest.main()

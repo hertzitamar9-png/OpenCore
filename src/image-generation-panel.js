@@ -76,9 +76,32 @@ async function readImageModelLibrary(options={}){
 export function imageModelChoices(models,adapters=[]){
   return downloadedImageModels(models).flatMap(model=>[model,...imageAdaptersForModel(model,adapters).map(adapter=>({...model,adapterId:adapter.id,adapterLabel:adapter.familyLabel||adapter.name||adapter.repository}))]);
 }
+// Keep a device/account-scoped snapshot while the picker is closed. The model
+// library dispatches changes after installation, removal and runtime updates.
+let imagePickerSnapshot=null,imagePickerRevision=0;
+if(typeof window!=='undefined'){
+  window.addEventListener('opencore-model-library-invalidated',()=>{imagePickerRevision++;});
+  window.addEventListener('opencore-model-library-changed',event=>{
+    if(imagePickerSnapshot&&event.detail?.models&&imagePickerSnapshot.scope===(globalThis.__opencoreModelLibrary?.getScope?.()||'')&&imagePickerSnapshot.bridge===globalThis.__TAURI_INTERNALS__)imagePickerSnapshot.library=event.detail;
+  });
+}
 export function ChatImageModelOptions({onSelect,disabled=false,loadModels=readImageModelLibrary,selectedId,selectedAdapterId}){
-  const h=React.createElement,[models,setModels]=React.useState(null),[error,setError]=React.useState(''),selected=useChatImageSelection();
-  React.useEffect(()=>{let active=true;Promise.all([Promise.resolve().then(()=>loadModels()),Promise.resolve().then(()=>globalThis.__opencoreImageAdapters?.()||[]).catch(()=>[])]).then(([library,adapters])=>{if(active)setModels(imageModelChoices(library.models,adapters));}).catch(reason=>{if(active)setError(String(reason));});return()=>{active=false;};},[loadModels]);
+  const h=React.createElement, scope=globalThis.__opencoreModelLibrary?.getScope?.()||'', bridge=globalThis.__TAURI_INTERNALS__;
+  const same=()=>imagePickerSnapshot?.scope===scope&&imagePickerSnapshot?.bridge===bridge&&imagePickerSnapshot?.loader===loadModels;
+  const initial=()=>{const library=globalThis.__opencoreModelLibrary?.peek?.()||(same()?imagePickerSnapshot.library:null);return library?.models?imageModelChoices(library.models,same()&&imagePickerSnapshot.revision===imagePickerRevision?imagePickerSnapshot.adapters||[]:[]):null;};
+  const [models,setModels]=React.useState(initial),[error,setError]=React.useState(''),selected=useChatImageSelection();
+  React.useEffect(()=>{
+    let active=true, library=globalThis.__opencoreModelLibrary?.peek?.()||(same()?imagePickerSnapshot.library:null), adapters=same()&&imagePickerSnapshot.revision===imagePickerRevision?imagePickerSnapshot.adapters:null, serial=0, librarySerial=0;
+    const publish=()=>{if(!active||!library?.models)return;imagePickerSnapshot={scope,bridge,loader:loadModels,library,adapters,revision:imagePickerRevision};setModels(imageModelChoices(library.models,adapters||[]));setError('');};
+    const refreshAdapters=async()=>{const ticket=++serial;try{const value=await (globalThis.__opencoreImageAdapters?.()||[]);if(active&&ticket===serial){adapters=value;publish();}}catch{if(active&&ticket===serial){adapters=adapters||[];publish();}}};
+    const refreshLibrary=async()=>{const ticket=++librarySerial;try{const value=await loadModels();if(active&&ticket===librarySerial){library=value;publish();}}catch(reason){if(active&&ticket===librarySerial&&!library)setError(String(reason));}};
+    const changed=event=>{if(event.detail?.models){librarySerial++;library=event.detail;publish();}};
+    const invalidated=()=>{adapters=null;publish();void refreshLibrary();void refreshAdapters();};
+    window.addEventListener('opencore-model-library-changed',changed);window.addEventListener('opencore-model-library-invalidated',invalidated);
+    if(library)publish();else void refreshLibrary();
+    if(adapters===null)void refreshAdapters();
+    return()=>{active=false;serial++;window.removeEventListener('opencore-model-library-changed',changed);window.removeEventListener('opencore-model-library-invalidated',invalidated);};
+  },[loadModels,scope,bridge]);
   const pickedId=selectedId===undefined?selected?.id:selectedId,pickedAdapter=selectedAdapterId===undefined?selected?.adapterId:selectedAdapterId;
   const picked=model=>pickedId===model.id&&(pickedAdapter||'')===(model.adapterId||'');
   return h('div',{className:'chat-image-model-options',role:'group','aria-label':'Downloaded image models'},h('strong',{className:'chat-image-model-heading'},'Image models'),

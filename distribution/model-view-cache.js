@@ -111,6 +111,5 @@ if (typeof window !== 'undefined') {
   globalThis.__opencoreModelLibrary = cache;
   window.addEventListener('opencore-model-library-changed', event => cache.accept(event.detail));
   window.addEventListener('opencore-model-library-invalidated', () => cache.invalidate());
-  window.addEventListener('focus', () => cache.invalidate());
 }
 if (typeof module !== 'undefined' && module.exports) module.exports = {createModelLibraryCache};

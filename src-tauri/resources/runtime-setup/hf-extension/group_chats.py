@@ -220,6 +220,14 @@ class GroupStore(WorkspaceStore):
         with self.lock,self.db:
             member=self._member(group,token)
             if action=='view':return self._view(group,member,body.get('after',0),body.get('channelId','general'))
+            if action=='delete-group':
+                if member['role']!='owner':raise PermissionError('Only the hosting owner can delete this group')
+                if self.db.execute("SELECT 1 FROM tasks WHERE group_id=? AND status IN ('queued','running') LIMIT 1",(group,)).fetchone():
+                    raise ValueError('Cancel active group tasks before deleting this group')
+                for table in ('plans','tasks','messages','agents','invites','group_channels','group_projects','members'):
+                    self.db.execute('DELETE FROM '+table+' WHERE group_id=?',(group,))
+                self.db.execute('DELETE FROM groups WHERE id=?',(group,))
+                return {'deleted':True}
             if action in WORKSPACE_ACTIONS:return self._workspace_action(group,member,action,body)
             if action=='agents':
                 choices=body.get('models',[])
@@ -249,9 +257,9 @@ class GroupStore(WorkspaceStore):
                 settings=body.get('requestSettings') or {}
                 if not isinstance(settings,dict) or set(settings)-{'effort','approval'}:
                     raise ValueError('Invalid group request settings')
-                if settings.get('effort','owner-default') not in ('owner-default','off','low','medium','high','ultra'):
+                if settings.get('effort','owner-default') not in ('owner-default','off','low','medium','high','extra-high','max','opencore','ultra'):
                     raise ValueError('Choose a supported reasoning effort')
-                if settings.get('approval','owner-default') not in ('owner-default','ask-every-time','allow-chat','allow-all'):
+                if settings.get('approval','owner-default') not in ('owner-default','ask-every-time','approve-for-me','allow-chat','allow-all'):
                     raise ValueError('Choose a supported approval setting')
                 agents=self._targets(group,member,channel,content,body)
                 message_id,new=self._message(group,member,body.get('requestId'),content,channel=channel['id'])
@@ -565,14 +573,22 @@ class GroupManager:
             if action in WORKSPACE_ACTIONS:
                 return {**self._rpc(connection,action,body),'sharing':copy.deepcopy(connection['sharing']),'connectionId':connection['id']}
             if action=='revoke':return self._rpc(connection,'revoke',{'memberId':body.get('memberId')})
+            if action=='delete-group':
+                if not connection['hosting']:raise PermissionError('Only the hosting PC can delete this group')
+                result=self._rpc(connection,'delete-group')
+                del self.saved['connections'][connection['id']];self._save()
+                return result
             if action=='leave':
                 if connection['hosting']:raise ValueError('The hosting owner cannot leave its own group')
                 try:self._rpc(connection,'revoke',{'memberId':connection['memberId']})
-                finally:
-                    for task_id,item in list(self.active.items()):
-                        if item['connectionId']==connection['id']:
-                            self._discard_context(item);self.active.pop(task_id,None)
-                    del self.saved['connections'][connection['id']];self._save()
+                except PermissionError as failure:
+                    # The host may already have removed the member or deleted the
+                    # group. Do not mistake a certificate error for revocation.
+                    if str(failure)!='Group membership was removed or expired':raise
+                for task_id,item in list(self.active.items()):
+                    if item['connectionId']==connection['id']:
+                        self._discard_context(item);self.active.pop(task_id,None)
+                del self.saved['connections'][connection['id']];self._save()
                 return {'left':True}
             raise ValueError('Unknown local group operation')
 

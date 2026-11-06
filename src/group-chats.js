@@ -214,13 +214,16 @@ export function createGroupWorker({ invoke, service, listen, storage = globalThi
       maxSubagents = Math.max(1, Math.min(16, Math.floor(Number(latest.maxSubagents) || 3)));
       const config = latest.models.find(model => model.enabled !== false && model.id === task.modelId && (!task.agentKey || model.key === task.agentKey));
       if (!config) throw Error("The shared agent's configuration changed before execution.");
-      if (["ask-every-time", "allow-chat", "allow-all"].includes(config.approvalMode)) approvalMode = config.approvalMode;
+      if (["ask-every-time", "approve-for-me", "allow-chat", "allow-all"].includes(config.approvalMode)) approvalMode = config.approvalMode;
       // Group members may request stricter approval, never bypass this PC's policy.
-      const approvalRank = ["ask-every-time", "allow-chat", "allow-all"];
+      const approvalRank = ["ask-every-time", "approve-for-me", "allow-chat", "allow-all"];
       const requestedApproval = task.requestSettings?.approval;
       if (approvalRank.includes(requestedApproval)) approvalMode = approvalRank[Math.min(approvalRank.indexOf(approvalMode), approvalRank.indexOf(requestedApproval))];
       const requestedEffort = task.requestSettings?.effort;
-      const reasoningEffort = ["off", "low", "medium", "high", "ultra"].includes(requestedEffort) ? requestedEffort : config.reasoningEffort || "medium";
+      const allowedEfforts = ["off", "low", "medium", "high", "extra-high", "max", "opencore"];
+      const requested = requestedEffort === "ultra" ? "max" : requestedEffort;
+      const configured = config.reasoningEffort === "ultra" ? "max" : config.reasoningEffort;
+      const reasoningEffort = allowedEfforts.includes(requested) ? requested : allowedEfforts.includes(configured) ? configured : "medium";
       maxSubagents = Math.min(maxSubagents, Math.max(1, Math.min(8, Math.floor(Number(config.maxSubagents) || 3))));
       const projectId = config.projectBindings?.[task.projectId] || latest.projectBindings?.[task.projectId];
       if (task.projectId && !projectId) throw Error("Map this shared project to a local project in Share my PC before running its agents.");

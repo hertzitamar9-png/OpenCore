@@ -69,7 +69,15 @@ app=editFunction(app,'w8',text=>replaceOnce(text,'!l||Pe.current||["running","st
 app=editFunction(app,'Gp',text=>replaceOnce(text,
   'f&&(an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])',
   'f&&(globalThis.__opencoreUnreadyTextModels=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&!g.selectable&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,precision:g.precision})):[],an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])'));
+// Show the known local list while provider configuration loads; an unavailable
+// provider must not make every subsequent opening rescan otherwise-ready models.
+app=editFunction(app,'Gp',text=>replaceOnce(replaceOnce(text,
+  'p.useState(la?[...an||[],...mi.values()]:null)',
+  'p.useState(la||an?[...an||[],...mi.values()]:null)'),
+  'la=!oi.local&&!oi.provider','la=!oi.local'));
 app=editFunction(app,'Hp',text=>{
+  text=replaceOnce(text,'Could not check API providers. Close and reopen to retry.',
+    'Could not check API providers. Check API settings or restart OpenCore.');
   text=replaceOnce(text,'No downloaded text models or API providers. Download a local model in Models or add a provider in API.',
     'No ready text model or API provider. Download a model, or prepare a downloaded model in Models.');
   return replaceOnce(text,'c.map(({id:d,label:u,description:b})=>',

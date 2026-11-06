@@ -141,6 +141,48 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(self.manager.local('worker/poll',{})['jobs'],[])
         self.assertEqual(self.manager.local('view',{'id':self.group})['agents'],[])
 
+    def test_host_can_delete_its_group_without_touching_another(self):
+        other=self.manager.local('create',{'name':'Keep','displayName':'Owner'})['id']
+        self.assertEqual(self.manager.local('delete-group',{'id':self.group}),{'deleted':True})
+        self.assertEqual([group['id'] for group in self.manager.local('list',{})['groups']],[other])
+        self.assertEqual(self.manager.local('view',{'id':other})['group']['name'],'Keep')
+
+    def test_group_deletion_refuses_active_tasks(self):
+        self.start_job()
+        with self.assertRaisesRegex(ValueError,'Cancel active group tasks'):
+            self.manager.local('delete-group',{'id':self.group})
+        self.assertEqual(self.manager.local('view',{'id':self.group})['group']['name'],'Group')
+
+    def test_member_leave_revokes_host_access_and_offline_failure_preserves_membership(self):
+        owner=self.manager._connection(self.group)
+        invite=self.manager.store.invite(self.group,owner['token'])
+        membership=self.manager.store.join(self.group,invite['code'],'Friend','friend-client','Friend PC')
+        def online(endpoint,pin,route,body,token=None):
+            return self.manager.remote_request(route,'Bearer '+token,body)
+        guest=GroupManager(self.root/'guest',Remote(),transport=online,context_root=self.root/'guest-context')
+        self.addCleanup(guest.close)
+        guest._remember(membership,False,'https://peer.example','0'*64)
+        guest.transport=lambda *args,**kwargs: (_ for _ in ()).throw(OSError('host offline'))
+        with self.assertRaises(OSError):guest.local('leave',{'id':self.group})
+        self.assertEqual(len(guest.local('list',{})['groups']),1)
+        guest.transport=lambda *args,**kwargs: (_ for _ in ()).throw(PermissionError('This PC certificate changed'))
+        with self.assertRaises(PermissionError):guest.local('leave',{'id':self.group})
+        self.assertEqual(len(guest.local('list',{})['groups']),1)
+        guest.transport=online
+        self.assertEqual(guest.local('leave',{'id':self.group}),{'left':True})
+        self.assertEqual(guest.local('list',{})['groups'],[])
+        with self.assertRaises(PermissionError):self.manager.store.request(self.group,membership['token'],'view',{})
+
+    def test_member_can_remove_a_group_after_host_revoked_them(self):
+        owner=self.manager._connection(self.group);invite=self.manager.store.invite(self.group,owner['token'])
+        membership=self.manager.store.join(self.group,invite['code'],'Friend','friend-client','Friend PC')
+        def online(endpoint,pin,route,body,token=None):return self.manager.remote_request(route,'Bearer '+token,body)
+        guest=GroupManager(self.root/'guest',Remote(),transport=online,context_root=self.root/'guest-context');self.addCleanup(guest.close)
+        guest._remember(membership,False,'https://peer.example','0'*64)
+        self.manager.local('revoke',{'id':self.group,'memberId':membership['memberId']})
+        self.assertEqual(guest.local('leave',{'id':self.group}),{'left':True})
+        self.assertEqual(guest.local('list',{})['groups'],[])
+
     def test_project_binding_is_local_and_does_not_change_agent_sharing(self):
         project=self.manager.local('project-save',{'id':self.group,'name':'Website'})['project']
         result=self.manager.local('project-bind',{'id':self.group,'projectId':project['id'],'localProjectId':'local-project'})

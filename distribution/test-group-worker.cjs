@@ -103,6 +103,16 @@ test('group requests may choose effort or stricter approval but never weaken the
   }
 });
 
+test('all Conversations effort levels reach the actual group model request',async()=>{
+  const {createGroupWorker}=await load();
+  for(const effort of ['off','low','medium','high','extra-high','max','opencore']){
+    const f=fixture({sharing:{approvalMode:'allow-all'}});f.task.requestSettings={effort,approval:'approve-for-me'};
+    await createGroupWorker(f.api).poll();
+    const request=f.calls.find(call=>call.command==='send_chat_message').args.request;
+    assert.equal(request.reasoningEffort,effort);assert.equal(request.approvalMode,'approve-for-me');
+  }
+});
+
 test('worker runs an API agent through native provider selection without requiring downloaded weights',async()=>{
   const {createGroupWorker}=await load(),f=fixture({providers:[{id:'vendor',name:'Vendor',model:'model-one'}],
     sharing:{models:[{id:'api:vendor',key:'api-agent',name:'Helper',label:'API',instructions:'Review changes carefully'}]}});

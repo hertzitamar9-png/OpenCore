@@ -65,7 +65,7 @@ jobs:
         run: python distribution/sync-branding.py
       - name: Test manual update controls and release version ordering
         run: |
-          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/media-catalog.test.ts src/image-generation-panel.test.ts src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx src/FileChangesReceipt.test.tsx src/generation-settings-phone.test.tsx src/phone-profile-preference.test.ts src/group-workspace-phone.test.mjs
+          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/media-catalog.test.ts src/image-generation-panel.test.ts src/image-model-picker.test.tsx src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx src/FileChangesReceipt.test.tsx src/generation-settings-phone.test.tsx src/phone-profile-preference.test.ts src/group-workspace-phone.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx vitest run src/model-download-queue.test.mjs src/model-install-progress.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -209,6 +209,8 @@ jobs:
           node qa-chat-core-shell.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-group-workspace.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-model-picker-cache.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-menu-scroll.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
