@@ -90,7 +90,7 @@ fixture+=String.raw`
   await dialog.getByRole('heading',{name:'Friend host',exact:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('.group-tabs [aria-selected=true]')?.textContent==='Chat');
   await page.waitForFunction(()=>![...document.querySelectorAll('.group-header-actions button')].some(button=>button.textContent==='Create invite'));
-  assert.equal(await dialog.getByRole('button',{name:'Leave',exact:true}).isEnabled(),true);
+  assert.equal(await dialog.getByRole('button',{name:'Leave group',exact:true}).isEnabled(),true);
   assert.equal(await page.evaluate(()=>fixture.calls.filter(call=>call.command==='send_chat_message').length),0);
   const bounds=await dialog.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));

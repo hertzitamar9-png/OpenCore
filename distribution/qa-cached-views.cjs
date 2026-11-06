@@ -124,11 +124,11 @@ const server=http.createServer((request,response)=>{
   record('a changed live catalog adds its new card without clearing existing cards');
   await page.evaluate(()=>{
     fixture.models=fixture.models.filter(model=>model.id!=='new-model');
-    window.dispatchEvent(new Event('focus'));
+    window.dispatchEvent(new Event('opencore-model-library-invalidated'));
   });
   await page.getByRole('heading',{name:'New catalog model',exact:true}).waitFor({state:'detached'});
   await page.getByRole('heading',{name:'EdgeRock-4B',exact:true}).waitFor();
-  record('background revalidation also removes obsolete cards while retaining the library');
+  record('an installation change removes obsolete cards while retaining the library');
   assert.equal(await page.locator('vite-error-overlay,nextjs-portal').count(),0);assert.deepEqual(errors,[]);
   record('meaningful pages render without framework overlays or browser runtime and console errors');
   console.log(JSON.stringify({passed:true,browser:'Playwright; Browser plugin not available',url,results,errors},null,2));
