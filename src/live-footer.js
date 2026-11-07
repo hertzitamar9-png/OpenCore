@@ -88,8 +88,10 @@ function LiveModelActivity({conversationId, active, entries=[], fallback}) {
   }).filter(record=>record.text||record.reasoning);
   return h(React.Fragment,null,
     ...visible.map(record=>h('div',{className:'assistant-response live-model-preview',key:record.id},
-      record.reasoning?h('details',{className:'assistant-disclosure',open:true},
-        h('summary',null,active?'Live reasoning':'Streamed reasoning'),h('p',null,record.reasoning)):null,
+      record.reasoning?h('details',{className:'assistant-disclosure kind-thinking reasoning-disclosure',open:true},
+        h('summary',null,h('span',{'aria-hidden':true},'◇'),h('strong',null,active&&record.id===preview?.id?'Reasoning':'Reasoned'),
+          h('span',null,'Streamed model reasoning')),
+        h('div',{className:'reasoning-output-body'},h('p',{className:'reasoning-text',style:{whiteSpace:'pre-wrap'}},record.reasoning))):null,
       record.text?h('p',{className:'assistant-progress'},record.text):null)),
     active?(label?h('div',{className:'generation-state',role:'status'},h('span',{className:'generation-pulse'}),label):fallback):null);
 }

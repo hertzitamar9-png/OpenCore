@@ -7,6 +7,7 @@ code=code.replace('TestModels,TestHubSettings}from','TestModels,TestHubSettings,
 code=code.replace('React.createElement(React.Fragment,null,React.createElement(TestModels,{selectedProfile:\'none\',onSelect:id=>window.selected=id,runtimeActive:false,onNotice:message=>window.notice=message}),React.createElement(TestHubSettings))',
   'React.createElement(TestLearning,{onNotice:message=>window.notice=message,renderAssistant:()=>null})');
 code=code.replace("case 'runtime_setup_probe':","case 'learning_command':return{runs:[],active:false,root:'fixture',rawRecords:0};case 'runtime_setup_probe':");
+code=code.replace("status:'running',stage:'loading-model'", "status:'ready',stage:'ready'");
 code=code.replace('window.fetch=async(url,options={})=>{',String.raw`
 fixture.autoRuns=[];fixture.autoActive=null;fixture.autoModels=[{id:'source',label:'Installed original Q4',modelPath:'C:/models/original.gguf',bytes:100},{id:'unsupported',label:'Hybrid model',modelPath:'C:/models/unsupported.gguf',bytes:100}];
 window.__TAURI_INTERNALS__.transformCallback=()=>1;window.__TAURI_INTERNALS__.unregisterCallback=()=>{};
@@ -52,7 +53,11 @@ code+=String.raw`
   await panel.getByRole('button',{name:'Use verified model in chat',exact:true}).waitFor();
   await panel.getByRole('button',{name:'Use verified model in chat',exact:true}).click();
   await page.waitForFunction(()=>fixture.calls.some(c=>c.command==='start_profile'));
-  check(width+' accepted profile uses standard chat selection',await page.evaluate(()=>fixture.calls.find(c=>c.command==='start_profile').args.request.profile.startsWith('api:provider-fixture:')));
+  check(width+' accepted profile loads its managed runtime before chat selection',await page.evaluate(()=>{
+    const prepared=fixture.calls.findIndex(c=>c.route==='/prepare'&&c.body.id===fixture.autoRuns[0].modelId);
+    const started=fixture.calls.findIndex(c=>c.command==='start_profile'&&c.args.request.profile.startsWith('api:provider-fixture:'));
+    return prepared>=0&&started>prepared;
+  }));
   await page.reload();await panel.waitFor();await panel.getByText('Experiment settings',{exact:true}).click();
   check(width+' tab and budgets survive reopening',await panel.getByLabel('Candidate limit',{exact:true}).inputValue()==='5'&&await panel.getByLabel('Time budget (minutes)',{exact:true}).inputValue()==='12');
   check(width+' layout fits viewport',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));

@@ -6,6 +6,7 @@ fixture=fixture.replace("case 'preview_attachment_image':return png;", "case 'pr
 fixture=fixture.replace('TestComposer,TestFooter,TestChanges}', 'TestComposer,TestFooter,TestChanges,TestArtifact}');
 fixture=fixture.replace('h(TestChanges,{','h(TestArtifact,{id:"saved-answer",name:"Complete answer.md",mime:"text/markdown",size:12000}),h(TestChanges,{');
 fixture=fixture.replace("runtimeRunning:false,runtimeSnapshot:{status:'stopped'", "runtimeRunning:true,runtimeSnapshot:{status:'running'");
+fixture=fixture.replace("case 'model_install_progress':return null;", "case 'get_snapshot':return {activeConversationIds:[],runtime:{status:'running',profile:'echo'}};case 'model_install_progress':return null;");
 fixture=fixture.replace("inferenceBlocked:'Text runtime is not loaded'", 'inferenceBlocked:null');
 fixture+=String.raw`
 (async()=>{

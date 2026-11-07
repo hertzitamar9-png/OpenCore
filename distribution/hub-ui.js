@@ -210,7 +210,10 @@ globalThis.__opencoreChangeModelRuntime=async (profile,action)=>{
       await $hubLoad(entry);
     }
   }else if(action==='load')await Ue('start_profile',{request:{profile:resolved,attachUrl:null}});
-  else if(snapshot?.runtime?.profile===profile)await native('stop_runtime',{});
+  else {
+    if(snapshot?.runtime?.profile!==profile)throw Error('The loaded model changed. Reopen the model picker.');
+    await native('stop_runtime',{});
+  }
   if(resolved!==profile)await native('select_profile',{profile:resolved});
   globalThis.__opencoreRuntimeSample={profile:resolved,runtime:{status:action==='load'?'running':'stopped',profile:resolved}};
   window.dispatchEvent(new Event('opencore-model-runtime'));
