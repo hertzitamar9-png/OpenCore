@@ -127,7 +127,9 @@ it.each([['desktop', false], ['paired PC', true]])('preserves the full %s worksp
   f.mount();
   expect(await screen.findByRole('heading', { name: 'Existing workspace', exact: true })).toBeVisible();
   expect(f.service.mock.calls.map(([action]) => action)).toEqual(['list', 'view']);
-  expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Groups', 'Chat', 'Team builder', 'Agents', 'Plan', 'Projects', 'Share my PC', 'Advanced']);
+  const navigation = screen.getByRole('navigation', { name: 'Workspace sections' });
+  expect(Array.from(navigation.querySelectorAll('button'), button => button.textContent))
+    .toEqual(['People & agents', 'Tasks', 'Projects', 'Settings']);
   fireEvent.change(screen.getByRole('textbox', { name: 'Group message' }), { target: { value: 'Existing group message' } });
   fireEvent.click(screen.getByRole('button', { name: 'Send group message' }));
   await waitFor(() => expect(screen.getByText('Existing group message', { selector: '.gw-message-text' })).toBeVisible());

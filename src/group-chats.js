@@ -226,7 +226,7 @@ export function createGroupWorker({ invoke, service, listen, storage = globalThi
       const reasoningEffort = allowedEfforts.includes(requested) ? requested : allowedEfforts.includes(configured) ? configured : "medium";
       maxSubagents = Math.min(maxSubagents, Math.max(1, Math.min(8, Math.floor(Number(config.maxSubagents) || 3))));
       const projectId = config.projectBindings?.[task.projectId] || latest.projectBindings?.[task.projectId];
-      if (task.projectId && !projectId) throw Error("Map this shared project to a local project in Share my PC before running its agents.");
+      if (task.projectId && !projectId) throw Error("Connect this shared project to a local project in Chat Core's Projects section before running its agents.");
       if (projectId) {
         const current = await invoke("get_snapshot", {});
         if (!current.projects?.some(project => project.id === projectId && project.folderAvailable !== false)) throw Error("The owner's mapped local project is unavailable.");

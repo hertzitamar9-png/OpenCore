@@ -39,12 +39,22 @@ fixture+=String.raw`
   if(width<600)await page.getByRole('button',{name:'Open conversations',exact:true}).click();
   await page.locator('button.group-entry[aria-label="Chat Core"]').click({timeout:12000});
   const dialog=page.getByRole('region',{name:'Chat Core'});await dialog.waitFor();
+  async function navigate(name) {
+    const browse = dialog.getByRole('button', { name: 'Browse groups and channels' });
+    if (await browse.isVisible()) await browse.click();
+    await dialog.getByRole('complementary', { name: 'Group navigation' })
+      .getByRole('button', { name, exact: true }).click();
+  }
+  async function sharingSettings() {
+    await navigate('Settings');
+    await dialog.getByRole('button', { name: 'Agents on this PC', exact: true }).click();
+  }
   await dialog.getByRole('button',{name:'Create group',exact:true}).click();
   await dialog.getByLabel('Group name',{exact:true}).fill('Friends QA');
   await dialog.getByLabel('Your name',{exact:true}).fill('Owner');
   await dialog.getByRole('button',{name:'Create group',exact:true}).last().click();
   await dialog.getByRole('heading',{name:'Friends QA',exact:true}).waitFor();
-  await dialog.getByRole('tab',{name:'Share my PC',exact:true}).click();
+  await sharingSettings();
   assert.equal(await dialog.getByLabel('Share models from this PC',{exact:true}).isChecked(),false);
   assert.equal(await dialog.getByLabel('Group tool approval',{exact:true}).inputValue(),'ask-every-time');
   await dialog.getByLabel('Share models from this PC',{exact:true}).check();
@@ -54,7 +64,7 @@ fixture+=String.raw`
   await dialog.getByRole('button',{name:'Save sharing',exact:true}).click();
   await page.waitForFunction(()=>fixture.sharing.enabled&&fixture.sharing.models.some(model=>model.name==='Helper'));
   assert.equal(await page.evaluate(()=>fixture.sharing.approvalMode),'ask-every-time');
-  await dialog.getByRole('tab',{name:'Chat',exact:true}).click();
+  await navigate('General');
   await dialog.getByLabel('Group message',{exact:true}).fill('@Helper Write a plan');
   await dialog.getByRole('button',{name:'Send group message',exact:true}).click();
   await dialog.getByText('@Helper Write a plan',{exact:true}).first().waitFor();
@@ -72,24 +82,26 @@ fixture+=String.raw`
   await dialog.getByRole('button',{name:'Send group message',exact:true}).click();
   await page.waitForFunction(()=>fixture.groupCalls.filter(call=>call.action==='message').length===2);
   assert.deepEqual(await page.evaluate(()=>fixture.groupCalls.filter(call=>call.action==='message').at(-1).body.agentIds),['agent-echo']);
-  await dialog.getByRole('tab',{name:'Plan',exact:true}).click();
+  await navigate('Tasks');
   await dialog.getByText('Queued',{exact:true}).first().waitFor();
-  await dialog.getByRole('button',{name:'Create invite',exact:true}).click();
+  await dialog.getByRole('button',{name:'Invite people',exact:true}).click();
   assert.equal(await dialog.getByLabel('Group invite',{exact:true}).inputValue(),'opencore-group:v1:fixture');
-  await dialog.getByRole('tab',{name:'Share my PC',exact:true}).click();
+  await sharingSettings();
   await page.evaluate(()=>{fixture.offlineSharing=true});
   await dialog.getByLabel('Share models from this PC',{exact:true}).uncheck();
   await dialog.getByRole('button',{name:'Save sharing',exact:true}).click();
   await dialog.getByText('Settings saved on this PC; group host is unavailable',{exact:true}).waitFor();
   assert.equal(await dialog.getByLabel('Share models from this PC',{exact:true}).isChecked(),false);
   await dialog.getByRole('heading',{name:'Friends QA',exact:true}).waitFor();
-  await dialog.getByRole('tab',{name:'Groups',exact:true}).click();
+  await navigate('All groups');
   await dialog.getByRole('button',{name:'Join with invite',exact:true}).click();
   await dialog.getByLabel('Paste group invite',{exact:true}).fill('opencore-group:v1:friend');
   await dialog.getByRole('button',{name:'Join group',exact:true}).click();
   await dialog.getByRole('heading',{name:'Friend host',exact:true}).waitFor();
-  await page.waitForFunction(()=>document.querySelector('.group-tabs [aria-selected=true]')?.textContent==='Chat');
-  await page.waitForFunction(()=>![...document.querySelectorAll('.group-header-actions button')].some(button=>button.textContent==='Create invite'));
+  await dialog.getByLabel('Group message',{exact:true}).waitFor();
+  assert.equal(await dialog.getByRole('button',{name:'Invite people',exact:true}).count(),0);
+  await navigate('Settings');
+  await dialog.getByRole('button',{name:'Membership',exact:true}).click();
   assert.equal(await dialog.getByRole('button',{name:'Leave group',exact:true}).isEnabled(),true);
   assert.equal(await page.evaluate(()=>fixture.calls.filter(call=>call.command==='send_chat_message').length),0);
   const bounds=await dialog.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);

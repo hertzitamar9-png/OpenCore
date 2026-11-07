@@ -2,6 +2,8 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module');
 const original=fs.readFileSync(path.join(__dirname,'qa-hub.cjs'),'utf8');
 let code=original.slice(0,original.indexOf('(async()=>{await new Promise'));
+code=code.replace('<title>OpenCore Hub QA</title>','<title>OpenCore Hub QA</title><link rel="icon" href="data:,">');
+code=code.replace("if(name==='/assets/'+entryName)", "if(name==='/opencore-logo.png'){res.setHeader('Content-Type','image/png');return res.end(fs.readFileSync(path.join(__dirname,'../public/opencore-logo.png')));}if(name==='/assets/'+entryName)");
 code=code.replace('Up as TestProfiles','Up as TestProfiles,w8 as TestApp');
 code=code.replace('TestModels,TestHubSettings}from','TestModels,TestHubSettings,TestApp}from');
 code=code.replace("TestDOM.createRoot(document.getElementById('root')).render(React.createElement(React.Fragment,null,React.createElement(TestModels,{selectedProfile:'none',onSelect:id=>window.selected=id,runtimeActive:false,onNotice:message=>window.notice=message}),React.createElement(TestHubSettings)));",
@@ -11,8 +13,10 @@ code=code.replace("TestDOM.createRoot(document.getElementById('root')).render(Re
    TestDOM.createRoot(document.getElementById('root')).render(React.createElement(TestApp));`);
 code+=String.raw`
 (async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({headless:true,args:['--mute-audio']});try{
- for(const width of [1440,393]){
-  const page=await browser.newPage({viewport:{width,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ for(const viewport of [{width:1536,height:1024},{width:393,height:852}]){
+  const {width}=viewport;
+  const page=await browser.newPage({viewport}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
   if(width<500)await page.addInitScript(()=>{window.__OPENCORE_MOBILE__=true;});
   await page.goto('http://127.0.0.1:'+server.address().port);
   if(width<500)await page.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Chat Core',exact:true}).click();
@@ -20,9 +24,41 @@ code+=String.raw`
   await page.getByRole('region',{name:'Chat Core',exact:true}).waitFor();
   if(await page.getByRole('dialog',{name:'Chat Core',exact:true}).count())throw Error('Chat Core opened as a dialog');
   if(!(await page.locator('.section-main .group-embedded').count()))throw Error('Chat Core is outside the app workspace');
-  await page.getByRole('button',{name:/Fixture group/}).click();await page.getByLabel('Group message',{exact:true}).waitFor();
+  await page.getByRole('region',{name:'Group directory'}).getByRole('button',{name:/Fixture group/}).click();
+  await page.getByLabel('Group message',{exact:true}).waitFor();
+  await page.mouse.move(width-1,viewport.height-1);
+  if(process.env.OPENCORE_GROUP_WORKSPACE_PROOF)await page.screenshot({path:path.join(process.env.OPENCORE_GROUP_WORKSPACE_PROOF,'chat-core-shell-'+width+'.png')});
+  if(width<500){
+    const browse=page.getByRole('button',{name:'Browse groups and channels'});
+    await browse.click();
+    const navigation=page.getByRole('complementary',{name:'Group navigation'});
+    await navigation.getByRole('button',{name:'Back to Chat Core'}).waitFor();
+    if(await page.getByLabel('Group message',{exact:true}).isVisible())throw Error('Mobile navigation covers an active composer');
+    await navigation.getByRole('button',{name:'General',exact:true}).click();
+    await page.getByLabel('Group message',{exact:true}).waitFor();
+  }
+  const workspace=page.getByRole('region',{name:'Chat Core',exact:true});
+  async function navigate(name) {
+    const browse=workspace.getByRole('button',{name:'Browse groups and channels'});
+    if(await browse.isVisible())await browse.click();
+    await workspace.getByRole('complementary',{name:'Group navigation'})
+      .getByRole('button',{name,exact:true}).click();
+  }
+  await workspace.getByLabel('Group message',{exact:true}).fill('Keep this draft while navigating');
+  await navigate('Settings');
+  await workspace.getByRole('region',{name:'Display preferences'}).waitFor();
+  if(await workspace.locator('.gw-rail-list [aria-label="General"][aria-current="page"]').count())throw Error('Channel stayed selected in Settings');
+  if(await workspace.getByRole('button',{name:'Delete group',exact:true}).count())throw Error('Delete group is exposed outside Membership');
+  await page.mouse.move(width-1,viewport.height-1);
+  if(process.env.OPENCORE_GROUP_WORKSPACE_PROOF)await page.screenshot({path:path.join(process.env.OPENCORE_GROUP_WORKSPACE_PROOF,'chat-core-settings-'+width+'.png')});
+  await navigate('General');
+  if(await workspace.getByLabel('Group message',{exact:true}).inputValue()!=='Keep this draft while navigating')throw Error('Navigating to Settings erased the channel draft');
   await page.getByRole('button',{name:/Effort:/}).click();const slider=page.getByRole('group',{name:'Effort settings'}).getByLabel('Reasoning effort');await slider.focus();await slider.press('End');if(await slider.getAttribute('aria-valuetext')!=='OpenCore')throw Error('Packaged Chat Core effort does not match Conversations');await page.getByRole('button',{name:'Effort: OpenCore'}).click();
-  await page.getByLabel('Current channel',{exact:true}).selectOption('custom');await page.getByRole('button',{name:'Delete current channel'}).click();await page.getByRole('button',{name:'Confirm delete channel'}).click();await page.waitForFunction(()=>fixture.groupCalls.some(call=>call.action==='channel-delete'&&call.body.channelId==='custom'));
+  await page.getByLabel('Current channel',{exact:true}).selectOption('custom');
+  await page.getByRole('button',{name:'Channel actions'}).click();
+  await page.getByRole('button',{name:'Delete current channel'}).click();
+  await page.getByRole('button',{name:'Confirm delete channel'}).click();
+  await page.waitForFunction(()=>fixture.groupCalls.some(call=>call.action==='channel-delete'&&call.body.channelId==='custom'));
   if(width>=1000){await page.getByRole('button',{name:'Workspace',exact:true}).click();await page.locator('#opencore-workspace').waitFor();}
   if(!await page.locator('.statusbar').innerText().then(text=>text.includes('No model selected')))throw Error('Fresh model selection is misleading');
   if(errors.length)throw Error(errors.join('\n'));await page.close();console.log('PASS main app shell with Chat Core at '+width+'px');
