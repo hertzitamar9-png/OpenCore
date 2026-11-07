@@ -214,6 +214,7 @@ class RuntimeSafetyTests(unittest.TestCase):
             if payload and payload.get('conversation_id'):
                 if payload.get('echo_max_total_tokens')!=payload.get('max_tokens'):
                     raise RuntimeError('ECHO smoke test did not bound its total output')
+                self.assertEqual(payload.get('opencore_reasoning_effort'),'off')
             return io.BytesIO(json.dumps({'choices':[{'message':{'content':'Hello'}}],'usage':{'completion_tokens':1}}).encode())
         runtime._request=request
         with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime._bundled_cuda_available',return_value=True),patch('hf_runtime.gpu_offloaded_layers',return_value=8):

@@ -18,6 +18,8 @@ class MultimodalTextRuntimeTests(unittest.TestCase):
     def test_synthetic_image_has_real_pixels_and_stays_local(self):
         kind,probe=visual_text_probe(self.entry('image'))
         self.assertEqual(kind,'image')
+        self.assertEqual(probe['opencore_reasoning_effort'],'off')
+        self.assertEqual(probe['reasoning_budget_tokens'],0)
         self.assertTrue(has_multimodal_parts(probe))
         parsed=multimodal_messages(probe)
         picture=parsed[0]['content'][1]['image']

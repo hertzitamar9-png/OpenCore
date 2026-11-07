@@ -134,7 +134,8 @@ def visual_text_probe(entry):
         media={'type':'image_url','image_url':{'url':data}}
         kind='image'
     return kind,{'messages':[{'role':'user','content':[{'type':'text','text':'Describe what you see in one sentence.'},media]}],
-                 'max_tokens':32,'temperature':0,'stream':False,'chat_template_kwargs':{'enable_thinking':False}}
+                 'max_tokens':64,'temperature':0,'stream':False,'opencore_reasoning_effort':'off',
+                 'reasoning_budget_tokens':0,'chat_template_kwargs':{'enable_thinking':False}}
 
 
 def _chat_template_path(entry, folder):
@@ -614,7 +615,7 @@ class RuntimeManager:
                 'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
                 'max_tokens': 512, 'echo_max_total_tokens': 512, 'temperature': 0, 'stream': False,
                 'conversation_id': 'installation-check-' + uuid.uuid4().hex,
-                'chat_template_kwargs': {'enable_thinking': False}}, key, timeout=180) as response:
+                'opencore_reasoning_effort': 'off', 'chat_template_kwargs': {'enable_thinking': False}}, key, timeout=180) as response:
             echo_result = json.load(response)
         echo_choices = echo_result.get('choices', [])
         echo_message = echo_choices[0].get('message', {}) if echo_choices else {}
