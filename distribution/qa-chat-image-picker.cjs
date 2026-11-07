@@ -1,7 +1,7 @@
 // Exercise the actual packaged conversation component and its normal Send button.
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict'),acorn=require('acorn');
 const{chromium}=require(process.env.OPENCORE_PLAYWRIGHT||'playwright');
-const dir=path.join(__dirname,'candidate-dist'),entryName='index-CD0EH-dA.js',appName='App-kNA9sRUP.js';
+const dir=path.join(process.env.OPENCORE_UI_OUTPUT||__dirname,'candidate-dist'),entryName='index-CD0EH-dA.js',appName='App-kNA9sRUP.js';
 let entry=fs.readFileSync(path.join(dir,'assets',entryName),'utf8');
 const mount=acorn.parse(entry,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='ExpressionStatement'&&entry.slice(n.start,n.end).includes('createRoot('));entry=entry.slice(0,mount.start)+entry.slice(mount.end)+'\nexport{ev as TestDOM};';
 let app=fs.readFileSync(path.join(dir,'assets',appName),'utf8');

@@ -12,13 +12,33 @@ code=code.replace("TestDOM.createRoot(document.getElementById('root')).render(Re
    window.__opencoreGroupService=async(action,body={})=>{fixture.groupCalls.push({action,body});if(action==='list')return{groups:[{id:'fixture-group',name:'Fixture group',hosting:true}],localName:'Tester'};if(action==='channel-delete')fixture.groupChannels=fixture.groupChannels.filter(c=>c.id!==body.channelId);const channel=fixture.groupChannels.find(c=>c.id===(action==='channel-delete'?'general':body.channelId))||fixture.groupChannels[0];return{group:{id:'fixture-group',name:'Fixture group'},self:{id:'me',role:'owner'},channel,channels:fixture.groupChannels,messages:[],agents:[],members:[],projects:[],tasks:[],plan:[],sharing:{models:[],enabled:false}}};
    TestDOM.createRoot(document.getElementById('root')).render(React.createElement(TestApp));`);
 code+=String.raw`
+async function composerAppearance(textbox) {
+  return textbox.locator('xpath=ancestor::div[contains(@class,"chat-composer ")][1]').evaluate(composer => {
+    const controls = ['.composer-plus-button','.speech-button','textarea','.generation-settings-trigger',
+      '.approval-trigger','.effort-trigger','.send-button'];
+    return controls.map(selector => {
+      const control = composer.querySelector(selector);
+      if (!control) throw Error('Missing shared composer control ' + selector);
+      const style = getComputedStyle(control), bounds = control.getBoundingClientRect();
+      return [control.tagName, style.borderRadius, style.fontFamily, style.fontSize, style.height,
+        Math.round(bounds.top - composer.getBoundingClientRect().top)];
+    });
+  });
+}
 (async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({headless:true,args:['--mute-audio']});try{
  for(const viewport of [{width:1536,height:1024},{width:393,height:852}]){
   const {width}=viewport;
   const page=await browser.newPage({viewport}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
   if(width<500)await page.addInitScript(()=>{window.__OPENCORE_MOBILE__=true;});
+  await page.addInitScript(()=>localStorage.setItem('opencore.prompt-assistant.v1','{"enabled":true}'));
   await page.goto('http://127.0.0.1:'+server.address().port);
+  await page.getByRole('button',{name:'Open conversations',exact:true}).first().click();
+  const normal=page.getByRole('textbox',{name:'Message OpenCore',exact:true});
+  await normal.waitFor();
+  const normalAppearance=await composerAppearance(normal);
+  if(process.env.OPENCORE_GROUP_WORKSPACE_PROOF)await page.screenshot({path:path.join(process.env.OPENCORE_GROUP_WORKSPACE_PROOF,'conversations-'+width+'.png')});
+  await page.getByRole('button',{name:'Overview',exact:true}).first().click();
   if(width<500)await page.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Chat Core',exact:true}).click();
   else await page.getByRole('button',{name:'Open Chat Core',exact:true}).click();
   await page.getByRole('region',{name:'Chat Core',exact:true}).waitFor();
@@ -26,6 +46,13 @@ code+=String.raw`
   if(!(await page.locator('.section-main .group-embedded').count()))throw Error('Chat Core is outside the app workspace');
   await page.getByRole('region',{name:'Group directory'}).getByRole('button',{name:/Fixture group/}).click();
   await page.getByLabel('Group message',{exact:true}).waitFor();
+  const groupAppearance=await composerAppearance(page.getByRole('textbox',{name:'Group message',exact:true}));
+  if(JSON.stringify(groupAppearance)!==JSON.stringify(normalAppearance))throw Error('Composer appearance differs at '+width+': '+JSON.stringify({normalAppearance,groupAppearance}));
+  if(!await page.locator('.group-embedded .timeline-heading .conversation-actions').isVisible())throw Error('The group channel is missing the Conversations header');
+  await page.getByRole('button',{name:'Generation settings',exact:true}).click();
+  const settings=page.getByRole('dialog',{name:'Generation settings',exact:true});
+  if(await settings.getByLabel('Message routing',{exact:true}).inputValue()!=='auto')throw Error('Channel routing is missing from the shared settings dialog');
+  await settings.getByRole('button',{name:'Done',exact:true}).click();
   await page.mouse.move(width-1,viewport.height-1);
   if(process.env.OPENCORE_GROUP_WORKSPACE_PROOF)await page.screenshot({path:path.join(process.env.OPENCORE_GROUP_WORKSPACE_PROOF,'chat-core-shell-'+width+'.png')});
   if(width<500){
@@ -53,7 +80,18 @@ code+=String.raw`
   if(process.env.OPENCORE_GROUP_WORKSPACE_PROOF)await page.screenshot({path:path.join(process.env.OPENCORE_GROUP_WORKSPACE_PROOF,'chat-core-settings-'+width+'.png')});
   await navigate('General');
   if(await workspace.getByLabel('Group message',{exact:true}).inputValue()!=='Keep this draft while navigating')throw Error('Navigating to Settings erased the channel draft');
-  await page.getByRole('button',{name:/Effort:/}).click();const slider=page.getByRole('group',{name:'Effort settings'}).getByLabel('Reasoning effort');await slider.focus();await slider.press('End');if(await slider.getAttribute('aria-valuetext')!=='OpenCore')throw Error('Packaged Chat Core effort does not match Conversations');await page.getByRole('button',{name:'Effort: OpenCore'}).click();
+  await workspace.getByRole('button',{name:/Effort:/}).click();
+  const effort=page.getByRole('region',{name:'Effort settings'});
+  const effortValues=await effort.locator('.effort-labels button').allTextContents();
+  if(effortValues.join('|')!=='Off|Low|Medium|High|Extra high|Max|OpenCore')throw Error('Chat Core is missing Conversations effort levels');
+  await effort.getByRole('button',{name:'OpenCore',exact:true}).click();
+  await workspace.getByRole('button',{name:'Effort: OpenCore'}).waitFor();
+  await workspace.getByRole('button',{name:'Approval: Ask every time'}).click();
+  await page.getByRole('region',{name:'Approval settings'}).getByRole('button',{name:'Allow everything in this chat',exact:true}).click();
+  await page.getByRole('dialog',{name:'Allow everything in this chat?'}).getByRole('button',{name:'Approve',exact:true}).click();
+  await workspace.getByRole('button',{name:'Send message',exact:true}).click();
+  await page.waitForFunction(()=>fixture.groupCalls.some(call=>call.action==='message'&&call.body.requestSettings.effort==='opencore'&&call.body.requestSettings.approval==='allow-chat'));
+  if(await page.evaluate(()=>localStorage.getItem('opencore.reasoning-effort.v1')||localStorage.getItem('opencore.approval-global.v1')))throw Error('Group options changed the personal defaults');
   await page.getByLabel('Current channel',{exact:true}).selectOption('custom');
   await page.getByRole('button',{name:'Channel actions'}).click();
   await page.getByRole('button',{name:'Delete current channel'}).click();

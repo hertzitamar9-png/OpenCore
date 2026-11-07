@@ -3,7 +3,6 @@
 const fs=require('node:fs'),path=require('node:path'),Module=require('node:module');
 const original=fs.readFileSync(path.join(__dirname,'qa-chat-image-picker.cjs'),'utf8');
 let fixture=original.slice(0,original.indexOf('\n(async()=>'));
-fixture=fixture.replace("const dir=path.join(__dirname,'candidate-dist')","const dir=path.join(process.env.OPENCORE_QA_UI||__dirname,'candidate-dist')");
 fixture=fixture.replace('const html=`','app+="\\nexport{l8 as TestSidebar};";\nconst html=`');
 fixture=fixture.replace('import{TestComposer,TestFooter,TestChanges}','import{TestComposer,TestFooter,TestChanges,TestSidebar}');
 fixture=fixture.replace(/function Fixture\(\)\{[\s\S]*?\}TestDOM\.createRoot/,
@@ -66,20 +65,22 @@ fixture+=String.raw`
   assert.equal(await page.evaluate(()=>fixture.sharing.approvalMode),'ask-every-time');
   await navigate('General');
   await dialog.getByLabel('Group message',{exact:true}).fill('@Helper Write a plan');
-  await dialog.getByRole('button',{name:'Send group message',exact:true}).click();
+  await dialog.getByRole('button',{name:'Send message',exact:true}).click();
   await dialog.getByText('@Helper Write a plan',{exact:true}).first().waitFor();
   const sent=await page.evaluate(()=>fixture.groupCalls.find(call=>call.action==='message').body);
   assert.deepEqual(sent.agentIds,['agent-echo']);assert.ok(sent.requestId);
   await page.evaluate(()=>{fixture.extraAgents=[{id:'friend-echo',name:'Helper',modelId:'friend-model',modelLabel:'Friend model',memberId:'friend',pcName:'Friend PC',online:true}]});
   await dialog.getByLabel('Ask Helper on Friend PC',{exact:true}).waitFor({state:'attached'});
   await dialog.getByLabel('Group message',{exact:true}).fill('@Helper Which PC?');
-  await dialog.getByRole('button',{name:'Send group message',exact:true}).click();
+  await dialog.getByRole('button',{name:'Send message',exact:true}).click();
   assert.equal(await page.evaluate(()=>fixture.groupCalls.filter(call=>call.action==='message').length),1);
   await dialog.getByText('Choose which PC should run @Helper',{exact:true}).waitFor();
   assert.equal(await dialog.getByLabel('Group message',{exact:true}).inputValue(),'@Helper Which PC?');
-  await dialog.locator('.group-targets > summary').click();
-  await dialog.getByLabel('Ask Helper on This PC',{exact:true}).check();
-  await dialog.getByRole('button',{name:'Send group message',exact:true}).click();
+  await dialog.getByRole('button',{name:'Generation settings',exact:true}).click();
+  const routing=dialog.getByRole('dialog',{name:'Generation settings',exact:true});
+  await routing.getByLabel('Ask Helper on This PC',{exact:true}).check();
+  await routing.getByRole('button',{name:'Done',exact:true}).click();
+  await dialog.getByRole('button',{name:'Send message',exact:true}).click();
   await page.waitForFunction(()=>fixture.groupCalls.filter(call=>call.action==='message').length===2);
   assert.deepEqual(await page.evaluate(()=>fixture.groupCalls.filter(call=>call.action==='message').at(-1).body.agentIds),['agent-echo']);
   await navigate('Tasks');

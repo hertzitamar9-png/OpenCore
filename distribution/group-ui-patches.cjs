@@ -21,7 +21,7 @@ module.exports=function applyGroupUi(app,{editFunction,replaceOnce}) {
     if(frame<0||children<0)throw Error('Missing global group-host mount');
     return text.slice(0,children)+'children:[i.jsx(globalThis.__opencoreGroupHost,{}),'+text.slice(children+'children:['.length);
   });
-  return app+'\nglobalThis.__opencoreGroupService=(action,body)=>$hubRequest("/groups/"+action,body);import{installGroupFeatures as $installGroupFeatures}from"./model-catalog-B8SfuDgQ.js";$installGroupFeatures(p,It,{invoke:(command,args)=>Ue(command,args),speechButton:dO,catalog:()=>$hubState.catalog,refresh:$hubRefresh,register:$hubRegister,get modes(){return globalThis.__opencoreModelModes},installState:{refresh:fresh=>$installCoordinator.refresh(fresh),getSnapshot:()=>$installCoordinator.getSnapshot()}});\n';
+  return app+'\nglobalThis.__opencoreGroupService=(action,body)=>$hubRequest("/groups/"+action,body);import{installGroupFeatures as $installGroupFeatures}from"./model-catalog-B8SfuDgQ.js";$installGroupFeatures(p,It,{invoke:(command,args)=>Ue(command,args),Conversation:Fu,catalog:()=>$hubState.catalog,refresh:$hubRefresh,register:$hubRegister,get modes(){return globalThis.__opencoreModelModes},installState:{refresh:fresh=>$installCoordinator.refresh(fresh),getSnapshot:()=>$installCoordinator.getSnapshot()}});\n';
 };
 module.exports.featureInstallerSource=function(){
   const source=fs.readFileSync(path.join(__dirname,'../src/group-chats.js'),'utf8').replace(/^import .*(group-(workspace-ui|model-preparation)|navigation-items).*\r?\n/gm,'').replace(/export function /g,'function ');

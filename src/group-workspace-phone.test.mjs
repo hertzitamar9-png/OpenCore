@@ -35,8 +35,15 @@ function fixture(capability = Promise.resolve({ available: false, reason: phoneR
   function Dialog({ label, children }) {
     return React.createElement('section', { role: 'dialog', 'aria-label': label }, children);
   }
+  // The packaged browser tests render the real Conversations component.
+  function Conversation({ title, groupChat }) {
+    const { actions, thread, draft, onDraftChange, onSend } = groupChat;
+    return React.createElement(React.Fragment, null, React.createElement('h2',null,title), actions, thread,
+      React.createElement('textarea', { 'aria-label': 'Group message', value: draft, onChange: event => onDraftChange(event.target.value) }),
+      React.createElement('button', { onClick: onSend }, 'Send message'));
+  }
   const Panel = installGroupWorkspaceUI(React, {
-    service, invoke, Dialog, Board: () => null, groupReadyModels, resolveGroupTargets,
+    service, invoke, Dialog, Board: () => null, groupReadyModels, resolveGroupTargets, Conversation,
   });
   const close = vi.fn();
   return { service, invoke, close, mount: () => render(React.createElement(Panel, { close })) };
@@ -131,7 +138,7 @@ it.each([['desktop', false], ['paired PC', true]])('preserves the full %s worksp
   expect(Array.from(navigation.querySelectorAll('button'), button => button.textContent))
     .toEqual(['People & agents', 'Tasks', 'Projects', 'Settings']);
   fireEvent.change(screen.getByRole('textbox', { name: 'Group message' }), { target: { value: 'Existing group message' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Send group message' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
   await waitFor(() => expect(screen.getByText('Existing group message', { selector: '.gw-message-text' })).toBeVisible());
   expect(f.service.mock.calls.find(([action]) => action === 'message')[1]).toMatchObject({ id: 'group-one', channelId: 'general', text: 'Existing group message' });
   expect(f.service.mock.calls.some(([action]) => action === 'capabilities')).toBe(false);

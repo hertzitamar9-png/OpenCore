@@ -372,7 +372,7 @@ export function installGroupFeatures(React, listen, preparation) {
   function EmbeddedWorkspace({ label, className = "", children }) {
     return h("div", { className: "group-dialog group-embedded " + className, role: "region", "aria-label": label }, children);
   }
-  const GroupPanel = installGroupWorkspaceUI(React, {service,invoke,worker,Dialog,EmbeddedWorkspace,Board,groupReadyModels,resolveGroupTargets,SpeechButton: preparation?.speechButton});
+  const GroupPanel = installGroupWorkspaceUI(React, {service,invoke,worker,Dialog,EmbeddedWorkspace,Board,groupReadyModels,resolveGroupTargets,Conversation: preparation?.Conversation});
   function Approval({ request }) {
     const [busy, setBusy] = React.useState(false), [error, setError] = React.useState("");
     const answer = async approved => {
