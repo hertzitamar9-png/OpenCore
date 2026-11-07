@@ -113,8 +113,9 @@ def run(nsis):
                     assert len(ranges)==2,'An unchanged file was downloaded again'
                     summary=json.loads((target/'logs/incremental-update-summary.json').read_text())
                     assert summary['mode']=='release-difference',summary
-                    assert summary['filesInspected']==(2 if attempt==0 else 0),summary
-                    assert summary['unchangedFilesSkipped']==(1 if attempt==0 else 3),summary
+                    assert summary['filesInspected']==2,summary
+                    assert summary['unchangedFilesSkipped']==1,summary
+                    assert summary['downloadedFiles']==(2 if attempt==0 else 0),summary
                     assert not list(target.glob('.update-*')),'Successful update left staging directories'
                 assert observed['downloadText'] and observed['movingProgress'],observed
             finally:kernel.CloseHandle(locked);user.CloseDesktop(desktop)
