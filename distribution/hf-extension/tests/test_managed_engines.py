@@ -159,7 +159,7 @@ class PublisherCatalogTests(unittest.TestCase):
             self.assertEqual(hydrated['status'], 'installed')
             self.assertEqual(hydrated['installReceipt']['nativeProfileId'], 'dory-q8-native')
             self.assertEqual(hydrated['runtimeChoices'], ['auto', 'cuda'])
-            self.assertEqual(checked_model_files(hydrated, root), [target])
+            self.assertEqual(checked_model_files(hydrated, root), [target.resolve(strict=True)])
             with patch.object(engines,'dory_cuda_devices',return_value=['CUDA1']):
                 plan = runtime_plan(hydrated, root, resources)
             self.assertEqual(plan['runtimeBackend'], 'cuda')
