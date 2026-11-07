@@ -1379,12 +1379,21 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 raise ValueError('A valid conversation is required')
             entry=next((e for e in state.entries.values() if e.get('profileId')==body.get('profile') and body.get('profile')),None)
             source=getattr(state.runtime,'telemetry_source',lambda *args:None)(entry['id'],conversation) if entry and conversation else None
-            if source:
-                value=state.live_telemetry.read(source[0],conversation,source[1])
-                value['runtime']={'status':'running','profile':body['profile'],'contextSize':value.get('context',{}).get('modelContextTokens') or entry['contextTokens']}
+            if entry:
+                proof = getattr(state.runtime, 'loaded', lambda _: None)(entry['id'])
+                value = state.live_telemetry.read(source[0], conversation, source[1]) if source else state.live_telemetry.read({}, conversation)
+                stage = getattr(state.runtime, 'loading_stage', lambda _: None)(entry['id'])
+                if not stage and state.progress and state.progress.get('id') == entry['id'] and state.progress.get('status') in ACTIVE:
+                    stage = state.progress.get('detail') or 'Loading model…'
+                value['runtime'] = {
+                    'status': 'running' if proof else 'starting' if stage else 'stopped',
+                    'profile': body['profile'],
+                    'contextSize': (proof or {}).get('contextTokens') or entry['contextTokens'],
+                    **({'loadStage': stage} if stage else {}),
+                }
                 return self._send(200,value)
             if runtime.get('status') == 'running': runtime = state._memory_runtime(runtime)
-            self._send(200, state.live_telemetry.read(runtime, conversation))
+            self._send(200, state.live_telemetry.read(runtime, conversation, preview_key=self.server.secret))
         elif route == '/connectors/disconnect':
             self._send(200, state.connectors.disconnect(body.get('id')))
         elif route == '/connectors/reconnect':
@@ -1408,6 +1417,12 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(202, state.start(body.get("id"), "download"))
         elif route == "/prepare":
             self._send(202, state.start(body.get("id"), "prepare"))
+        elif route == '/runtime/unload':
+            entry = state.entry(body.get('id'), installed=True)
+            unload = getattr(state.runtime, 'unload', None)
+            if unload is None:
+                raise ValueError('This model has no managed runtime to unload.')
+            self._send(200, unload(entry['id']))
         elif route == '/specialist/computer':
             with state.lock:
                 if state.progress and state.progress.get('status') in ACTIVE:

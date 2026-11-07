@@ -6,6 +6,7 @@ let code=source.slice(0,source.indexOf('(async()=>{'));
 code=code.replace('<link rel="stylesheet" href="/phone/mobile.css">','<link rel="stylesheet" href="/phone/mobile.css" media="(max-width:767px)">');
 code=code.replace('res.end(fs.readFileSync(file));',"res.end(name==='/phone/mobile-shim.js'?fs.readFileSync(file,'utf8').replace('globalThis.__OPENCORE_MOBILE__=true','globalThis.__OPENCORE_MOBILE__=innerWidth<768'):fs.readFileSync(file));");
 code=code.replace("else if(command==='get_conversation')value=fixture.timeline;", "else if(command==='get_conversation')value=fixture.timeline;else if(command==='echo_working_set')value=fixture.context;");
+code=code.replace("else if(command==='list_conversations')", "else if(command==='api_provider_list')value=[];else if(command==='stop_runtime')fixture.snapshot.runtime.status='stopped';else if(command==='start_profile')fixture.snapshot.runtime.status='running';else if(command==='list_conversations')");
 code=code.replace('channel.port1.start();window.postMessage',"fixture.emit=(event,payload)=>channel.port1.postMessage(JSON.stringify({type:'event',handler:fixture.listeners[event],payload:{event,payload}}));channel.port1.start();window.postMessage");
 code=code.replace("const body=request.path==='/api/status'?","const body=request.path==='/api/telemetry'?{telemetry:fixture.liveHardware||{},context:fixture.context}:request.path==='/api/status'?");
 code+=String.raw`
@@ -45,6 +46,13 @@ code+=String.raw`
       assert.ok((await footer.innerText()).includes('6.0GB VRAM'));
       assert.ok((await footer.innerText()).includes('40.0 tokens/s'));
       await page.getByText('40.0 output tokens/s · 121 output tokens',{exact:true}).waitFor({state:'attached'});
+      await page.evaluate(()=>{fixture.context.preview={id:'buffered-one',phase:'reading-prompt'};});
+      await page.getByText('Reading prompt and context…',{exact:true}).waitFor();
+      await page.evaluate(()=>{fixture.context.preview={id:'buffered-one',phase:'working',text:'I found the main game file.'};});
+      await page.getByText('I found the main game file.',{exact:true}).waitFor();
+      await page.evaluate(()=>{fixture.context.preview={id:'buffered-two',phase:'working',reasoning:'Check the next operation.'};});
+      await page.getByText('Check the next operation.',{exact:true}).waitFor();
+      assert.ok(await page.getByText('I found the main game file.',{exact:true}).isVisible(),'text disappeared when reasoning began');
       if(width>767){
         const nav=page.locator('.conversation-app-rail .nav-item.active').first(),row=page.locator('.conversation-row-shell.selected').first();
         const fill=element=>getComputedStyle(element).backgroundColor;
@@ -82,6 +90,18 @@ code+=String.raw`
       assert.ok(await page.getByText(/Used\s*1\s*tool/).first().isVisible());
       const cards=await page.getByText('I will inspect the file that was found.',{exact:true}).evaluateAll(items=>new Set(items.map(item=>item.closest('details'))).size);
       assert.equal(cards,1,'The saved reasoning and its preview must share one disclosure');
+      const unload=page.getByRole('button',{name:'Unload model',exact:true}).and(page.locator('.send-button'));
+      await unload.waitFor({timeout:7000});
+      await unload.click();
+      await page.waitForFunction(()=>fixture.calls.some(item=>item.command==='stop_runtime'));
+      if(width>767){
+        await page.getByRole('button',{name:/Choose model profile, currently/}).click();
+        await page.getByRole('button',{name:'Load model',exact:true}).click();
+        await page.waitForFunction(()=>fixture.calls.some(item=>item.command==='start_profile'));
+        await page.keyboard.press('Escape');
+        await unload.waitFor();
+        await unload.click();
+      }
       await page.evaluate(()=>{fixture.snapshot.runtime.status='stopped';fixture.context={available:true,active:false,modelSessionActive:false,contextMode:'persistent_echo',windowTokens:16384,modelActiveTokens:16384,modelUsageKind:'live'};});
       // After unloading, retain the last measured 16K window as historical
       // usage, rather than claiming a live 32K model allocation.

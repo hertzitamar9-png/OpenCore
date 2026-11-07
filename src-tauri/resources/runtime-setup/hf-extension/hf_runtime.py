@@ -253,6 +253,10 @@ def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None)
             command += ['--gpu-layers', 'auto', '--fit', 'on', '--fit-ctx', '8192', '--log-verbosity', '4']
             if publisher_engine == 'dory-cuda13-v1':
                 from managed_engines import dory_cuda_devices
+                # Dory's CUDA worker can prefill a full prompt in larger
+                # batches than the conservative shared CPU launch.
+                command[command.index('--batch-size') + 1] = '512'
+                command[command.index('--ubatch-size') + 1] = '128'
                 command += ['--device', ','.join(dory_cuda_devices())]
         template = _chat_template_path(entry, folder)
         if template is not None:
@@ -317,6 +321,32 @@ def gpu_offloaded_layers(log_path):
 
 class RuntimeManager:
     automatic_preparation=True
+
+    def loaded(self, model_id):
+        with self._state_lock:
+            active = self._active
+            if not active or active['id'] != model_id or any(child.poll() is not None for child in self._children):
+                return None
+            return active['proof']
+
+    def loading_stage(self, model_id):
+        with self._state_lock:
+            return self._loading[1] if self._loading and self._loading[0] == model_id else None
+
+    def _report_progress(self, **progress):
+        with self._state_lock:
+            if self._loading and progress.get('detail'):
+                self._loading = (self._loading[0], progress['detail'])
+        self.on_progress(**progress)
+
+    def unload(self, model_id):
+        with self._state_lock:
+            if self._generation.locked() or self._preparation.locked() or self._context:
+                raise RuntimeError('Finish or stop the active model request before unloading.')
+            if self._active and self._active['id'] == model_id:
+                self.stop()
+            return {'stopped': True}
+
     def telemetry_source(self, model_id, conversation):
         with self._state_lock:
             active=self._active
@@ -358,6 +388,7 @@ class RuntimeManager:
         self._children, self._logs = [], []
         self._context = None
         self._active = None
+        self._loading = None
         self._memory_watchers = []
         self._state_lock = threading.RLock()
         self._generation = threading.Lock()
@@ -469,12 +500,16 @@ class RuntimeManager:
     def prepare(self, entry):
         if not self._preparation.acquire(blocking=False):
             raise RuntimeError('Another model runtime is being prepared')
+        with self._state_lock:
+            self._loading = (entry['id'], 'Loading model…')
         try:
             return self._prepare(entry)
         except Exception:
             self.stop()
             raise
         finally:
+            with self._state_lock:
+                self._loading = None
             self._preparation.release()
 
     def change_mode(self, entry, mode):
@@ -504,7 +539,7 @@ class RuntimeManager:
         plan = runtime_plan(entry, self.root, self.resources, backend_override=backend_override)
         plan.setdefault('operatingMode',entry.get('operatingMode','echo'))
         plan.setdefault('requestedContextTokens',NATIVE_TARGET if plan['operatingMode']=='native' else ECHO_TARGET)
-        self.on_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
+        self._report_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
         files = checked_model_files(entry, self.root, self._cancel)
         available = _available_memory()
         weight_bytes = sum(path.stat().st_size for path in files)
@@ -520,11 +555,11 @@ class RuntimeManager:
                 raise error
             preference = entry.get('runtimePreference', 'auto')
             if plan.get('bundledCuda') and cuda_driver_version() >= 12000:
-                self.on_progress(stage='loading-model', detail='Trying the managed CUDA runtime for this checkpoint.')
+                self._report_progress(stage='loading-model', detail='Trying the managed CUDA runtime for this checkpoint.')
                 return self._prepare(entry, backend_override='managed-cuda')
             if (preference == 'auto' and plan.get('runtimeBackend') == 'cuda'
                     and plan.get('engineFamily') in VULKAN_VARIANTS and vulkan_gpu_available()):
-                self.on_progress(stage='loading-model', detail='CUDA could not start the model. Trying Vulkan GPU.')
+                self._report_progress(stage='loading-model', detail='CUDA could not start the model. Trying Vulkan GPU.')
                 return self._prepare(entry, backend_override='vulkan')
             raise error
         if plan.get('publisherEngine'):
@@ -533,11 +568,11 @@ class RuntimeManager:
                 if self._cancel.is_set():
                     raise RuntimeError('Runtime preparation paused; downloaded files were retained.')
             try:
-                ensure(self.root, plan['publisherEngine'], self.on_progress, check_cancel)
+                ensure(self.root, plan['publisherEngine'], self._report_progress, check_cancel)
                 if plan.get('runtimeBackend') == 'cuda':
                     version = '13' if '-cuda13-' in plan['publisherEngine'] else '12'
                     library_id = 'cuda' + version + '-libs-v1'
-                    ensure(self.root, library_id, self.on_progress, check_cancel)
+                    ensure(self.root, library_id, self._report_progress, check_cancel)
                     cuda_library_dir = folder(self.root, library_id)
             except (OSError, RuntimeError, ValueError) as error:
                 return try_other_gpu(error)
@@ -551,7 +586,7 @@ class RuntimeManager:
         command = [str(value).replace('{port}', str(port)).replace('{keyfile}', str(key_file)) for value in plan['command']]
         environment = dict(os.environ, PYTHONIOENCODING='utf-8', OPENCORE_HF_INTERNAL_KEY=key,
                            PATH=(str(cuda_library_dir)+os.pathsep if cuda_library_dir else '')+str(self.resources/'doucode/runtime')+os.pathsep+os.environ.get('PATH',''))
-        self.on_progress(stage='loading-model', detail='Loading the selected checkpoint in its managed runtime')
+        self._report_progress(stage='loading-model', detail='Loading the selected checkpoint in its managed runtime')
         try:
             child = self._spawn(command, environment, log_path,
                                 cwd=Path(command[0]).parent if plan.get('publisherEngine') else None)
@@ -580,7 +615,7 @@ class RuntimeManager:
             plan['gpuModules'] = gpu_modules
             plan['cpuModules'] = props.get('cpuModules', 0)
         plan['context'], context_verified = admitted_context(plan['context'], props)
-        self.on_progress(stage='verifying-inference', detail='Checking an actual short generation')
+        self._report_progress(stage='verifying-inference', detail='Checking an actual short generation')
         with self._request(upstream + '/v1/chat/completions', {'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
                 'max_tokens': 8, 'temperature': 0, 'stream': False}, key, timeout=120) as response:
             proof_result = json.load(response)
@@ -593,7 +628,7 @@ class RuntimeManager:
         media_verified=None
         if media_probe:
             kind,request=media_probe
-            self.on_progress(stage='verifying-vision',detail='Verifying real generated text from '+kind)
+            self._report_progress(stage='verifying-vision',detail='Verifying real generated text from '+kind)
             with self._request(upstream+'/v1/chat/completions',request,key,timeout=180) as response:
                 media_result=json.load(response)
             media_choices=media_result.get('choices',[])
@@ -611,14 +646,14 @@ class RuntimeManager:
         echo = self.resources / 'echo/echo_server.py'
         if not echo.is_file():
             raise RuntimeError('The installed ECHO runtime is missing')
-        self.on_progress(stage='preparing-echo', detail='Connecting ECHO archive and bounded context')
+        self._report_progress(stage='preparing-echo', detail='Connecting ECHO archive and bounded context')
         echo_command = [sys.executable, '-I', str(Path(__file__).resolve()), '--worker', 'echo', '--resources', str(self.resources),
                         '--port', str(echo_port), '--upstream', upstream, '--archive', str(self.root / 'echo/archives'),
                         '--context', str(plan['context'])]
         echo_child = self._spawn(echo_command, dict(environment, ECHO_UPSTREAM_API_KEY=key), log_path)
         echo_url = f'http://127.0.0.1:{echo_port}'
         self._wait_health(echo_child, echo_url, key, log_path, deadline=60)
-        self.on_progress(stage='verifying-echo', detail='Checking a generated reply through the ECHO endpoint')
+        self._report_progress(stage='verifying-echo', detail='Checking a generated reply through the ECHO endpoint')
         with self._request(echo_url + '/v1/chat/completions', {
                 'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
                 'max_tokens': 512, 'echo_max_total_tokens': 512, 'temperature': 0, 'stream': False,
@@ -631,7 +666,7 @@ class RuntimeManager:
             raise RuntimeError('The ECHO endpoint did not return an actual generated reply')
         if media_probe:
             kind,request=media_probe
-            self.on_progress(stage='verifying-multimodal-echo',detail='Verifying '+kind+' survives ECHO chat routing')
+            self._report_progress(stage='verifying-multimodal-echo',detail='Verifying '+kind+' survives ECHO chat routing')
             echo_request={**request,'conversation_id':'installation-media-check-'+uuid.uuid4().hex,
                           'echo_max_total_tokens':128}
             with self._request(echo_url+'/v1/chat/completions',echo_request,key,timeout=180) as response:
@@ -672,22 +707,25 @@ class RuntimeManager:
     def chat(self, entry, payload):
         if not self._active or self._active['id'] != entry['id'] or self._active.get('mode','echo')!=entry.get('operatingMode','echo') or any(child.poll() is not None for child in self._children):
             self.prepare(entry)
-        if not self._generation.acquire(blocking=False):
-            raise RuntimeError('The local model is already generating a response')
+        with self._state_lock:
+            active = self._active
+            if not active or active['id'] != entry['id'] or not self._generation.acquire(blocking=False):
+                raise RuntimeError('The local model is already generating or was unloaded. Retry when it is ready.')
+            selected = self._context if self._context and self._context['modelId'] == entry['id'] else None
         try:
-            with self._state_lock:
-                selected = self._context if self._context and self._context['modelId'] == entry['id'] else None
-                conversation = selected['conversationId'] if selected else 'hub-direct-' + uuid.uuid4().hex
+            conversation = selected['conversationId'] if selected else 'hub-direct-' + uuid.uuid4().hex
             body = {**payload, 'conversation_id': conversation}
-            if self._active.get('mode')=='native':
-                self._active['usage']={}
+            if active.get('mode')=='native':
+                active['usage']={}
                 for field in list(body):
                     if field.startswith('echo_'):body.pop(field,None)
-                maximum=self._active['proof']['contextTokens']
+                maximum=active['proof']['contextTokens']
                 if body.get('max_tokens') is not None:body['max_tokens']=max(1,min(int(body['max_tokens']),maximum-1))
                 if body.get('stream'):body['stream_options']={**(body.get('stream_options') or {}),'include_usage':True}
-            response=self._request(self._active['url'] + '/v1/chat/completions', body, self._active['key'], timeout=600,
-                               extra={'X-Echo-Conversation': conversation})
+            headers = {'X-Echo-Conversation': conversation}
+            if selected:
+                headers['X-OpenCore-Managed-Turn'] = '1'
+            response=self._request(active['url'] + '/v1/chat/completions', body, active['key'], timeout=600, extra=headers)
             if payload.get('stream'):
                 def chunks():
                     try:
@@ -698,10 +736,10 @@ class RuntimeManager:
                                 if not chunk:break
                                 total+=len(chunk)
                                 if total>64*1024*1024:raise RuntimeError('The local response exceeded its stream limit')
-                                if self._active.get('mode')=='native' and chunk.startswith(b'data:'):
+                                if active.get('mode')=='native' and chunk.startswith(b'data:'):
                                     try:
                                         usage=json.loads(chunk[5:].strip()).get('usage')
-                                        if isinstance(usage,dict):self._active['usage']=usage
+                                        if isinstance(usage,dict):active['usage']=usage
                                     except (ValueError,AttributeError):pass
                                 yield chunk
                     finally:
@@ -713,8 +751,8 @@ class RuntimeManager:
                 data = response.read(64 * 1024 * 1024 + 1)
                 if len(data) > 64 * 1024 * 1024:
                     raise RuntimeError('The local response exceeded the bounded response buffer')
-                if self._active.get('mode')=='native':
-                    try:self._active['usage']=json.loads(data).get('usage',{})
+                if active.get('mode')=='native':
+                    try:active['usage']=json.loads(data).get('usage',{})
                     except (ValueError,AttributeError):pass
                 return data, response.headers.get('Content-Type', 'application/json')
         finally:
@@ -792,6 +830,8 @@ def system_prefix(payload):
 
 def _echo_handler(parent):
     class Compatible(_authorized_handler(parent)):
+        private_live_preview = True
+
         def _upstream(self, path, payload, stream):
             return super()._upstream(path, system_prefix(payload), stream)
     return Compatible

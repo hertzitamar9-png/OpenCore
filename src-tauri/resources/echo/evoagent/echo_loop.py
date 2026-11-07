@@ -63,6 +63,9 @@ def tool_receipt(call, result, failed=False):
     workspace = (isinstance(value, dict) and isinstance(value.get('workspace'), str)
                  and isinstance(value.get('files'), list))
     inspection = (name in ('Read', 'Grep', 'Glob', 'LS')
+                  or (name == 'exec_command' and isinstance(args, dict)
+                      and str(args.get('cmd', args.get('command', ''))).strip().lower()
+                      in ('dir', 'ls', 'pwd', 'get-childitem', 'get-location'))
                   or (isinstance(name, str) and re.search(r'(?:^|__)dev$', name)
                       and isinstance(args, dict) and
                       (args.get('action') in ('read', 'search')

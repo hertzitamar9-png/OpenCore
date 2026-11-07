@@ -10,12 +10,54 @@ import threading
 import unittest
 import urllib.request
 
-from echo_server import ArchiveSet, EchoState, Handler
+from echo_server import ArchiveSet, EchoState, Handler, HARNESS_CHECKPOINT
 from evoagent.echo_adapters import adapter_for
 from evoagent.echo_context import LiveTranscript
 
 
 class ToolRecoveryTests(unittest.TestCase):
+    def test_harness_checkpoint_keeps_the_live_task_and_pending_tool_result(self):
+        with ExitStack() as stack:
+            root = Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives = ArchiveSet(root, idle_seconds=60)
+            stack.callback(archives.close)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            stack.callback(state.memory_controller.close)
+            state._ctx_size = 32768
+            state.count_tokens = lambda text: max(1, len(str(text)) // 4)
+            state._memory_adapter = adapter_for({'architecture':'qwen', 'revision':'fixture'}, state.count_tokens)
+            state.backend_session_metrics = lambda *_: {}
+            conversation = 'codex-checkpoint'
+            user = {'role':'user', 'content':'Inspect the project and then verify the file.'}
+            live = LiveTranscript(archives.get(conversation), conversation)
+            live.start_turn(user['content'], state.count_tokens)
+            turn_id = live.turn_id
+            call = {'role':'assistant', 'tool_calls':[{'id':'read', 'function':{'name':'Read', 'arguments':'{}'}}]}
+            live.append(call, state.count_tokens)
+            live.save()
+            handler = Handler.__new__(Handler)
+            handler.state = state
+            handler.headers = {'x-opencore-timeline-owner':'app'}
+            handler._send_json = lambda status, result: (status, result)
+            requests = []
+            def generate(body, phase):
+                requests.append(body)
+                return {'choices':[{'message':{'content':'Verified.'}, 'finish_reason':'stop'}]}
+            handler._generate_live = generate
+            result = {'role':'tool', 'tool_call_id':'read', 'content':'The project contains index.html.'}
+            compact = {'role':'user', 'content':'You are performing a CONTEXT CHECKPOINT COMPACTION. '
+                'Create a handoff summary for another LLM that will resume the task. '
+                'Be concise, structured, and focused on helping the next LLM seamlessly continue the work.'}
+            _, checkpoint = handler._controlled_context_serial({'messages':[user, call, result, compact]}, conversation)
+            self.assertEqual(checkpoint['choices'][0]['message']['content'], HARNESS_CHECKPOINT)
+            self.assertEqual(requests, [])
+            handler._controlled_context_serial({'messages':[user, checkpoint['choices'][0]['message']], 'max_tokens':64}, conversation)
+            self.assertEqual(len(requests), 1)
+            self.assertIn(result, requests[0]['messages'])
+            self.assertFalse(any('handoff summary for another LLM' in str(item.get('content'))
+                                 for item in requests[0]['messages']))
+            self.assertEqual(LiveTranscript(archives.get(conversation), conversation).turn_id, turn_id)
+
     def test_internal_memory_cycles_stop_with_a_specific_incomplete_reason(self):
         for queries,expected_calls in [(['one','two','three','four'],12),([''],3)]:
             with self.subTest(queries=queries), ExitStack() as stack:

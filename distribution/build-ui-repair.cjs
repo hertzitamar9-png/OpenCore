@@ -64,6 +64,12 @@ let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8')
 app=replaceOnce(app,'const Xf=()=>{try{const t=window.localStorage.getItem("opencore.model-profile");if(t&&g2(t))return t}catch{}return"doucode"}',
   'const Xf=()=>{const e=globalThis.__OPENCORE_PHONE__===true;try{const t=window.localStorage.getItem("opencore.model-profile");if(e)return t||"stopped";if(t&&g2(t))return t}catch{}return "stopped"}');
 app=replaceOnce(app,'t==="stopped"?"Stopped":t','t==="stopped"?"No model selected":t');
+app=replaceOnce(app,'Tn=t=>{var e,n,s;return','Tn=t=>{var e,n,s;return globalThis.__opencoreLocalProfiles?.get(t)?.label??');
+app=replaceOnce(app,'label:`${t.name} · ${e.id}`,description:`API provider · ${e.contextTokens.toLocaleString()} context tokens · ${e.status}`',
+  'label:globalThis.__opencoreLocalProfiles?.get(e.profileId)?.label??`${t.name} · ${e.id}`,description:globalThis.__opencoreLocalProfiles?.get(e.profileId)?.description??`API provider · ${e.contextTokens.toLocaleString()} context tokens · ${e.status}`');
+app=editFunction(app,'WO',text=>replaceOnce(text,'t.profile.startsWith("api:")','t.profile.startsWith("api:")&&!globalThis.__opencoreLocalProfiles?.has(t.profile)'));
+app=editFunction(app,'w8',text=>replaceOnce(text,'p.useEffect(()=>{!l||Pe.current',
+  'p.useEffect(()=>{const resolved=event=>at(event.detail);window.addEventListener("opencore-profile-resolved",resolved);return()=>window.removeEventListener("opencore-profile-resolved",resolved)},[at]);p.useEffect(()=>{!l||Pe.current'));
 app=editFunction(app,'w8',text=>replaceOnce(text,'!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch',
   'v==="stopped"&&globalThis.__OPENCORE_PHONE__!==true||!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch'));
 app=editFunction(app,'Gp',text=>replaceOnce(text,
@@ -75,6 +81,9 @@ app=editFunction(app,'Gp',text=>replaceOnce(replaceOnce(text,
   'p.useState(la?[...an||[],...mi.values()]:null)',
   'p.useState(la||an?[...an||[],...mi.values()]:null)'),
   'la=!oi.local&&!oi.provider','la=!oi.local'));
+app=editFunction(app,'Gp',text=>replaceOnce(replaceOnce(text,
+  'm.status==="fulfilled"?m.value.flatMap(Dp)','m.status==="fulfilled"&&Array.isArray(m.value)?m.value.flatMap(Dp)'),
+  'provider:m.status==="rejected"','provider:m.status==="rejected"||!Array.isArray(m.value)'));
 app=editFunction(app,'Hp',text=>{
   text=replaceOnce(text,'Could not check API providers. Close and reopen to retry.',
     'Could not check API providers. Check API settings or restart OpenCore.');
@@ -183,7 +192,7 @@ app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+
   const report = [];
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
-  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode;
+  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode+'\n'+require('./hub-patches.cjs').featureInstallerSource();
   for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,

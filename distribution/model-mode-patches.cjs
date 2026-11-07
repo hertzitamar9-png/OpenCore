@@ -7,6 +7,7 @@ module.exports=function(app,{editFunction,replaceOnce}){
   app=editFunction(app,'yj',text=>{
     if(text.split('e(de.id)').length!==3)throw Error('Native model use controls changed');
     text=replaceOnce(text,'ht=se.aliases[t]===de.id','ht=se.aliases[t]===de.id&&(!de.operatingProfileId||t===de.operatingProfileId)');
+    text=replaceOnce(text,'de.selectable&&de.installed&&de.runtimeReady!==!1&&!nt?i.jsxs("button",','ht&&de.selectable&&de.installed&&de.runtimeReady!==!1&&i.jsx(globalThis.__opencoreModelRuntimeButton,{profile:t,disabled:!!s||B||!!O,onNotice:r}),de.selectable&&de.installed&&de.runtimeReady!==!1&&!nt?i.jsxs("button",');
     return replaceOnce(text.replaceAll('e(de.id)','e(de.operatingProfileId||de.id)'),'Ft?i.jsxs("label",{className:"model-quantization-picker"',
       'i.jsx(globalThis.__opencoreModelModes.Control,{model:de,disabled:!!O||B}),Ft?i.jsxs("label",{className:"model-quantization-picker"');
   });

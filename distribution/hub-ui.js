@@ -5,9 +5,17 @@ let $hubState = {catalog: [], progress: null, available: false, loaded: false, e
 let $hubTimer = null;
 const $hubProviderSync=new Set();
 function $hubContext(entry){const mode=entry.operatingMode||'echo';return Math.min(entry.runtimePreparation?.contextTokens||entry.operatingModes?.find(item=>item.id===mode)?.contextTokens||entry.contextTokens||32768,mode==='native'?1048576:32768);}
+function $hubTitle(entry){
+  return [entry.familyLabel||entry.repository.split('/').at(-1),entry.quantization,entry.operatingMode==='native'?'Native':'ECHO'].join(' · ');
+}
 function $hubPublish(value) {
   if(value.connectorProfiles&&typeof $publishConnectorProfiles==='function'&&JSON.stringify(value.connectorProfiles.disconnected)!==JSON.stringify($connectorProfiles.disconnected))$publishConnectorProfiles(value.connectorProfiles);
-  if(value.catalog)globalThis.__opencoreHubEchoProfiles=new Set(value.catalog.filter(entry=>entry.profileId&&entry.operatingMode!=='native'&&(entry.category||entry.libraryCategory||'text')==='text').map(entry=>entry.profileId));
+  if(value.catalog){
+    const local=value.catalog.filter(entry=>entry.profileId&&(entry.category||entry.libraryCategory||'text')==='text');
+    globalThis.__opencoreHubEchoProfiles=new Set(local.filter(entry=>entry.operatingMode!=='native').map(entry=>entry.profileId));
+    globalThis.__opencoreLocalProfiles=new Map(local.map(entry=>[entry.profileId,{label:$hubTitle(entry),
+      description:'Local model · '+$hubContext(entry).toLocaleString()+' context tokens'+(entry.runtimePreparation?.runtimeBackend?' · '+entry.runtimePreparation.runtimeBackend.toUpperCase():'')}]));
+  }
   if (Object.entries(value).some(([key,item])=>item!==$hubState[key]&&JSON.stringify(item)!==JSON.stringify($hubState[key]))) {
     $hubState = {...$hubState,...value}; $hubListeners.forEach(fn => fn());
   }
@@ -144,7 +152,7 @@ function $hubAugment(library) {
 }
 async function $hubRegister(entry) {
   const descriptor=await $hubConnect();
-  const input={...(entry.providerId?{id:entry.providerId}:{}),name:'Local · '+(entry.familyLabel||entry.repository.split('/').at(-1))+' · '+entry.quantization,baseUrl:descriptor.url+'/v1',model:entry.id,
+  const input={...(entry.providerId?{id:entry.providerId}:{}),name:$hubTitle(entry),baseUrl:descriptor.url+'/v1',model:entry.id,
     contextTokens:$hubContext(entry),apiKey:descriptor.secret};
   let provider=await window.__TAURI_INTERNALS__.invoke('api_provider_save',{input});
   provider=await window.__TAURI_INTERNALS__.invoke('api_provider_model',{id:provider.id,model:entry.id,enabled:true,manual:true});
@@ -154,10 +162,80 @@ async function $hubRegister(entry) {
   window.dispatchEvent(new CustomEvent(sc,{detail:{action:'saved',provider}}));
   await $hubRefresh(true);return profile.profileId;
 }
+
+const $legacyDory=/^dory-4b(?:-[a-z0-9_]+)?(?:-mode-native)?$/i;
+let $hubDoryMigration=null;
+async function $hubResolveDory(profile){
+  if(!$legacyDory.test(profile||'')||globalThis.__OPENCORE_PHONE__===true)return profile;
+  if($hubDoryMigration?.profile===profile)return $hubDoryMigration.promise;
+  const promise=(async()=>{
+    await $hubRefresh();
+    const entry=$hubState.catalog.find(value=>value.familyId==='publisher-dory-4b'&&value.nativeModelIds?.includes(profile)&&value.status==='installed');
+    if(!entry)throw Error('Open Models and prepare the exact Dory quantization with its CUDA runtime.');
+    const mode=profile.endsWith('-mode-native')?'native':'echo';
+    const prepared=(entry.operatingMode||'echo')===mode?entry:await $hubRequest('/runtime/mode',{id:entry.id,operatingMode:mode});
+    return prepared.profileId||$hubRegister(prepared);
+  })();
+  $hubDoryMigration={profile,promise};
+  try{return await promise;}finally{if($hubDoryMigration?.promise===promise)$hubDoryMigration=null;}
+}
+
+async function $hubLoad(entry){
+  const job=await $hubRequest('/prepare',{id:entry.id});
+  if(!job?.jobId)throw Error('OpenCore could not start loading this model.');
+  const deadline=Date.now()+20*60*1000;
+  while(Date.now()<deadline){
+    const state=await $hubRefresh(true);
+    if(state.progress?.jobId!==job.jobId)throw Error('The model load was replaced by another operation.');
+    if(state.progress.status==='ready')return;
+    if(!['running','pausing'].includes(state.progress.status))throw Error(state.progress.error||'Model loading stopped.');
+    await new Promise(resolve=>setTimeout(resolve,850));
+  }
+  throw Error('Model loading is still running. Follow its progress in Models.');
+}
+
+globalThis.__opencoreChangeModelRuntime=async (profile,action)=>{
+  const native=(command,args)=>window.__TAURI_INTERNALS__.invoke(command,args);
+  if(globalThis.__OPENCORE_PHONE__===true)return action==='unload'?native('stop_runtime',{}):
+    native('start_profile',{request:{profile,attachUrl:null}});
+  const snapshot=await native('get_snapshot',{});
+  if(snapshot?.activeConversationIds?.length)throw Error('Finish or stop the current response first.');
+  const resolved=action==='load'?await $hubResolveDory(profile):profile;
+  const entry=$hubState.catalog.find(value=>value.profileId===resolved);
+  if(entry){
+    if(action==='unload')await $hubRequest('/runtime/unload',{id:entry.id});
+    else {
+      if(snapshot?.runtime?.status==='running'&&!snapshot.runtime.profile.startsWith('api:'))await native('stop_runtime',{});
+      await $hubLoad(entry);
+    }
+  }else if(action==='load')await Ue('start_profile',{request:{profile:resolved,attachUrl:null}});
+  else if(snapshot?.runtime?.profile===profile)await native('stop_runtime',{});
+  if(resolved!==profile)await native('select_profile',{profile:resolved});
+  globalThis.__opencoreRuntimeSample={profile:resolved,runtime:{status:action==='load'?'running':'stopped',profile:resolved}};
+  window.dispatchEvent(new Event('opencore-model-runtime'));
+  if(resolved!==profile)window.dispatchEvent(new CustomEvent('opencore-profile-resolved',{detail:resolved}));
+};
+
 async function $hubInvoke(command,args,run) {
   if(command==='download_queue_action') {
     if(globalThis.__OPENCORE_PHONE__===true)return run();
     return $hubRequest('/download-queue/action',args);
+  }
+  const original=command==='select_profile'?args.profile:command==='start_profile'?args.request?.profile:
+    command==='send_chat_message'?globalThis.__opencoreHubSelectedProfile||localStorage.getItem('opencore.model-profile'):null;
+  const resolved=await $hubResolveDory(original);
+  if(resolved!==original){
+    if(command==='select_profile')args.profile=resolved;
+    else if(command==='start_profile')args.request.profile=resolved;
+    else {
+      const native=(name,value)=>window.__TAURI_INTERNALS__.invoke(name,value);
+      const snapshot=await native('get_snapshot',{});
+      if(snapshot.activeConversationIds?.length)throw Error('Finish or stop the current Dory response before switching it to CUDA.');
+      if(snapshot.runtime?.profile===original&&snapshot.runtime.status==='running')await native('stop_runtime',{});
+      await native('select_profile',{profile:resolved});
+      globalThis.__opencoreHubSelectedProfile=resolved;
+      window.dispatchEvent(new CustomEvent('opencore-profile-resolved',{detail:resolved}));
+    }
   }
   await globalThis.__opencoreModelModes?.before(command,args);
   const historyPath=command==='list_saved_conversations'?'/conversations/list':command==='delete_empty_projects'?'/projects/delete-empty':null;
@@ -232,8 +310,9 @@ async function $hubInvoke(command,args,run) {
     return $hubRequest('/native/cancel',{id:args.modelId});
   }
   if(command==='stop_runtime'&&$hubDescriptor){await $hubRequest('/stop').catch(()=>{});return run();}
-  if(command==='send_chat_message'&&$hubDescriptor){
-    const request=args.request||{},entry=$hubState.catalog.find(e=>e.profileId===globalThis.__opencoreHubSelectedProfile);
+  if(command==='send_chat_message'&&($hubDescriptor||String(original||'').startsWith('api:'))){
+    if(!$hubState.loaded)await $hubRefresh().catch(()=>{});
+    const request=args.request||{},entry=$hubState.catalog.find(e=>e.profileId===(globalThis.__opencoreHubSelectedProfile||resolved));
     if(entry){const requestId=request.submissionId||crypto.randomUUID();await $hubRequest('/context',{modelId:entry.id,conversationId:request.conversationId,requestId});
       try{return await run();}finally{await $hubRequest('/context/release',{requestId}).catch(()=>{});}}
   }
@@ -241,6 +320,15 @@ async function $hubInvoke(command,args,run) {
     const selected=args.profile||args.request?.profile;
     if($hubDescriptor&&!$hubState.catalog.some(e=>e.profileId===selected))await $hubRequest('/stop').catch(()=>{});
     globalThis.__opencoreHubSelectedProfile=selected;
+    if(command==='start_profile'){
+      const entry=$hubState.catalog.find(value=>value.profileId===selected);
+      if(entry)await $hubLoad(entry);
+    }
+    if(resolved!==original){
+      const result=await run();
+      window.dispatchEvent(new CustomEvent('opencore-profile-resolved',{detail:resolved}));
+      return result;
+    }
   }
   return run();
 }
@@ -531,7 +619,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function changeRuntime(preference){setBusy(true);setError('');try{await $hubRequest('/runtime/backend',{id:entry.id,runtimePreference:preference});await $hubRefresh(true);onNotice?.(entry.status==='installed'?'Runtime choice saved. Prepare the runtime to use this downloaded model.':'Runtime choice saved for this download.');}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function prepare(){setError('');try{await globalThis.__opencoreModelModes?.ensure(rawEntry);await Ue(entry.nativeProfile?'install_model':'hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
-  async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const prepared=await globalThis.__opencoreModelModes?.ensure(rawEntry)||entry;const profile=entry.nativeProfile?await globalThis.__opencoreModelModes?.activate(entry.id,globalThis.__opencoreModelModes.mode(entry))||entry.id:await $hubRegister(prepared);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function use(){setBusy(true);setError('');try{const prepared=await globalThis.__opencoreModelModes?.ensure(rawEntry)||entry;const profile=entry.nativeProfile?await globalThis.__opencoreModelModes?.activate(entry.id,globalThis.__opencoreModelModes.mode(entry))||entry.id:prepared.profileId||await $hubRegister(prepared);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function askRemove(){
     setError('');
     const native=entry.installReceipt?.nativeProfileId;
@@ -595,6 +683,8 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
       entry.category==='image'&&(entry.format==='diffusers'||entry.imageRuntime==='iris-sdcpp-v1')?h('button',{disabled:locked,onClick:()=>{globalThis.__opencoreRequestedImageModel=entry.id;window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));}},'Generate images'):
       entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':selectedProfile===entry.profileId?'Selected':'Use model'):
       h('button',{disabled:locked||!(entry.runtime?.adapter||entry.specialist==='ocr'),onClick:prepare},active?'Preparing…':entry.specialist==='ocr'?'Prepare OCR':'Prepare runtime'),
+      entry.runtimeReady&&selectedProfile&&selectedProfile===entry.profileId?
+        h(globalThis.__opencoreModelRuntimeButton,{profile:selectedProfile,disabled:locked,onNotice}):null,
       entry.status==='installed'?h('button',{className:'model-delete-button',disabled:locked,onClick:askRemove},'Uninstall'):null),
     ocrOpen&&entry.specialistReady?h(entry.specialist==='computer'?$HubComputer:$HubOCR,{entry}):null,
     active?h('p',{role:'status'},shared.progress?.currentFile||'Starting installation…'):null,error?h('p',{role:'alert'},error):null,

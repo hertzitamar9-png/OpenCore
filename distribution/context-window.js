@@ -22,7 +22,7 @@ function g8({conversationId:t,profile:e,runtime:n,liveContext}){
   const used=known?Math.min(maximum,reported):undefined;
   const kind=typeof slot==='number'&&current?.modelUsageKind!=='prompt'?(running&&(current?.modelSessionActive||current?.active)?'live':'last'):current?.active?'prompt':'last';
   const idle=n.status==='starting'?'Model loading':'Model not running';
-  const title=known?`${Kp(e)?'ECHO rolling context':'Model context'}: ${used.toLocaleString()} / ${maximum.toLocaleString()} tokens (${kind==='prompt'?'latest prompt; token-by-token slot usage is unavailable':kind==='live'?'live backend usage':'last reported usage'}).`:`${running?'Waiting for context usage from the model':idle}. ${windowTokens?`Context capacity: ${maximum.toLocaleString()} tokens.`:''}`;
+  const title=known?`${Kp(e)?'ECHO rolling context':'Model context'}: ${used.toLocaleString()} / ${maximum.toLocaleString()} tokens (${kind==='prompt'?current?.preview?.phase==='reading-prompt'?'reading the current prompt':'current prompt count':kind==='live'?'live backend usage':'last reported usage'}).`:`${running?'Waiting for context usage from the model':idle}. ${windowTokens?`Context capacity: ${maximum.toLocaleString()} tokens.`:''}`;
   return i.jsxs('div',{className:'statusbar-context',title,'aria-label':'Live context window',children:[
     i.jsx('span',{className:'statusbar-context-label',children:'Context'}),
     i.jsx('progress',{'aria-label':'Model context usage',value:used,max:maximum}),

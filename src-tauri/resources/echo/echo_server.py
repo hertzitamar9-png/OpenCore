@@ -34,6 +34,7 @@ import argparse
 import base64
 from collections import OrderedDict
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -203,6 +204,40 @@ REPEATED_PLAN_GUIDANCE=('The previous attempt repeated a plan without acting. Us
 REPEATED_TOOL_GUIDANCE=('The previous tool requests repeated the same inspection or failed action with unchanged results. '
                         'Use the existing evidence, remedy the recorded error, choose a different action, '
                         'or explain the blocker in a final answer. The task is incomplete.')
+
+HARNESS_CHECKPOINT = 'OpenCore ECHO kept the active task and its tool results in the working transcript.'
+HARNESS_SUMMARY_PREFIX = 'Another language model started to solve this problem and produced a summary'
+HARNESS_INSTRUCTIONS = (
+    'ECHO keeps the active task and exact tool results. Continue from those results. '
+    'Use the declared tools with their actual argument schemas. When a file is requested, '
+    'write it with a workspace tool and check its result before saying it exists. '
+    'After checking a file or an empty workspace, take the next concrete action. '
+    'Only use the declared memory tools when earlier history is needed. '
+    'Do not write tool calls or handoff summaries as ordinary reply text.'
+)
+
+
+def harness_checkpoint_request(messages, user_index, owns_timeline, tools):
+    """Recognize only the private harness's tool-free compaction request."""
+    if not owns_timeline or tools or user_index < 1:
+        return False
+    text = str(messages[user_index].get('content') or '').strip()
+    return (
+        text == ('Create a concise working-memory summary of the conversation above. Preserve active goals, '
+                 'constraints, decisions, unresolved tasks, file paths, tool results, and facts needed to '
+                 'continue. Do not add commentary.')
+        or (text.startswith('You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary')
+            and text.endswith('helping the next LLM seamlessly continue the work.'))
+    )
+
+
+def harness_checkpoint_marker(message):
+    text = message.get('content')
+    return isinstance(text, str) and (
+        (message.get('role') != 'user' and text.strip() == HARNESS_CHECKPOINT)
+        or (text.strip().endswith(HARNESS_CHECKPOINT)
+            and text.startswith((HARNESS_SUMMARY_PREFIX, 'Compacted prior conversation state:')))
+    )
 
 _EMBEDDED_TOOL = re.compile(
     r"<tool_call>\s*<function=([A-Za-z_][A-Za-z_0-9]*)>\s*(.*?)\s*</function>\s*</tool_call>",
@@ -731,6 +766,7 @@ class EchoState:
         self.context_steps = 0
         self._context_active = set()
         self._context_active_counts: dict[str, int] = {}
+        self._preview = None
         # The local llama server owns one persistent recurrent slot. Serialize
         # ECHO generations so different conversations cannot interleave their
         # append-only suffixes into that state.
@@ -894,6 +930,19 @@ class EchoState:
             else:
                 self._context_active_counts.pop(conversation, None)
                 self._context_active.discard(conversation)
+                if self._preview and self._preview[0] == conversation:
+                    self._preview = None
+
+    def set_preview(self, conversation, sample):
+        with self.lock:
+            self._preview = (conversation, sample)
+
+    def preview(self, conversation, include_text=False):
+        with self.lock:
+            if conversation not in self._context_active or not self._preview or self._preview[0] != conversation:
+                return {}
+            sample = self._preview[1]
+            return dict(sample) if include_text else {key: sample[key] for key in ('id', 'phase')}
 
     # -- window management -------------------------------------------------
 
@@ -1521,6 +1570,41 @@ def _inject(messages: list, context: str) -> list:
 
 
 class Handler(BaseHTTPRequestHandler):
+    private_live_preview = False
+
+    def _owns_harness_turn(self):
+        headers = getattr(self, 'headers', {})
+        return (headers.get('x-opencore-timeline-owner', '').lower() == 'app'
+                or self.private_live_preview and headers.get('X-OpenCore-Managed-Turn') == '1')
+
+    def _preview_authorized(self, conversation):
+        if self.private_live_preview:
+            return True  # The managed handler authenticates before invoking this handler.
+        supplied = self.headers.get('X-OpenCore-Preview', '')
+        if self.client_address[0] not in ('127.0.0.1', '::1') or not re.fullmatch('[0-9a-f]{64}', supplied):
+            return False
+        descriptor = self.state.archives.directory.parent.parent / 'runtime-setup/hub-bridge/service.json'
+        try:
+            with descriptor.open('rb') as stream:
+                secret = json.loads(stream.read(65537)).get('secret')
+            scope = f'echo-preview:{self.server.server_port}:{conversation}'.encode()
+            return isinstance(secret, str) and hmac.compare_digest(supplied, hmac.digest(secret.encode(), scope, 'sha256').hex())
+        except (OSError, ValueError, AttributeError):
+            return False
+
+    def _show_preview(self, generation, phase, message=None, calls=None):
+        conversation = getattr(self, '_preview_conversation', None)
+        if not conversation:
+            return
+        message = message or {}
+        self.state.set_preview(conversation, {
+            'id': generation, 'phase': phase,
+            'reasoning': (message.get('reasoning_content') or '')[-16000:],
+            'text': (message.get('content') or '')[-24000:],
+            'tool': next((call['function']['name'] for call in (calls or {}).values()
+                          if call['function']['name']), '')[:100],
+        })
+
     def finish(self):
         stop=getattr(self,'_heartbeat_stop',None)
         if stop: stop.set()
@@ -1664,6 +1748,7 @@ class Handler(BaseHTTPRequestHandler):
                 'contextMode': 'persistent_echo',
                 'warmCache': warm_cache,
                 'harness': harness_status(self.state.archives.directory, conversation),
+                'preview': self.state.preview(conversation, self._preview_authorized(conversation)),
                 **live.memory_status(),
                 **self.state.backend_session_metrics(conversation)})
         if self.path.startswith("/echo/stats"):
@@ -1814,6 +1899,8 @@ class Handler(BaseHTTPRequestHandler):
                            % (level, settings["budget"], settings["passes"]))
 
         if self.state.autonomous_context:
+            if self._owns_harness_turn():
+                self._preview_conversation = conversation
             self.state.begin_context(conversation)
             try:
                 return self._controlled_context(payload, conversation, level,
@@ -1907,6 +1994,20 @@ class Handler(BaseHTTPRequestHandler):
             with self.state._backend_lock:
                 return self._controlled_context_serial(payload, conversation, level, archive_input)
 
+    def _merge_client_tools(self, live, messages, count):
+        compacted_ids = set(live.compacted_tool_ids)
+        answered = live.tool_result_ids() | compacted_ids
+        recorded = {call.get('id') for m in live.messages for call in (m.get('tool_calls') or [])} | compacted_ids
+        for message in messages:
+            if message.get('role') == 'assistant':
+                calls = [call for call in message.get('tool_calls') or [] if call.get('id') not in recorded]
+                if calls:
+                    live.append({'role':'assistant', 'content':message.get('content') or '', 'tool_calls':calls}, count)
+                    recorded.update(call.get('id') for call in calls)
+            elif message.get('role') == 'tool' and message.get('tool_call_id') not in answered:
+                live.append({'role':'tool', 'tool_call_id':message.get('tool_call_id'), 'content':message.get('content')}, count)
+                answered.add(message.get('tool_call_id'))
+
     def _controlled_context_serial(self, payload, conversation, level="off", archive_input=True):
         """Answer one request against the conversation's live transcript.
 
@@ -1927,12 +2028,34 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError:
                 pass
         supplied = payload.get("messages") or []
+        owns_timeline = self._owns_harness_turn()
+        checkpoints = [index for index, message in enumerate(supplied)
+                       if owns_timeline and harness_checkpoint_marker(message)]
+        last_task = max((index for index, message in enumerate(supplied)
+                         if index not in checkpoints and _is_user_request(message)), default=-1)
+        resumed_checkpoint = any(index > last_task for index in checkpoints)
+        if checkpoints:
+            supplied = [message for message in supplied if not harness_checkpoint_marker(message)]
         count = self.state.count_tokens
-        question = _last_user_message(supplied)
         user_index = max((index for index, message in enumerate(supplied)
                           if _is_user_request(message)), default=-1)
-        agent_request = (getattr(self, 'headers', {}).get('x-opencore-timeline-owner') == 'app'
-                         or bool(payload.get('tools')))
+        checkpoint_request = harness_checkpoint_request(supplied, user_index, owns_timeline, payload.get('tools'))
+        window = self.state.context_size()
+        live = LiveTranscript(self.state.archives.get(conversation), conversation)
+        if checkpoint_request:
+            # The harness may ask for a compressed handoff even though ECHO
+            # already owns an exact transcript. Preserve pending tool results
+            # and acknowledge the checkpoint without a second model call.
+            before_checkpoint = supplied[:user_index]
+            if live.question and _last_user_message(before_checkpoint) == live.question:
+                last_task = max(index for index, item in enumerate(before_checkpoint) if _is_user_request(item))
+                self._merge_client_tools(live, before_checkpoint[last_task + 1:], count)
+                live.save()
+                result = {'choices': [{'message': {'role': 'assistant', 'content': HARNESS_CHECKPOINT},
+                                       'finish_reason': 'stop'}]}
+                return self._finish_live(result) if payload.get('stream') else self._send_json(200, result)
+        question = _last_user_message(supplied)
+        agent_request = owns_timeline or bool(payload.get('tools'))
         assistant_tail = [message.get('content') for message in supplied[user_index + 1:]
                           if message.get('role') == 'assistant' and not message.get('tool_calls')
                           and isinstance(message.get('content'),str) and message.get('content')]
@@ -1940,8 +2063,6 @@ class Handler(BaseHTTPRequestHandler):
                        if message.get("role") == "tool"
                        or (message.get("role") == "assistant" and message.get("tool_calls"))]
         pinned = [m for m in supplied if m.get("role") in ("system", "developer")]
-        window = self.state.context_size()
-        live = LiveTranscript(self.state.archives.get(conversation), conversation)
         if self.state.memory_adapter().prepare_transcript(live):
             self.state._backend_conversation = None
             self.state._backend_needs_reset = True
@@ -1956,26 +2077,11 @@ class Handler(BaseHTTPRequestHandler):
                 and isinstance(entry.get('message',{}).get('content'),str)),None)
         continuing_answer = (agent_request and live.question == question and previous_answer is not None
             and any(hashlib.sha256(text.encode('utf-8')).hexdigest() == previous_answer for text in assistant_tail))
-        same_turn = live.question == question and ((live.open and bool(client_tail)) or continuing_answer)
+        same_turn = live.question == question and ((live.open and bool(client_tail)) or continuing_answer
+                                                   or resumed_checkpoint)
         if same_turn:
             live.open = True
-            # The client is returning results for calls this transcript already holds.
-            compacted_ids = set(live.compacted_tool_ids)
-            answered = live.tool_result_ids() | compacted_ids
-            recorded = {call.get("id") for m in live.messages for call in (m.get("tool_calls") or [])} | compacted_ids
-            for message in client_tail:
-                if message.get("role") == "assistant":
-                    calls = [c for c in message["tool_calls"] if c.get("id") not in recorded]
-                    if calls:
-                        live.append({"role": "assistant", "content": message.get("content") or "",
-                                     "tool_calls": calls}, count)
-                        recorded.update(c.get("id") for c in calls)
-                elif message.get("tool_call_id") not in answered:
-                    content = message.get("content")
-                    live.append({"role": "tool", "tool_call_id": message.get("tool_call_id"),
-                                 "content": content if isinstance(content, str)
-                                 else content}, count)
-                    answered.add(message.get("tool_call_id"))
+            self._merge_client_tools(live, client_tail, count)
         else:
             # Keep completed turns in the live working set so normal dialogue
             # continuity survives across requests. ECHO archives exact events
@@ -1987,7 +2093,7 @@ class Handler(BaseHTTPRequestHandler):
             live.start_turn(question, count, supplied[user_index].get("content") if user_index >= 0 else question)
 
         system_text = "\n\n".join([str(m.get("content") or "") for m in pinned] +
-                                   [INSTRUCTIONS])
+                                   [HARNESS_INSTRUCTIONS if owns_timeline else INSTRUCTIONS])
         system_messages = [{"role": "system", "content": system_text}]
         system_tokens = count(system_text) + count(json.dumps(payload.get('tools') or [])) + 8
 
@@ -2070,7 +2176,7 @@ class Handler(BaseHTTPRequestHandler):
             raise ValueError("echo_target_words must be nonnegative")
         tool_request = bool(payload.get("tools"))
         buffered_deadline = (time.monotonic() + BUFFERED_AGENT_SECONDS
-                             if agent_request and tool_request and not payload.get('stream') else None)
+                             if (owns_timeline or tool_request) and not payload.get('stream') else None)
         backend_session_id = hashlib.sha256(conversation.encode("utf-8")).hexdigest()
         empty_calls = 0
         malformed_controls = 0
@@ -2116,7 +2222,8 @@ class Handler(BaseHTTPRequestHandler):
             append_live = (same_backend_session
                            and not self.state._backend_needs_reset
                            and conversation not in self.state._backend_append_disabled)
-            if append_live and not self.state.backend_session_metrics(conversation).get("modelSessionTokens"):
+            persistent_cache = append_live and self.state.backend_session_metrics(conversation).get("modelSessionTokens")
+            if append_live and not persistent_cache:
                 # Only send a suffix after the backend proves that it still
                 # holds this exact session. A stock/restarted server may ignore
                 # our extension fields; a full transcript remains compatible.
@@ -2142,12 +2249,12 @@ class Handler(BaseHTTPRequestHandler):
             # Agent clients can request a JSON response while the model itself
             # still streams internally; otherwise partial tool calls and loops
             # cannot be detected until after the client's timeout.
-            body["stream"] = bool(payload.get("stream")) or (agent_request and tool_request)
+            body["stream"] = bool(payload.get("stream")) or owns_timeline or tool_request
             if body["stream"] and not payload.get("stream"):
                 body['_echo_buffer_preview'] = True
                 body['_echo_upstream_deadline'] = buffered_deadline
             body["cache_prompt"] = True
-            if (same_backend_session and not body.get("echo_append")) or self.state._backend_needs_reset:
+            if self.state._backend_needs_reset or (persistent_cache and not body.get('echo_append')):
                 body["echo_reset"] = True
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
@@ -2216,7 +2323,6 @@ class Handler(BaseHTTPRequestHandler):
                 content = draft.get('content') or ''
                 if ((candidate.get('finish_reason') == 'length' or codex_harness) and not draft.get('tool_calls')
                         and isinstance(reasoning, str) and isinstance(content, str)
-                        and '<tool_call>' not in reasoning + content
                         and continuation_guard.feed(reasoning + '\n' + content + '\n')):
                     parsed['echo_loop_detected'] = True
             if parsed.get('echo_loop_detected'):
@@ -2231,6 +2337,8 @@ class Handler(BaseHTTPRequestHandler):
                 continue
             choice = parsed["choices"][0]
             message = choice.get("message", {})
+            if agent_request and isinstance(message.get('content'), str):
+                message['content'] = re.sub(r'^(?:\s*</?think>)+\s*', '', message['content'])
             usage = parsed.get("usage") or {}
             timings = parsed.get("timings") or {}
             prefill_ms = timings.get("prompt_ms")
@@ -2244,6 +2352,17 @@ class Handler(BaseHTTPRequestHandler):
                     completion_tokens = None
             recover_embedded_tool_call(message, body.get("tools"))
             recover_requested_html_file(message,body.get('tools'),question,live.messages)
+            raw_call = tool_request and not message.get('tool_calls') and any(
+                isinstance(value, str) and '<tool_call>' in value and '```' not in value
+                for value in (message.get('reasoning_content'), message.get('content')))
+            if raw_call:
+                malformed_tools += 1
+                if malformed_tools >= 3:
+                    raise ValueError('The model repeatedly emitted tool markup instead of a valid action. No unvalidated action was executed.')
+                live.append({'role':'user', 'content': 'Use one declared tool with complete structured arguments. '
+                             'Do not write tool syntax in prose or repeat the plan. Continue from the existing tool results.'},
+                            count, 'echo')
+                continue
             if message.get("tool_calls"):
                 if repeated_tool_keys and any(codex_call_identity(call)[0] in repeated_tool_keys for call in message['tool_calls']):
                     live.save()
@@ -2889,10 +3008,11 @@ class Handler(BaseHTTPRequestHandler):
         if streaming:
             body = dict(body, stream_options={'include_usage': True})
         started = time.monotonic()
+        generation = uuid.uuid4().hex
+        self._show_preview(generation, 'reading-prompt')
         with self._upstream('/v1/chat/completions', body, stream=streaming) as response:
             if not streaming:
                 return self._retain_generation(json.load(response), body, phase)
-            generation = uuid.uuid4().hex
             self._append_raw_record({"record_type": "stream_start", "phase": phase, "generation": generation,
                                      "request": {key: body.get(key) for key in ("max_tokens", "max_completion_tokens", "reasoning_effort", "opencore_reasoning_effort", "reasoning_budget_tokens", "reasoning_min_tokens", "chat_template_kwargs", "reasoning_format")}})
             message = {'role': 'assistant', 'content': '', 'reasoning_content': ''}
@@ -2957,6 +3077,8 @@ class Handler(BaseHTTPRequestHandler):
                             target['id'] = call['id']
                         for key in ('name', 'arguments'):
                             target['function'][key] += (call.get('function') or {}).get(key) or ''
+                    if delta:
+                        self._show_preview(generation, 'preparing-tool' if calls else phase, message, calls)
                     if calls and not choice.get('finish_reason'):
                         oversized = any(_is_dev_tool(call['function']['name'])
                             and len(call['function']['arguments']) > TOOL_CALL_MAX_CHARS + 512

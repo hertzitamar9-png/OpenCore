@@ -1,4 +1,7 @@
 const fs=require('fs');const path=require('path');
+const source=fs.readFileSync(path.join(__dirname,'hub-ui.js'),'utf8');
+const style=source.indexOf('const $hubStyle=');
+if(style<0)throw Error('Missing Hub styles');
 module.exports=function(app,{editFunction,replaceOnce}){
   app=editFunction(app,'yj',text=>{
     text=replaceOnce(text,'var Oe;','var Oe;const $hub=$useHub();');
@@ -19,5 +22,6 @@ module.exports=function(app,{editFunction,replaceOnce}){
     const at=open+marker.length;
     text=text.slice(0,at)+'i.jsx(ho,{category:"tools",children:i.jsxs(i.Fragment,{children:[i.jsx($HubSettings,{}),i.jsx($RemoteSettings,{})]})}),i.jsx(ho,{category:"data",children:i.jsx($PrivateChatLauncher,{})}),'+text.slice(at);return text;
   });
-  return app+'\n'+fs.readFileSync(path.join(__dirname,'hub-ui.js'),'utf8');
+  return app+'\n'+source.slice(0,style);
 };
+module.exports.featureInstallerSource=()=>source.slice(style);

@@ -1,5 +1,6 @@
 """Small read-only live samples; no model scans, process launches or persisted chat data."""
 import ctypes
+import hmac
 import json
 import os
 from pathlib import Path
@@ -48,7 +49,7 @@ class LiveTelemetry:
         self.hardware_at, self.hardware = -100.0, {}
         self.previous = {}
 
-    def read(self, runtime, conversation, read_context=None):
+    def read(self, runtime, conversation, read_context=None, preview_key=None):
         now = self.clock()
         with self.lock:
             if now-self.hardware_at >= .75:
@@ -66,7 +67,9 @@ class LiveTelemetry:
             else:
                 port = runtime['echoPort']
                 if type(port) is not int or not 1 <= port <= 65535: raise ValueError('Invalid ECHO port')
-                request = Request('http://127.0.0.1:%d/echo/context?conversation=%s' % (port, quote(conversation, safe='')))
+                scope = f'echo-preview:{port}:{conversation}'.encode()
+                headers = {'X-OpenCore-Preview': hmac.digest(preview_key.encode(), scope, 'sha256').hex()} if preview_key else {}
+                request = Request('http://127.0.0.1:%d/echo/context?conversation=%s' % (port, quote(conversation, safe='')), headers=headers)
                 # Never send model authorization or chat text to any remote host.
                 with build_opener(ProxyHandler({})).open(request, timeout=.8) as response:
                     raw = response.read(256*1024+1)

@@ -47,6 +47,11 @@ module.exports=function applyContextActivity(app,{editFunction,replaceOnce}){
     return replaceOnce(text,'L&&ve&&G(ve)','L&&ve&&G(previous=>$mergeGenerationPreview(previous,ve))');
   });
   app=editFunction(app,'TO',text=>{
+    text=replaceOnce(text,'c=new Map,d=new Set,u=','c=new Map,u=');
+    const hideStart=text.indexOf('const j=g.content.trim()===C.trim()'),hideEnd=text.indexOf(';break}',hideStart);
+    if(hideStart<0||hideEnd<0)throw Error('Missing narration suppression');
+    text=text.slice(0,hideStart)+text.slice(hideEnd+1);
+    text=replaceOnce(text,':d.has(m.key)?null:m.type==="reasoning"',':m.type==="reasoning"');
     text=replaceOnce(text,'f.metadata.live===!0','f.metadata.live===!0&&!f.metadata.previewComplete');
     text=replaceOnce(text,'f===n&&!h','h?Yp(h.content)==="running":f===n');
     const start=text.indexOf('const k=qu(x.title,x.content).label.replace('),end=text.indexOf(',y=Zv(x.content);',start);
