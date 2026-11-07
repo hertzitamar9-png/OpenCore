@@ -1385,10 +1385,11 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 stage = getattr(state.runtime, 'loading_stage', lambda _: None)(entry['id'])
                 if not stage and state.progress and state.progress.get('id') == entry['id'] and state.progress.get('status') in ACTIVE:
                     stage = state.progress.get('detail') or 'Loading model…'
+                running = bool(proof) or bool(source and source[0].get('status') == 'running')
                 value['runtime'] = {
-                    'status': 'running' if proof else 'starting' if stage else 'stopped',
+                    'status': 'running' if running else 'starting' if stage else 'stopped',
                     'profile': body['profile'],
-                    'contextSize': (proof or {}).get('contextTokens') or entry['contextTokens'],
+                    'contextSize': value.get('context', {}).get('modelContextTokens') or (proof or {}).get('contextTokens') or entry['contextTokens'],
                     **({'loadStage': stage} if stage else {}),
                 }
                 return self._send(200,value)

@@ -6,7 +6,8 @@ let $hubTimer = null;
 const $hubProviderSync=new Set();
 function $hubContext(entry){const mode=entry.operatingMode||'echo';return Math.min(entry.runtimePreparation?.contextTokens||entry.operatingModes?.find(item=>item.id===mode)?.contextTokens||entry.contextTokens||32768,mode==='native'?1048576:32768);}
 function $hubTitle(entry){
-  return [entry.familyLabel||entry.repository.split('/').at(-1),entry.quantization,entry.operatingMode==='native'?'Native':'ECHO'].join(' · ');
+  return [entry.familyLabel||entry.repository?.split('/').at(-1)||entry.name||'Local model',
+    entry.quantization,entry.operatingMode==='native'?'Native':'ECHO'].filter(Boolean).join(' · ');
 }
 function $hubPublish(value) {
   if(value.connectorProfiles&&typeof $publishConnectorProfiles==='function'&&JSON.stringify(value.connectorProfiles.disconnected)!==JSON.stringify($connectorProfiles.disconnected))$publishConnectorProfiles(value.connectorProfiles);

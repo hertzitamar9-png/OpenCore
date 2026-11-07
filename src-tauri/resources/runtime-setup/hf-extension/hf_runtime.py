@@ -327,7 +327,7 @@ class RuntimeManager:
             active = self._active
             if not active or active['id'] != model_id or any(child.poll() is not None for child in self._children):
                 return None
-            return active['proof']
+            return active.get('proof')
 
     def loading_stage(self, model_id):
         with self._state_lock:
@@ -350,7 +350,8 @@ class RuntimeManager:
     def telemetry_source(self, model_id, conversation):
         with self._state_lock:
             active=self._active
-            if not active or active['id']!=model_id:return None
+            if not active or active['id']!=model_id or any(child.poll() is not None for child in self._children):
+                return None
             url,key=active['url'],active['key']
         from urllib.parse import quote,urlsplit
         def read():
