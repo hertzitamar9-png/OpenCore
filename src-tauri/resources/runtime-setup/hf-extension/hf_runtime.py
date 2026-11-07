@@ -101,6 +101,14 @@ def admitted_context(requested, props):
     return context, verified
 
 
+def _python(root):
+    for recipe in ('managed-transformers-text-v1', 'edgerock-portable-v1'):
+        path = Path(root) / 'runtime-setup/environments' / recipe / 'Scripts/python.exe'
+        if path.is_file():
+            return str(path)
+    return sys.executable
+
+
 def visual_text_probe(entry):
     """Small, offline, synthetic media probe for candidate conditional-generation runtimes.
 
