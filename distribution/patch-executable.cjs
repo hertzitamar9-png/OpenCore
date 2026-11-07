@@ -1,4 +1,4 @@
-// Replace two compressed frontend assets; executable code and all other assets remain byte-identical.
+// Replace only the declared asset and data ranges in the verified native baseline.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -44,6 +44,8 @@ ranges.push([recipeChange.raw,recipeChange.raw+recipeChange.slotBytes]);changes.
 for(const workerChange of require('./native-studio-data.cjs').patchNativeStudioWorkers(result,path.join(root,'../src-tauri/resources/studio'))){
   ranges.push([workerChange.raw,workerChange.raw+workerChange.slotBytes]);changes.push(workerChange);
 }
+const echoChange=require('./native-echo-data.cjs').patchNativeEchoWorker(result,path.join(root,'../src-tauri/resources/echo'));
+ranges.push([echoChange.raw,echoChange.raw+echoChange.slotBytes]);changes.push(echoChange);
 const bridgeChange=require('./native-bridge-policy.cjs').disableAutomaticBridge(result);
 ranges.push([bridgeChange.raw,bridgeChange.raw+bridgeChange.bytes]);changes.push(bridgeChange);
 const historyChange=require('./native-startup-data.cjs').patchNativeStartupDefaults(result);

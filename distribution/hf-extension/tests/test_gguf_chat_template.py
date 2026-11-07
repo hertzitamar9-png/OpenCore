@@ -34,7 +34,7 @@ class GgufChatTemplateTests(unittest.TestCase):
                                        'gitBlobSha1': blob}}
 
     def plan(self, entry=None):
-        return runtime_plan(entry or self.entry, self.root, self.root / 'resources')
+        return runtime_plan(entry or self.entry, self.root, self.root / 'resources', prefer_gpu=False)
 
     def test_pinned_template_is_selected_by_exact_managed_file(self):
         command = self.plan()['command']

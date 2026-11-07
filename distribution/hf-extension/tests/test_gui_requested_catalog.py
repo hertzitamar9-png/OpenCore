@@ -21,8 +21,9 @@ class GuiRequestedCatalogTests(unittest.TestCase):
 
     def test_complete_quantization_menus_keep_each_publisher_identity(self):
         for family, original, total, ggufs in [
-            ('herculis-cua-gui-actioner-4b', 'Herculis-CUA-GUI-Actioner-4B', 15, 14),
-            ('gliese-cua-tool-call-8b', 'Gliese-CUA-Tool-Call-8B', 19, 16),
+            ('herculis-cua-gui-actioner-4b', 'prithivMLmods/Herculis-CUA-GUI-Actioner-4B', 15, 14),
+            ('gliese-cua-tool-call-8b', 'prithivMLmods/Gliese-CUA-Tool-Call-8B', 19, 16),
+            ('northcua-nano', 'beipo-ai/NorthCUA-Nano', 14, 12),
         ]:
             with self.subTest(family=family):
                 entries = self.family(family)
@@ -33,10 +34,10 @@ class GuiRequestedCatalogTests(unittest.TestCase):
                     {entry['quantization'] for entry in entries}))
                 self.assertTrue(all(entry['libraryCategory'] == 'computer-use' for entry in entries))
                 self.assertTrue(all(entry['category'] == 'text' for entry in entries))
-                self.assertTrue(all(entry['originalRepository'] == 'prithivMLmods/' + original for entry in entries))
+                self.assertTrue(all(entry['originalRepository'] == original for entry in entries))
 
     def test_ggufs_include_their_own_pinned_vision_projector(self):
-        for family in ('herculis-cua-gui-actioner-4b', 'gliese-cua-tool-call-8b'):
+        for family in ('herculis-cua-gui-actioner-4b', 'gliese-cua-tool-call-8b', 'northcua-nano'):
             for entry in self.family(family):
                 if entry['format'] != 'gguf':
                     continue

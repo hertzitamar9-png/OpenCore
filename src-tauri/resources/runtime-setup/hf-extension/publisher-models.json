@@ -86015,6 +86015,574 @@
       "publishedContextTokens": 262144
     },
     {
+      "id": "hf-3c2486c17ee3f201d48ad027",
+      "variantKey": "gguf:Dory1.0-4B-Q2_K.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · Q2_K",
+      "quantization": "Q2_K",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b-q2_k",
+        "dory-4b-q2_k-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b-q2_k",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-Q2_K.gguf",
+          "bytes": 1609110688,
+          "sha256": "14f49fabd544002cf62f07ab40944d06c27564535cadc45d56a358e7cbc5b230",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 1609110688,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-5d539d8ab016e3621be367aa",
+      "variantKey": "gguf:Dory1.0-4B-IQ3_M.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · IQ3_M",
+      "quantization": "IQ3_M",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b-iq3_m",
+        "dory-4b-iq3_m-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b-iq3_m",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-IQ3_M.gguf",
+          "bytes": 1923519648,
+          "sha256": "fa5fdce7da2b2ea39c9926c60bfbed06d28f688d5d92fdeacf9b4da960b80d69",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 1923519648,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-e6390fc3b708c2dbccf2eedd",
+      "variantKey": "gguf:Dory1.0-4B-Q3_K_M.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b-q3_k_m",
+        "dory-4b-q3_k_m-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b-q3_k_m",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-Q3_K_M.gguf",
+          "bytes": 2006750368,
+          "sha256": "6a2e5b89a0be4ef4b83598bca22d3757cf2515a38143a35b9be82f91161dfa65",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 2006750368,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-36dc9b2469b668ccd47157b0",
+      "variantKey": "gguf:Dory1.0-4B-Q4_K_M.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b-q4_k_m",
+        "dory-4b-q4_k_m-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b-q4_k_m",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-Q4_K_M.gguf",
+          "bytes": 2431669408,
+          "sha256": "7c70b0d949722201a5af6bc42c1d2552a300901d93d194f13c3fe1fb1cea3cab",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 2431669408,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-4478ea46ae3739f53e38314f",
+      "variantKey": "gguf:Dory1.0-4B-Q5_K_M.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b-q5_k_m",
+        "dory-4b-q5_k_m-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b-q5_k_m",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-Q5_K_M.gguf",
+          "bytes": 2839303328,
+          "sha256": "fc7cb1b9235f31e4a666b493307cd85e5dea6b3b08d4e746ca0ade766bbe0545",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 2839303328,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-cbe5e993cd44472d5c9cfe64",
+      "variantKey": "gguf:Dory1.0-4B-Q6_K.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · Q6_K",
+      "quantization": "Q6_K",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b-q6_k",
+        "dory-4b-q6_k-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b-q6_k",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-Q6_K.gguf",
+          "bytes": 3272414368,
+          "sha256": "81308c5aeb89403c2f8fbd567788a243835f53e8ff30aa09427af7d040dc204d",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 3272414368,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-be57289b9cd984646b797ed6",
+      "variantKey": "gguf:Dory1.0-4B-Q8_0.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · Q8_0",
+      "quantization": "Q8_0",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b-q8_0",
+        "dory-4b-q8_0-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b-q8_0",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-Q8_0.gguf",
+          "bytes": 4234892448,
+          "sha256": "9344fa95375c74e433facd7692869cf2906de5b7f5174fa3953fc34f3c95d1b4",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 4234892448,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
+      "id": "hf-586bc05b5051b141af7c515b",
+      "variantKey": "gguf:Dory1.0-4B-BF16.gguf",
+      "format": "gguf",
+      "subdirectory": "",
+      "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+      "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "sourceUrl": "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF/tree/9abcb0453c0382e6852fb57893102a7ed0fe17be",
+      "originalRepository": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "name": "NVIDIA Nemotron Labs Dory1.0 4B · BF16",
+      "quantization": "BF16",
+      "familyId": "publisher-dory-4b",
+      "familyLabel": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "license": "openmdw-1.1",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "nativeModelIds": [
+        "dory-4b",
+        "dory-4b-mode-native"
+      ],
+      "nativeWeightProfile": "dory-4b",
+      "modelType": "dory",
+      "managedEngine": "dory-cuda13-v1",
+      "contextTokens": 32768,
+      "supportedContextTokens": 262144,
+      "files": [
+        {
+          "filename": "Dory1.0-4B-BF16.gguf",
+          "bytes": 7960613824,
+          "sha256": "575e0face224e86294f4597e46308419932d795c4435125e1fd12e73dcc30ccd",
+          "repository": "cloudnathan5/Dory1.0-4B-GGUF",
+          "revision": "9abcb0453c0382e6852fb57893102a7ed0fe17be",
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 7960613824,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights."
+      },
+      "builtIn": true,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
       "id": "hf-0983ef279a405884e4bdbd4f",
       "repository": "hkust-aaron/EdgeRock-4B-GGUF",
       "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
@@ -130188,6 +130756,1392 @@
         }
       ],
       "publishedContextTokens": 65536
+    },
+    {
+      "id": "hf-44bc3ae33a1273f1f7b4d425",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q2_K.gguf",
+      "name": "NorthCUA Nano · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 4745428288,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q2_K.gguf",
+          "bytes": 3827262656,
+          "sha256": "87b30d5bffbb4775a582e7b6a74a64d3698a81b7e6fd9b9f7ac505c16638fde2",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-7b66e68f3d365d864e2d3b2a",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q3_K_S.gguf",
+      "name": "NorthCUA Nano · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5177572672,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q3_K_S.gguf",
+          "bytes": 4259407040,
+          "sha256": "6df26cfff4a6a13b96e60457284a864c810b5c582a72efb5927a92d2d23bceb8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-feab24599cd38f2734627531",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q3_K_M.gguf",
+      "name": "NorthCUA Nano · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5541690688,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q3_K_M.gguf",
+          "bytes": 4623525056,
+          "sha256": "61645392e8e46d93f6fb1f6ecd164899a764adcd677ce647243951cf157e26a6",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-c828173b186b54c8c456c1e1",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q3_K_L.gguf",
+      "name": "NorthCUA Nano · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 5843680576,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q3_K_L.gguf",
+          "bytes": 4925514944,
+          "sha256": "2dc6b36c05f9fdf4cd2601d257b426cf2367378b00ca7c0cbe53b48c985884f7",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-027478d668b81801c668cd43",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.IQ4_XS.gguf",
+      "name": "NorthCUA Nano · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6146063680,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.IQ4_XS.gguf",
+          "bytes": 5227898048,
+          "sha256": "04779a8d47e71c4011522b808afacc4f9d162714903e22cca933b1471934edbb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-25109f7d621f72517ad04d2e",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q4_K_S.gguf",
+      "name": "NorthCUA Nano · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6269795648,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q4_K_S.gguf",
+          "bytes": 5351630016,
+          "sha256": "27db545348cbad9c0b9d372b8743e4b43ddc226aadb4006daeb13022ba24f0d1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-bb772c229d8ae892ce7df429",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q4_K_M.gguf",
+      "name": "NorthCUA Nano · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 6547275072,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q4_K_M.gguf",
+          "bytes": 5629109440,
+          "sha256": "3163385ba7d48d49ae7e4d20e55f1e94f67cf3bf862e8e0e7840e54f0992fc3f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-6f312244a1b5811ddcc16435",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q5_K_S.gguf",
+      "name": "NorthCUA Nano · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 7223475520,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q5_K_S.gguf",
+          "bytes": 6305309888,
+          "sha256": "fd4447eab69d62d2d77f200bf92ddefa47cc8b0ff3092ec69dc872ab6c9604d5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-c23d0d91bb757c064bddf824",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q5_K_M.gguf",
+      "name": "NorthCUA Nano · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 7386135872,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q5_K_M.gguf",
+          "bytes": 6467970240,
+          "sha256": "215b05b937a70aa2ca16b6ac79409aab57755f43425d1219b99495bd006aa227",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-2a8d477345edf8686e0bf035",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q6_K.gguf",
+      "name": "NorthCUA Nano · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 8277425472,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q6_K.gguf",
+          "bytes": 7359259840,
+          "sha256": "1ab2fac56a413e9ce759c1822773d4371e562f752fee97f86b0822a67e8bb25c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-a1baa98ff54d0107329bfe8f",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.Q8_0.gguf",
+      "name": "NorthCUA Nano · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 10445667648,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.Q8_0.gguf",
+          "bytes": 9527502016,
+          "sha256": "a5fb4fd9ce6c2faceb706d8c0eacb7e4e71a717d635e4d5a96febf361bbc3970",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-d7cb16061c8801c05635bfb1",
+      "repository": "mradermacher/NorthCUA-Nano-GGUF",
+      "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+      "variantKey": "gguf:NorthCUA-Nano.f16.gguf",
+      "name": "NorthCUA Nano · F16",
+      "quantization": "F16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 18838863168,
+      "files": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.f16.gguf",
+          "bytes": 17920697536,
+          "sha256": "b2c8bd9e4e18f291f2008bd640801ef32c2d515d0d1c454f8609d14eba1b445e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "revision": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+          "filename": "NorthCUA-Nano.mmproj-f16.gguf",
+          "bytes": 918165632,
+          "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/NorthCUA-Nano-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-54361941cab1147626db4555",
+      "repository": "beipo-ai/NorthCUA-Nano",
+      "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+      "variantKey": "safetensors:.",
+      "name": "NorthCUA Nano · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 18839795986,
+      "files": [
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "model-00001-of-00004.safetensors",
+          "bytes": 4911674496,
+          "sha256": "4777af76d47797eb376597b967a9c4e099e2dcb2159431e55dd08b11cd99e585",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "model-00002-of-00004.safetensors",
+          "bytes": 4954211152,
+          "sha256": "f20326c8e95f88faf0b18e4ea2808c7e734429e0cdf8ac770dc4f28d5e486453",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "model-00003-of-00004.safetensors",
+          "bytes": 4988356912,
+          "sha256": "e8c7d60be58630f6bdf579265b7c014fa38d35a99c7129d2e64542de0841986b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "model-00004-of-00004.safetensors",
+          "bytes": 3965478424,
+          "sha256": "8bc8c147f1a270413b0b0c7d0091cca1b406de784802caa5ee6337e3bad6fd81",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "chat_template.jinja",
+          "bytes": 7756,
+          "sha256": null,
+          "gitBlobSha1": "a585dec894e63da457d9440ec6aa7caa16d20860",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "config.json",
+          "bytes": 2908,
+          "sha256": null,
+          "gitBlobSha1": "065b47a0537e55683aead2e6c6ae8de1e6b28269",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "model.safetensors.index.json",
+          "bytes": 72268,
+          "sha256": null,
+          "gitBlobSha1": "6de66b3ed6d189e2c9103613e5c19c79b0e753b8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": null,
+          "gitBlobSha1": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "processor_config.json",
+          "bytes": 1191,
+          "sha256": null,
+          "gitBlobSha1": "33818c7f9e991ad735fd240209f4fa73e6c28c50",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "tokenizer.json",
+          "bytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "revision": "317dd35f56527900d1c0fb4f344107f181598b07",
+          "filename": "tokenizer_config.json",
+          "bytes": 1164,
+          "sha256": null,
+          "gitBlobSha1": "875b7b0a3aabbd4e5e2888802dfbd5624a4a2060",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/beipo-ai/NorthCUA-Nano",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-39ab8bf203a6259d8f150694",
+      "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+      "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+      "variantKey": "safetensors:.",
+      "name": "NorthCUA Nano · NVFP4A16",
+      "quantization": "NVFP4A16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 11218817329,
+      "files": [
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "model-00001-of-00004.safetensors",
+          "bytes": 3886695964,
+          "sha256": "84845ad13b1b301addaf4fcb769bb694c30dcabfccdd85d3f958cdc02963cecd",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "model-00002-of-00004.safetensors",
+          "bytes": 2168681412,
+          "sha256": "8ca68ac18ecc8f8d2797f8d7ca9043b0d9bb82c47604a9df070e647929c076be",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "model-00003-of-00004.safetensors",
+          "bytes": 2275178704,
+          "sha256": "4f83cef31124870aee28197d9e9acc180e3f1c34120988431fd636df44feee15",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "model-00004-of-00004.safetensors",
+          "bytes": 2868148440,
+          "sha256": "8501df17b33f32a2153be5a6576e33b591f1e6ab3bd943eafb47e56690418591",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "chat_template.jinja",
+          "bytes": 7756,
+          "sha256": null,
+          "gitBlobSha1": "a585dec894e63da457d9440ec6aa7caa16d20860",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "config.json",
+          "bytes": 16130,
+          "sha256": null,
+          "gitBlobSha1": "76a6129ad69a83966b23d77694292191840907a3",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "model.safetensors.index.json",
+          "bytes": 96853,
+          "sha256": null,
+          "gitBlobSha1": "0c582fe3010c5ed24e884919eea9b37f5f494e4c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": null,
+          "gitBlobSha1": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "processor_config.json",
+          "bytes": 1191,
+          "sha256": null,
+          "gitBlobSha1": "33818c7f9e991ad735fd240209f4fa73e6c28c50",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "tokenizer.json",
+          "bytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "revision": "d0bf2b151a81c671db283a020300261f6e8b7c01",
+          "filename": "tokenizer_config.json",
+          "bytes": 1164,
+          "sha256": null,
+          "gitBlobSha1": "875b7b0a3aabbd4e5e2888802dfbd5624a4a2060",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "This community edition uses compressed-tensors NVFP4A16 and needs a compatible quantized Qwen3.5-VL runtime. Choose a GGUF or the original BF16 checkpoint for OpenCore's managed runtime."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/willyb23/NorthCUA-Nano-NVFP4A16",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-northcua-nano",
+      "familyLabel": "NorthCUA Nano",
+      "originalRepository": "beipo-ai/NorthCUA-Nano",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "license": "apache-2.0",
+      "supportedContextTokens": 262144,
+      "catalogOrder": 1,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": false
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
     },
     {
       "id": "hf-35a42169baab64eb11193eb7",

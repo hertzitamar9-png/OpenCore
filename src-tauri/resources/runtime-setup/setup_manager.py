@@ -164,7 +164,7 @@ def read_receipt(path, recipe):
             return None
         if not receipt.get("dependenciesVerified"):
             return None
-        if recipe.get('kind')=='speech' and recipe.get('requiresCuda'):
+        if recipe.get('kind') in ('speech', 'text') and recipe.get('requiresCuda'):
             hardware=receipt.get('hardware',{})
             if not hardware.get('cudaBuild') or hardware.get('cudaAvailable') is not True or hardware.get('kernelVerified') is not True:
                 return None
@@ -520,7 +520,8 @@ def install(root, resources, target, options, runner, recipe_id=None):
     elif kind == "text":
         from managed_model_sources import shared_torch_source,attach_shared_packages
         shared=None
-        for flavor in (('cpu',) if recipe.get('cpuOnly') else ('cpu','cu126')):
+        flavors = (('cu126',) if recipe.get('requiresCuda') else ('cpu',) if recipe.get('cpuOnly') else ('cpu', 'cu126'))
+        for flavor in flavors:
             candidate=dict(recipe,torchIndex='https://download.pytorch.org/whl/'+flavor)
             shared=shared_torch_source(root,candidate,runner)
             if shared:break
@@ -532,6 +533,8 @@ def install(root, resources, target, options, runner, recipe_id=None):
         runner.reporter('installing-dependencies',detail='Preparing the isolated text generation runtime')
         torch_packages = recipe['torchPackages'] if not shared else {name: version for name, version in recipe['torchPackages'].items() if name != 'torch'}
         if torch_packages:
+            if recipe.get('requiresCuda'):
+                torch_packages = {name: version + '+cu126' for name, version in torch_packages.items()}
             runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:','--index-url',recipe['torchIndex'],
                         *[f'{name}=={version}' for name, version in torch_packages.items()]],env=environment)
         wheel=recipe.get('transformersWheel')
@@ -540,7 +543,8 @@ def install(root, resources, target, options, runner, recipe_id=None):
         if wheel:
             archive=download(wheel['url'],root/'runtime-setup/downloads'/wheel['filename'],wheel['sha256'],runner,max_bytes=wheel['bytes'])
             runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:',archive],env=environment)
-        verification=verify_environment(python,{**recipe['torchPackages'],**recipe['packages']},recipe['imports'],runner)
+        verification=verify_environment(python,{**recipe['torchPackages'],**recipe['packages']},recipe['imports'],runner,
+                                        require_cuda=recipe.get('requiresCuda', False))
         model_type=options.get('modelType')
         if model_type and model_type not in ('gptx3','edgerock','spark2_5'):
             runner.run([python,'-I','-c',"import sys;from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES;assert sys.argv[1] in CONFIG_MAPPING_NAMES,'The current text runtime does not support architecture '+sys.argv[1]",model_type],timeout=30)

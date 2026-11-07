@@ -585,6 +585,40 @@
       "limitations": "Offline CPU or GPU execution. The selected checkpoint must fit available memory; disk offload is disabled. Installation verifies a real generated token before reporting Ready. Base language models are not instruction-tuned agents."
     },
     {
+      "id": "managed-transformers-text-cuda-v1",
+      "label": "Managed CUDA text generation",
+      "kind": "text",
+      "modelIds": [],
+      "packages": {
+        "transformers": "5.20.1",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "psutil": "6.1.1",
+        "pillow": "11.3.0",
+        "sentencepiece": "0.2.1"
+      },
+      "torchPackages": {
+        "torch": "2.11.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cu126",
+      "shareManagedTorch": true,
+      "imports": {
+        "transformers": ["AutoTokenizer", "AutoModelForCausalLM", "AutoModelForImageTextToText", "AutoProcessor"],
+        "accelerate": [],
+        "safetensors": [],
+        "psutil": []
+      },
+      "minimumDiskBytes": 400000000,
+      "fallbackDiskBytes": 9000000000,
+      "minimumRamBytes": 2000000000,
+      "requiresCuda": true,
+      "sourceUrls": [
+        "https://huggingface.co/docs/transformers",
+        "https://huggingface.co/docs/accelerate"
+      ],
+      "limitations": "Uses CUDA for model execution and system RAM for weights that exceed available VRAM. Disk offload is disabled. Readiness requires a verified CUDA load and generated text."
+    },
+    {
       "id": "managed-gguf-v1",
       "label": "Native local model runtime",
       "kind": "gguf",

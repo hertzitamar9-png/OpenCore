@@ -102,6 +102,11 @@ def append_requested(entries, manifest, snapshots):
                     raise ValueError('Requested package already belongs to a bundled card: ' + entry['id'])
                 if entry['format'] == 'gguf' and not any(pin['role'] == 'companion' for pin in entry['files']) and projectors:
                     entry['files'].append(copy.deepcopy(projectors[0]))
+                if source.get('visionInput'):
+                    if (entry['format'] != 'gguf' or original.get('pipeline_tag') != 'image-text-to-text'
+                            or not any(pin['role'] == 'companion' for pin in entry['files'])):
+                        raise ValueError('Reviewed vision input needs a pinned projector and a vision-language checkpoint')
+                    entry['inputModalities'] = ['image', 'text']
                 if entry['format'] != 'gguf':
                     selected = {pin['filename'] for pin in entry['files']}
                     for item in metadata['siblings']:

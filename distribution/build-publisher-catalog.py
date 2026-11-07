@@ -94,6 +94,32 @@ def build():
                 entries.append(entry)
                 seen.add(entry['id'])
                 quantizations.add(entry['quantization'])
+    # Dory's architecture needs the publisher's llama.cpp fork. Use the
+    # existing native checkpoint paths and install receipts for every quant.
+    for model in catalog['models']:
+        if model.get('modeAliasOf') or model.get('installation', {}).get('adapterId') != 'dory-native-text-v1':
+            continue
+        artifact_id, = model['artifacts']
+        artifact = artifacts[artifact_id]
+        repository, revision = artifact['repo'], artifact['revision']
+        key = 'gguf:' + artifact['filename']
+        pin = {key: artifact[key] for key in ('filename', 'bytes', 'sha256')}
+        pin.update(repository=repository, revision=revision, role='model', pinned=True)
+        entry = {
+            'id': stable_id(repository, key), 'variantKey': key, 'format': 'gguf', 'subdirectory': '',
+            'repository': repository, 'revision': revision, 'sourceUrl': model['sourceUrl'],
+            'originalRepository': 'nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16',
+            'name': model['label'] + ' · ' + model['precision'], 'quantization': model['precision'],
+            'familyId': 'publisher-dory-4b', 'familyLabel': model['label'], 'license': model['license'],
+            'category': 'text', 'inputModalities': ['text'], 'outputModalities': ['text'],
+            'nativeModelIds': list(model['modeProfiles'].values()), 'nativeWeightProfile': model['id'],
+            'modelType': 'dory', 'managedEngine': 'dory-cuda13-v1', 'contextTokens': 32768,
+            'supportedContextTokens': 262144, 'files': [pin], 'bytes': pin['bytes'], 'installable': True,
+            'status': 'not-installed', 'runtime': {'adapter': 'gguf', 'available': False, 'inferenceVerified': False,
+                'reason': 'Dory prepares its CUDA runtime on supported NVIDIA GPUs and reuses verified installed weights.'},
+        }
+        validate_entry(entry)
+        entries.append(entry)
     from bundled_catalog import append_presets
     entries = append_presets(catalog, entries, HERE / 'hf-research/bundled-quantizations.json', HERE / 'hf-research/bundled-quants')
     from requested_catalog import append_requested

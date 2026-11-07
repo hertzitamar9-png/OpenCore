@@ -123,7 +123,8 @@ function $hubAugment(library) {
     return true;}).map(model=>{const adapter=$hubBuiltInAdapter(model);return adapter?{...model,hubModel:true,hubEntry:adapter}:model;});
   const precision=$hubPrecision;
   for(const [family,entries] of families){
-    const packaged=library.models.filter(model=>nativeFamilies.get(model.id)===family&&(model.installed||model.id===globalThis.__opencoreHubSelectedProfile||model.totalBytes>0||model.weightBytes>0));
+    const managedNativeIds=new Set(entries.filter(entry=>entry.nativeWeightProfile).flatMap(entry=>entry.nativeModelIds||[]));
+    const packaged=library.models.filter(model=>nativeFamilies.get(model.id)===family&&!managedNativeIds.has(model.id)&&(model.installed||model.id===globalThis.__opencoreHubSelectedProfile||model.totalBytes>0||model.weightBytes>0));
     // Preserve installed native profiles. Uninstalled catalog rows must not
     // replace the managed package with a legacy install/verification path.
     const nativeQuants=new Set(packaged.filter(model=>model.installed).map(model=>precision(model.precision)));
@@ -454,6 +455,7 @@ function $hubChosenAdapterPath(entry) {
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,selectedProfile}) {
   const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
   const model=group.variants.find(v=>v.id===choice)||group.variants[0],rawEntry=state.catalog.find(v=>v.id===model.id)||model.hubEntry,entry=globalThis.__opencoreModelModes?.entry(rawEntry)||rawEntry;
+  const runtimeName=entry.format==='safetensors'?'Transformers':'llama.cpp';
   const queued=shared.queue?.items?.find(item=>item.modelId===entry.id&&['queued','starting','downloading','preparing','paused'].includes(item.phase));
   const active=shared.active?.modelId===entry.id||!!queued&&shared.queue.activeIds.includes(queued.id),locked=disabled||!!shared.active||busy;
   const downloadLocked=busy||active||!!queued||!!disabled&&!shared.queue;
@@ -530,7 +532,15 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   async function changeRuntime(preference){setBusy(true);setError('');try{await $hubRequest('/runtime/backend',{id:entry.id,runtimePreference:preference});await $hubRefresh(true);onNotice?.(entry.status==='installed'?'Runtime choice saved. Prepare the runtime to use this downloaded model.':'Runtime choice saved for this download.');}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function prepare(){setError('');try{await globalThis.__opencoreModelModes?.ensure(rawEntry);await Ue(entry.nativeProfile?'install_model':'hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const prepared=await globalThis.__opencoreModelModes?.ensure(rawEntry)||entry;const profile=entry.nativeProfile?await globalThis.__opencoreModelModes?.activate(entry.id,globalThis.__opencoreModelModes.mode(entry))||entry.id:await $hubRegister(prepared);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
-  function askRemove(){setError('');onNativeRemove?.(model);}
+  async function askRemove(){
+    setError('');
+    const native=entry.installReceipt?.nativeProfileId;
+    if(!native){onNativeRemove?.(model);return;}
+    setBusy(true);
+    try{await $hubRequest('/stop');onNativeRemove?.({...model,id:native});}
+    catch(error){setError(String(error));}
+    finally{setBusy(false);}
+  }
   return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady||entry.specialistReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
     globalThis.__opencoreDownloadQueueUI?h(globalThis.__opencoreDownloadQueueUI.Checkbox,{groupId:group.id||entry.familyId||entry.repository,modelId:entry.id,label:(entry.familyLabel||entry.repository)+' · '+model.precision,installed:entry.status==='installed',installable:entry.installable!==false,modelIds:group.variants.map(value=>value.id),legacyModelId:cardProgress?.modelId}):null,
     globalThis.__opencoreModelInstallProgress&&group.variants.some(value=>value.id===cardProgress?.modelId)?h(globalThis.__opencoreModelInstallProgress,{progress:cardProgress,label:state.catalog.find(value=>value.id===cardProgress.modelId)?.familyLabel||entry.familyLabel||entry.repository,busy:shared.active?.pausing||shared.active?.kind==='starting',onPause:()=>$installCoordinator.pause(),onCancel:()=>$installCoordinator.cancel(cardProgress),onError:setError}):null,
@@ -538,8 +548,13 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
     globalThis.__opencoreModelModes?h(globalThis.__opencoreModelModes.Control,{model:entry,disabled:locked,onChanged}):null,
     !entry.nativeProfile&&entry.runtimeChoices?.length?h('label',{className:'model-quantization-picker'},'Runtime',h('select',{'aria-label':'Runtime for '+entry.repository,value:entry.runtimePreference||'auto',disabled:locked||!!queued,onChange:e=>void changeRuntime(e.target.value)},
-      ...entry.runtimeChoices.map(value=>h('option',{key:value,value},({auto:'Automatic · recommended',cuda:'llama.cpp · CUDA (NVIDIA)',vulkan:'llama.cpp · Vulkan GPU',cpu:'llama.cpp · CPU'}[value]||value)))),
-      h('small',null,entry.runtimePreparation?.runtimeBackend?'Last verified: '+entry.runtimePreparation.runtimeBackend.toUpperCase():entry.runtimeChoices.includes('cuda')?'Automatic prefers CUDA, then Vulkan, then CPU. GPU runtimes require compatible drivers.':'This model uses its publisher-specific CPU runtime.')):null,
+      ...entry.runtimeChoices.map(value=>h('option',{key:value,value},({auto:'Automatic · recommended',cuda:runtimeName+' · CUDA (NVIDIA)',vulkan:'llama.cpp · Vulkan GPU',cpu:runtimeName+' · CPU'}[value]||value)))),
+      h('small',null,entry.runtimeReady&&entry.runtimePreparation?.runtimeBackend?
+        ['Last verified: '+entry.runtimePreparation.runtimeBackend.toUpperCase(),entry.runtimePreparation.gpuOffloadedLayers&&entry.runtimePreparation.gpuOffloadedLayers+' layers on GPU',entry.runtimePreparation.gpuModules&&entry.runtimePreparation.gpuModules+' modules on GPU'].filter(Boolean).join(' · '):
+        entry.runtimeChoices.includes('vulkan')?'Automatic tries CUDA, then Vulkan. Layers that exceed available VRAM use system RAM and the CPU.':
+        entry.format==='safetensors'?'Automatic uses CUDA and keeps weights that exceed available VRAM in system RAM.':
+        entry.runtimeChoices.includes('cuda')?'Requires a compatible NVIDIA GPU and CUDA driver. Layers that exceed VRAM use system RAM and the CPU.':
+        'This package has a CPU-only runtime. Select CPU to run it.')):null,
     h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.specialist==='computer'?(entry.specialistReady?'Local action prediction verified':'Computer-use runtime prepares after download'):entry.specialistReady?'Local OCR verified':entry.specialist==='ocr'?'OCR runtime prepares after download':entry.nativeProfile&&entry.runtimeReady?'Installed native runtime':entry.runtimeReady?'Generation verified · '+(entry.operatingMode==='native'?'Native context':'ECHO connected'):entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
     adapter?h('section',{className:'hub-base-picker','aria-label':'Compatible base model'},
       h('strong',null,'Base model and quantization'),

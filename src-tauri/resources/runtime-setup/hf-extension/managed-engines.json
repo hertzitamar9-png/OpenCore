@@ -1,6 +1,15 @@
 {
   "schema": 1,
   "engines": {
+    "dory-cuda13-v1": {
+      "label": "Dory llama.cpp · CUDA 13.3",
+      "url": "https://github.com/hertzitamar9-png/OpenCore/releases/download/runtime-dory-cuda13-98a74c97/dory-llama-win-x64-cuda13-98a74c97.zip",
+      "sha256": "1b9490d81c5dabe58f873ebc443b546dc4bd285e10adf5058d1b71e4f89eebb7",
+      "bytes": 44061503,
+      "source": "https://github.com/brianchmielNV/llama.cpp",
+      "revision": "98a74c97ea09ac72f6ceda1559808fc0a2f447ce",
+      "requiredFiles": ["llama-server.exe", "llama-server-impl.dll", "llama.dll", "llama-common.dll", "mtmd.dll", "ggml.dll", "ggml-base.dll", "ggml-cpu.dll", "ggml-cuda.dll", "LICENSE", "build-info.json"]
+    },
     "cuda13-libs-v1": {
       "label": "Shared CUDA 13.4 libraries",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11960/cudart-llama-bin-win-cuda-13.4-x64.zip",

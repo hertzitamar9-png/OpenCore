@@ -278,20 +278,30 @@ class LoopGuardTests(unittest.TestCase):
         class SilentStream(BaseHTTPRequestHandler):
             def do_GET(self):
                 self.send_response(200);self.send_header('Content-Type','text/event-stream');self.end_headers()
-                self.wfile.write(('data: '+json.dumps(event)+'\n\n').encode());self.wfile.flush()
+                chunk = (event if self.path == '/tool' else
+                         {'choices':[{'delta':{'reasoning_content':'I should inspect the project.'}}]})
+                self.wfile.write(('data: '+json.dumps(chunk)+'\n\n').encode());self.wfile.flush()
                 stopped.wait(3)
             def log_message(self,*_): pass
         server=ThreadingHTTPServer(('127.0.0.1',0),SilentStream)
         thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         self.addCleanup(server.server_close);self.addCleanup(server.shutdown);self.addCleanup(stopped.set)
         handler=Handler.__new__(Handler);handler.state=types.SimpleNamespace(log=lambda *_:None);handler._live_event=lambda *_:None
-        handler._upstream=lambda *a,**k:urllib.request.urlopen('http://127.0.0.1:%d/'%server.server_port,timeout=5)
+        url='http://127.0.0.1:%d/'%server.server_port
+        handler._upstream=lambda *a,**k:urllib.request.urlopen(url+'tool',timeout=5)
         started=time.monotonic()
         with patch('echo_server.TOOL_CALL_SECONDS',0.2):
             result=handler._generate_live({'stream':True,'max_tokens':1024},'working')
         self.assertLess(time.monotonic()-started,2)
         self.assertEqual(result.get('echo_incomplete_tool_call'),'time')
         self.assertEqual(result['choices'][0]['finish_reason'],'length')
+        handler._live_event=lambda *_:self.fail('The buffered client received a preview')
+        handler._upstream=lambda *a,**k:urllib.request.urlopen(url+'reasoning',timeout=5)
+        started=time.monotonic()
+        with self.assertRaisesRegex(ValueError, 'did not finish an answer or action in time'):
+            handler._generate_live({'stream':True,'max_tokens':1024,'_echo_buffer_preview':True,
+                                    '_echo_upstream_deadline':started+.2},'working')
+        self.assertLess(time.monotonic()-started,2)
 
     def test_a_slow_answer_without_a_partial_tool_is_not_cut_off(self):
         class SlowAnswer(BaseHTTPRequestHandler):

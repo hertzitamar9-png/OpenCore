@@ -387,14 +387,20 @@ TOOL_CALL_MIN_TOKENS = 800
 TOOL_CALL_MAX_TOKENS = 3000
 TOOL_CALL_INITIAL_TOKENS = 1200
 TOOL_CALL_MAX_CHARS = 6000
+BUFFERED_AGENT_SECONDS = 230
+BUFFERED_AGENT_TIMEOUT = 'The model did not finish an answer or action in time. Your chat and files were kept.'
 
 
-def _tool_stream_lines(response, calls, started):
-    """Bound a partially emitted tool call even if its upstream goes silent."""
+def _tool_stream_lines(response, calls, started, deadline=None):
+    """Bound partial calls and buffered agent replies even on a silent socket."""
     iterator = iter(response)
     while True:
+        limit = deadline
         if calls:
-            remaining = TOOL_CALL_SECONDS - (time.monotonic() - started)
+            tool_deadline = started + TOOL_CALL_SECONDS
+            limit = min(limit, tool_deadline) if limit is not None else tool_deadline
+        if limit is not None:
+            remaining = limit - time.monotonic()
             if remaining <= 0:
                 yield None
                 return
@@ -412,7 +418,7 @@ def _tool_stream_lines(response, calls, started):
         except StopIteration:
             return
         except TimeoutError:
-            if not calls:
+            if limit is None:
                 raise
             yield None
             return
@@ -1615,6 +1621,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _upstream(self, path: str, payload: dict, stream: bool):
+        deadline = payload.pop('_echo_upstream_deadline', None)
         if path.startswith("/v1/chat/completions"):
             output = payload.get("max_completion_tokens", payload.get("max_tokens"))
             if isinstance(output, int):
@@ -1630,7 +1637,13 @@ class Handler(BaseHTTPRequestHandler):
             headers=self.state.upstream_headers(),
             method="POST",
         )
-        return urllib.request.urlopen(request, timeout=None if stream else 3600)
+        timeout = max(.001, deadline - time.monotonic()) if deadline is not None else None if stream else 3600
+        try:
+            return urllib.request.urlopen(request, timeout=timeout)
+        except (TimeoutError, urllib.error.URLError) as error:
+            if deadline is not None and (isinstance(error, TimeoutError) or isinstance(getattr(error, 'reason', None), TimeoutError)):
+                raise ValueError(BUFFERED_AGENT_TIMEOUT) from error
+            raise
 
     def do_GET(self):
         if self.path == "/echo/config":
@@ -1777,6 +1790,8 @@ class Handler(BaseHTTPRequestHandler):
                     return self._passthrough(payload)
 
         conversation = _conversation_id(payload, self.headers)
+        payload.pop('_echo_upstream_deadline', None)
+        payload.pop('_echo_buffer_preview', None)
         payload = apply_generation_settings(self.state.archives.directory.parent / 'generation-settings.json', conversation, payload)
         messages = payload.get("messages") or []
         question = _last_user_message(messages)
@@ -2054,6 +2069,8 @@ class Handler(BaseHTTPRequestHandler):
         if target_words < 0:
             raise ValueError("echo_target_words must be nonnegative")
         tool_request = bool(payload.get("tools"))
+        buffered_deadline = (time.monotonic() + BUFFERED_AGENT_SECONDS
+                             if agent_request and tool_request and not payload.get('stream') else None)
         backend_session_id = hashlib.sha256(conversation.encode("utf-8")).hexdigest()
         empty_calls = 0
         malformed_controls = 0
@@ -2128,6 +2145,7 @@ class Handler(BaseHTTPRequestHandler):
             body["stream"] = bool(payload.get("stream")) or (agent_request and tool_request)
             if body["stream"] and not payload.get("stream"):
                 body['_echo_buffer_preview'] = True
+                body['_echo_upstream_deadline'] = buffered_deadline
             body["cache_prompt"] = True
             if (same_backend_session and not body.get("echo_append")) or self.state._backend_needs_reset:
                 body["echo_reset"] = True
@@ -2866,6 +2884,7 @@ class Handler(BaseHTTPRequestHandler):
         """
         body = dict(body)
         buffer_preview = bool(body.pop('_echo_buffer_preview',False))
+        deadline = body.get('_echo_upstream_deadline')
         streaming = bool(body.get('stream'))
         if streaming:
             body = dict(body, stream_options={'include_usage': True})
@@ -2881,8 +2900,10 @@ class Handler(BaseHTTPRequestHandler):
             result = {'choices': [{'message': message, 'finish_reason': None}]}
             finished = False
             loop_guard = ReasoningLoopGuard()
-            for line in _tool_stream_lines(response, calls, started):
+            for line in _tool_stream_lines(response, calls, started, deadline):
                 if line is None:
+                    if deadline is not None and (not calls or time.monotonic() >= deadline):
+                        raise ValueError(BUFFERED_AGENT_TIMEOUT)
                     result['echo_incomplete_tool_call'] = 'time'
                     result['choices'][0]['finish_reason'] = 'length'
                     finished = True

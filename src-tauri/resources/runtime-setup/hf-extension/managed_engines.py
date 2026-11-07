@@ -74,6 +74,25 @@ def vulkan_gpu_available():
             library.vkDestroyInstance(instance, None)
 
 
+def dory_cuda_devices():
+    """The pinned build targets Ada and includes PTX for newer devices."""
+    if cuda_driver_version() < 13030:
+        return []
+    driver = ctypes.WinDLL('nvcuda.dll')
+    count = ctypes.c_int()
+    if driver.cuDeviceGetCount(ctypes.byref(count)) != 0:
+        return []
+    devices = []
+    for index in range(count.value):
+        device, major, minor = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
+        if (driver.cuDeviceGet(ctypes.byref(device), index) == 0
+                and driver.cuDeviceGetAttribute(ctypes.byref(major), 75, device) == 0
+                and driver.cuDeviceGetAttribute(ctypes.byref(minor), 76, device) == 0
+                and (major.value, minor.value) >= (8, 9)):
+            devices.append('CUDA' + str(index))
+    return devices
+
+
 def engine_variants(engine_id):
     return (engine_id, *((VULKAN_VARIANTS[engine_id],) if engine_id in VULKAN_VARIANTS else ()),
             *CUDA_VARIANTS.get(engine_id, {}).values())
@@ -82,6 +101,10 @@ def engine_variants(engine_id):
 def select_engine(engine_id, preference='auto'):
     if preference not in ('auto', 'cuda', 'vulkan', 'cpu'):
         raise ValueError('Choose Automatic, CUDA, Vulkan or CPU')
+    if engine_id == 'dory-cuda13-v1':
+        if preference not in ('auto', 'cuda') or not dory_cuda_devices():
+            raise ValueError('Dory needs an NVIDIA GPU with compute capability 8.9 or newer and a CUDA 13.3 compatible driver. Downloaded weights are kept.')
+        return engine_id
     if preference == 'cpu':
         return engine_id
     if preference in ('auto', 'cuda') and engine_id in CUDA_VARIANTS:
@@ -89,7 +112,7 @@ def select_engine(engine_id, preference='auto'):
         # CUDA minor-version compatibility can run a 12.4/13.4 build on the
         # corresponding 12.x/13.x driver family; startup still verifies it.
         version = 13 if driver >= 13000 else 12 if driver >= 12000 else 0
-        if version:
+        if version in CUDA_VARIANTS[engine_id]:
             return CUDA_VARIANTS[engine_id][version]
         if preference == 'cuda':
             raise ValueError('CUDA requires a compatible NVIDIA GPU and driver. Choose Automatic, Vulkan or CPU instead.')
@@ -102,7 +125,9 @@ def select_engine(engine_id, preference='auto'):
             raise ValueError('No compatible Vulkan GPU was detected. Choose Automatic or CPU instead.')
     elif preference == 'vulkan':
         raise ValueError('This model requires a publisher-specific CPU runtime; Vulkan is not available for it yet.')
-    return engine_id
+    if engine_id in CUDA_VARIANTS or engine_id in VULKAN_VARIANTS:
+        raise ValueError('Automatic requires a compatible CUDA or Vulkan GPU. The model files are kept. Choose CPU explicitly if you want to run without a GPU.')
+    raise ValueError('This checkpoint has a publisher-specific CPU runtime. Choose CPU explicitly or select a checkpoint with GPU support.')
 
 
 @contextmanager
@@ -138,6 +163,8 @@ def engine_for(entry):
         return None
     model_type = str(entry.get('modelType') or '').lower()
     repository = str(entry.get('repository') or '').lower()
+    if entry.get('nativeWeightProfile') and entry.get('managedEngine') == 'dory-cuda13-v1':
+        return 'dory-cuda13-v1'
     if entry.get('managedEngine') in ('velociq8-cpu-v1', 'prism-cpu-v1'):
         return entry['managedEngine']
     if model_type == 'edgerock' or repository == 'hkust-aaron/edgerock-4b-gguf':
@@ -164,7 +191,8 @@ def definition(engine_id):
 
 def folder(root, engine_id):
     if engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1', 'lfm3-vulkan-v1', 'flint-vulkan-v1',
-                         'lfm3-cuda12-v1', 'lfm3-cuda13-v1', 'flint-cuda12-v1', 'flint-cuda13-v1', 'cuda12-libs-v1', 'cuda13-libs-v1'):
+                         'lfm3-cuda12-v1', 'lfm3-cuda13-v1', 'flint-cuda12-v1', 'flint-cuda13-v1', 'cuda12-libs-v1', 'cuda13-libs-v1',
+                         'dory-cuda13-v1'):
         raise ValueError('Unknown managed publisher runtime')
     base = Path(root).resolve() / 'runtime-setup/engines'
     target = (base / engine_id).resolve()

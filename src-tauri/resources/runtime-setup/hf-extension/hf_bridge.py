@@ -190,6 +190,11 @@ class BridgeState:
                 self.discard_native_partials(item['modelId'])
         else:
             entry = self.entry(item['modelId'])
+            if entry.get('nativeWeightProfile'):
+                _, artifact = self._native_weight_binding(entry)
+                with self.downloader.owned_targets([managed_path(self.root, artifact['path'])], threading.Event(), lambda _: None):
+                    self._discard_entry_partials(entry)
+                return
             paths = [managed_path(self.downloader.directory(entry), pin['filename']) for pin in entry['files']]
             with self.downloader.owned_targets(paths, threading.Event(), lambda _: None):
                 self.downloader.discard_partials(entry)
@@ -214,7 +219,7 @@ class BridgeState:
         entry = self.entry(identity)
         preparing = command == 'hub_prepare_model' or command == 'runtime_setup_start' and not resolved['args']['options'].get('installWeights')
         if not preparing:
-            self.downloader.install(entry, pause, report, parallel_ranges=not item.get('_parallel'))
+            self._download_entry(entry, pause, report, parallel_ranges=not item.get('_parallel'))
             preparing = supports_computer(entry) or supports_ocr(entry) or supports_image(entry) or entry.get('runtime', {}).get('adapter') and getattr(self.runtime, 'automatic_preparation', False)
         if preparing:
             def prepare():
@@ -529,7 +534,52 @@ class BridgeState:
         if changed:
             self.persist_catalog()
 
+    def _native_weight_binding(self, entry):
+        models, artifacts = self._bindings()
+        model = models.get(entry['nativeWeightProfile'])
+        if not model or model.get('installation', {}).get('adapterId') != 'dory-native-text-v1':
+            raise ValueError('This model does not have a verified native checkpoint binding')
+        artifact_id, = model['artifacts']
+        artifact = artifacts[artifact_id]
+        expected = {'repository': artifact['repo'], **{key: artifact[key] for key in ('revision', 'filename', 'bytes', 'sha256')}}
+        if len(entry['files']) != 1 or any(entry['files'][0].get(key) != value for key, value in expected.items()):
+            raise ValueError('The native checkpoint pin differs from the managed runtime package')
+        return model, artifact
+
+    def _native_weight_receipt(self, entry):
+        from native_modes import regular
+        model, artifact = self._native_weight_binding(entry)
+        target = regular(self.root, artifact['path'])
+        if not target.is_file() or target.stat().st_size != artifact['bytes']:
+            return None
+        for profile in dict.fromkeys((model['id'], *model.get('modeProfiles', {}).values())):
+            receipt_path = regular(self.root, 'models/receipts/model-' + profile + '.json')
+            if receipt_path.is_file() and _read_json(receipt_path, 65536) == model['artifacts']:
+                return {'schema': 1, **{key: entry[key] for key in ('id', 'repository', 'revision', 'bytes')},
+                        'localDirectory': str(target.parent), 'receiptPath': str(receipt_path),
+                        'nativeArtifactId': artifact['id'], 'nativeProfileId': profile,
+                        'files': [{**entry['files'][0], 'localPath': str(target)}]}
+        return None
+
+    def _download_entry(self, entry, pause, report, *, parallel_ranges=True):
+        if entry.get('nativeWeightProfile'):
+            model, artifact = self._native_weight_binding(entry)
+            return self.downloader.install_native(model, {artifact['id']: artifact}, pause, report, parallel_ranges=parallel_ranges)
+        return self.downloader.install(entry, pause, report, parallel_ranges=parallel_ranges)
+
+    def _discard_entry_partials(self, entry):
+        if entry.get('nativeWeightProfile'):
+            return self.discard_native_partials(entry['nativeWeightProfile'])
+        return self.downloader.discard_partials(entry)
+
     def _receipt(self, entry):
+        if entry.get('nativeWeightProfile'):
+            try:
+                native = self._native_weight_receipt(entry)
+                if native:
+                    return native
+            except (OSError, ValueError, KeyError, TypeError):
+                pass
         directory = managed_path(managed_path(self.root, "models", "hub"), entry["id"])
         path = managed_path(directory, "install-receipt.json")
         try:
@@ -574,9 +624,21 @@ class BridgeState:
         if entry.get('format') == 'gguf' and supports_text_generation(entry):
             from managed_engines import engine_for, VULKAN_VARIANTS
             base = engine_for(entry) or 'lfm3-cpu-v1'
+            result['runtimeChoices'] = (['auto', 'cuda'] if base == 'dory-cuda13-v1' else
+                                        ['auto', 'cuda', 'vulkan', 'cpu'] if base in VULKAN_VARIANTS else ['auto', 'cpu'])
+        elif entry.get('format') == 'safetensors' and entry.get('runtime', {}).get('adapter') == 'transformers':
+            result['runtimeChoices'] = ['auto', 'cuda', 'cpu']
+        if result.get('runtimeChoices'):
             result['runtimePreference'] = entry.get('runtimePreference', 'auto')
-            result['runtimeChoices'] = ['auto', 'cuda', 'vulkan', 'cpu'] if base in VULKAN_VARIANTS else ['auto', 'cpu']
+            if result['runtimePreference'] not in result['runtimeChoices']:
+                result['runtimePreference'] = 'auto'
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
+        if (entry.get('format') == 'gguf' and entry.get('runtimePreference', 'auto') == 'auto'
+                and preparation.get('runtimeBackend') == 'cpu'):
+            result['runtimeReady'] = False
+        if (entry.get('format') == 'safetensors' and entry.get('runtime', {}).get('adapter') == 'transformers'
+                and result['runtimePreference'] != 'cpu' and not preparation.get('gpuModules')):
+            result['runtimeReady'] = False
         if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
         if result['runtimeReady'] and entry.get('category') in ('text','brain','omni','ocr','computer-use') and supports_text_generation(entry) and mode=='echo' and preparation.get('echoMode')!='main-context-v1':
             result['runtimeReady']=False
@@ -804,7 +866,7 @@ class BridgeState:
             return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
         try:
             if kind == "download":
-                result = self.downloader.install(entry, pause, report)
+                result = self._download_entry(entry, pause, report)
                 if pause.is_set(): raise Paused('Installation stopped after downloading; completed files were retained')
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
                 if supports_computer(entry):
@@ -866,7 +928,7 @@ class BridgeState:
         finally:
             with self.lock:
                 if cancel.is_set():
-                    cleanup = self.downloader.discard_partials(entry) if kind == 'download' and not external_report else {'removedBytes': 0, 'retainedPartials': []}
+                    cleanup = self._discard_entry_partials(entry) if kind == 'download' and not external_report else {'removedBytes': 0, 'retainedPartials': []}
                     progress.update(status='cancelled', stage='cancelled', error=None, finishedAt=time.time(),
                                          detail='Installation cancelled. Completed and shared files were kept.', **cleanup)
                 if not external_report: self._persist_progress()
@@ -905,7 +967,7 @@ class BridgeState:
             self.progress.update(status='cancelling', stage='cancelling', error=None)
             if not self.worker or not self.worker.is_alive():
                 entry = self.entry(self.progress['id'])
-                cleanup = self.downloader.discard_partials(entry) if self.progress.get('kind') == 'download' else {'removedBytes': 0, 'retainedPartials': []}
+                cleanup = self._discard_entry_partials(entry) if self.progress.get('kind') == 'download' else {'removedBytes': 0, 'retainedPartials': []}
                 self.progress.update(status='cancelled', stage='cancelled', finishedAt=time.time(),
                                      detail='Installation cancelled. Completed and shared files were kept.', **cleanup)
             self._persist_progress()
@@ -953,7 +1015,10 @@ class BridgeState:
         return result if isinstance(result, dict) else {"stopped": True}
 
     def _removal_files(self, model_id):
-        folder=managed_path(managed_path(self.root,'models','hub'),self.entry(model_id)['id'])
+        entry = self.entry(model_id)
+        if (entry.get('installReceipt') or {}).get('nativeProfileId'):
+            raise ValueError('Open Uninstall on the Dory model card to remove this shared native checkpoint')
+        folder=managed_path(managed_path(self.root,'models','hub'),entry['id'])
         files=[]
         if folder.is_dir():
             for path in sorted(folder.rglob('*')):

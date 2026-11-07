@@ -336,7 +336,7 @@ class RuntimeIntegrationRegressions(unittest.TestCase):
                 manager._children.append(completed)
                 return completed
             with patch.object(manager, "_spawn", side_effect=spawn):
-                manager._ensure_transformers({"id": MODEL_ID}, root / "runtime.log")
+                manager._ensure_transformers({"id": MODEL_ID}, root / "runtime.log", 'managed-transformers-text-v1')
             self.assertNotIn(completed, manager._children)
             manager._children = [Child(None), Child(None)]
             manager._active = {"id": MODEL_ID, "url": "http://127.0.0.1:1", "key": "fixture-key"}

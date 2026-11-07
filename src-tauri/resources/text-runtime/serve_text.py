@@ -12,6 +12,30 @@ ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT))
 
 
+def device_counts(devices):
+    return {'gpuModules': sum(type(device) is int or str(device).startswith('cuda') for device in devices),
+            'cpuModules': sum(str(device) == 'cpu' for device in devices),
+            'diskModules': sum(str(device) == 'disk' for device in devices)}
+
+
+def device_placement(model):
+    devices = list((getattr(model, 'hf_device_map', None) or {}).values()) or [model.device]
+    return device_counts(devices)
+
+
+def cuda_device_map(model_factory, memory, dtype):
+    from accelerate import init_empty_weights, infer_auto_device_map
+    with init_empty_weights():
+        skeleton = model_factory()
+    skeleton.tie_weights()
+    layout = infer_auto_device_map(skeleton, max_memory=memory, dtype=dtype,
+                                   no_split_module_classes=skeleton._no_split_modules)
+    placement = device_counts(layout.values())
+    if not placement['gpuModules'] or placement['diskModules']:
+        raise RuntimeError('The model did not fit a GPU and RAM load plan. Choose a smaller quantization.')
+    return layout
+
+
 def load(directory,context,precision='auto',device_preference='auto',experimental_fast=False):
     import psutil
     import torch
@@ -55,7 +79,19 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
         # the 0.1 GiB recurrent history is not the total GPU footprint.
         required=weight_bytes+8*1024**3
     device='cpu'
-    if device_preference!='cpu' and torch.cuda.is_available() and torch.cuda.mem_get_info()[0]>required:device='cuda'
+    hybrid=device_preference=='cuda-hybrid'
+    if hybrid:
+        if not torch.cuda.is_available():
+            raise RuntimeError('The managed CUDA runtime could not initialize a compatible NVIDIA GPU')
+        memory = {index: max(0, torch.cuda.mem_get_info(index)[0] - 1024**3)
+                  for index in range(torch.cuda.device_count())}
+        if not any(memory.values()):
+            raise RuntimeError('CUDA has insufficient free VRAM to place model weights. Close other GPU applications or choose a smaller quantization.')
+        memory['cpu'] = max(0, psutil.virtual_memory().available - 3 * 1024**3)
+        if sum(memory.values()) < weight_bytes:
+            raise RuntimeError(f'This checkpoint has {weight_bytes/1e9:.1f} GB of weights and only {sum(memory.values())/1e9:.1f} GB of usable VRAM and RAM after runtime headroom. Choose a smaller quantization.')
+        device='cuda'
+    elif device_preference!='cpu' and torch.cuda.is_available() and torch.cuda.mem_get_info()[0]>required:device='cuda'
     if device_preference=='cuda' and device!='cuda':raise RuntimeError('The selected GPU does not have enough available memory for this checkpoint')
     if raw.get('model_type')=='edgerock' and device=='cpu':
         required=weight_bytes*2+1024**3
@@ -75,8 +111,24 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
         tokenizer.chat_template=(ROOT/'edgerock/chat_template.jinja').read_text(encoding='utf-8')
         tokenizer._opencore_edgerock=True
     safe_loading={} if raw.get('model_type') in ('gptx3','edgerock','spark2_5') else {'trust_remote_code':False}
+    placement = {}
+    if hybrid:
+        if cls in (AutoModelForCausalLM, AutoModelForImageTextToText):
+            def model_factory():
+                return cls.from_config(config, trust_remote_code=False)
+        else:
+            def model_factory():
+                return cls(config)
+        estimate_dtype = (getattr(config, 'dtype', None) or getattr(getattr(config, 'text_config', None), 'dtype', None)) if dtype == 'auto' else dtype
+        placement['device_map'] = cuda_device_map(model_factory, memory, estimate_dtype)
     model=cls.from_pretrained(directory,config=config,local_files_only=True,**safe_loading,
-        dtype=dtype,low_cpu_mem_usage=True,attn_implementation='eager').eval().to(device)
+        dtype=dtype,low_cpu_mem_usage=True,attn_implementation='eager',**placement).eval()
+    if hybrid:
+        actual=device_placement(model)
+        if not actual['gpuModules'] or actual['diskModules']:
+            raise RuntimeError('The model did not fit a GPU and RAM load plan. Choose a smaller quantization.')
+    else:
+        model=model.to(device)
     if raw.get('model_type')=='edgerock':
         # The model chunks prefill itself. Transformers' similarly named option
         # expects an externally provided cache and otherwise rejects generation.
@@ -217,7 +269,11 @@ def generation_inputs(model,tokenizer,context,payload,stop):
     maximum=min(max(1,int(payload.get('max_tokens',payload.get('n_predict',512)))),context-length,8192)
     temperature=float(payload.get('temperature',0.7))
     if not 0<=temperature<=5:raise ValueError('Temperature must be from zero to five')
-    args={**{key:value.to(model.device) for key,value in encoded.items()},'max_new_tokens':maximum,
+    input_device = model.device
+    if str(input_device) == 'meta':
+        input_device = next(device for device in model.hf_device_map.values()
+                            if type(device) is int or str(device).startswith('cuda'))
+    args={**{key:value.to(input_device) for key,value in encoded.items()},'max_new_tokens':maximum,
           'do_sample':temperature>0,'stopping_criteria':StoppingCriteriaList([Cancelled()]),
           'pad_token_id':tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id}
     if temperature>0:args.update(temperature=temperature,top_p=float(payload.get('top_p',0.95)))
@@ -254,6 +310,7 @@ def serve(model,tokenizer,context,model_id,port,source_pin=''):
                 if self.first_token_at is None:self.first_token_at=time.perf_counter()
             super().put(value)
     active=threading.Lock()
+    placement=device_placement(model)
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args):pass
         def send_json(self,status,value):
@@ -262,7 +319,7 @@ def serve(model,tokenizer,context,model_id,port,source_pin=''):
         def do_GET(self):
             if self.path=='/health':self.send_json(200,{'status':'ok','model':model_id,'contextTokens':context,'experimentalFast':bool(getattr(model.config,'opencore_fast_mode',False))})
             elif self.path=='/v1/models':self.send_json(200,{'object':'list','data':[{'id':model_id,'object':'model','owned_by':'local'}]})
-            elif self.path=='/props':self.send_json(200,{'n_ctx':context,'model':model_id,'model_fingerprint':source_pin,'tokenizer_fingerprint':source_pin,'cache_append_supported':False,'reasoning_min_tokens':False})
+            elif self.path=='/props':self.send_json(200,{'n_ctx':context,'model':model_id,'model_fingerprint':source_pin,'tokenizer_fingerprint':source_pin,'cache_append_supported':False,'reasoning_min_tokens':False,**placement})
             else:self.send_json(404,{'error':'Unknown endpoint'})
         def do_POST(self):
             if self.path=='/tokenize':

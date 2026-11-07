@@ -2873,6 +2873,30 @@
           "runtimeReason": "This publisher edition uses compressed-tensors W8A8 FP8 and needs a compatible quantized Qwen2.5-VL adapter. The managed BF16 Transformers runtime cannot load it. Choose a GGUF or original BF16 package for the integrated text runtime; FP8 generation has not been verified."
         }
       ]
+    },
+    {
+      "repository": "beipo-ai/NorthCUA-Nano",
+      "familyId": "publisher-northcua-nano",
+      "label": "NorthCUA Nano",
+      "category": "computer-use",
+      "description": "Beipo AI's Qwen3.5-based vision-language model for screenshot grounding and computer interaction. Includes the original BF16 checkpoint and twelve verified GGUF quants with the matching vision projector. Native context is up to 262,144 tokens subject to device memory. Preparation checks generation. Autonomous desktop actions have not been verified in OpenCore.",
+      "supportedContextTokens": 262144,
+      "sources": [
+        {
+          "repository": "mradermacher/NorthCUA-Nano-GGUF",
+          "managedEngine": "flint-cpu-v1",
+          "visionInput": true
+        },
+        {
+          "repository": "beipo-ai/NorthCUA-Nano",
+          "quantization": "BF16"
+        },
+        {
+          "repository": "willyb23/NorthCUA-Nano-NVFP4A16",
+          "quantization": "NVFP4A16",
+          "runtimeReason": "This community edition uses compressed-tensors NVFP4A16 and needs a compatible quantized Qwen3.5-VL runtime. Choose a GGUF or the original BF16 checkpoint for OpenCore's managed runtime."
+        }
+      ]
     }
   ]
 }

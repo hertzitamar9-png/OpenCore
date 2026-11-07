@@ -9,7 +9,7 @@ import zipfile
 
 import managed_engines as engines
 from hf_bridge import BridgeState
-from hf_runtime import runtime_plan
+from hf_runtime import checked_model_files, runtime_plan
 
 
 class ManagedEngineTests(unittest.TestCase):
@@ -37,14 +37,15 @@ class ManagedEngineTests(unittest.TestCase):
         with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=True):
             plan=runtime_plan(entry,self.root,self.root/'resources')
             self.assertEqual(plan['publisherEngine'],'lfm3-vulkan-v1')
-            self.assertEqual(plan['publisherCpuFallback'],'lfm3-cpu-v1')
+            self.assertEqual(plan['runtimeBackend'],'vulkan')
             self.assertEqual(plan['command'][plan['command'].index('--gpu-layers')+1],'auto')
             self.assertEqual(plan['command'][plan['command'].index('--fit')+1],'on')
             fallback=runtime_plan(entry,self.root,self.root/'resources',prefer_gpu=False)
             self.assertEqual(fallback['publisherEngine'],'lfm3-cpu-v1')
             self.assertEqual(fallback['command'][fallback['command'].index('--gpu-layers')+1],'0')
         with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=False):
-            self.assertEqual(runtime_plan(entry,self.root,self.root/'resources')['publisherEngine'],'lfm3-cpu-v1')
+            with self.assertRaisesRegex(ValueError,'requires a compatible CUDA or Vulkan GPU'):
+                runtime_plan(entry,self.root,self.root/'resources')
 
     def test_automatic_and_manual_runtime_choices_respect_hardware_and_publisher(self):
         with patch.object(engines,'cuda_driver_version',return_value=13040), patch.object(engines,'vulkan_gpu_available',return_value=True):
@@ -56,7 +57,8 @@ class ManagedEngineTests(unittest.TestCase):
         with patch.object(engines,'cuda_driver_version',return_value=12040), patch.object(engines,'vulkan_gpu_available',return_value=True):
             self.assertEqual(engines.select_engine('flint-cpu-v1','auto'),'flint-cuda12-v1')
         with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=False):
-            self.assertEqual(engines.select_engine('lfm3-cpu-v1','auto'),'lfm3-cpu-v1')
+            with self.assertRaisesRegex(ValueError,'requires a compatible CUDA or Vulkan GPU'):
+                engines.select_engine('lfm3-cpu-v1','auto')
             with self.assertRaisesRegex(ValueError,'NVIDIA'):
                 engines.select_engine('lfm3-cpu-v1','cuda')
 
@@ -131,6 +133,42 @@ class ManagedEngineTests(unittest.TestCase):
 
 
 class PublisherCatalogTests(unittest.TestCase):
+    def test_dory_cuda_uses_the_existing_native_receipt_and_checkpoint(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            resources = root/'resources'
+            state = BridgeState(root, resources)
+            self.addCleanup(state.close)
+            data = b'verified Dory fixture'
+            target = root/'models/library/dory-4b/Dory-Q8.gguf'
+            target.parent.mkdir(parents=True)
+            target.write_bytes(data)
+            digest = hashlib.sha256(data).hexdigest()
+            pin = {'repository':'test/Dory', 'revision':'a'*40, 'filename':target.name, 'bytes':len(data), 'sha256':digest, 'role':'model'}
+            artifact = {**pin, 'id':'dory-pin', 'repo':pin['repository'], 'path':target.relative_to(root).as_posix()}
+            native = {'id':'dory-q8', 'artifacts':[artifact['id']], 'modeProfiles':{'native':'dory-q8-native'},
+                      'installation':{'adapterId':'dory-native-text-v1'}}
+            state._native_bindings = ({native['id']:native}, {artifact['id']:artifact})
+            receipt = root/'models/receipts/model-dory-q8-native.json'
+            receipt.parent.mkdir()
+            receipt.write_text(json.dumps(native['artifacts']))
+            entry = {'id':'hf-'+'a'*24, 'repository':pin['repository'], 'revision':pin['revision'],
+                     'nativeWeightProfile':native['id'], 'format':'gguf', 'category':'text', 'contextTokens':32768,
+                     'managedEngine':'dory-cuda13-v1', 'bytes':len(data), 'files':[pin], 'installable':True}
+            hydrated = state._hydrate(entry)
+            self.assertEqual(hydrated['status'], 'installed')
+            self.assertEqual(hydrated['installReceipt']['nativeProfileId'], 'dory-q8-native')
+            self.assertEqual(hydrated['runtimeChoices'], ['auto', 'cuda'])
+            self.assertEqual(checked_model_files(hydrated, root), [target])
+            with patch.object(engines,'dory_cuda_devices',return_value=['CUDA1']):
+                plan = runtime_plan(hydrated, root, resources)
+            self.assertEqual(plan['runtimeBackend'], 'cuda')
+            self.assertEqual(plan['command'][plan['command'].index('--device')+1], 'CUDA1')
+            self.assertFalse((root/'models/hub'/entry['id']).exists())
+            receipt.write_text('["different-artifact"]')
+            with self.assertRaisesRegex(ValueError,'receipt'):
+                checked_model_files(hydrated,root)
+
     def test_runtime_preference_is_persisted_and_does_not_remove_downloaded_files(self):
         source = Path(__file__).resolve().parents[3] / 'src-tauri/resources/runtime-setup/hf-extension/publisher-models.json'
         entries = json.loads(source.read_text())['entries']

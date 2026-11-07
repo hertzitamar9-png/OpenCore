@@ -31,8 +31,9 @@ class IncrementalTests(unittest.TestCase):
             root=Path(temporary);app=root/'app';app.mkdir();python=root/'python';python.mkdir();stage=root/'stage';stage.mkdir()
             (app/'OpenCore.exe').write_bytes(b'installed executable')
             (app/'runtime.dll').write_bytes(b'shared runtime'*100)
+            echo=app/'echo'/'echo_server.py';echo.parent.mkdir();echo.write_bytes(b'new worker')
             (app/'build-info.json').write_text(json.dumps({'build':'0.3.203','commit':'b'*40,'appExeSha256':hashlib.sha256((app/'OpenCore.exe').read_bytes()).hexdigest()}))
-            entries=[{'path':'app/'+file.name,'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest(),'offset':0,'compressedBytes':10} for file in app.iterdir()]
+            entries=[{'path':'app/'+file.relative_to(app).as_posix(),'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest(),'offset':0,'compressedBytes':10} for file in app.rglob('*') if file.is_file()]
             previous={'schema':1,'version':'0.3.203','commit':'b'*40,'files':entries}
             receipt=app/'installed-file-manifest.json';receipt.write_text(json.dumps(previous))
             index={**previous,'version':'0.3.204','commit':'a'*40,'files':[dict(entry) for entry in entries]}
@@ -45,26 +46,31 @@ $script:originalHash=(Get-Command Get-UpdateHash).ScriptBlock
 $script:reads=New-Object Collections.Generic.List[string]
 function Get-UpdateHash([string]$Path){{$script:reads.Add($Path);& $script:originalHash $Path}}
 $fast=New-UpdatePlan $index {quoted(stage)}
-if($fast.mode -ne 'release-difference' -or $fast.unchangedFilesSkipped -ne 2 -or $fast.filesInspected -ne 1 -or $fast.changes.Count -ne 1){{throw 'Incorrect release difference'}}
+if($fast.mode -ne 'release-difference' -or $fast.unchangedFilesSkipped -ne 1 -or $fast.filesInspected -ne 3 -or $fast.changes.Count -ne 1){{throw 'Incorrect release difference'}}
 if(@($script:reads|Where-Object {{$_ -like '*runtime.dll'}}).Count){{throw 'Unchanged runtime was opened'}}
-if($script:reads.Count -ne 1){{throw 'Unchanged identity files were read before the release comparison'}}
-[IO.File]::WriteAllText({quoted(app/'OpenCore.exe')},'a local executable repair')
+if($script:reads.Count -ne 3){{throw 'The bounded startup files were not checked'}}
+$staleIndex=Get-Content -LiteralPath {quoted(index_path)} -Raw | ConvertFrom-Json
+$nextExe=$staleIndex.files | Where-Object {{$_.path -eq 'app/OpenCore.exe'}}
+$nextExe.sha256=Get-UpdateHash {quoted(app/'OpenCore.exe')}
+[IO.File]::WriteAllText({quoted(app/'OpenCore.exe')},'restored executable')
+[IO.File]::WriteAllText({quoted(echo)},'old worker')
 $script:reads.Clear()
-$localRepair=New-UpdatePlan $index {quoted(stage)}
-if($localRepair.mode -ne 'release-difference' -or $localRepair.unchangedFilesSkipped -ne 2 -or $localRepair.filesInspected -ne 1 -or $localRepair.changes.Count -ne 1){{throw 'A local executable change discarded unrelated runtime records'}}
+$localRepair=New-UpdatePlan $staleIndex {quoted(stage)}
+$repairedPaths=@($localRepair.changes | ForEach-Object {{$_.entry.path}})
+if($localRepair.mode -ne 'release-difference' -or $localRepair.unchangedFilesSkipped -ne 1 -or $localRepair.filesInspected -ne 3 -or $repairedPaths.Count -ne 2 -or 'app/OpenCore.exe' -notin $repairedPaths -or 'app/echo/echo_server.py' -notin $repairedPaths){{throw 'Stale startup files were not found with matching release records'}}
 if(@($script:reads|Where-Object {{$_ -like '*runtime.dll'}}).Count){{throw 'Unchanged runtime was opened after a local executable repair'}}
 [IO.File]::WriteAllText({quoted(app/'runtime.dll')},'locally damaged runtime')
 $repair=New-UpdatePlan $index {quoted(stage)} -VerifyInstalledFiles
-if($repair.mode -ne 'full-verification' -or $repair.changes.Count -ne 2 -or $repair.filesInspected -ne 3){{throw 'Explicit repair did not find changed files'}}
+if($repair.mode -ne 'full-verification' -or $repair.changes.Count -ne 3 -or $repair.filesInspected -ne 4){{throw 'Explicit repair did not find changed files'}}
 $original=[IO.File]::ReadAllText({quoted(receipt)})
 foreach($bad in @('{{broken json}}')){{
  [IO.File]::WriteAllText({quoted(receipt)},$bad)
  $fallback=New-UpdatePlan $index {quoted(stage)}
- if($fallback.mode -ne 'full-verification' -or $fallback.filesInspected -ne 3){{throw 'Invalid receipt did not trigger verification'}}
+ if($fallback.mode -ne 'full-verification' -or $fallback.filesInspected -ne 4){{throw 'Invalid receipt did not trigger verification'}}
 }}
 [IO.File]::WriteAllText({quoted(receipt)},$original.Replace('0.3.203','0.3.202'))
 $metadataRepair=New-UpdatePlan $index {quoted(stage)}
-if($metadataRepair.mode -ne 'release-difference' -or $metadataRepair.filesInspected -ne 1){{throw 'A metadata-only difference discarded unrelated file records'}}
+if($metadataRepair.mode -ne 'release-difference' -or $metadataRepair.filesInspected -ne 3){{throw 'A metadata-only difference discarded unrelated file records'}}
 Remove-Item -LiteralPath {quoted(receipt)}
 $missing=New-UpdatePlan $index {quoted(stage)}
 if($missing.mode -ne 'full-verification'){{throw 'Missing receipt was accepted'}}

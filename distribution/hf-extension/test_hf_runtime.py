@@ -102,9 +102,9 @@ class RuntimeSafetyTests(unittest.TestCase):
         self.assertIn('--no-webui', plan['command'])
         self.assertNotIn('--trust-remote-code', plan['command'])
 
-    def test_automatic_backend_falls_back_but_manual_cuda_does_not_change_choice(self):
+    def test_automatic_tries_the_other_gpu_without_falling_back_to_cpu(self):
         import managed_engines
-        for preference, expected in [('auto',['lfm3-cuda13-v1','lfm3-vulkan-v1','lfm3-cpu-v1']),('cuda',['lfm3-cuda13-v1'])]:
+        for preference, expected in [('auto',['lfm3-cuda13-v1','lfm3-vulkan-v1']),('cuda',['lfm3-cuda13-v1'])]:
             self.entry['runtimePreference']=preference;calls=[]
             def fail(_root, engine_id, *args):
                 calls.append(engine_id)
@@ -118,22 +118,22 @@ class RuntimeSafetyTests(unittest.TestCase):
             self.assertTrue(self.path.is_file(), 'Runtime preparation never removes the downloaded checkpoint')
 
     def test_generic_gguf_runtime_reserves_the_full_context_for_one_echo_slot(self):
-        plan=runtime_plan(self.entry,self.root,self.resources)
+        plan=runtime_plan(self.entry,self.root,self.resources,prefer_gpu=False)
         command=plan['command']
         self.assertEqual(command[command.index('--parallel')+1],'1')
 
     def test_native_requests_the_published_window_without_clamping_to_echo(self):
         self.entry['operatingMode']='native'
         self.entry['publishedContextTokens']=1048576
-        plan=runtime_plan(self.entry,self.root,self.resources)
+        plan=runtime_plan(self.entry,self.root,self.resources,prefer_gpu=False)
         self.assertEqual(plan['context'],1048576)
         self.assertEqual(plan['command'][plan['command'].index('--ctx-size')+1],'1048576')
         self.assertEqual(plan['requestedContextTokens'],1048576)
         self.assertEqual(admitted_context(1048576,{'default_generation_settings':{'n_ctx':131072}}),(131072,True))
         self.entry['publishedContextTokens']=65536
-        self.assertEqual(runtime_plan(self.entry,self.root,self.resources)['context'],65536)
+        self.assertEqual(runtime_plan(self.entry,self.root,self.resources,prefer_gpu=False)['context'],65536)
         self.entry['operatingMode']='echo'
-        self.assertEqual(runtime_plan(self.entry,self.root,self.resources)['context'],32768)
+        self.assertEqual(runtime_plan(self.entry,self.root,self.resources,prefer_gpu=False)['context'],32768)
 
     def test_native_generation_is_verified_directly_without_an_echo_worker(self):
         self.entry['operatingMode']='native'
@@ -147,11 +147,13 @@ class RuntimeSafetyTests(unittest.TestCase):
             return io.BytesIO(json.dumps(value).encode())
         runtime._request=request
         before=self.path.stat()
-        with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime._bundled_cuda_available',return_value=True):proof=runtime.prepare(self.entry)
+        with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime._bundled_cuda_available',return_value=True),patch('hf_runtime.gpu_offloaded_layers',return_value=8):
+            proof=runtime.prepare(self.entry)
         self.assertEqual(len(spawned),1)
         self.assertEqual(proof['operatingMode'],'native')
         self.assertEqual(proof['contextTokens'],131072)
         self.assertTrue(proof['inferenceVerified'])
+        self.assertEqual(proof['gpuOffloadedLayers'],8)
         self.assertFalse(proof['echoReady'])
         self.assertIsNone(proof['echoMode'])
         self.assertEqual(runtime._active['url'],runtime._active['upstream'])
@@ -214,7 +216,7 @@ class RuntimeSafetyTests(unittest.TestCase):
                     raise RuntimeError('ECHO smoke test did not bound its total output')
             return io.BytesIO(json.dumps({'choices':[{'message':{'content':'Hello'}}],'usage':{'completion_tokens':1}}).encode())
         runtime._request=request
-        with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime._bundled_cuda_available',return_value=True):
+        with patch('hf_runtime._available_memory',return_value=None),patch('hf_runtime._bundled_cuda_available',return_value=True),patch('hf_runtime.gpu_offloaded_layers',return_value=8):
             proof=runtime.prepare(self.entry)
         self.assertTrue(proof['echoReady'])
         self.assertTrue(proof['contextVerified'])
@@ -256,6 +258,22 @@ class RuntimeSafetyTests(unittest.TestCase):
         self.entry.update(format='safetensors', quantization='NVFP4')
         with self.assertRaisesRegex(ValueError, 'NVFP4|hardware|runtime'):
             runtime_plan(self.entry, self.root, self.resources)
+
+    def test_automatic_transformers_uses_isolated_cuda_with_explicit_cpu_available(self):
+        self.entry.update(format='safetensors', quantization='BF16')
+        (self.folder/'config.json').write_text('{"model_type":"llama"}')
+        with patch('managed_engines.cuda_driver_version',return_value=13040):
+            plan=runtime_plan(self.entry,self.root,self.resources)
+        self.assertEqual(plan['recipe'],'managed-transformers-text-cuda-v1')
+        self.assertEqual(plan['runtimeBackend'],'cuda')
+        self.assertIn('cuda-hybrid',plan['command'])
+        with patch('managed_engines.cuda_driver_version',return_value=0):
+            with self.assertRaisesRegex(ValueError,'compatible NVIDIA'):
+                runtime_plan(self.entry,self.root,self.resources)
+            self.entry['runtimePreference']='cpu'
+            cpu=runtime_plan(self.entry,self.root,self.resources)
+        self.assertEqual(cpu['recipe'],'managed-transformers-text-v1')
+        self.assertEqual(cpu['command'][-1],'cpu')
 
     def test_echo_conversations_have_separate_stable_identity(self):
         self.assertEqual(conversation_key('chat-1'), conversation_key('chat-1'))

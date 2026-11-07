@@ -44,13 +44,25 @@ def _inside(path, parent):
     return result
 
 
+def _weight_folder(entry, root):
+    base = 'models/library' if (entry.get('installReceipt') or {}).get('nativeArtifactId') else 'models/hub'
+    return _inside(entry.get('localDirectory', ''), Path(root) / base)
+
+
 def checked_model_files(entry, root, cancel=None):
-    folder = _inside(entry.get('localDirectory', ''), Path(root) / 'models/hub')
-    receipt_path = _inside(entry.get('receiptPath', folder / 'install-receipt.json'), folder)
+    folder = _weight_folder(entry, root)
+    native = (entry.get('installReceipt') or {}).get('nativeArtifactId')
+    receipt_parent = Path(root) / 'models/receipts' if native else folder
+    receipt_path = _inside(entry.get('receiptPath', folder / 'install-receipt.json'), receipt_parent)
     receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
-    if receipt.get('id') != entry['id'] or receipt.get('repository') != entry['repository'] or receipt.get('revision') != entry['revision']:
-        raise ValueError('The installed receipt belongs to another model or revision')
-    pins = {pin['filename']: pin for pin in receipt.get('files', [])}
+    if native:
+        if receipt != [native]:
+            raise ValueError('The native installation receipt no longer matches this checkpoint')
+        pins = {pin['filename']: pin for pin in entry['installReceipt']['files']}
+    else:
+        if receipt.get('id') != entry['id'] or receipt.get('repository') != entry['repository'] or receipt.get('revision') != entry['revision']:
+            raise ValueError('The installed receipt belongs to another model or revision')
+        pins = {pin['filename']: pin for pin in receipt.get('files', [])}
     models = []
     for pin in entry.get('files', []):
         installed = pins.get(pin['filename'])
@@ -89,14 +101,6 @@ def admitted_context(requested, props):
     return context, verified
 
 
-def _python(root):
-    for recipe in ('managed-transformers-text-v1', 'edgerock-portable-v1'):
-        path = Path(root) / 'runtime-setup/environments' / recipe / 'Scripts/python.exe'
-        if path.is_file():
-            return str(path)
-    return sys.executable
-
-
 def visual_text_probe(entry):
     """Small, offline, synthetic media probe for candidate conditional-generation runtimes.
 
@@ -104,9 +108,12 @@ def visual_text_probe(entry):
     URLs or user images are fetched during this verification.
     """
     inputs=entry.get('inputModalities') or []
-    if (entry.get('format') != 'safetensors' or
-        (entry.get('runtime') or {}).get('adapter') != 'transformers' or
-        not any(value in inputs for value in ('image','video'))):
+    adapter = (entry.get('runtime') or {}).get('adapter')
+    gguf_vision = (entry.get('format') == 'gguf' and adapter == 'gguf' and 'image' in inputs
+                   and any(pin.get('role') == 'companion' for pin in entry.get('files', [])))
+    transformers_vision = (entry.get('format') == 'safetensors' and adapter == 'transformers'
+                           and any(value in inputs for value in ('image', 'video')))
+    if not (gguf_vision or transformers_vision):
         return None
     import base64
     import struct
@@ -120,14 +127,14 @@ def visual_text_probe(entry):
     png=(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>2I5B',width,height,8,2,0,0,0))+
          chunk(b'IDAT',zlib.compress(scanline*height))+chunk(b'IEND',b''))
     data='data:image/png;base64,'+base64.b64encode(png).decode('ascii')
-    if 'video' in inputs:
+    if transformers_vision and 'video' in inputs:
         media={'type':'video','frames':[{'timestamp':0,'image_url':data},{'timestamp':1,'image_url':data}]}
         kind='video-frames'
     else:
         media={'type':'image_url','image_url':{'url':data}}
         kind='image'
     return kind,{'messages':[{'role':'user','content':[{'type':'text','text':'Describe what you see in one sentence.'},media]}],
-                 'max_tokens':16,'temperature':0,'stream':False}
+                 'max_tokens':32,'temperature':0,'stream':False,'chat_template_kwargs':{'enable_thinking':False}}
 
 
 def _chat_template_path(entry, folder):
@@ -196,47 +203,50 @@ def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None)
         raise ValueError('This format has no integrated Windows runtime adapter. The downloaded files are retained.')
     if fmt == 'safetensors' and any(name in quant for name in ('NVFP4', 'MLX', 'GPTQ', 'AWQ')):
         raise ValueError('This quantization requires a specialized runtime and compatible hardware; NVFP4 is not a plain Transformers checkpoint.')
-    folder = _inside(entry.get('localDirectory', ''), root / 'models/hub')
+    folder = _weight_folder(entry, root)
     models = [folder / f['filename'] for f in entry.get('files', []) if f.get('role') == 'model']
     if not models:
         raise ValueError('No model weights are present for the runtime adapter')
     context = mode_context(entry)
     if context < 8192:
         raise ValueError('This model has less than the 8,192-token context required by the chat agent. Its downloaded files are retained.')
+    managed_cuda = backend_override == 'managed-cuda'
+    preference = 'cuda' if managed_cuda else backend_override or (entry.get('runtimePreference', 'auto') if prefer_gpu else 'cpu')
     if fmt == 'gguf':
         from managed_engines import engine_for, executable, select_engine
         # The generic b11960 build and each publisher-specific build remain pinned
         # to their own tested llama.cpp revision.
         specialized_engine = engine_for(entry)
         base_engine = specialized_engine or 'lfm3-cpu-v1'
-        preference = backend_override or (entry.get('runtimePreference', 'auto') if prefer_gpu else 'cpu')
         bundled = root / 'runtime/llama-server.exe'
         if not bundled.is_file():bundled = resources / 'opencore/runtime/llama-server.exe'
-        use_bundled_cuda = not specialized_engine and preference in ('auto', 'cuda') and _bundled_cuda_available(bundled, resources)
+        use_bundled_cuda = (not specialized_engine and not managed_cuda and preference in ('auto', 'cuda')
+                            and _bundled_cuda_available(bundled, resources))
         publisher_engine = None if use_bundled_cuda else select_engine(base_engine, preference)
-        cpu_fallback = base_engine if use_bundled_cuda or publisher_engine != base_engine else None
+        backend = ('cuda' if use_bundled_cuda or '-cuda' in publisher_engine
+                   else 'vulkan' if '-vulkan' in publisher_engine else 'cpu')
         engine = bundled if use_bundled_cuda else executable(root, publisher_engine)
         model = sorted(models, key=lambda p: p.name)[0]
         command = [str(engine), '--model', str(model), '--host', '127.0.0.1', '--port', '{port}',
                    '--ctx-size', str(context), '--threads', '2', '--threads-batch', '2',
-                   '--gpu-layers', 'auto', '--fit', 'on', '--parallel', '1', '--no-webui', '--api-key-file', '{keyfile}']
-        if cpu_fallback:
-            command += ['--no-warmup', '--jinja', '--batch-size', '64', '--ubatch-size', '16']
-        if publisher_engine and not cpu_fallback:
-            # The publisher CPU builds work without a CUDA SDK or a particular GPU.
-            command[command.index('--gpu-layers') + 1] = '0'
-            command[command.index('--fit') + 1] = 'off'
-            command += ['--no-repack', '--cache-ram', '0', '--no-warmup', '--jinja',
-                        '--batch-size', '64', '--ubatch-size', '16']
+                   '--parallel', '1', '--no-webui', '--api-key-file', '{keyfile}',
+                   '--no-warmup', '--jinja', '--batch-size', '64', '--ubatch-size', '16']
+        if backend == 'cpu':
+            command += ['--gpu-layers', '0', '--fit', 'off', '--cache-ram', '0']
             if publisher_engine == 'edgerock-cpu-v1':
                 command += ['--no-context-shift']
-            if publisher_engine == 'velociq8-cpu-v1':
-                # Q8A64 stored tensors require the publisher's repacked buffers.
-                command.remove('--no-repack')
+            # Q8A64 stored tensors require the publisher's repacked buffers.
+            if publisher_engine != 'velociq8-cpu-v1':
+                command.append('--no-repack')
+        else:
+            # llama.cpp fits layers and working buffers into available VRAM.
+            # Remaining model layers execute on the CPU using system RAM.
+            command += ['--gpu-layers', 'auto', '--fit', 'on', '--fit-ctx', '8192', '--log-verbosity', '4']
+            if publisher_engine == 'dory-cuda13-v1':
+                from managed_engines import dory_cuda_devices
+                command += ['--device', ','.join(dory_cuda_devices())]
         template = _chat_template_path(entry, folder)
         if template is not None:
-            if '--jinja' not in command:
-                command.append('--jinja')
             command += ['--chat-template-file', str(template)]
         companions = [folder / f['filename'] for f in entry['files'] if f.get('role') == 'companion' and f['filename'].lower().endswith('.gguf')]
         if companions:
@@ -250,15 +260,22 @@ def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None)
         quant_config = raw.get('quantization_config')
         if quant_config:
             raise ValueError('This checkpoint declares a specialized quantization runtime. A matching managed adapter must be integrated before execution.')
-        command = [_python(root), '-I', str(Path(__file__).resolve()), '--worker', 'text',
+        from managed_engines import cuda_driver_version
+        if preference not in ('auto', 'cuda', 'cpu'):
+            raise ValueError('Choose Automatic, CUDA or CPU for the Transformers runtime')
+        backend = 'cpu' if preference == 'cpu' else 'cuda'
+        if backend == 'cuda' and cuda_driver_version() < 12000:
+            raise ValueError('This Transformers runtime needs a compatible NVIDIA GPU and CUDA driver. The model files are kept. Choose CPU explicitly to run without CUDA.')
+        recipe = 'managed-transformers-text-cuda-v1' if backend == 'cuda' else 'managed-transformers-text-v1'
+        interpreter = root / 'runtime-setup/environments' / recipe / 'Scripts/python.exe'
+        command = [str(interpreter), '-I', str(Path(__file__).resolve()), '--worker', 'text',
                    '--resources', str(resources), '--model-dir', str(directory), '--model-id', entry['id'],
-                   '--context', str(context), '--port', '{port}']
+                   '--context', str(context), '--port', '{port}', '--device', 'cuda-hybrid' if backend == 'cuda' else 'cpu']
     return {'command': command, 'context': context, 'operatingMode':entry.get('operatingMode','echo'),
             'requestedContextTokens':NATIVE_TARGET if entry.get('operatingMode')=='native' else ECHO_TARGET,
-            'format': fmt, 'folder': str(folder),
+            'format': fmt, 'folder': str(folder), 'runtimeBackend': backend,
             **({'publisherEngine': publisher_engine} if fmt == 'gguf' and publisher_engine else {}),
-            **({'publisherCpuFallback': cpu_fallback} if fmt == 'gguf' and cpu_fallback else {}),
-            **({'runtimeBackend': 'cuda' if use_bundled_cuda or '-cuda' in publisher_engine else 'vulkan' if '-vulkan' in publisher_engine else 'cpu'} if fmt == 'gguf' else {})}
+            **({'engineFamily': base_engine, 'bundledCuda': use_bundled_cuda} if fmt == 'gguf' else {'recipe': recipe})}
 
 
 def _port():
@@ -276,6 +293,17 @@ def _available_memory():
     data = Memory()
     data.length = ctypes.sizeof(data)
     return data.availablePhysical if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(data)) else None
+
+
+def gpu_offloaded_layers(log_path):
+    """Read llama.cpp's actual layer placement after the server is ready."""
+    try:
+        with Path(log_path).open('rb') as log:
+            log.seek(max(0, log.seek(0, os.SEEK_END) - 1024 * 1024))
+            matches = re.findall(rb'offloaded (\d+)/(\d+) layers to GPU', log.read())
+    except OSError:
+        return 0
+    return int(matches[-1][0]) if matches else 0
 
 
 class RuntimeManager:
@@ -411,7 +439,7 @@ class RuntimeManager:
             self._cancel.wait(.2)
         raise RuntimeError('The model runtime did not become ready within five minutes. Its files were retained.')
 
-    def _ensure_transformers(self, entry, log_path):
+    def _ensure_transformers(self, entry, log_path, recipe):
         helper = self.resources / 'runtime-setup/setup_manager.py'
         if not helper.is_file():
             raise ValueError('The managed text dependency helper is missing')
@@ -419,8 +447,8 @@ class RuntimeManager:
         options.parent.mkdir(parents=True, exist_ok=True)
         options.write_text(json.dumps({'modelType': entry.get('modelType'), 'remainingWeightBytes': 0}), encoding='utf-8')
         self.on_progress(stage='installing-dependencies', detail='Preparing the isolated text runtime')
-        command = [_python(self.root), '-I', str(helper), '--root', str(self.root), '--resources', str(self.resources),
-                   '--target', entry['id'], '--recipe-id', 'managed-transformers-text-v1', '--options-file', str(options)]
+        command = [sys.executable, '-I', str(helper), '--root', str(self.root), '--resources', str(self.resources),
+                   '--target', entry['id'], '--recipe-id', recipe, '--options-file', str(options)]
         child = self._spawn(command, dict(os.environ, PYTHONIOENCODING='utf-8'), log_path)
         while child.poll() is None:
             if self._cancel.wait(.2):
@@ -456,7 +484,7 @@ class RuntimeManager:
             if self._active and self._active['id'] == entry['id']:
                 self.stop()
 
-    def _prepare(self, entry, force_cpu=False, backend_override=None):
+    def _prepare(self, entry, backend_override=None):
         if self._generation.locked():
             raise RuntimeError('Wait for the current local response to finish')
         if self._active and self._active['id'] == entry['id'] and self._active.get('mode','echo')==entry.get('operatingMode','echo') and all(child.poll() is None for child in self._children):
@@ -464,28 +492,32 @@ class RuntimeManager:
         self.stop(clear_context=False)
         self._cancel.clear()
         self._stop_reason = ''
-        plan = runtime_plan(entry, self.root, self.resources, prefer_gpu=not force_cpu, backend_override=backend_override)
+        plan = runtime_plan(entry, self.root, self.resources, backend_override=backend_override)
         plan.setdefault('operatingMode',entry.get('operatingMode','echo'))
         plan.setdefault('requestedContextTokens',NATIVE_TARGET if plan['operatingMode']=='native' else ECHO_TARGET)
         self.on_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
         files = checked_model_files(entry, self.root, self._cancel)
         available = _available_memory()
         weight_bytes = sum(path.stat().st_size for path in files)
-        if plan.get('publisherEngine') and not plan.get('publisherCpuFallback') and available and weight_bytes + 3 * 1024 ** 3 > available:
+        if plan['format'] == 'gguf' and plan.get('runtimeBackend') == 'cpu' and available and weight_bytes + 3 * 1024 ** 3 > available:
             raise RuntimeError(f'This model uses a CPU-only runtime and needs about {(weight_bytes + 3 * 1024 ** 3) / 1e9:.1f} GB of free RAM including working space; GPU memory is not used by that runtime. The downloaded model is kept. Free RAM or choose a smaller quantization, then prepare it again.')
-        if not plan.get('publisherCpuFallback') and available and weight_bytes > available + 8 * 1024**3:
-            raise RuntimeError(f'This checkpoint has {weight_bytes / 1e9:.1f} GB of weights; there is not enough available host/GPU memory for this managed runtime. Choose a smaller quantization.')
         run_dir = self.root / 'runtime-setup/hub-runs' / (entry['id'] + '-' + uuid.uuid4().hex[:12])
         run_dir.mkdir(parents=True)
         log_path = run_dir / 'runtime.log'
         cuda_library_dir = None
-        def fallback(error):
-            if entry.get('runtimePreference', 'auto') != 'auto' or not plan.get('publisherCpuFallback') or self._cancel.is_set():
+        def try_other_gpu(error):
+            from managed_engines import VULKAN_VARIANTS, cuda_driver_version, vulkan_gpu_available
+            if self._cancel.is_set():
                 raise error
-            from managed_engines import vulkan_gpu_available
-            next_backend = 'vulkan' if plan.get('runtimeBackend') == 'cuda' and vulkan_gpu_available() else 'cpu'
-            self.on_progress(stage='loading-model', detail='The ' + plan['runtimeBackend'].upper() + ' runtime could not start; trying ' + next_backend.upper() + '. Model files are kept.')
-            return self._prepare(entry, backend_override=next_backend)
+            preference = entry.get('runtimePreference', 'auto')
+            if plan.get('bundledCuda') and cuda_driver_version() >= 12000:
+                self.on_progress(stage='loading-model', detail='Trying the managed CUDA runtime for this checkpoint.')
+                return self._prepare(entry, backend_override='managed-cuda')
+            if (preference == 'auto' and plan.get('runtimeBackend') == 'cuda'
+                    and plan.get('engineFamily') in VULKAN_VARIANTS and vulkan_gpu_available()):
+                self.on_progress(stage='loading-model', detail='CUDA could not start the model. Trying Vulkan GPU.')
+                return self._prepare(entry, backend_override='vulkan')
+            raise error
         if plan.get('publisherEngine'):
             from managed_engines import ensure, folder
             def check_cancel():
@@ -499,9 +531,9 @@ class RuntimeManager:
                     ensure(self.root, library_id, self.on_progress, check_cancel)
                     cuda_library_dir = folder(self.root, library_id)
             except (OSError, RuntimeError, ValueError) as error:
-                return fallback(error)
+                return try_other_gpu(error)
         if plan['format'] == 'safetensors':
-            self._ensure_transformers(entry, log_path)
+            self._ensure_transformers(entry, log_path, plan.get('recipe', 'managed-transformers-text-v1'))
             plan = runtime_plan(entry, self.root, self.resources)
         port, echo_port, key = _port(), _port(), secrets.token_urlsafe(32)
         key_file = run_dir / 'worker-key'
@@ -515,17 +547,29 @@ class RuntimeManager:
             child = self._spawn(command, environment, log_path,
                                 cwd=Path(command[0]).parent if plan.get('publisherEngine') else None)
         except OSError as error:
-            return fallback(error)
+            return try_other_gpu(error)
         upstream = f'http://127.0.0.1:{port}'
         try:
             self._wait_health(child, upstream, key, log_path)
         except RuntimeError as error:
-            return fallback(error)
+            return try_other_gpu(error)
+        if plan['format'] == 'gguf' and plan.get('runtimeBackend') in ('cuda', 'vulkan'):
+            plan['gpuOffloadedLayers'] = gpu_offloaded_layers(log_path)
+            if not plan['gpuOffloadedLayers']:
+                return try_other_gpu(RuntimeError(
+                    f"The {plan['runtimeBackend'].upper()} runtime did not place any model layers on the GPU. "
+                    f"The downloaded weights are kept. See the runtime log: {log_path}"))
         try:
             with self._request(upstream + '/props', key=key, timeout=5) as response:
                 props = json.load(response)
         except (OSError, ValueError, RuntimeError):
             props = {}
+        if plan['format'] == 'safetensors' and plan.get('runtimeBackend') == 'cuda':
+            gpu_modules = props.get('gpuModules')
+            if type(gpu_modules) is not int or gpu_modules < 1 or props.get('diskModules') != 0:
+                raise RuntimeError('The Transformers worker did not confirm a GPU and RAM load plan. The model files were kept.')
+            plan['gpuModules'] = gpu_modules
+            plan['cpuModules'] = props.get('cpuModules', 0)
         plan['context'], context_verified = admitted_context(plan['context'], props)
         self.on_progress(stage='verifying-inference', detail='Checking an actual short generation')
         with self._request(upstream + '/v1/chat/completions', {'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
@@ -559,7 +603,7 @@ class RuntimeManager:
         if not echo.is_file():
             raise RuntimeError('The installed ECHO runtime is missing')
         self.on_progress(stage='preparing-echo', detail='Connecting ECHO archive and bounded context')
-        echo_command = [_python(self.root), '-I', str(Path(__file__).resolve()), '--worker', 'echo', '--resources', str(self.resources),
+        echo_command = [sys.executable, '-I', str(Path(__file__).resolve()), '--worker', 'echo', '--resources', str(self.resources),
                         '--port', str(echo_port), '--upstream', upstream, '--archive', str(self.root / 'echo/archives'),
                         '--context', str(plan['context'])]
         echo_child = self._spawn(echo_command, dict(environment, ECHO_UPSTREAM_API_KEY=key), log_path)
@@ -610,6 +654,10 @@ class RuntimeManager:
             proof['engineArchiveSha256'] = definition(plan['publisherEngine'])['sha256']
         if plan.get('runtimeBackend'):
             proof['runtimeBackend'] = plan['runtimeBackend']
+        if plan.get('gpuOffloadedLayers'):
+            proof['gpuOffloadedLayers'] = plan['gpuOffloadedLayers']
+        if plan.get('gpuModules'):
+            proof.update(gpuModules=plan['gpuModules'], cpuModules=plan['cpuModules'])
         return proof
 
     def chat(self, entry, payload):
@@ -750,6 +798,7 @@ def _worker_main():
     parser.add_argument('--context', type=int, required=True)
     parser.add_argument('--upstream')
     parser.add_argument('--archive', type=Path)
+    parser.add_argument('--device', choices=('auto','cpu','cuda-hybrid'), default='auto')
     args = parser.parse_args()
     if args.worker == 'echo':
         module = _load('opencore_hub_echo', args.resources / 'echo/echo_server.py')
@@ -763,7 +812,7 @@ def _worker_main():
     def owned_server(address, handler):
         return original_server(address, _authorized_handler(handler))
     module.ThreadingHTTPServer = owned_server
-    model, tokenizer, context, device = module.load(args.model_dir, args.context)
+    model, tokenizer, context, device = module.load(args.model_dir, args.context, device_preference=args.device)
     module.serve(model, tokenizer, context, args.model_id, args.port)
 
 

@@ -1,0 +1,217 @@
+{
+  "_id": "6ae88fa6769da28ddbc80e2e",
+  "id": "mradermacher/NorthCUA-Nano-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "northcua",
+    "computer-use",
+    "multimodal",
+    "qwen3_5",
+    "safetensors",
+    "en",
+    "base_model:beipo-ai/NorthCUA-Nano",
+    "base_model:quantized:beipo-ai/NorthCUA-Nano",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 2420,
+  "likes": 2,
+  "modelId": "mradermacher/NorthCUA-Nano-GGUF",
+  "author": "mradermacher",
+  "sha": "42a3ff34fb13e5f8c57497d17807033f996ac765",
+  "lastModified": "2026-11-03T09:13:47.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "beipo-ai/NorthCUA-Nano",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "northcua",
+      "computer-use",
+      "multimodal",
+      "qwen3_5",
+      "safetensors"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 8953803264,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 17920697536
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9f02125f72e23f54141340f11ab33e9d2cf96780",
+      "size": 2387
+    },
+    {
+      "rfilename": "NorthCUA-Nano.IQ4_XS.gguf",
+      "blobId": "3f4d9c2d8c8cfdde9a4581ea36f6d5cef5203441",
+      "size": 5227898048,
+      "lfs": {
+        "sha256": "04779a8d47e71c4011522b808afacc4f9d162714903e22cca933b1471934edbb",
+        "size": 5227898048,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q2_K.gguf",
+      "blobId": "9ce4ff64d77131cbe59db58c531ffcfa76e3709c",
+      "size": 3827262656,
+      "lfs": {
+        "sha256": "87b30d5bffbb4775a582e7b6a74a64d3698a81b7e6fd9b9f7ac505c16638fde2",
+        "size": 3827262656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q3_K_L.gguf",
+      "blobId": "1a99f70f668dd2afc64c034287c75338be2afe9c",
+      "size": 4925514944,
+      "lfs": {
+        "sha256": "2dc6b36c05f9fdf4cd2601d257b426cf2367378b00ca7c0cbe53b48c985884f7",
+        "size": 4925514944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q3_K_M.gguf",
+      "blobId": "b5a290923b60b68f3c814bff4fc79decf1ca3d98",
+      "size": 4623525056,
+      "lfs": {
+        "sha256": "61645392e8e46d93f6fb1f6ecd164899a764adcd677ce647243951cf157e26a6",
+        "size": 4623525056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q3_K_S.gguf",
+      "blobId": "6ca55290a1a283ab2969d7142b0f8b14f37385cf",
+      "size": 4259407040,
+      "lfs": {
+        "sha256": "6df26cfff4a6a13b96e60457284a864c810b5c582a72efb5927a92d2d23bceb8",
+        "size": 4259407040,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q4_K_M.gguf",
+      "blobId": "b21d5b6e9272731c50013234f3ee73b183415597",
+      "size": 5629109440,
+      "lfs": {
+        "sha256": "3163385ba7d48d49ae7e4d20e55f1e94f67cf3bf862e8e0e7840e54f0992fc3f",
+        "size": 5629109440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q4_K_S.gguf",
+      "blobId": "2fa827e18f63f2f2dc9abb2bd43108ba6a09e530",
+      "size": 5351630016,
+      "lfs": {
+        "sha256": "27db545348cbad9c0b9d372b8743e4b43ddc226aadb4006daeb13022ba24f0d1",
+        "size": 5351630016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q5_K_M.gguf",
+      "blobId": "6255f1b0f9b2da5a815e00535b28581993338b9a",
+      "size": 6467970240,
+      "lfs": {
+        "sha256": "215b05b937a70aa2ca16b6ac79409aab57755f43425d1219b99495bd006aa227",
+        "size": 6467970240,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q5_K_S.gguf",
+      "blobId": "3bbf82cdac751e7c7766bf2839362b88cf3957a3",
+      "size": 6305309888,
+      "lfs": {
+        "sha256": "fd4447eab69d62d2d77f200bf92ddefa47cc8b0ff3092ec69dc872ab6c9604d5",
+        "size": 6305309888,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q6_K.gguf",
+      "blobId": "e5c65805f84614ef0d824b1fa2c2b502a71b1d46",
+      "size": 7359259840,
+      "lfs": {
+        "sha256": "1ab2fac56a413e9ce759c1822773d4371e562f752fee97f86b0822a67e8bb25c",
+        "size": 7359259840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.Q8_0.gguf",
+      "blobId": "fcb02aebdc63eafb306f8f445554877bbd57a73d",
+      "size": 9527502016,
+      "lfs": {
+        "sha256": "a5fb4fd9ce6c2faceb706d8c0eacb7e4e71a717d635e4d5a96febf361bbc3970",
+        "size": 9527502016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.f16.gguf",
+      "blobId": "7f9e43fea489f3f856d18a5b5dbda7887073ad33",
+      "size": 17920697536,
+      "lfs": {
+        "sha256": "b2c8bd9e4e18f291f2008bd640801ef32c2d515d0d1c454f8609d14eba1b445e",
+        "size": 17920697536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.mmproj-Q8_0.gguf",
+      "blobId": "879080fd166410772a365a270d19565e0bab25ea",
+      "size": 624229376,
+      "lfs": {
+        "sha256": "d6a9e907c96aa297ac58492a588be459740514f491dff0a9a42d6f617ad19069",
+        "size": 624229376,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "NorthCUA-Nano.mmproj-f16.gguf",
+      "blobId": "5dde7004c1499f82f472d27e492b183699313b1c",
+      "size": 918165632,
+      "lfs": {
+        "sha256": "a143f066a06cb2c2a45adfe87afc225213aadd086ce52233cc105eb310ff416f",
+        "size": 918165632,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "afd8f6a106da69b82da7a969e68908eebd5d7722",
+      "size": 3945
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-02T13:27:02.000Z",
+  "usedStorage": 82967481728
+}

@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 590,
-  "withFive": 235,
+  "families": 591,
+  "withFive": 236,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5027,8 +5027,10 @@
       "category": "text",
       "quantizations": 8,
       "readyToInstallChoices": true,
-      "source": "native catalog",
-      "repositories": []
+      "source": "bundled packages",
+      "repositories": [
+        "cloudnathan5/Dory1.0-4B-GGUF"
+      ]
     },
     {
       "id": "spark-x26-4b",
@@ -5820,6 +5822,19 @@
       "repositories": [
         "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB",
         "unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-northcua-nano",
+      "label": "NorthCUA Nano",
+      "category": "computer-use",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "beipo-ai/NorthCUA-Nano",
+        "mradermacher/NorthCUA-Nano-GGUF",
+        "willyb23/NorthCUA-Nano-NVFP4A16"
       ]
     },
     {

@@ -50,8 +50,8 @@ function Get-InstalledUpdateEntries {
     if(-not $entries.ContainsKey('app/OpenCore.exe') -or -not $entries.ContainsKey('app/build-info.json')){return $null}
     # The install ledger records each packaged file independently. A local EXE
     # repair or changed build-info must not discard every unrelated runtime pin.
-    # Compare ledgers first; only affected files are read below. A full content
-    # audit remains available through the explicit VerifyInstalledFiles switch.
+    # Compare ledgers first. Read changed files and a bounded startup set.
+    # A full content audit remains available through VerifyInstalledFiles.
     return ,$entries
   }catch{return $null}
 }
@@ -60,14 +60,16 @@ function New-UpdatePlan($Index,[string]$Stage,[switch]$VerifyInstalledFiles){
   $mode=if($null -ne $previous){'release-difference'}else{'full-verification'}
   $changes=New-Object Collections.Generic.List[object]
   $seen=New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+  $startupFiles=@('app/OpenCore.exe','app/build-info.json','app/echo/echo_server.py','app/resources/echo/echo_server.py')
   $compared=0;$skipped=0;$inspected=0
-  if($mode -eq 'release-difference'){Write-UpdateProgress 'Comparing releases; unchanged files will be skipped.' 2}
+  if($mode -eq 'release-difference'){Write-UpdateProgress 'Checking startup files and comparing releases.' 2}
   else{Write-UpdateProgress 'Verifying the installation to establish its file record.' 2}
   foreach($entry in $Index.files){
     if($entry.sha256 -notmatch '^[a-f0-9]{64}$' -or $null -eq $entry.bytes -or $entry.bytes -lt 0 -or $entry.offset -lt 0 -or $entry.compressedBytes -lt 1 -or -not $seen.Add($entry.path)){throw 'Invalid or duplicate update entry'}
     $null=Get-UpdatePath $entry.path
     $compared++
-    if($null -ne $previous -and $previous.ContainsKey($entry.path) -and $previous[$entry.path].sha256 -eq $entry.sha256 -and $previous[$entry.path].bytes -eq $entry.bytes){
+    # A stale executable or ECHO worker can leave the receipt looking current.
+    if($null -ne $previous -and $entry.path -notin $startupFiles -and $previous.ContainsKey($entry.path) -and $previous[$entry.path].sha256 -eq $entry.sha256 -and $previous[$entry.path].bytes -eq $entry.bytes){
       $skipped++
       continue
     }
@@ -75,7 +77,7 @@ function New-UpdatePlan($Index,[string]$Stage,[switch]$VerifyInstalledFiles){
     $inspected++
     if(-not(Test-UpdateFile $entry $target)){$changes.Add(@{entry=$entry;staged=(Join-Path $Stage ('file-'+$changes.Count))})}
     if($inspected%20 -eq 0){
-      $label=if($mode -eq 'release-difference'){'Checking '+$inspected+' changed files'}else{'Building the installation record: '+$inspected+' / '+$Index.files.Count+' files'}
+      $label=if($mode -eq 'release-difference'){'Checking '+$inspected+' startup or changed files'}else{'Building the installation record: '+$inspected+' / '+$Index.files.Count+' files'}
       Write-UpdateProgress $label ([int](15*$compared/[Math]::Max(1,$Index.files.Count)))
     }
   }
@@ -171,7 +173,7 @@ public static class OpenCoreUpdateWindows {
   $plan=New-UpdatePlan $index $stage -VerifyInstalledFiles:$VerifyInstalledFiles
   $planningTimer.Stop()
   $changes=$plan.changes
-  Write-UpdateProgress ('Update plan: '+$plan.mode+'; '+$plan.unchangedFilesSkipped+' unchanged files skipped; '+$plan.filesInspected+' changed or unrecorded files checked.') 15
+  Write-UpdateProgress ('Update plan: '+$plan.mode+'; '+$plan.unchangedFilesSkipped+' unchanged files skipped; '+$plan.filesInspected+' files checked.') 15
   $total=[Int64](($changes | ForEach-Object {$_.entry.compressedBytes} | Measure-Object -Sum).Sum);$done=0L
   Write-UpdateProgress ('Downloading '+$changes.Count+' changed files; '+[Math]::Round($total/1MB,1)+' MB. Unchanged files will be kept.') 15
   foreach($item in $changes){
