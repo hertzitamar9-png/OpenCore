@@ -114,6 +114,11 @@ app=editFunction(app,'Pj',text=>{
 app=editFunction(app,'qj',text=>replaceOnce(text,
   'i.jsx("p",{children:"OpenCore checks for updates on startup and every five minutes while open. You can also check here. Downloading and installing starts only when you choose Update."})',
   'i.jsx($UpdatePreferences,{}),i.jsx("p",{children:"OpenCore checks for releases at startup and every five minutes while it is open."})'));
+app=replaceOnce(app,'description:"Assistant instructions, verification and updates"},{id:"appearance"',
+  'description:"Assistant instructions and verification"},{id:"updates",label:"Updates",description:"Check for releases and choose when to install them"},{id:"appearance"');
+app=replaceOnce(app,'Updates:"general",Appearance:"appearance"','Updates:"updates",Appearance:"appearance"');
+app=replaceOnce(app,'et("settings.category","general",Gn("general","appearance"',
+  'et("settings.category","general",Gn("general","updates","appearance"');
 // Local UI recovery can pin the version while the matching release is prepared.
 // Normal releases retain the manual update control above.
 if (process.env.OPENCORE_UI_PIN_RELEASE === '1') {

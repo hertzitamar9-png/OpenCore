@@ -3,6 +3,23 @@ import gzip,hashlib,json,re,struct,subprocess
 from pathlib import Path,PurePosixPath
 from package import collect,file_hash,installer_script,nsis_literal
 
+EXECUTABLE_BLOCK_SIZE = 1024 * 1024
+
+def write_executable_blocks(source, payload):
+    blocks = []
+    file_offset = 0
+    with source.open('rb') as stream:
+        while block := stream.read(EXECUTABLE_BLOCK_SIZE):
+            compressed = gzip.compress(block, compresslevel=6, mtime=0)
+            blocks.append({
+                'fileOffset': file_offset, 'bytes': len(block),
+                'sha256': hashlib.sha256(block).hexdigest(),
+                'offset': payload.tell(), 'compressedBytes': len(compressed),
+            })
+            payload.write(compressed)
+            file_offset += len(block)
+    return blocks
+
 def build_payload(app,python,output,version,commit):
     output.mkdir(parents=True,exist_ok=True)
     entries=[]
@@ -10,10 +27,20 @@ def build_payload(app,python,output,version,commit):
         for group,label in [(collect(app),'app'),(collect(python),'python')]:
             for relative,source in group:
                 begin=payload.tell()
-                with gzip.GzipFile(fileobj=payload,mode='wb',mtime=0,compresslevel=6) as compressed,source.open('rb') as stream:
-                    while block:=stream.read(1024*1024):compressed.write(block)
+                path=label+'/'+relative.as_posix()
+                if path == 'app/OpenCore.exe':
+                    blocks=write_executable_blocks(source,payload)
+                    if not blocks:
+                        raise ValueError('OpenCore.exe is empty')
+                else:
+                    blocks=None
+                    with gzip.GzipFile(fileobj=payload,mode='wb',mtime=0,compresslevel=6) as compressed,source.open('rb') as stream:
+                        while block:=stream.read(1024*1024):compressed.write(block)
                 end=payload.tell()
-                entries.append({'path':label+'/'+relative.as_posix(),'bytes':source.stat().st_size,'sha256':file_hash(source),'offset':begin,'compressedBytes':end-begin})
+                entry={'path':path,'bytes':source.stat().st_size,'sha256':file_hash(source),'offset':begin,'compressedBytes':end-begin}
+                if blocks:
+                    entry['blocks']=blocks
+                entries.append(entry)
     index={'schema':1,'version':version,'commit':commit,'files':entries,
            'payloadUrl':f'https://github.com/hertzitamar9-png/OpenCore/releases/download/app-v{version}/OpenCore.Update.data'}
     (output/'incremental-index.json').write_text(json.dumps(index,separators=(',',':')),encoding='utf-8')

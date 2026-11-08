@@ -1,6 +1,6 @@
 :root {
   --theme-accent: color-mix(in srgb, var(--platform-accent, #245ca8) 40%, #376fad);
-  --section-highlight-fill: color-mix(in srgb, var(--theme-accent) 35%, var(--theme-panel, #101217));
+  --section-highlight-fill: var(--theme-panel, #101217);
   --section-highlight-border: var(--theme-accent);
   --section-highlight-ink: var(--theme-ink, #f0f3f6);
 }
@@ -18,8 +18,10 @@
   color: var(--platform-accent-text, white);
 }
 
-.opencore-shell :is(.echo-storage-card, .reasoning-disclosure, .tool-group, .tool-activity:not(.failed)) {
+.opencore-shell :is(.echo-storage-card, .reasoning-disclosure, .tool-group:not(.failed), .tool-activity:not(.failed), .assistant-disclosure:not(.kind-error)) {
+  background: var(--section-highlight-fill) !important;
   border-color: var(--section-highlight-border) !important;
+  box-shadow: none !important;
 }
 
 .opencore-shell :is(progress, input[type="checkbox"], input[type="radio"]) {
@@ -51,9 +53,11 @@
 .opencore-shell .nav-item:is(:hover, :focus-visible, .active, [aria-current="page"]),
 .opencore-shell [role="tab"]:is(:hover, [aria-selected="true"]) {
   background: var(--section-highlight-fill) !important;
-  border-color: var(--section-highlight-border) !important;
+  border-color: transparent !important;
   color: var(--section-highlight-ink) !important;
-  box-shadow: inset 0 0 0 1px var(--section-highlight-border) !important;
+  box-shadow: none !important;
+  outline: 1px solid var(--section-highlight-border) !important;
+  outline-offset: -1px;
 }
 
 .opencore-shell :is(button, select):focus-visible {
@@ -64,9 +68,11 @@
 .conversation-list-focus button:not(:disabled):not(.conversation-row):is(:hover, :focus-visible, [aria-selected="true"], [aria-pressed="true"], .active),
 .conversation-list-focus .conversation-row-shell.selected {
   background: var(--section-highlight-fill) !important;
-  border-color: var(--section-highlight-border) !important;
+  border-color: transparent !important;
   color: var(--section-highlight-ink) !important;
-  box-shadow: inset 0 0 0 1px var(--section-highlight-border) !important;
+  box-shadow: none !important;
+  outline: 1px solid var(--section-highlight-border) !important;
+  outline-offset: -1px;
 }
 
 .conversation-list-focus button:not(.conversation-row):focus-visible {
@@ -87,8 +93,8 @@
 
 .conversation-list-focus .conversation-row-shell:not(.selected):hover,
 .conversation-list-focus .conversation-row-shell.selected:hover {
-  border-color: #f4f8fc !important;
-  box-shadow: inset 0 0 0 1px #f4f8fc !important;
+  outline: 1px solid #f4f8fc !important;
+  outline-offset: -1px;
 }
 
 .conversation-list-focus .conversation-row-shell:has(> .conversation-row:focus-visible) {

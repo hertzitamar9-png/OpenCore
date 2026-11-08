@@ -29,6 +29,50 @@ function Get-UpdateHash([string]$Path){
 function Test-UpdateFile($Entry,[string]$Path){
   return (Test-Path -LiteralPath $Path -PathType Leaf) -and (Get-Item -LiteralPath $Path).Length -eq $Entry.bytes -and (Get-UpdateHash $Path) -eq $Entry.sha256
 }
+function Copy-MatchingExecutableBlocks($Entry,[string]$Target,[string]$Staged){
+  if($Entry.path -cne 'app/OpenCore.exe'){throw 'Unexpected block-addressed update file'}
+  $missing=New-Object Collections.Generic.List[object]
+  $buffer=New-Object byte[] (1MB)
+  $fileOffset=0L
+  $payloadOffset=[Int64]$Entry.offset
+  $payloadEnd=$payloadOffset+$Entry.compressedBytes
+  $original=$null
+  $hash=[Security.Cryptography.SHA256]::Create()
+  $output=[IO.File]::Create($Staged)
+  try{
+    if(Test-Path -LiteralPath $Target -PathType Leaf){$original=[IO.File]::OpenRead($Target)}
+    $output.SetLength($Entry.bytes)
+    foreach($block in $Entry.blocks){
+      if($block.fileOffset -ne $fileOffset -or $block.offset -ne $payloadOffset -or
+        $block.bytes -lt 1 -or $block.bytes -gt $buffer.Length -or $block.compressedBytes -lt 1 -or
+        $block.sha256 -notmatch '^[a-f0-9]{64}$' -or $fileOffset+$block.bytes -gt $Entry.bytes -or
+        $payloadOffset+$block.compressedBytes -gt $payloadEnd){throw 'Invalid executable update block'}
+      $size=[int]$block.bytes
+      $read=0
+      if($null -ne $original -and $original.Length -ge $fileOffset+$size){
+        $original.Position=$fileOffset
+        while($read -lt $size){
+          $count=$original.Read($buffer,$read,$size-$read)
+          if(!$count){break}
+          $read+=$count
+        }
+      }
+      $sameBlock=$read -eq $size -and [BitConverter]::ToString($hash.ComputeHash($buffer,0,$size)).Replace('-','') -eq $block.sha256
+      if($sameBlock){
+        $output.Position=$fileOffset
+        $output.Write($buffer,0,$size)
+      }else{$missing.Add($block)}
+      $fileOffset+=$size
+      $payloadOffset+=$block.compressedBytes
+    }
+    if($fileOffset -ne $Entry.bytes -or $payloadOffset -ne $payloadEnd){throw 'Executable update blocks do not cover the file'}
+  }finally{
+    if($null -ne $original){$original.Dispose()}
+    $output.Dispose()
+    $hash.Dispose()
+  }
+  return ,$missing
+}
 function Write-UpdateProgress([string]$Message,[int]$Percent){
   Write-Host $Message
   if($WindowHandle -and ('OpenCoreUpdateWindows' -as [type])){
@@ -75,7 +119,15 @@ function New-UpdatePlan($Index,[string]$Stage,[switch]$VerifyInstalledFiles){
     }
     $target=Get-UpdateTarget $entry.path
     $inspected++
-    if(-not(Test-UpdateFile $entry $target)){$changes.Add(@{entry=$entry;staged=(Join-Path $Stage ('file-'+$changes.Count))})}
+    if(-not(Test-UpdateFile $entry $target)){
+      $item=@{entry=$entry;staged=(Join-Path $Stage ('file-'+$changes.Count));compressedBytes=$entry.compressedBytes}
+      if($entry.blocks){
+        Write-UpdateProgress 'Finding changed sections of OpenCore.exe.' 7
+        $item.blocks=Copy-MatchingExecutableBlocks $entry $target $item.staged
+        $item.compressedBytes=[Int64](($item.blocks | Measure-Object -Property compressedBytes -Sum).Sum)
+      }
+      $changes.Add($item)
+    }
     if($inspected%20 -eq 0){
       $label=if($mode -eq 'release-difference'){'Checking '+$inspected+' startup or changed files'}else{'Building the installation record: '+$inspected+' / '+$Index.files.Count+' files'}
       Write-UpdateProgress $label ([int](15*$compared/[Math]::Max(1,$Index.files.Count)))
@@ -89,7 +141,7 @@ function Save-InstalledUpdateManifest($Index,[string]$Stage){
   [IO.File]::WriteAllText($pending,($Index | ConvertTo-Json -Depth 8 -Compress),(New-Object Text.UTF8Encoding($false)))
   if(Test-Path -LiteralPath $target){[IO.File]::Replace($pending,$target,(Join-Path $Stage 'previous-file-manifest.json'))}else{[IO.File]::Move($pending,$target)}
 }
-function Receive-UpdateFile($Entry,[string]$Url,[string]$Destination,[scriptblock]$OnProgress){
+function Receive-UpdateFile($Entry,[string]$Url,[string]$Destination,[scriptblock]$OnProgress,[Int64]$PreviousBytes=0){
   $request=[Net.HttpWebRequest]::Create($Url)
   $request.UserAgent='OpenCore Incremental Update'
   $request.Timeout=60000;$request.ReadWriteTimeout=60000
@@ -106,7 +158,7 @@ function Receive-UpdateFile($Entry,[string]$Url,[string]$Destination,[scriptbloc
         $received+=$read
         if($received -gt $Entry.compressedBytes){throw 'The update file exceeded its declared size'}
         $output.Write($buffer,0,$read)
-        & $OnProgress $received
+        & $OnProgress ($PreviousBytes+$received)
       }
       if($received -ne $Entry.compressedBytes){throw 'The changed-file download was incomplete'}
     }finally{$output.Dispose();$source.Dispose()}
@@ -122,6 +174,27 @@ function Receive-UpdateFile($Entry,[string]$Url,[string]$Destination,[scriptbloc
     if(-not(Test-UpdateFile $Entry $Destination)){throw 'Changed-file SHA-256 verification failed'}
     Remove-Item -LiteralPath $compressed
   }finally{$response.Dispose()}
+}
+function Receive-UpdatePlanItem($Item,[string]$Url,[scriptblock]$OnProgress){
+  if(-not $Item.ContainsKey('blocks')){
+    Receive-UpdateFile $Item.entry $Url $Item.staged $OnProgress
+    return
+  }
+  $output=[IO.File]::OpenWrite($Item.staged)
+  $temporary=$Item.staged+'.block'
+  $received=0L
+  try{
+    foreach($block in $Item.blocks){
+      Receive-UpdateFile $block $Url $temporary $OnProgress $received
+      $input=[IO.File]::OpenRead($temporary)
+      try{
+        $output.Position=$block.fileOffset
+        $input.CopyTo($output)
+      }finally{$input.Dispose()}
+      Remove-Item -LiteralPath $temporary
+      $received+=$block.compressedBytes
+    }
+  }finally{$output.Dispose()}
 }
 function Apply-VerifiedUpdate($Plan,[string]$Stage){
   $replaced=New-Object Collections.Generic.List[object]
@@ -174,17 +247,18 @@ public static class OpenCoreUpdateWindows {
   $planningTimer.Stop()
   $changes=$plan.changes
   Write-UpdateProgress ('Update plan: '+$plan.mode+'; '+$plan.unchangedFilesSkipped+' unchanged files skipped; '+$plan.filesInspected+' files checked.') 15
-  $total=[Int64](($changes | ForEach-Object {$_.entry.compressedBytes} | Measure-Object -Sum).Sum);$done=0L
+  $total=[Int64](($changes | ForEach-Object {$_.compressedBytes} | Measure-Object -Sum).Sum);$done=0L
+  $reusedBlocks=[int](($changes | Where-Object {$_.ContainsKey('blocks')} | ForEach-Object {$_.entry.blocks.Count-$_.blocks.Count} | Measure-Object -Sum).Sum)
   Write-UpdateProgress ('Downloading '+$changes.Count+' changed files; '+[Math]::Round($total/1MB,1)+' MB. Unchanged files will be kept.') 15
   foreach($item in $changes){
     $progressCallback={param($received) Write-UpdateProgress ('Downloading '+$item.entry.path+' - '+[Math]::Round(($done+$received)/1MB,1)+' / '+[Math]::Round($total/1MB,1)+' MB') ([int](15+65*($done+$received)/[Math]::Max(1,$total)))}
-    Receive-UpdateFile $item.entry $index.payloadUrl $item.staged $progressCallback
-    $done+=$item.entry.compressedBytes
+    Receive-UpdatePlanItem $item $index.payloadUrl $progressCallback
+    $done+=$item.compressedBytes
   }
   Write-UpdateProgress 'Applying verified changed files; downloaded models and chats stay in place.' 85
   Apply-VerifiedUpdate $changes $stage
   Save-InstalledUpdateManifest $index $stage
-  [IO.File]::WriteAllText((Join-Path $logRoot 'incremental-update-summary.json'),(@{version=$index.version;mode=$plan.mode;unchangedFilesSkipped=$plan.unchangedFilesSkipped;filesInspected=$plan.filesInspected;planningSeconds=[Math]::Round($planningTimer.Elapsed.TotalSeconds,3);downloadedFiles=$changes.Count;downloadedBytes=$total} | ConvertTo-Json -Compress))
+  [IO.File]::WriteAllText((Join-Path $logRoot 'incremental-update-summary.json'),(@{version=$index.version;mode=$plan.mode;unchangedFilesSkipped=$plan.unchangedFilesSkipped;filesInspected=$plan.filesInspected;planningSeconds=[Math]::Round($planningTimer.Elapsed.TotalSeconds,3);downloadedFiles=$changes.Count;downloadedBytes=$total;reusedExecutableBlocks=$reusedBlocks} | ConvertTo-Json -Compress))
   $resolvedStage=[IO.Path]::GetFullPath($stage)
   if(-not $resolvedStage.StartsWith([IO.Path]::GetFullPath($AppRoot).TrimEnd('\')+'\.update-',[StringComparison]::OrdinalIgnoreCase)){throw 'Invalid update staging directory'}
   Remove-Item -LiteralPath $resolvedStage -Recurse

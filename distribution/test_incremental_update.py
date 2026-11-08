@@ -1,7 +1,7 @@
 import gzip,hashlib,json,os,re,subprocess,tempfile,threading,unittest
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from incremental_update import build_payload,update_script
+from incremental_update import EXECUTABLE_BLOCK_SIZE,build_payload,update_script
 
 def quoted(path):return "'"+str(path).replace("'","''")+"'"
 
@@ -91,7 +91,10 @@ Write-Output 'PLAN_OK'
     def test_only_changed_file_bytes_download_and_failed_apply_rolls_back(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);source=root/'source';source.mkdir();python=root/'python';python.mkdir()
-            (source/'OpenCore.exe').write_bytes(b'new executable'*100)
+            size=EXECUTABLE_BLOCK_SIZE
+            prefix=b'p'*size
+            suffix=b's'*size+b'tail'
+            (source/'OpenCore.exe').write_bytes(prefix+b'n'*size+suffix)
             (source/'runtime.dll').write_bytes(b'unchanged large library'*10000)
             index=build_payload(source,python,root/'output','0.3.204','a'*40)
             payload=(root/'output/OpenCore.Update.data').read_bytes();ranges=[]
@@ -104,21 +107,17 @@ Write-Output 'PLAN_OK'
                 def log_message(self,*args):pass
             server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
             thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
-            app=root/'installed';app.mkdir();(app/'OpenCore.exe').write_bytes(b'old executable');(app/'runtime.dll').write_bytes((source/'runtime.dll').read_bytes())
+            app=root/'installed';app.mkdir();(app/'OpenCore.exe').write_bytes(prefix+b'o'*size+suffix);(app/'runtime.dll').write_bytes((source/'runtime.dll').read_bytes())
             unchanged=(app/'runtime.dll').stat().st_mtime_ns
             staged=root/'stage';staged.mkdir();(root/'index.json').write_text(json.dumps(index))
             code=f"""$ErrorActionPreference='Stop'
 . {quoted(Path(__file__).with_name('apply-incremental-update.ps1').resolve())} -AppRoot {quoted(app)} -PythonRoot {quoted(python)} -IndexPath {quoted(root/'index.json')} -FunctionsOnly
 $index=Get-Content -LiteralPath {quoted(root/'index.json')} -Raw | ConvertFrom-Json
-$plan=@()
-foreach($entry in $index.files){{
- $target=Get-UpdateTarget $entry.path
- if(-not(Test-UpdateFile $entry $target)){{
-  $path=Join-Path {quoted(staged)} ('new-'+$plan.Count)
-  Receive-UpdateFile $entry 'http://127.0.0.1:{server.server_port}/data' $path {{param($count)}}
-  $plan+=@{{entry=$entry;staged=$path}}
- }}
-}}
+$plan=(New-UpdatePlan $index {quoted(staged)}).changes
+if($plan.Count -ne 1 -or $plan[0].blocks.Count -ne 1){{throw 'Only the changed executable block should transfer'}}
+$progress=New-Object 'Collections.Generic.List[long]'
+Receive-UpdatePlanItem $plan[0] 'http://127.0.0.1:{server.server_port}/data' {{param($count) $progress.Add($count)}}
+if($progress[$progress.Count-1] -ne $plan[0].compressedBytes){{throw 'Transfer progress did not match the changed bytes'}}
 Apply-VerifiedUpdate $plan {quoted(staged)}
 $target=Join-Path {quoted(app)} 'OpenCore.exe'
 $before=[IO.File]::ReadAllBytes($target)
@@ -137,7 +136,8 @@ Write-Output 'TRANSACTION_OK'
                 self.assertIn('TRANSACTION_OK',result.stdout)
             finally:server.shutdown();server.server_close();thread.join()
             changed=next(entry for entry in index['files'] if entry['path']=='app/OpenCore.exe')
-            self.assertEqual(ranges,[(changed['offset'],changed['offset']+changed['compressedBytes']-1)])
+            block=changed['blocks'][1]
+            self.assertEqual(ranges,[(block['offset'],block['offset']+block['compressedBytes']-1)])
             self.assertEqual((app/'runtime.dll').stat().st_mtime_ns,unchanged)
             self.assertEqual((app/'OpenCore.exe').read_bytes(),(source/'OpenCore.exe').read_bytes())
 

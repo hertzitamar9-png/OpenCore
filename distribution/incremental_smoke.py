@@ -3,26 +3,30 @@ import ast,ctypes,hashlib,json,os,re,struct,subprocess,tempfile,threading,time,u
 from ctypes import wintypes
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from incremental_update import build_payload,update_script
+from incremental_update import EXECUTABLE_BLOCK_SIZE,build_payload,update_script
 from package import nsis_literal
 
 def run(nsis):
     with tempfile.TemporaryDirectory(prefix='opencore-incremental-smoke-') as temporary:
         root=Path(temporary).resolve();source=root/'source';python=root/'python';target=root/'installed';output=root/'release';branding=root/'branding'
         for folder in [source,python,target,output,branding]:folder.mkdir()
-        (source/'OpenCore.exe').write_bytes(os.urandom(768000))
+        common=os.urandom(EXECUTABLE_BLOCK_SIZE)
+        (source/'OpenCore.exe').write_bytes(common+os.urandom(768000))
         (source/'runtime.dll').write_bytes(b'unchanged shared runtime'*10000)
-        (target/'OpenCore.exe').write_bytes(b'old executable')
+        (target/'OpenCore.exe').write_bytes(common+b'old executable')
         (target/'runtime.dll').write_bytes((source/'runtime.dll').read_bytes())
         (source/'build-info.json').write_text(json.dumps({'build':'0.3.204','commit':'a'*40,'appExeSha256':hashlib.sha256((source/'OpenCore.exe').read_bytes()).hexdigest()}))
         (target/'build-info.json').write_text(json.dumps({'build':'0.3.203','commit':'b'*40,'appExeSha256':hashlib.sha256((target/'OpenCore.exe').read_bytes()).hexdigest()}))
         old_files=[{'path':'app/'+file.name,'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()} for file in target.iterdir()]
         (target/'installed-file-manifest.json').write_text(json.dumps({'schema':1,'version':'0.3.203','commit':'b'*40,'files':old_files}))
         # Reproduce a local app repair without invalidating unchanged DLL pins.
-        (target/'OpenCore.exe').write_bytes(b'locally repaired executable')
+        (target/'OpenCore.exe').write_bytes(common+b'locally repaired executable')
         unchanged=(target/'runtime.dll').stat().st_mtime_ns
         index=build_payload(source,python,output,'0.3.204','a'*40)
         assert all(entry['path'].startswith('app/') for entry in index['files'])
+        app_exe=next(entry for entry in index['files'] if entry['path']=='app/OpenCore.exe')
+        changed_ranges=[app_exe['blocks'][1],next(entry for entry in index['files'] if entry['path']=='app/build-info.json')]
+        expected_ranges=sorted((entry['offset'],entry['offset']+entry['compressedBytes']-1) for entry in changed_ranges)
         payload=(output/'OpenCore.Update.data').read_bytes();ranges=[]
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
@@ -110,14 +114,15 @@ def run(nsis):
                     finally:applied.close()
                     assert (target/'OpenCore.exe').read_bytes()==(source/'OpenCore.exe').read_bytes()
                     assert (target/'runtime.dll').stat().st_mtime_ns==unchanged
-                    assert len(ranges)==2,'An unchanged file was downloaded again'
+                    assert sorted(ranges)==expected_ranges,'An unchanged file or executable block was downloaded'
                     summary=json.loads((target/'logs/incremental-update-summary.json').read_text())
                     assert summary['mode']=='release-difference',summary
                     assert summary['filesInspected']==2,summary
                     assert summary['unchangedFilesSkipped']==1,summary
                     assert summary['downloadedFiles']==(2 if attempt==0 else 0),summary
+                    assert summary['reusedExecutableBlocks']==(1 if attempt==0 else 0),summary
                     assert not list(target.glob('.update-*')),'Successful update left staging directories'
                 assert observed['downloadText'] and observed['movingProgress'],observed
             finally:kernel.CloseHandle(locked);user.CloseDesktop(desktop)
-            return {'actualNsisApplyPassed':True,'repeatUpdateDownloadedNoFiles':True,'unchangedLibraryUntouched':True,'unchangedFilesNotReadVerified':True,'releaseDifferenceVerified':True,'downloadedRanges':len(ranges),'visibleDownloadProgressVerified':True}
+            return {'actualNsisApplyPassed':True,'repeatUpdateDownloadedNoFiles':True,'unchangedLibraryUntouched':True,'unchangedFilesNotReadVerified':True,'releaseDifferenceVerified':True,'executableBlocksReusedVerified':True,'downloadedRanges':len(ranges),'visibleDownloadProgressVerified':True}
         finally:server.shutdown();server.server_close();thread.join()

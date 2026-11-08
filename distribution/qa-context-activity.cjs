@@ -65,7 +65,7 @@ code+=String.raw`
         const nav=page.locator('.conversation-app-rail .nav-item.active').first(),row=page.locator('.conversation-row-shell.selected').first();
         const fill=element=>getComputedStyle(element).backgroundColor;
         assert.equal(await nav.evaluate(fill),await row.evaluate(fill),'Navigation and selected chats must use one highlight fill');
-        assert.equal(await nav.evaluate(element=>getComputedStyle(element).borderColor),accent,'Navigation and progress must use one highlight blue');
+        assert.equal(await nav.evaluate(element=>getComputedStyle(element).outlineColor),accent,'Navigation and progress must use one highlight blue');
         const memory=page.locator('.conversation-app-rail .nav-item').nth(5);await memory.hover();
         await page.waitForFunction(()=>{const nav=document.querySelectorAll('.conversation-app-rail .nav-item')[5],row=document.querySelector('.conversation-row-shell.selected');return nav&&row&&getComputedStyle(nav).backgroundColor===getComputedStyle(row).backgroundColor;});
         assert.equal(await memory.evaluate(fill),await row.evaluate(fill),'Hover and selection must share the highlight color');
@@ -74,11 +74,11 @@ code+=String.raw`
       if(width>767){
         const selected=page.locator('.conversation-row-shell.selected'),other=page.locator('.conversation-row-shell:not(.selected)').first();
         await other.locator('.conversation-row').hover();
-        assert.equal(await other.evaluate(e=>getComputedStyle(e).borderColor),'rgb(244, 248, 252)','The chat under the pointer must have a visible white border');
-        assert.match(await other.evaluate(e=>getComputedStyle(e).boxShadow),/rgb\(244, 248, 252\)/,'The hover border must be drawn inside the chat row');
+        assert.equal(await other.evaluate(e=>getComputedStyle(e).outlineColor),'rgb(244, 248, 252)','The chat under the pointer must have a visible white border');
+        assert.equal(await other.evaluate(e=>getComputedStyle(e).outlineOffset),'-1px','The hover border must be drawn inside the chat row');
         await page.screenshot({path:path.join(folder,'chat-hover-desktop.png')});
         assert.equal(await selected.count(),1,'Hover must not select another chat');
-        assert.notEqual(await selected.evaluate(e=>getComputedStyle(e).borderColor),await other.evaluate(e=>getComputedStyle(e).borderColor),'Unselected chat must not copy selected border');
+        assert.notEqual(await selected.evaluate(e=>getComputedStyle(e).outlineColor),await other.evaluate(e=>getComputedStyle(e).outlineColor),'Unselected chat must not copy selected border');
         const input=page.getByRole('textbox',{name:'Message OpenCore',exact:true});await input.focus();
         assert.equal(await input.evaluate(e=>getComputedStyle(e).outlineStyle),'none','Typing must not outline the composer');
       }
@@ -97,7 +97,8 @@ code+=String.raw`
       await page.evaluate(()=>fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',phase:'answer',segments:[{kind:'text',itemId:'wire-answer',content:'<think></think></think>Game verification finished.'}]}));
       await page.getByText('Game verification finished.',{exact:true}).waitFor();
       const memory={...entry(10,'progress','Automatic memory did not complete.',{status:'failed',userEntryId:1}),title:'Automatic memory',role:'system'};
-      await page.evaluate(({user,call,result,thinking,next,pending,answer,memory})=>{fixture.timeline=[user,call,result,thinking,next,pending,answer,memory];fixture.snapshot.activeConversationIds=[];fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',done:true});},{user,call,result,thinking:entry(5,'thinking','I will inspect the file that was found.',{itemId:'reason-1'}),next:entry(6,'thinking','Now I can validate the next step.',{itemId:'reason-2'}),pending:entry(8,'tool_call','{"id":"pending-tool","name":"validate"}',{id:'pending-tool'}),answer:entry(9,'message','Game verification finished.',{itemId:'saved-answer'}),memory});
+      const echo={...entry(11,'echo','Archive receipt',{artifact:{status:'complete',words:3}}),role:'system'};
+      await page.evaluate(({user,call,result,thinking,next,pending,answer,memory,echo})=>{fixture.timeline=[user,call,result,thinking,next,pending,answer,memory,echo];fixture.snapshot.activeConversationIds=[];fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',done:true});},{user,call,result,thinking:entry(5,'thinking','I will inspect the file that was found.',{itemId:'reason-1'}),next:entry(6,'thinking','Now I can validate the next step.',{itemId:'reason-2'}),pending:entry(8,'tool_call','{"id":"pending-tool","name":"validate"}',{id:'pending-tool'}),answer:entry(9,'message','Game verification finished.',{itemId:'saved-answer'}),memory,echo});
       await page.waitForTimeout(400);
       assert.ok(await page.getByText(/Used\s*1\s*tool/).first().isVisible());
       const cards=await page.getByText('I will inspect the file that was found.',{exact:true}).evaluateAll(items=>new Set(items.map(item=>item.closest('details'))).size);
@@ -107,6 +108,13 @@ code+=String.raw`
       const receipt=page.locator('.echo-storage-card').filter({hasText:'Memory receipt'}).first();
       await receipt.waitFor();
       assert.equal(await receipt.evaluate(element=>getComputedStyle(element).borderColor),accent,'Memory receipts must use the same blue as the active controls');
+      const saved=page.locator('.echo-storage-card').filter({hasText:'Saved to ECHO'}).first();
+      await saved.waitFor();
+      const fill=element=>getComputedStyle(element).backgroundColor;
+      const activeNav=page.locator('.conversation-app-rail .nav-item.active').first();
+      assert.equal(await activeNav.evaluate(fill),await saved.evaluate(fill),'The selected navigation item must use the black Saved to ECHO surface');
+      assert.equal(await activeNav.evaluate(element=>getComputedStyle(element).outlineWidth),'1px');
+      if(width>767)assert.equal(await page.locator('.conversation-row-shell.selected').first().evaluate(fill),await saved.evaluate(fill),'The selected chat must match the Saved to ECHO surface');
       const unload=page.getByRole('button',{name:'Unload model',exact:true}).and(page.locator('.send-button'));
       await unload.waitFor({timeout:7000});
       await unload.click();
@@ -127,6 +135,13 @@ code+=String.raw`
       await page.getByText('16.4K / 16.4K last',{exact:false}).waitFor();
       assert.deepEqual(errors,[]);
       await page.screenshot({path:path.join(folder,'context-activity-'+width+'.png')});
+      if(width>767){
+        await page.getByRole('navigation',{name:'OpenCore sections'}).getByRole('button',{name:'Settings',exact:true}).click();
+        await page.getByRole('navigation',{name:'Settings categories'}).getByRole('button',{name:'Updates',exact:true}).click();
+        const manual=page.getByRole('radio',{name:'Manual',exact:true});
+        await manual.waitFor();
+        assert.ok(await manual.isChecked(),'The desktop update settings must open in Manual mode on a fresh profile');
+      }
       proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedLastWindowVerified:true,liveContextSamples:[12480,12520],liveHardwareSamples:[87,63],liveOutputRates:[35,40],sharedHighlightsVerified:true,errors});
       await page.close();
     }
