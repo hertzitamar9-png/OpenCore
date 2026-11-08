@@ -32,10 +32,16 @@ def automatic_memory_request(payload):
         return False
     system, source = messages
     instructions = system['content'].strip()
-    return (system.get('role') in ('system', 'developer')
+    if not (system.get('role') in ('system', 'developer')
             and instructions.startswith('Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only.')
             and instructions.endswith('Do not emit reasoning, markdown, tools or commentary.')
-            and source.get('role') == 'user' and source['content'].lstrip().startswith('HUMAN_SOURCE data:'))
+            and source.get('role') == 'user'):
+        return False
+    try:
+        data = json.loads(source['content'].strip().removeprefix('HUMAN_SOURCE data:').strip())
+    except (ValueError, RecursionError):
+        return False
+    return isinstance(data, dict) and isinstance(data.get('HUMAN_SOURCE'), str)
 
 
 def _hash(path, cancel=None):

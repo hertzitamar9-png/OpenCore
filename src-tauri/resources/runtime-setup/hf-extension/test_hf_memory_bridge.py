@@ -16,7 +16,7 @@ from hf_runtime import RuntimeManager, automatic_memory_request
 def automatic_capture():
     return {'model': 'local-fixture', 'messages': [
         {'role': 'system', 'content': 'Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only. Do not emit reasoning, markdown, tools or commentary.'},
-        {'role': 'user', 'content': 'HUMAN_SOURCE data:\n{"HUMAN_SOURCE":"I played football in Canada."}'},
+        {'role': 'user', 'content': '{"HUMAN_SOURCE":"I played football in Canada.","deleted_keys":[]}'},
     ], 'max_tokens': 1024}
 
 
@@ -25,6 +25,8 @@ class AutomaticMemoryRuntimeTests(unittest.TestCase):
         payload = automatic_capture()
         self.assertTrue(automatic_memory_request(payload))
         self.assertFalse(automatic_memory_request({**payload, 'stream': True}))
+        self.assertFalse(automatic_memory_request({**payload, 'messages': [payload['messages'][0],
+            {'role': 'user', 'content': 'A normal chat request.'}]}))
         with tempfile.TemporaryDirectory() as folder:
             manager = RuntimeManager(folder, folder)
             with patch.object(manager, 'prepare') as prepare:
