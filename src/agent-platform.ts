@@ -37,6 +37,7 @@ export interface PlatformConfig {
   mcpServers: McpServer[];
   activityEnabled: boolean;
   memoryEnabled: boolean;
+  easterEggsEnabled?: boolean;
   appearance: AppearanceConfig;
 }
 export type PlatformConfigurationPatch = Omit<Partial<PlatformConfig>, "appearance"> & { appearance?: Partial<AppearanceConfig> };

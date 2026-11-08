@@ -1,18 +1,18 @@
 import{expect,it,vi,afterEach}from'vitest';
 import{render,screen,waitFor,cleanup,fireEvent}from'@testing-library/react';
-import{chatPostprocessing,ChatMemoryStatus,ensureMemoryRelevancePolicy,MEMORY_RELEVANCE_POLICY}from'./chat-postprocessing.js';
+import{chatPostprocessing,ChatMemoryStatus,removeLegacyMemoryRelevancePolicy,MEMORY_RELEVANCE_POLICY}from'./chat-postprocessing.js';
 const user={id:1,kind:'message',role:'user',timestamp:'2026-10-28T11:57:00Z',content:'I played professional ⚽ a year ago'};
 const capture={id:2,title:'Automatic memory',timestamp:'2026-10-28T11:57:05Z',metadata:{status:'checking',userEntryId:1}};
 afterEach(()=>{cleanup();delete(globalThis as any).__opencoreMemoryService;delete(window as any).__TAURI_INTERNALS__;});
-it('adds a persisted relevance policy once while preserving custom instructions',async()=>{
- const invoke=vi.fn(async(command:string,args:any)=>command==='agent_platform_configuration'?{systemPrompt:'Use concise replies.',memoryEnabled:true}:{persisted:true});
- await ensureMemoryRelevancePolicy(invoke);await ensureMemoryRelevancePolicy(invoke);
+it('removes the exact app-inserted guidance once and preserves custom instructions',async()=>{
+ const invoke=vi.fn(async(command:string,args:any)=>command==='agent_platform_configuration'?{systemPrompt:'Use concise replies.\n\n'+MEMORY_RELEVANCE_POLICY+'\n\nUse metric units.',memoryEnabled:false}:{persisted:true});
+ await removeLegacyMemoryRelevancePolicy(invoke);await removeLegacyMemoryRelevancePolicy(invoke);
  expect(invoke).toHaveBeenCalledTimes(2);
- expect(invoke.mock.calls[1][1].args.settings.systemPrompt).toBe('Use concise replies.\n\n'+MEMORY_RELEVANCE_POLICY);
+ expect(invoke.mock.calls[1][1].args.settings.systemPrompt).toBe('Use concise replies.\n\nUse metric units.');
 });
-it('does not rewrite an existing policy or enable memory when disabled',async()=>{
- for(const config of [{systemPrompt:MEMORY_RELEVANCE_POLICY,memoryEnabled:true},{systemPrompt:'',memoryEnabled:false}]){
-  const invoke=vi.fn(async()=>config);await ensureMemoryRelevancePolicy(invoke);expect(invoke).toHaveBeenCalledTimes(1);
+it('leaves user-written instructions and new installations alone',async()=>{
+ for(const config of [{systemPrompt:'[OpenCore memory relevance v1]\nA custom rule.',memoryEnabled:true},{systemPrompt:'',memoryEnabled:false}]){
+  const invoke=vi.fn(async()=>config);await removeLegacyMemoryRelevancePolicy(invoke);expect(invoke).toHaveBeenCalledTimes(1);
  }
 });
 it('separates post-response memory checking from text generation and ignores old captures',()=>{

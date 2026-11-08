@@ -196,6 +196,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-slash-menu.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-workbench.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-catalog-admission.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-model-modes.cjs

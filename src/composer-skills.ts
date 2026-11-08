@@ -1,3 +1,5 @@
+import { matchesSlashSkillName } from "./slash-menu.js";
+
 export type ComposerSkillId = "text" | "speech" | "computer-use" | "browser-use" | "chrome-control" | "music" | "image" | "3d" | "3d-animation" | "2d-animation" | "video" | "tts" | "voice-cloning" | "ocr" | "omni" | "policy" | "game-dev" | "web-dev" | "full-stack" | "mobile-dev" | "desktop-dev" | "mcp-server" | "plugins" | "skills-library";
 
 export const COMPOSER_SKILLS: { id: ComposerSkillId; label: string; description: string; aliases: string[]; category?: string }[] = [
@@ -33,23 +35,26 @@ export function availableComposerSkills(models: SkillModel[]) {
   return COMPOSER_SKILLS.filter(skill => !skill.category || categories.has(skill.category));
 }
 export function exactSlashSkill(draft:string) {
+  draft = draft.trimStart();
   if(!draft.startsWith('/'))return undefined;
   const token=draft.slice(1).split(/\s/,1)[0].toLowerCase();
   return COMPOSER_SKILLS.find(skill=>[skill.id,...skill.aliases].includes(token));
 }
 export function filterComposerSkills(draft: string, models?: SkillModel[]) {
+  draft = draft.trimStart();
   if (!draft.startsWith("/")) return [];
   const query = draft.slice(1).split(/\s/, 1)[0].toLowerCase();
   const skills = models ? availableComposerSkills(models) : COMPOSER_SKILLS;
   if (!query || query === "skills") return skills;
-  return skills.filter((skill) => [skill.id, ...skill.aliases].some((name) => name.startsWith(query)));
+  return skills.filter(skill => matchesSlashSkillName(skill, query));
 }
 
 export function resolveSlashSkill(draft: string, id: ComposerSkillId) {
   const skill = COMPOSER_SKILLS.find((item) => item.id === id);
+  draft = draft.trimStart();
   if (!skill || !draft.startsWith("/")) return draft;
   const token = draft.slice(1).split(/\s/, 1)[0].toLowerCase();
   if (token === "skills") return draft.slice(token.length + 1).trimStart();
-  if (![skill.id, ...skill.aliases].some((name) => name.startsWith(token))) return draft;
+  if (!matchesSlashSkillName(skill, token) && !skill.aliases.includes(token)) return draft;
   return draft.slice(token.length + 1).trimStart();
 }

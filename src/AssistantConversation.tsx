@@ -17,7 +17,7 @@ import {StoredAnswer} from './StoredAnswer.js';
 import {profileUsesEcho} from './ModelProfiles';
 import './generation-settings.css';
 import './ImageGenerationPanel.css';
-import {ChatMemoryStatus,chatPostprocessing} from './chat-postprocessing.js';
+import {ChatMemoryStatus,chatPostprocessing,chatSendFailure} from './chat-postprocessing.js';
 import {cachedImagePreview,readImagePreview} from './image-preview-cache.js';
 import {PromptAssistantTools} from './prompt-assistant.js';
 import remarkGfm from "remark-gfm";
@@ -33,7 +33,8 @@ import { messageUrlTransform, parseArtifactLink, studioLinkCategory } from "./ar
 import { sanitizeMessageMarkdown } from "./message-markdown";
 import { localFilePath } from "./local-file-links";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, availableComposerSkills, exactSlashSkill, type ComposerSkillId } from "./composer-skills";
-import { SlashMenu } from "./slash-menu.js";
+import { SlashMenu, isDesktopChromeLaunch } from "./slash-menu.js";
+import { playAppEffect } from "./app-effects.js";
 import "./slash-menu.css";
 import { formatMessageTimestamp } from "./message-time";
 import { removePersistedOptimisticDuplicates, retainUnchangedTimeline } from "./visible-entries";
@@ -769,7 +770,7 @@ export const AssistantConversation = memo(function AssistantConversation({
         setDraft((current) => current.trim() ? current : item.text);
         setFiles((current) => Array.from(new Set([...current, ...item.files])));
         setSelectedSkills((current) => Array.from(new Set([...current, ...item.skills])));
-        onNotice(`Message not sent. Your draft is ready to retry. ${String(error)}`);
+        onNotice(chatSendFailure(error));
       }
       await onRefresh();
       setLiveEntries([]);
@@ -801,6 +802,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   }, [backendActive]);
 
   const submit = () => {
+    if (!files.length && playAppEffect(draft)) { setDraft(""); setSkillPickerOpen(false); return; }
     if(submitChatImagePrompt({scope:draftInput.current?.closest('.chat-composer-wrap'),prompt:draft,files,onError:onNotice,onAccepted:()=>{setDraft('');setFiles([]);}}))return;
     if (inferenceBlocked && !sendingRef.current) { onNotice(inferenceBlocked); return; }
     if (backendActive && !sendingRef.current) return;
@@ -810,6 +812,8 @@ export const AssistantConversation = memo(function AssistantConversation({
     if(slash&&!available.includes(slash.id)){onNotice(`Install a ${slash.category} model in Models to unlock /${slash.id}.`);return;}
     const skills=selectedSkills.filter(id=>available.includes(id));
     if(slash){text=resolveSlashSkill(text,slash.id);if(!skills.includes(slash.id))skills.push(slash.id);}
+    if (!files.length && !(globalThis as { __OPENCORE_PHONE__?: boolean }).__OPENCORE_PHONE__ &&
+      isDesktopChromeLaunch(text) && !skills.includes("computer-use")) skills.push("computer-use");
     if (!text && files.length === 0) return;
     const item: ChatQueueItem = { id: crypto.randomUUID(), text, files: [...files], reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens };
     setDraft("");
@@ -999,9 +1003,20 @@ export const AssistantConversation = memo(function AssistantConversation({
           aria-label={embedded ? "Message side chat" : "Message OpenCore"}
           onPointerDown={() => { void focusDraft(); }}
           value={draft}
-          onChange={(event) => { setDraft(event.target.value); setSkillPickerOpen(event.target.value.startsWith("/")); }}
+          onChange={(event) => {
+            const value = event.target.value, leading = value.trimStart();
+            const command = /^\/\S+\s/.test(leading) ? exactSlashSkill(leading) : undefined;
+            if (command && availableComposerSkills(skillModels).some(skill => skill.id === command.id)) {
+              setSelectedSkills(current => current.includes(command.id) ? current : [...current, command.id]);
+              setDraft(resolveSlashSkill(leading, command.id));
+              setSkillPickerOpen(false);
+            } else {
+              setDraft(value);
+              setSkillPickerOpen(leading.startsWith("/"));
+            }
+          }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
               submit();
             }

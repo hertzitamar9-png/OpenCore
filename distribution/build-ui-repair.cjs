@@ -175,6 +175,7 @@ app = require('./hub-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./image-ui-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./context-activity-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./slash-menu-patches.cjs')(app,{editFunction,replaceOnce});
+const workbench = require('./workbench-ui-patches.cjs');
 app = require('./group-ui-patches.cjs')(app,{editFunction,replaceOnce});
 app = require('./task-progress-patches.cjs')(app,{replaceOnce});
 app = require('./model-mode-patches.cjs')(app,{editFunction,replaceOnce});
@@ -192,6 +193,8 @@ app=require('./release-mobile-navigation-patches.cjs')(app,{editFunction,replace
 app=editFunction(app,'w8',text=>replaceOnce(text,'i.jsx(Pj,{})',
   'i.jsx(Pj,{blocked:!!(J||D||ge||l.activeConversationIds?.length||l.runtime.status==="starting")})'));
 app=require('./group-conversation-patches.cjs')(app,{replaceOnce});
+app=workbench.patchApp(app,{editFunction,replaceOnce});
+index=workbench.patchAccount(index,{editFunction,replaceOnce});
 app=editFunction(app,'h8',retainSupportPage);
 app=editFunction(app,'w8',text=>replaceOnce(text,
   'className:"section-main",children:tr','className:"section-main",children:i.jsx($RetainedViews,{view:d,content:tr})'));
@@ -216,7 +219,7 @@ app += '\nimport{createAppUpdatePreferences}from"./model-catalog-B8SfuDgQ.js";co
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
   const preferencesCode='\nconst $createAppUpdatePreferences=(()=>{'+fs.readFileSync(path.join(root,'../src/app-update-preferences.js'),'utf8').replace('export function ','function ')+';return createAppUpdatePreferences})();export{$createAppUpdatePreferences as createAppUpdatePreferences};\n';
-  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode+'\n'+require('./hub-patches.cjs').featureInstallerSource();
+  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+workbench.featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode+'\n'+require('./hub-patches.cjs').featureInstallerSource();
   for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures+preferencesCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,

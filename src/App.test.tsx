@@ -770,9 +770,9 @@ describe("OpenCore", () => {
     try {
       render(<App initialView="conversations" />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
+      await waitFor(() => expect(models).toHaveBeenCalled());
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "/computer-use open Calculator" } });
-      expect(await screen.findByRole("listbox", { name: "Skills" })).toBeInTheDocument();
-      fireEvent.click(screen.getByRole("option", { name: /computer-use/ }));
+      await waitFor(() => expect(screen.getByLabelText("Selected skills")).toHaveTextContent("Computer use"));
       expect(screen.getByLabelText("Message OpenCore")).toHaveValue("open Calculator");
       fireEvent.click(screen.getByTitle("Send"));
       await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "open Calculator", [], expect.any(String), "ask-every-time", ["computer-use"], true, 3, true, 200000, expect.any(String)));

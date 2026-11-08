@@ -9,3 +9,5 @@ export function SlashMenu(props: {
   onClose: () => void;
   available?: (item: SlashItem) => boolean;
 }): ReactNode;
+export function matchesSlashSkillName(item: { id: string; label: string }, query: string): boolean;
+export function isDesktopChromeLaunch(text: string): boolean;

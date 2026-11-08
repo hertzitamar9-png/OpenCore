@@ -1,19 +1,23 @@
 // The same queue controls are used by the source UI and the packaged UI.
 export function createDownloadQueueStore(invoke) {
   let state = { available: false, mode: 'sequential', paused: false, items: [], activeIds: [], selected: [], error: '' };
-  const listeners = new Set(), selected = new Map(); let poll = null, pending = null;
+  const listeners = new Set(), selected = new Map(); let poll = null, pending = null, revision = 0;
   const publish = value => { state = { ...state, ...value, selected: [...selected.values()] }; for (const listener of listeners) listener(); };
   const accept = value => {
     if (!value || value.schema !== 1 || !Array.isArray(value.items)) return;
-    const next = { available: true, mode: value.mode === 'parallel' ? 'parallel' : 'sequential', paused: !!value.paused, items: value.items, activeIds: value.activeIds || [] };
+    const next = { available: true, mode: value.mode === 'parallel' ? 'parallel' : 'sequential', paused: !!value.paused, items: value.items.filter(item => item.phase !== 'cancelled'), activeIds: value.activeIds || [] };
     if (JSON.stringify(next) !== JSON.stringify({ available: state.available, mode: state.mode, paused: state.paused, items: state.items, activeIds: state.activeIds })) publish(next);
   };
   async function refresh() {
     if (pending) return pending;
-    pending = Promise.resolve().then(() => invoke({ action: 'snapshot' })).then(accept).catch(() => {}).finally(() => { pending = null; }); return pending;
+    const started = revision;
+    pending = Promise.resolve().then(() => invoke({ action: 'snapshot' }))
+      .then(value => { if (started === revision) accept(value); })
+      .catch(() => {}).finally(() => { pending = null; });
+    return pending;
   }
   async function action(args) {
-    try { const value = await invoke(args); accept(value); publish({ error: '' }); return value; }
+    try { const value = await invoke(args); revision++; accept(value); publish({ error: '' }); return value; }
     catch (error) { publish({ error: String(error?.message || error) }); throw error; }
   }
   return {

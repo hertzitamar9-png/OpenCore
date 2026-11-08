@@ -1,0 +1,21 @@
+html:not([data-platform-density="compact"]) .settings-layout .agent-platform-settings {
+  --platform-space: 14px;
+}
+.settings-layout .platform-panel + .platform-panel { margin-top: 0; }
+.settings-layout .platform-panel h2 { margin-bottom: 10px; }
+.settings-layout .platform-field { margin-top: 10px; }
+.settings-layout .platform-note { margin-block: 6px 9px; }
+.platform-mcp-editor { margin-block: 10px; }
+.platform-mcp-editor fieldset {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  border: 1px solid var(--line, #3b424e); border-radius: 9px; padding: 12px; margin: 0; min-width: 0;
+}
+.platform-mcp-editor label { display: grid; gap: 4px; align-content: start; }
+.platform-mcp-editor .platform-mcp-enabled {
+  display: flex; align-items: center; gap: 6px; grid-column: 1 / -1;
+}
+.platform-mcp-editor .platform-toolbar, .platform-mcp-advanced { grid-column: 1 / -1; margin-block: 8px 0; }
+.platform-connection-summaries > div > .platform-toolbar { margin: 6px 0 0; display: flex; flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .platform-mcp-editor fieldset { grid-template-columns: minmax(0, 1fr); }
+}

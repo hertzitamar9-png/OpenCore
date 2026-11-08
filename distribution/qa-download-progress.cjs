@@ -50,6 +50,7 @@ const server=http.createServer((request,response)=>{
     assert.equal(await page.locator('progress[value]').count(),0,'Verification is indeterminate');
     assert.equal(await page.getByText(/remaining/).count(),0,'No download ETA during verification');
     await card.getByRole('button',{name:'Cancel installation'}).click();
+    assert.equal(await page.locator('.model-install-progress').count(),0,'Cancellation clears both progress cards');
     assert.deepEqual(await page.evaluate(()=>fixture.calls),['pause','cancel']);assert.deepEqual(errors,[]);
     console.log('PASS shared global/card bytes, speed, ETA, pause, cancel, verification and layout at '+width+'px'+(width===393?' Phone mode':''));await page.close();
   }}finally{await browser.close();server.close()}

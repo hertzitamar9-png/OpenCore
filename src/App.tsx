@@ -82,6 +82,9 @@ import { AgentConnectorControls } from './AgentConnectorControls';
 import { SETTINGS_SAVE_ERROR_EVENT, type SettingsSaveError } from './useSettingsAutosave';
 import { AgentQuestions } from './AgentQuestions';
 import { usePlatformConfiguration, executePlatformAction, type PlatformConfig } from './agent-platform';
+import { useAppEffects } from './app-effects.js';
+import { removeLegacyMemoryRelevancePolicy } from './chat-postprocessing.js';
+import './app-effects.css';
 import { retainUnchangedTimeline } from './visible-entries';
 import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
@@ -1261,6 +1264,8 @@ function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, block
 
 export default function App({ initialView = "overview" }: { initialView?: View } = {}) {
   const platform=usePlatformConfiguration();
+  useEffect(()=>{void removeLegacyMemoryRelevancePolicy().catch(()=>{});},[]);
+  const appEffect=useAppEffects(platform.configuration,listen);
   const updatingApp = useAppUpdateInstalling();
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>(initialView);
@@ -1746,7 +1751,7 @@ export default function App({ initialView = "overview" }: { initialView?: View }
 
   const workspaceConversationId = view === 'learning' ? learningConversationId : selectedConversation;
   const workspaceSettings = view === 'learning' ? learningSettings||parentSettings : parentSettings;
-  return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
+  return <div className={`app-window-frame ${appEffect.className} ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}>{appEffect.overlay}<AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
     <Navigation active={view} onChange={setView} running={running} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
       <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton blocked={busy || studioActive || Boolean(runtimeTransitionReason || inferenceOwner || snapshot.activeConversationIds?.length)} />{Reflect.get(globalThis, '__OPENCORE_MOBILE__') === true ? <div className="mobile-workspace-tools"><button className="mobile-tools-trigger" aria-label="Mobile tools" aria-expanded={mobileToolsOpen} aria-controls="opencore-mobile-tools-menu" onClick={() => setMobileToolsOpen(current => !current)}><Files size={17} /><span>Tools</span></button>{mobileToolsOpen ? <div id="opencore-mobile-tools-menu" className="mobile-tools-menu" role="menu" aria-label="Mobile workspace tools">{([{tab:'files',label:'Files and comparisons'},{tab:'browser',label:'In-app browser'},{tab:'computer',label:'Computer view'},{tab:'side-chat',label:'Side chat'}] as const).map(item => <button key={item.tab} role="menuitem" onClick={() => openWorkspace(item.tab)}>{item.label}</button>)}</div> : null}</div> : null}{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>

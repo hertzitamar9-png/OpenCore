@@ -41,7 +41,7 @@ fixture+=String.raw`
       assert.ok(firstRect.y>=geometry.y,'The first command must open with its complete label visible');
 
       const nextText=await menu.getByRole('option').nth(1).innerText();
-      const nextLabel=await menu.getByRole('option').nth(1).locator('.slash-command-heading > span').innerText();
+      const nextLabel=await menu.getByRole('option').nth(1).locator('.slash-command-heading > strong').innerText();
       await message.press('ArrowDown');
       const second=await menu.locator('[role=option][aria-selected=true]').innerText();
       assert.equal(second,nextText,'ArrowDown must select the next command');
@@ -108,14 +108,19 @@ fixture+=String.raw`
       await message.press('Enter');
       await menu.waitFor({state:'hidden'});
       assert.ok(await page.locator('.composer-skill-chips').innerText().then(text=>text.includes('Chrome control')));
-      await message.fill('/web-dev explain this');
+      await message.fill('  /CO');
+      await menu.waitFor();
+      assert.deepEqual(await menu.locator('.slash-command-heading').allTextContents(),['Computer use'],'Only skill names match a search prefix');
       await message.press('Enter');
-      assert.equal(await message.inputValue(),'/web-dev explain this','Enter with task text must keep ordinary composer behavior');
+      await menu.waitFor({state:'hidden'});
+      assert.ok(await page.locator('.composer-skill-chips').innerText().then(text=>text.includes('Computer use')));
+      await message.fill('/web-dev explain this');
+      await menu.waitFor({state:'hidden'});
+      await message.press('Enter');
+      assert.equal(await message.inputValue(),'explain this','The selected skill is a chip and the task stays in the draft');
       assert.ok(await page.evaluate(()=>(fixture.notices||[]).includes('Text runtime is not loaded')),
         'A complete command with task text must reach the normal send handler');
-      await menu.getByRole('option',{name:/web-dev/}).click();
-      await menu.waitFor({state:'hidden'});
-      assert.equal(await message.inputValue(),'explain this','Choosing a command must preserve the accompanying task');
+      assert.ok(await page.locator('.composer-skill-chips').innerText().then(text=>text.includes('Web development')));
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Phone layout must not overflow horizontally');
       assert.deepEqual(errors,[]);
       if(process.env.OPENCORE_SLASH_QA_SCREENSHOTS){

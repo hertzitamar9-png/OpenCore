@@ -1,0 +1,30 @@
+.app-effect-barrel_roll { animation: opencore-roll 950ms cubic-bezier(.22,.7,.3,1) both; }
+.app-effect-tilt { animation: opencore-tilt 950ms ease-in-out both; }
+.app-effect-pulse { animation: opencore-pulse 950ms ease-in-out both; }
+.app-effect-caption {
+  position: absolute; z-index: 90; top: 68px; left: 50%; transform: translateX(-50%);
+  padding: 8px 14px; border: 1px solid var(--section-highlight-border, #2f6fba);
+  border-radius: 9px; background: var(--theme-panel, #101217); color: var(--theme-ink, #f0f3f6);
+  font-weight: 650; pointer-events: none;
+}
+.app-effect-constellation::after, .app-effect-confetti::after {
+  content: ""; position: absolute; z-index: 89; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 24%, #4a95ef 0 3px, transparent 4px),
+    radial-gradient(circle at 33% 53%, #9579dd 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 12%, #84caff 0 3px, transparent 4px),
+    radial-gradient(circle at 65% 42%, #ffd380 0 4px, transparent 5px),
+    radial-gradient(circle at 80% 25%, #4e9fe2 0 3px, transparent 4px),
+    radial-gradient(circle at 87% 57%, #a3e8dc 0 4px, transparent 5px);
+  animation: opencore-confetti 1150ms ease-out both;
+}
+.app-effect-constellation::after { animation-name: opencore-stars; }
+@keyframes opencore-roll { to { transform: rotate(360deg); } }
+@keyframes opencore-tilt { 30% { transform: rotate(-2deg); } 65% { transform: rotate(1deg); } }
+@keyframes opencore-pulse { 35% { filter: brightness(1.27); } }
+@keyframes opencore-confetti { from { transform: translateY(-13%); } to { transform: translateY(28%); opacity: 0; } }
+@keyframes opencore-stars { 40% { opacity: 1; } from, to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .app-effect-barrel_roll, .app-effect-tilt, .app-effect-pulse,
+  .app-effect-constellation::after, .app-effect-confetti::after { animation: none; }
+}

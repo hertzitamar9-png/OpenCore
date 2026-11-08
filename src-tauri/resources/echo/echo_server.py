@@ -212,9 +212,100 @@ HARNESS_INSTRUCTIONS = (
     'Use the declared tools with their actual argument schemas. When a file is requested, '
     'write it with a workspace tool and check its result before saying it exists. '
     'After checking a file or an empty workspace, take the next concrete action. '
-    'Only use the declared memory tools when earlier history is needed. '
+    'Recall saved facts silently when directly relevant. Keep temporary task details out of durable memory. '
+    'Preserve the user’s wording and dates. Claim memory was saved only with a persistence receipt. '
+    'Claim a desktop action happened only when a tool result verifies it. '
+    'Use app_control for supported app settings. For code changes, use the selected source workspace and verify the files you change. '
     'Do not write tool calls or handoff summaries as ordinary reply text.'
 )
+
+_CHROME_LAUNCH = re.compile(
+    r'(?:please\s+)?(?:(?:really|actually)\s+)?(?:open|launch|start)\s+(?:google\s+)?chrome'
+    r'(?:\s+on\s+(?:my|this|the)\s+(?:pc|computer|desktop))?[.!]?', re.IGNORECASE)
+
+
+def chrome_launch_step(question, tools, history):
+    """Use approved native tools for a standalone request to launch Chrome."""
+    if not _CHROME_LAUNCH.fullmatch(question.strip()):
+        return None
+    declared = {entry.get('function', {}).get('name') for entry in tools or []}
+    def tool_name(name):
+        return next((key for key in ('mcp__opencore__' + name, name) if key in declared), None)
+
+    system = tool_name('system_use')
+    desktop = tool_name('desktop_use')
+
+    def call(name, **arguments):
+        return {'role': 'assistant', 'content': None, 'tool_calls': [{
+            'id': 'call_' + uuid.uuid4().hex, 'type': 'function', 'index': 0,
+            'function': {'name': name, 'arguments': json.dumps(arguments)}}]}
+
+    def reply(text):
+        return {'role': 'assistant', 'content': text}
+
+    if not system:
+        return reply('Use the Computer use skill and enable computer access in Settings to open Chrome on your PC.')
+
+    requests = {}
+    results = {}
+    for message in history:
+        for item in message.get('tool_calls') or []:
+            fn = item.get('function') or {}
+            if fn.get('name') not in (system, desktop):
+                continue
+            try:
+                args = json.loads(fn.get('arguments') or '{}')
+            except (TypeError, ValueError):
+                continue
+            if isinstance(args, dict) and item.get('id'):
+                requests[item['id']] = args.get('action')
+        if message.get('role') != 'tool' or message.get('tool_call_id') not in requests:
+            continue
+        action = requests[message['tool_call_id']]
+        try:
+            value = json.loads(message.get('content') or '{}')
+        except (TypeError, ValueError):
+            value = None
+        if isinstance(value, dict) and not value.get('isError'):
+            value = value.get('structuredContent', value)
+        else:
+            value = None
+        results[action] = value if isinstance(value, dict) else {}
+
+    if any(action not in results for action in requests.values()):
+        return reply('A Chrome action was requested, but its tool result is missing. I can’t confirm it ran.')
+    if 'find_apps' not in results:
+        return call(system, action='find_apps', query='Google Chrome')
+    chrome = next((app for app in results['find_apps'].get('apps') or []
+                   if isinstance(app, dict) and str(app.get('Name', '')).lower() in ('google chrome', 'chrome')
+                   and isinstance(app.get('AppID'), str) and 0 < len(app['AppID']) <= 1000), None)
+    if not chrome:
+        return reply('I couldn’t find Google Chrome in the Windows app list. No launch was confirmed.')
+    if 'launch_app' not in results:
+        return call(system, action='launch_app', appId=chrome['AppID'])
+    if results['launch_app'].get('appId') != chrome['AppID'] or not results['launch_app'].get('launched'):
+        return reply('Windows did not confirm that Chrome was launched. Check the launch tool result above.')
+    if desktop and 'list' not in results:
+        return call(desktop, action='list')
+    windows = results.get('list', {}).get('windows') or []
+    if any(isinstance(window, dict) and
+           str(window.get('executablePath', '')).replace('\\', '/').lower().endswith('/chrome.exe')
+           for window in windows):
+        return reply('Google Chrome is open on your PC. I verified its window.')
+    return reply('Windows accepted the Chrome launch, but I couldn’t verify a Chrome window.')
+
+
+def compact_builtin_tool_docs(tools):
+    """Shrink optional built-in documentation while preserving every argument."""
+    def compact(node):
+        if isinstance(node, list):
+            return [compact(value) for value in node]
+        if not isinstance(node, dict):
+            return node
+        return {key: compact(value) if key != 'description' or not isinstance(value, str)
+                else value[:220] for key, value in node.items()}
+    return [compact(tool) if str(tool.get('function', {}).get('name', '')).startswith('mcp__opencore__')
+            else tool for tool in tools]
 
 
 def is_harness_checkpoint_prompt(text):
@@ -2167,10 +2258,35 @@ class Handler(BaseHTTPRequestHandler):
                 self._seed_transcript(live, conversation, question, min(2048, int(window * 0.25)))
             live.start_turn(question, count, supplied[user_index].get("content") if user_index >= 0 else question)
 
+        if owns_timeline and payload.get('tool_choice') != 'none' and user_index >= 0:
+            user_content = supplied[user_index].get('content')
+            text_only = isinstance(user_content, str) or isinstance(user_content, list) and all(
+                isinstance(part, dict) and part.get('type') == 'text' for part in user_content)
+            action = chrome_launch_step(question, payload.get('tools'), client_tail) if text_only else None
+            if action and not tool_call_error(action, payload.get('tools')):
+                live.append(action, count, None if action.get('tool_calls') else 'answer')
+                if not action.get('tool_calls'):
+                    live.open = False
+                    live.last_answer_sha256 = hashlib.sha256(action['content'].encode('utf-8')).hexdigest()
+                    if not archive_input:
+                        live.archive_completed()
+                live.save()
+                result = {'choices': [{'message': action, 'finish_reason': 'tool_calls' if action.get('tool_calls') else 'stop'}]}
+                return self._finish_live(result) if payload.get('stream') else self._send_json(200, result)
+
         system_text = "\n\n".join([str(m.get("content") or "") for m in pinned] +
                                    [HARNESS_INSTRUCTIONS if owns_timeline else INSTRUCTIONS])
         system_messages = [{"role": "system", "content": system_text}]
-        system_tokens = count(system_text) + count(json.dumps(payload.get('tools') or [])) + 8
+        def system_cost(tools):
+            return count(system_text) + count(json.dumps(tools or [], ensure_ascii=False, separators=(',', ':'))) + 8
+        system_tokens = system_cost(payload.get('tools'))
+        framing_reserve = 2560
+        if owns_timeline and payload.get('tools') and system_tokens + live.tokens + framing_reserve + 1024 > window:
+            compacted_tools = compact_builtin_tool_docs(payload['tools'])
+            compacted_cost = system_cost(compacted_tools)
+            if compacted_cost < system_tokens:
+                payload = {**payload, 'tools': compacted_tools}
+                system_tokens = compacted_cost
 
         # Seed from pre-existing history before archiving this request. Otherwise
         # the first user message can be retrieved straight back into the live
@@ -2186,7 +2302,7 @@ class Handler(BaseHTTPRequestHandler):
             # Keep enough room for a useful next generation, then use the room
             # actually available for this pass. Longer output can continue.
             minimum_output = min(max(0, reserve_hint), max(512, min(2048, window // 8)))
-            fixed = system_tokens + minimum_output + 2560
+            fixed = system_tokens + minimum_output + framing_reserve
             if fixed + live.tokens <= int(window * self.state.live_high):
                 return
             before = live.tokens
@@ -2211,7 +2327,18 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("echo_max_total_tokens must be a positive integer")
             asked = min(asked, total_output_budget)
         ensure_room(min(asked, 16384))
-        room = window - system_tokens - live.tokens - 2560
+        room = window - system_tokens - live.tokens - framing_reserve
+        if room < 1024:
+            # A restarted worker may have stored UTF-8 byte estimates while its
+            # tokenizer was warming up. Recount the retained working set before
+            # refusing a short task whose actual prompt fits.
+            for entry in live.entries:
+                entry['tokens'] = live.cost(entry['message'], count)
+            room = window - system_tokens - live.tokens - framing_reserve
+        if room < 1024 and owns_timeline and all(isinstance(m.get('content'), str) for m in live.messages):
+            # Text-only turns do not need the multimodal framing allowance.
+            framing_reserve = 768
+            room = window - system_tokens - live.tokens - framing_reserve
         if room < 1024:
             live.save()
             raise ValueError(
@@ -2226,7 +2353,7 @@ class Handler(BaseHTTPRequestHandler):
             payload.pop("max_completion_tokens", None)
         self.state.refresh_memory(live, question, conversation, system_tokens, reserve,
                                   "tool_result" if client_tail else "generation_block" if same_turn else "new_turn", scopes=scopes)
-        room = window - system_tokens - live.tokens - 2560
+        room = window - system_tokens - live.tokens - framing_reserve
         reserve = min(reserve, max(0, room))
         if reserve < 1:
             raise ValueError("The active ECHO prompt leaves no generation room")
@@ -2274,7 +2401,7 @@ class Handler(BaseHTTPRequestHandler):
         paragraph_break = False
         while call_limit == 0 or calls < call_limit:
             ensure_room(reserve)
-            pass_reserve = min(reserve, max(0, window - system_tokens - live.tokens - 2560))
+            pass_reserve = min(reserve, max(0, window - system_tokens - live.tokens - framing_reserve))
             if pass_reserve < 1:
                 live.save()
                 raise ValueError('The active ECHO task leaves no room to continue within the model context window')

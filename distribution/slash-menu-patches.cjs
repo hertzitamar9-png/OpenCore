@@ -10,6 +10,14 @@ module.exports=function applySlashMenu(app,{editFunction,replaceOnce}) {
   if(table?.init?.type!=='ArrayExpression')throw Error('Missing recovered slash command table');
   commandTable=app.slice(table.init.start,table.init.end);
   app=app.slice(0,table.init.start)+'globalThis.__opencoreSlashCommands'+app.slice(table.init.end);
+  app=editFunction(app,'LI',text=>replaceOnce(
+    replaceOnce(text,'if(!t.startsWith("/")','t=t.trimStart();if(!t.startsWith("/")'),
+    '[r.id,...r.aliases].some(a=>a.startsWith(n))','globalThis.__opencoreMatchesSlashName(r,n)'));
+  app=editFunction(app,'DI',text=>replaceOnce(
+    replaceOnce(text,'const n=Wi.find','t=t.trimStart();const n=Wi.find'),
+    '[n.id,...n.aliases].some(r=>r.startsWith(s))','(globalThis.__opencoreMatchesSlashName(n,s)||n.aliases.includes(s))'));
+  app=replaceOnce(app, 'const Le=[...new Set([...ke.filter(_t=>he.includes(_t)),...A.skills])];',
+    'const Le=[...new Set([...ke.filter(_t=>he.includes(_t)),...A.skills,...!ce.length&&!globalThis.__OPENCORE_PHONE__&&globalThis.__opencoreDesktopChromeLaunch(ae)?["computer-use"]:[]])];');
   app=replaceOnce(app,
     'Oi.length>0?i.jsx("div",{className:"composer-skill-menu",role:"listbox","aria-label":"Skills",children:Oi.map(A=>i.jsxs("button",{type:"button",role:"option","aria-selected":ke.includes(A.id),onClick:()=>nr(A.id),children:[i.jsxs("strong",{children:["/",A.id]}),i.jsxs("small",{children:[A.description,!RI(A,Xe)&&" · Discover or download a compatible model"]})]},A.id))}):null',
     'Oi.length?i.jsx(globalThis.__opencoreSlashMenu,{items:Oi,input:D,onSelect:nr,onClose:()=>z(!1),available:A=>RI(A,Xe)}):null');
@@ -22,8 +30,8 @@ module.exports=function applySlashMenu(app,{editFunction,replaceOnce}) {
 
 module.exports.featureInstallerSource=function() {
   const source=fs.readFileSync(path.join(__dirname,'../src/slash-menu.js'),'utf8')
-    .replace(/^import .*?;\r?$/gm,'').replace('export function SlashMenu','function SlashMenu');
+    .replace(/^import .*?;\r?$/gm,'').replace(/^export /gm,'');
   const css=fs.readFileSync(path.join(__dirname,'../src/slash-menu.css'),'utf8');
   if(!commandTable)throw Error('Apply slash menu patches before building its installer');
-  return '\nglobalThis.__opencoreSlashCommands='+commandTable+';const $installBeforeSlash=installImageFeatures;installImageFeatures=function(React){'+source+';globalThis.__opencoreSlashMenu=SlashMenu;const style=document.createElement("style");style.textContent='+JSON.stringify(css)+';document.head.appendChild(style);return $installBeforeSlash(React)};\n';
+  return '\nglobalThis.__opencoreSlashCommands='+commandTable+';const $installBeforeSlash=installImageFeatures;installImageFeatures=function(React){'+source+';globalThis.__opencoreSlashMenu=SlashMenu;globalThis.__opencoreMatchesSlashName=matchesSlashSkillName;globalThis.__opencoreDesktopChromeLaunch=isDesktopChromeLaunch;const style=document.createElement("style");style.textContent='+JSON.stringify(css)+';document.head.appendChild(style);return $installBeforeSlash(React)};\n';
 };

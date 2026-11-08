@@ -10,12 +10,79 @@ import threading
 import unittest
 import urllib.request
 
-from echo_server import ArchiveSet, EchoState, Handler, HARNESS_CHECKPOINT
+from echo_server import ArchiveSet, EchoState, Handler, HARNESS_CHECKPOINT, chrome_launch_step, compact_builtin_tool_docs
 from evoagent.echo_adapters import adapter_for
 from evoagent.echo_context import LiveTranscript
 
 
 class ToolRecoveryTests(unittest.TestCase):
+    def test_chrome_launch_uses_matching_tool_receipts_before_claiming_success(self):
+        tools = [{'function': {'name': 'mcp__opencore__' + name}} for name in ('system_use', 'desktop_use')]
+        prompt = 'Really open Chrome on my PC.'
+        history = []
+        def step(action, value):
+            message = chrome_launch_step(prompt, tools, history)
+            call = message['tool_calls'][0]
+            args = json.loads(call['function']['arguments'])
+            self.assertEqual(args['action'], action)
+            history.extend([message, {'role': 'tool', 'tool_call_id': call['id'], 'content': json.dumps(value)}])
+            return args
+        self.assertIsNone(chrome_launch_step('Do not open Chrome', tools, []))
+        self.assertIn('enable computer access', chrome_launch_step(prompt, [], [])['content'])
+        self.assertEqual(step('find_apps', {'apps': [{'Name': 'Google Chrome', 'AppID': 'chrome'}]})['query'], 'Google Chrome')
+        self.assertEqual(step('launch_app', {'structuredContent': {'appId': 'chrome', 'launched': 'Google Chrome'}})['appId'], 'chrome')
+        self.assertNotIn('verified its window', chrome_launch_step(prompt, tools[:1], history)['content'])
+        step('list', {'windows': [{'windowId': 45, 'executablePath': r'C:\Apps\Google\Chrome\chrome.exe'}]})
+        self.assertIn('verified its window', chrome_launch_step(prompt, tools, history)['content'])
+        history[-1]['content'] = '{"isError":true,"content":[]}'
+        self.assertIn('couldn’t verify', chrome_launch_step(prompt, tools, history)['content'])
+        self.assertIn('tool result is missing', chrome_launch_step(prompt, tools, history[:-1])['content'])
+
+    def test_context_recovery_shrinks_only_optional_builtin_tool_docs(self):
+        parameters = {'type': 'object', 'required': ['action'], 'properties': {
+            'action': {'enum': ['status', 'launch_app'], 'description': 'Tool usage. ' * 500},
+        }}
+        schema = {'name': 'mcp__opencore__system_use', 'description': 'Tool usage. ' * 500, 'parameters': parameters}
+        tools = [{'function': schema}, {'function': {**schema, 'name': 'mcp__external__action'}}]
+        compacted = compact_builtin_tool_docs(tools)
+        self.assertLess(len(json.dumps(compacted[0])), len(json.dumps(tools[0])))
+        self.assertEqual(compacted[0]['function']['parameters']['required'], ['action'])
+        self.assertEqual(compacted[0]['function']['parameters']['properties']['action']['enum'], ['status', 'launch_app'])
+        self.assertEqual(compacted[1], tools[1])
+
+    def test_short_task_reaches_generation_with_an_oversized_builtin_tool_description(self):
+        with ExitStack() as stack:
+            root = Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives = ArchiveSet(root, idle_seconds=60)
+            stack.callback(archives.close)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            stack.callback(state.memory_controller.close)
+            state._ctx_size = 8192
+            state.count_tokens = lambda text: max(1, len(str(text)) // 4)
+            adapter = adapter_for({'architecture': 'qwen', 'revision': 'fixture'}, state.count_tokens)
+            state.memory_adapter = lambda: adapter
+            handler = Handler.__new__(Handler)
+            handler.state = state
+            handler.headers = {'x-opencore-timeline-owner': 'app'}
+            calls = []
+            def generate(body, _phase):
+                calls.append(body)
+                return {'choices': [{'message': {'role': 'assistant', 'content': 'The short task fits.'}, 'finish_reason': 'stop'}]}
+            handler._generate_live = generate
+            handler._send_json = lambda status, value: (status, value)
+            instruction = 'Use the exact filename from the workspace.'
+            tools = [{'type': 'function', 'function': {
+                'name': 'mcp__opencore__dev', 'description': 'Optional built-in documentation. ' * 1200,
+                'parameters': {'type': 'object', 'properties': {'action': {'enum': ['status']}}}}}]
+            status, value = handler._controlled_context_serial({
+                'messages': [{'role': 'developer', 'content': instruction}, {'role': 'user', 'content': 'Check the file.'}],
+                'tools': tools, 'max_tokens': 1024,
+            }, 'budget-fixture', archive_input=False)
+            self.assertEqual(status, 200)
+            self.assertEqual(value['choices'][0]['message']['content'], 'The short task fits.')
+            self.assertIn(instruction, calls[0]['messages'][0]['content'])
+            self.assertEqual(calls[0]['tools'][0]['function']['parameters'], tools[0]['function']['parameters'])
+
     def test_harness_checkpoint_keeps_the_live_task_and_pending_tool_result(self):
         with ExitStack() as stack:
             root = Path(stack.enter_context(tempfile.TemporaryDirectory()))

@@ -1,5 +1,14 @@
 import * as React from "react";
 
+export function matchesSlashSkillName(item, query) {
+  const normalize = text => text.toLowerCase().replace(/[\s_-]+/g, "-");
+  return [item.id, item.label].some(name => normalize(name).startsWith(normalize(query)));
+}
+
+export function isDesktopChromeLaunch(text) {
+  return /^(?:please\s+)?(?:(?:really|actually)\s+)?(?:open|launch|start)\s+(?:google\s+)?chrome(?:\s+on\s+(?:my|this|the)\s+(?:pc|computer|desktop))?[.!]?$/i.test(text.trim());
+}
+
 // The command list keeps focus in the ordinary composer. Its native popover
 // surface escapes clipped panels without moving or replacing the textarea.
 export function SlashMenu({ items, input, onSelect, onClose, available }) {
@@ -123,7 +132,7 @@ export function SlashMenu({ items, input, onSelect, onClose, available }) {
       if (event.pointerType === "mouse" && (event.movementX || event.movementY)) setActive(index);
     }, onClick: () => choose(item),
   }, React.createElement("span", { className: "slash-command-heading" },
-    React.createElement("strong", null, "/" + item.id), React.createElement("span", null, item.label)),
+    React.createElement("strong", null, item.label)),
   React.createElement("small", null, item.description),
   available && !available(item) ? React.createElement("small", { className: "slash-command-requirement" }, "Discover or download a compatible model") : null)));
 }

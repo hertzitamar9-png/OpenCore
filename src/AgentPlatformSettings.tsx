@@ -1,4 +1,7 @@
 import { ThemedSelect } from "./ThemedSelect";
+import { McpConnectionEditor } from "./mcp-connection-editor.js";
+import { AppEffectPreviews } from "./app-effects.js";
+import "./workbench-settings.css";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { BookOpen, Boxes, CheckCheck, Database, FlaskConical, History, Palette, Plug, SlidersHorizontal, Sparkles } from "lucide-react";
 import { openLocalPath } from "./api";
@@ -10,7 +13,7 @@ import {
   searchPlatformActivity, searchPlatformMemories, usePlatformConfiguration,
   platformConfigurationChanges, platformDraftField, reconcilePlatformDraft, validPlatformDraft,
   validatePlatformConfiguration, VERIFICATION_OPTIONS,
-  type AppearanceConfig, type McpServer, type PlatformActivity, type PlatformConfig,
+  type AppearanceConfig, type PlatformActivity, type PlatformConfig,
   type PlatformDraftField, type PlatformMemory, type PlatformPlugin, type PlatformSkill, type TestingLabAction, type TestingLabProfile,
 } from "./agent-platform";
 import { useSettingsAutosave } from "./useSettingsAutosave";
@@ -285,18 +288,6 @@ export function AgentPlatformSettings({ onConfigurationChange, initialConfigurat
     } catch (cause) { setMemoryError(errorMessage(cause)); }
     finally { setMemorySaving(false); }
   }
-  function addMcp(kind: "stdio" | "http") {
-    if (!mcp.servers) return;
-    let count = mcp.servers.length + 1;
-    while (mcp.servers.some(server => server.id === `server-${count}` || server.name === `Server-${count}`)) ++count;
-    const server: McpServer = {
-      id: `server-${count}`, name: `Server-${count}`, enabled: false,
-      command: kind === "stdio" ? "node" : null, args: kind === "stdio" ? ["C:/tools/mcp-server.js"] : [],
-      env: {}, url: kind === "http" ? "https://example.com/mcp" : null,
-      bearerTokenEnvVar: kind === "http" ? "MCP_TOKEN" : null, startupTimeoutSec: 30, toolTimeoutSec: 600,
-    };
-    editMcp(pretty([...mcp.servers, server]));
-  }
   function addLab(kind: "virtualbox" | "android") {
     if (!lab.profiles) return;
     let count = lab.profiles.length + 1;
@@ -379,6 +370,8 @@ export function AgentPlatformSettings({ onConfigurationChange, initialConfigurat
           {(["comfortable", "compact"] as const).map(density => <label key={density} className={draft.appearance.density === density ? "selected" : ""}><input type="radio" name="platform-density" checked={draft.appearance.density === density} disabled={locked} onChange={() => appearance({ density })} /><span>{density[0].toUpperCase() + density.slice(1)}</span></label>)}
         </div></fieldset>
         <Toggle label="Reduce motion" checked={draft.appearance.reducedMotion} disabled={locked} onChange={reducedMotion => appearance({ reducedMotion })} />
+        <Toggle label="Enable Easter egg tools" checked={draft.easterEggsEnabled === true} disabled={locked} onChange={enabled => update("easterEggsEnabled", enabled)} />
+        {draft.easterEggsEnabled && <AppEffectPreviews />}
         <Toggle label="High contrast" checked={draft.appearance.highContrast} disabled={locked} onChange={highContrast => appearance({ highContrast })} />
         <div className="platform-appearance-preview">Readable text <span>Accent and spacing preview</span></div><p className="platform-note">Valid changes apply immediately and save automatically.</p>
       </Panel>
@@ -412,12 +405,7 @@ export function AgentPlatformSettings({ onConfigurationChange, initialConfigurat
       </Panel>
 
       <Panel id="platform-mcp" title="MCP connections" icon={<Plug size={19} />} wide>
-        <p className="platform-note">Configure stdio commands or HTTP endpoints. Each profile needs a unique id and name, an enabled switch, and timeouts. For stdio, env can include local secrets. For HTTP, bearerTokenEnvVar references an existing environment variable for authorization. Agent tools receive redacted configuration.</p>
-        <div className="platform-toolbar"><button disabled={locked || Boolean(mcp.error)} onClick={() => addMcp("stdio")}>Add stdio example</button><button disabled={locked || Boolean(mcp.error)} onClick={() => addMcp("http")}>Add HTTP example</button><span>{mcp.servers?.filter(server => server.enabled).length ?? 0} enabled profiles</span></div>
-        <label className="platform-field" htmlFor="platform-mcp-json">MCP profiles JSON</label><textarea id="platform-mcp-json" className="platform-json-editor" rows={12} value={mcpText} spellCheck={false} disabled={locked} aria-invalid={Boolean(mcp.error)} aria-describedby="platform-mcp-help" onChange={event => editMcp(event.target.value)} />
-        {mcp.error && <p className="platform-error" role="alert">{mcp.error}</p>}
-        <p id="platform-mcp-help" className="platform-note">Examples start disabled. Stdio uses command, args, and env; HTTP uses url and bearerTokenEnvVar with empty args/env. Valid edits save automatically. Local stdio secret values are visible in this editor.</p>
-        {mcp.servers && <div className="platform-connection-summaries">{mcp.servers.map(server => <div key={server.id}><strong>{server.name}</strong><span>{server.command ? "stdio" : "HTTP"} · {server.enabled ? "Enabled" : "Disabled"}</span><code>{server.command ?? server.url}</code></div>)}</div>}
+        <McpConnectionEditor servers={mcp.servers} disabled={locked} value={mcpText} onChange={editMcp} error={mcp.error} parse={parseMcpServers} />
       </Panel>
 
       <Panel id="platform-activity" title="Activity history" icon={<History size={19} />}>

@@ -32,7 +32,7 @@ export function createModelInstallProgress(React) {
   const h = React.createElement, meter = createDownloadRateTracker();
   const gb = bytes => (Math.max(0, Number(bytes) || 0) / 1e9).toFixed(3) + ' GB';
   const duration = seconds => seconds < 60 ? Math.max(1, seconds) + ' seconds' : seconds < 3600 ? Math.ceil(seconds / 60) + ' minutes' : (seconds / 3600).toFixed(1) + ' hours';
-  const phases = { preparing: 'Preparing', downloading: 'Downloading', verifying: 'Verifying', paused: 'Paused', cancelling: 'Cancelling', cancelled: 'Cancelled', ready: 'Complete', failed: 'Failed' };
+  const phases = { preparing: 'Preparing', downloading: 'Downloading', verifying: 'Verifying', paused: 'Paused', cancelling: 'Cancelling', ready: 'Complete', failed: 'Failed' };
   return function ModelInstallProgress({ progress, label, busy = false, onPause, onCancel, onDismiss, onError = () => {} }) {
     const [, tick] = React.useState(0), [pending, setPending] = React.useState('');
     const phase = progress?.phase, key = progress?.operationId || progress?.jobId || progress?.modelId;
@@ -41,7 +41,7 @@ export function createModelInstallProgress(React) {
       const timer = setInterval(() => tick(value => value + 1), 1000);
       return () => clearInterval(timer);
     }, [key, phase]);
-    if (!progress) return null;
+    if (!progress || phase === 'cancelled') return null;
     const measured = meter.observe(progress), active = ['preparing', 'downloading', 'verifying', 'cancelling'].includes(phase);
     const downloading = phase === 'downloading' && progress.totalBytes > 0;
     const action = async (name, callback) => {
