@@ -41,6 +41,8 @@ export function chatSendFailure(reason){
   const detail=String(reason);
   if(/already has an active writer/i.test(detail))return 'This chat’s previous agent session is still open. Your draft is ready to retry after reopening OpenCore.';
   if(/instructions alone do not leave room|active ECHO (?:prompt|task) leaves no room/i.test(detail))return 'The model’s context is full before generation can start. Your draft is saved. Reduce the additional instructions or enabled tools, or choose a model with a larger window.';
+  if(/^OpenCore could not resume saved Codex thread /i.test(detail))
+    return 'OpenCore Agent could not reopen the local session. Your chat and draft are saved.';
   return 'Message not sent. Your draft is ready to retry. '+detail;
 }
 

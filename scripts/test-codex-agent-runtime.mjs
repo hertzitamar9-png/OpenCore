@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash, randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createInterface } from 'node:readline';
@@ -11,7 +12,18 @@ import { assertAppServerSchemaMatches, codexRuntimeManifest } from './codex-pack
 const PINNED_CODEX_VERSION = '0.160.0';
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
 const resourcesDir = process.env.OPENCORE_CODEX_TEST_RESOURCES || path.join(appRoot, 'src-tauri/resources/codex');
-const manifest = codexRuntimeManifest();
+const sourceBuiltEngine = process.env.OPENCORE_AGENT_TEST_EXECUTABLE;
+const manifest = sourceBuiltEngine
+  ? { ...JSON.parse(readFileSync(path.join(resourcesDir, 'protocol/runtime-manifest.json'), 'utf8')),
+      appServerExecutable: path.resolve(sourceBuiltEngine) }
+  : codexRuntimeManifest({ runtimeRoot: resourcesDir });
+if (sourceBuiltEngine) {
+  const schema = readFileSync(path.join(resourcesDir, 'protocol/app-server.schema.json'));
+  assertAppServerSchemaMatches(createHash('sha256').update(schema).digest('hex'), manifest.schemaSha256);
+  const version = spawnSync(manifest.appServerExecutable, ['--version'], { encoding: 'utf8', windowsHide: true });
+  assert.equal(version.status, 0, version.stderr);
+  assert.equal(version.stdout.trim(), 'OpenCore Agent ' + PINNED_CODEX_VERSION);
+}
 assert.equal(manifest.cliVersion, PINNED_CODEX_VERSION);
 assertAppServerSchemaMatches(manifest.schemaSha256, manifest.schemaSha256);
 assert.throws(() => assertAppServerSchemaMatches('0'.repeat(64), manifest.schemaSha256), /schema hash mismatch/);
@@ -46,6 +58,7 @@ writeFileSync(hookFile, [
 let requestCount = 0;
 let bridgedCall = null;
 let bridgeRequests = 0;
+let localShellCheck = 'inactive';
 let diagnostics = '';
 let child;
 let gateway;
@@ -161,6 +174,16 @@ function safeRuntimeEnvironment() {
   const safeKeys = ['PATH', 'Path', 'PATHEXT', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'ComSpec', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA'];
   const env = {};
   for (const key of safeKeys) if (process.env[key] !== undefined) env[key] = process.env[key];
+  if (sourceBuiltEngine && process.platform === 'win32') {
+    const windows = env.SystemRoot || env.WINDIR || 'C:/Windows';
+    delete env.Path;
+    env.PATH = [path.join(windows, 'System32'), path.join(windows, 'System32/WindowsPowerShell/v1.0')].join(path.delimiter);
+    env.USERPROFILE = path.join(root, 'isolated-profile');
+    env.APPDATA = path.join(env.USERPROFILE, 'AppData', 'Roaming');
+    env.LOCALAPPDATA = path.join(env.USERPROFILE, 'AppData', 'Local');
+    mkdirSync(env.APPDATA, { recursive: true });
+    mkdirSync(env.LOCALAPPDATA, { recursive: true });
+  }
   env.CODEX_HOME = codexHome;
   return env;
 }
@@ -274,10 +297,23 @@ try {
       assert.equal(request.headers['x-opencore-timeline-owner'], 'app');
       const payload = JSON.parse(raw || '{}');
       assert.equal(payload.model, 'opencore');
-      modelRequests.push({ model: payload.model, input: payload.input, tools: payload.tools });
+      modelRequests.push({ model: payload.model, instructions: payload.instructions, input: payload.input, tools: payload.tools });
       requestCount++;
       signalRequestCount();
-      if (requestCount === 1) sendModelTurn(response, 'resp_local', responseForText('local', 'Local OpenCore response passed.'));
+      if (localShellCheck === 'call') {
+        const declared = payload.tools.find(tool => tool.name === 'exec_command'
+          || (tool.type === 'namespace' && tool.tools.some(entry => entry.name === 'exec_command')));
+        assert.ok(declared, 'The OpenCore agent must expose the real native shell');
+        localShellCheck = 'result';
+        sendModelTurn(response, 'resp_shell', [{ id: 'fc_shell', type: 'function_call', status: 'completed', call_id: 'call_shell',
+          ...(declared.type === 'namespace' ? { namespace: declared.name } : {}), name: 'exec_command',
+          arguments: JSON.stringify({ cmd: 'cmd.exe /d /c echo OPENCORE_LOCAL_SHELL_OK', workdir: workspace, yield_time_ms: 1000 }) }]);
+      } else if (localShellCheck === 'result') {
+        const result = payload.input.find(item => item.type === 'function_call_output' && item.call_id === 'call_shell');
+        assert.match(JSON.stringify(result), /Output:[\s\S]*OPENCORE_LOCAL_SHELL_OK/);
+        localShellCheck = 'passed';
+        sendModelTurn(response, 'resp_shell_done', responseForText('shell_done', 'The local shell returned its output.'));
+      } else if (requestCount === 1) sendModelTurn(response, 'resp_local', responseForText('local', 'Local OpenCore response passed.'));
       else if (requestCount === 2) sendModelTurn(response, 'resp_tool', [modelFunctionCall()]);
       else if (requestCount === 3) sendModelTurn(response, 'resp_answer', responseForText('answer', 'OpenCore MCP tool loop passed.'));
       else if (requestCount === 4) {
@@ -303,7 +339,7 @@ try {
     else child.kill('SIGKILL');
   }, 150_000);
 
-  const initialized = await client.send('initialize', { clientInfo: { name: 'opencore-packaged-runtime-test', version: '1.0.0' }, capabilities: {} });
+  const initialized = await client.send('initialize', { clientInfo: { name: sourceBuiltEngine ? 'opencore' : 'opencore-packaged-runtime-test', version: '1.0.0' }, capabilities: {} });
   const actualCodexHome = realpathSync.native(initialized.codexHome);
   const expectedCodexHome = realpathSync.native(codexHome);
   const normalizedActualHome = process.platform === 'win32' ? actualCodexHome.toLowerCase() : actualCodexHome;
@@ -325,8 +361,13 @@ try {
         OPENCORE_TEST_MCP_EXITED: mcpExitedFile, NODE_OPTIONS: `--require=${hookFile}` },
       startup_timeout_sec: 30, tool_timeout_sec: 60 } },
   };
+  const developerInstructions = sourceBuiltEngine
+    ? "You are OpenCore, running the pinned Codex app-server agent harness with the selected local OpenCore model. Work in "
+      + workspace + ". Codex owns the agent loop, tool selection, and model/tool orchestration; OpenCore supplies the local Responses inference endpoint, project/conversation-scoped ECHO, and permission-checked app tools. "
+      + "Use the registered test action once, then answer briefly. User settings example: keep my reference to Codex CLI."
+    : 'Use the registered test action once, then answer briefly.';
   const threadParams = (threadId, sandbox = 'danger-full-access') => ({ cwd: workspace, model: 'opencore', modelProvider: 'opencore',
-    developerInstructions: 'Use the registered test action once, then answer briefly.', approvalPolicy: 'on-request', sandbox,
+    developerInstructions, approvalPolicy: 'on-request', sandbox,
     config: { ...configuration, sandbox_mode: sandbox,
       sandbox_workspace_write: { writable_roots: [workspace], network_access: sandbox === 'danger-full-access' } },
     ...(threadId ? { threadId } : {}) });
@@ -342,6 +383,14 @@ try {
   const localTerminal = await terminalTurn(localTurn.turn.id);
   assert.equal(localTerminal.method, 'turn/completed', `local tool-free turn failed: ${JSON.stringify(localTerminal)}`);
   assert.ok(assistantText.includes('Local OpenCore response passed.'), `expected a local tool-free answer, got ${assistantText}`);
+  if (sourceBuiltEngine) {
+    assert.match(modelRequests[0].instructions, /^You are OpenCore/);
+    assert.doesNotMatch(modelRequests[0].instructions, /running in the Codex CLI/);
+    const context = JSON.stringify(modelRequests[0].input);
+    assert.match(context, /Use the selected OpenCore model, scoped ECHO history, and permission-checked tools/);
+    assert.match(context, /User settings example: keep my reference to Codex CLI/);
+    assert.doesNotMatch(context, /Codex owns the agent loop/);
+  }
   const savedTurns = await client.send('thread/turns/list', { threadId, limit: 1, sortDirection: 'desc', itemsView: 'full' });
   assert.equal(savedTurns.data?.[0]?.status, 'completed', `the completed Codex turn was not saved for resume: ${JSON.stringify(savedTurns)}`);
   assert.ok(savedTurns.data[0].items.some(item => item.type === 'agentMessage' && item.text === 'Local OpenCore response passed.'),
@@ -413,6 +462,46 @@ try {
   const forkExit = await Promise.race([forkClosed, new Promise(resolve => setTimeout(() => resolve(null), 12_000))]);
   assert.equal(forkExit?.code, 0, `side fork app-server did not close cleanly: ${diagnostics}`);
 
+  if (sourceBuiltEngine) {
+    const originalPid = child.pid;
+    const originalMcpPid = Number(readFileSync(mcpStartedFile, 'utf8'));
+    assert.equal((await closeAppServer())?.code, 0);
+    await waitUntil(() => !pidIsRunning(originalPid) && !pidIsRunning(originalMcpPid), 'the first OpenCore agent and MCP processes to exit');
+    rmSync(mcpStartedFile, { force: true });
+    rmSync(mcpExitedFile, { force: true });
+    child = spawn(manifest.appServerExecutable, ['app-server', '--listen', 'stdio://'], {
+      cwd: workspace, env: safeRuntimeEnvironment(), windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    processClosed = new Promise(resolve => child.once('close', (code, signal) => resolve({ code, signal })));
+    client = new JsonRpcClient(child);
+    await client.send('initialize', { clientInfo: { name: 'opencore', version: '1.0.0' }, capabilities: {} });
+    client.notify('initialized');
+    const coldResume = await client.send('thread/resume', { ...threadParams(threadId), excludeTurns: true });
+    assert.equal(coldResume.thread.id, threadId);
+    const coldTurns = await client.send('thread/turns/list', { threadId, limit: 10, itemsView: 'full' });
+    assert.ok(JSON.stringify(coldTurns).includes('OpenCore MCP tool loop passed.'));
+    const missingSession = randomUUID();
+    const before = await client.send('thread/turns/list', { threadId, limit: 10, itemsView: 'full' });
+    const restored = await client.send('thread/resume', { ...threadParams(missingSession), excludeTurns: true });
+    const restoredId = restored?.thread?.id;
+    assert.equal(typeof restoredId, 'string');
+    assert.notEqual(restoredId, missingSession);
+    assert.notEqual(restoredId, threadId);
+    const restoration = await client.send('turn/start', { threadId: restoredId, cwd: workspace, model: 'opencore',
+      approvalPolicy: 'on-request', sandboxPolicy: { type: 'dangerFullAccess' },
+      input: [{ type: 'text', text: 'Continue after losing the engine session.' }] });
+    assert.equal((await terminalTurn(restoration.turn.id)).params?.turn?.status, 'completed');
+    assert.deepEqual(await client.send('thread/turns/list', { threadId, limit: 10, itemsView: 'full' }), before);
+    localShellCheck = 'call';
+    const shell = await client.send('turn/start', { threadId: restoredId, cwd: workspace, model: 'opencore',
+      approvalPolicy: 'on-request', sandboxPolicy: { type: 'dangerFullAccess' },
+      input: [{ type: 'text', text: 'Run the local shell check.' }] });
+    assert.equal((await terminalTurn(shell.turn.id)).params?.turn?.status, 'completed');
+    assert.equal(localShellCheck, 'passed');
+    assert.ok(notifications.some(item => item.method === 'item/completed' && item.params?.item?.type === 'commandExecution'),
+      'The native shell call must have an actual tool event');
+    await assert.rejects(client.send('thread/resume', { ...threadParams('invalid-id'), excludeTurns: true }), /invalid session id/i);
+  }
   const closed = await closeAppServer();
   assert.equal(closed?.code, 0, `app-server did not exit cleanly: ${JSON.stringify(closed)}\n${diagnostics}`);
   const mcpPid = Number(readFileSync(mcpStartedFile, 'utf8'));
@@ -427,12 +516,16 @@ try {
   assert.ok(events.some(event => event.kind === 'turn_interrupted'), evidence);
   assert.ok(events.some(event => event.kind === 'app_server_started'), evidence);
   assert.equal(pidIsRunning(child.pid), false, `app-server child ${child.pid} remained alive after close`);
+  const nativeToolNames = modelRequests[0]?.tools?.flatMap(tool =>
+    tool.type === 'namespace' ? tool.tools.map(entry => entry.name) : [tool.name ?? tool.type]) ?? [];
   testPassed = true;
   console.log(JSON.stringify({ codexAppServer: manifest.cliVersion, schemaSha256: manifest.schemaSha256,
     sameThreadResumed: true, sameAppServerProcess: true, mcpToolCalls: bridgeRequests,
-    savedTurnReplay: true, perTurnSandboxOverride: true, sideContextFork: true, freshProcessSideFork: true,
+    nativeToolNames, savedTurnReplay: true, perTurnSandboxOverride: true, sideContextFork: true, freshProcessSideFork: true,
     cancelledInferenceRequests: events.filter(event => event.kind === 'model_request_aborted').length,
-    mcpChildExited: true, hostedInference: false, passed: true }));
+    mcpChildExited: true, hostedInference: false, sourceBuiltEngine: Boolean(sourceBuiltEngine),
+    missingPrivateSessionRecovered: Boolean(sourceBuiltEngine), coldPrivateSessionResumed: Boolean(sourceBuiltEngine),
+    shellExecutionVerified: localShellCheck === 'passed', passed: true }));
 } finally {
   if (hardTimeout) clearTimeout(hardTimeout);
   if (forkChild && pidIsRunning(forkChild.pid)) {

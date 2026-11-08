@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 
+from agent_engine import stage_windows_agent
 from package import file_hash
 
 HERE = Path(__file__).resolve().parent
@@ -14,6 +15,7 @@ HERE = Path(__file__).resolve().parent
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--inputs', type=Path, required=True)
+    parser.add_argument('--agent-engine', type=Path, required=True)
     args = parser.parse_args()
     inputs = args.inputs.resolve()
     inputs.mkdir(parents=True, exist_ok=True)
@@ -43,6 +45,7 @@ def main():
             raise ValueError('Resource mapping leaves the verified source or installation root')
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+    stage_windows_agent(app, args.agent_engine.resolve(strict=True))
     from bridge_policy import prepare as prepare_bridge_policy
     print(json.dumps(prepare_bridge_policy(app)))
     environment = dict(os.environ, OPENCORE_NATIVE_BASE=str(inputs / baseline['assets']['native']['name']),

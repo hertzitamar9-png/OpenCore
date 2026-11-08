@@ -13,7 +13,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  agent-engine:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        id: engine-cache
+        with:
+          path: distribution/.output/agent-engine
+          key: opencore-agent-windows-x64-${{ hashFiles('distribution/agent_engine.py', 'distribution/agent-engine/**') }}
+      - name: Build the OpenCore agent from its pinned source
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python distribution/agent_engine.py --output distribution/.output/agent-engine --cache "$env:RUNNER_TEMP/opencore-agent-build" --jobs 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opencore-source-built-agent
+          path: distribution/.output/agent-engine
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
   windows:
+    needs: agent-engine
     runs-on: windows-latest
     outputs:
       release_version: ${{ steps.version.outputs.version }}
@@ -153,10 +182,22 @@ jobs:
         run: |
           python -m unittest discover -s src-tauri/resources/echo -p "test_echo*.py"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/download-artifact@v4
+        with:
+          name: opencore-source-built-agent
+          path: distribution/.output/agent-engine
       - name: Prepare the verified newer native baseline and current committed frontend
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python distribution/prepare.py --inputs distribution/.output/inputs
+        run: python distribution/prepare.py --inputs distribution/.output/inputs --agent-engine distribution/.output/agent-engine
+      - name: Verify the packaged OpenCore agent with local inference and real tools
+        run: |
+          $app = (Resolve-Path 'distribution/.output/inputs/app').Path
+          $env:OPENCORE_AGENT_TEST_EXECUTABLE = Join-Path $app 'codex/node_modules/@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/bin/codex.exe'
+          $env:OPENCORE_CODEX_TEST_RESOURCES = Join-Path $app 'codex'
+          $env:OPENCORE_CODEX_TEST_NODE = Join-Path $app 'claude/node.exe'
+          node scripts/test-codex-agent-runtime.mjs | Tee-Object -FilePath distribution/.output/agent-engine-verification.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build and verify this release's Android update with its original signing key
         env:
           OPENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.OPENCORE_ANDROID_KEYSTORE_BASE64 }}
@@ -332,6 +373,7 @@ jobs:
         with:
           name: opencore-release-checks-${{ github.run_number }}
           path: |
+            distribution/.output/agent-engine-verification.json
             distribution/.output/update-controls.png
             distribution/.output/update-controls-qa.json
             distribution/.output/cached-views-qa.json

@@ -20,7 +20,7 @@ Until the missing native source is restored, **the distribution sources in this 
 
 ## Build
 
-On Windows with Node, Python and NSIS available, install the root and `distribution/` npm dependencies, set `OPENCORE_RELEASE_VERSION`, then run `python distribution/prepare.py --inputs <new-input-folder>`. That fetches the pinned public inputs, verifies hashes, extracts to a disposable folder and overlays committed source. Use `distribution/package.py --help` to generate or compile the full installer. The workflow is the complete command reference.
+On Windows with Node, Python and NSIS available, install the root and `distribution/` npm dependencies, set `OPENCORE_RELEASE_VERSION`, build the OpenCore agent from the pinned source as described in [OpenCore Agent](agent-engine/README.md), then run `python distribution/prepare.py --inputs <new-input-folder> --agent-engine <agent-build-folder>`. That fetches the pinned public inputs, verifies hashes, extracts to a disposable folder and overlays committed source. Use `distribution/package.py --help` to generate or compile the full installer. The workflow is the complete command reference.
 
 The downloaded package includes a clean Python 3.12.10 standard library and ensurepip, bundled Node helpers and the native inference engine. It installs Microsoft WebView2 if missing. Supported model-specific managed dependencies prepare when that model is installed. Model weights are separate downloads.
 

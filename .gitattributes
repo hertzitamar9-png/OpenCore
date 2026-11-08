@@ -20,6 +20,7 @@ tests/fusion/*.py text eol=lf
 tests/fusion/*.cpp text eol=lf
 tests/fusion/fixtures/*.json text eol=lf
 distribution/recovered-dist/** -text -whitespace
+distribution/agent-engine/opencore.patch -text -whitespace
 android-remote/shared-ui/** -text -whitespace
 android-remote/vendor/litertlm/** -text -whitespace
 distribution/hf-research/requested-models/*.chat_template -text -whitespace

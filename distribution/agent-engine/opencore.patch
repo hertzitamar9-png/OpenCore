@@ -1,0 +1,143 @@
+--- a/codex-rs/models-manager/prompt.md
++++ b/codex-rs/models-manager/prompt.md
+@@ -1,12 +1,10 @@
+-You are a coding agent running in the Codex CLI, a terminal-based coding assistant. Codex CLI is an open source project led by OpenAI. You are expected to be precise, safe, and helpful.
++You are OpenCore, a local agent that works with the user's workspace and the selected model. Be precise, safe, and helpful.
+ 
+ Your capabilities:
+ 
+ - Receive user prompts and other context provided by the harness, such as files in the workspace.
+ - Communicate with the user by streaming thinking & responses, and by making & updating plans.
+ - Emit function calls to run terminal commands and apply patches. Depending on how this specific run is configured, you can request that these function calls be escalated to the user for approval before running. More on this in the "Sandbox and approvals" section.
+-
+-Within this context, Codex refers to the open-source agentic coding interface (not the old Codex language model built by OpenAI).
+ 
+ # How you work
+ 
+--- a/codex-rs/protocol/src/prompts/base_instructions/default.md
++++ b/codex-rs/protocol/src/prompts/base_instructions/default.md
+@@ -1,12 +1,10 @@
+-You are a coding agent running in the Codex CLI, a terminal-based coding assistant. Codex CLI is an open source project led by OpenAI. You are expected to be precise, safe, and helpful.
++You are OpenCore, a local agent that works with the user's workspace and the selected model. Be precise, safe, and helpful.
+ 
+ Your capabilities:
+ 
+ - Receive user prompts and other context provided by the harness, such as files in the workspace.
+ - Communicate with the user by streaming thinking & responses, and by making & updating plans.
+ - Emit function calls to run terminal commands and apply patches. Depending on how this specific run is configured, you can request that these function calls be escalated to the user for approval before running. More on this in the "Sandbox and approvals" section.
+-
+-Within this context, Codex refers to the open-source agentic coding interface (not the old Codex language model built by OpenAI).
+ 
+ # How you work
+ 
+--- a/codex-rs/app-server/src/request_processors/thread_processor.rs
++++ b/codex-rs/app-server/src/request_processors/thread_processor.rs
+@@ -564,18 +564,70 @@
+     ) -> Result<Option<ClientResponsePayload>, JSONRPCErrorError> {
+         let mut prepared_config = None;
+         // Keep the resume future off the request handler's stack.
+-        while Box::pin(self.thread_resume_inner(
+-            &target,
+-            &params,
+-            app_server_client_name.clone(),
+-            app_server_client_version.clone(),
+-            client_mcp_extensions.clone(),
+-            &mut prepared_config,
+-        ))
+-        .await?
+-        .is_continue()
+-        {}
+-        Ok(None)
++        loop {
++            match Box::pin(self.thread_resume_inner(
++                &target,
++                &params,
++                app_server_client_name.clone(),
++                app_server_client_version.clone(),
++                client_mcp_extensions.clone(),
++                &mut prepared_config,
++            ))
++            .await
++            {
++                Ok(ControlFlow::Continue(())) => {}
++                Ok(ControlFlow::Break(())) => return Ok(None),
++                Err(error) => {
++                    // The OpenCore host owns the visible transcript and ECHO archive.
++                    // Only replace a genuinely missing private engine session. A
++                    // live writer, malformed ID, or unreadable store is still an error.
++                    let ThreadResumeTarget::Client(request_id) = target else {
++                        return Err(error);
++                    };
++                    if app_server_client_name.as_deref() != Some("opencore")
++                        || params.model_provider.as_deref() != Some("opencore")
++                        || !params.exclude_turns
++                        || params.path.is_some()
++                        || params.history.is_some()
++                        || error.message != format!("no rollout found for thread id {}", params.thread_id)
++                    {
++                        return Err(error);
++                    }
++                    tracing::warn!(old_session = %params.thread_id, "Restoring OpenCore chat with a new agent session");
++                    let request_context = RequestContext::new(
++                        request_id.clone(),
++                        "thread/resume",
++                        tracing::Span::current(),
++                        /*parent_trace*/ None,
++                    );
++                    let start = ThreadStartParams {
++                        model: params.model,
++                        model_provider: params.model_provider,
++                        service_tier: params.service_tier,
++                        cwd: params.cwd,
++                        runtime_workspace_roots: params.runtime_workspace_roots,
++                        approval_policy: params.approval_policy,
++                        approvals_reviewer: params.approvals_reviewer,
++                        sandbox: params.sandbox,
++                        permissions: params.permissions,
++                        config: params.config,
++                        base_instructions: params.base_instructions,
++                        developer_instructions: params.developer_instructions,
++                        personality: params.personality,
++                        ..Default::default()
++                    };
++                    return Box::pin(self.thread_start(
++                        request_id,
++                        start,
++                        app_server_client_name,
++                        app_server_client_version,
++                        client_mcp_extensions,
++                        request_context,
++                    ))
++                    .await;
++                }
++            }
++        }
+     }
+ 
+     pub(crate) async fn thread_fork(
+@@ -1677,6 +1729,25 @@
+         developer_instructions: Option<String>,
+         personality: Option<Personality>,
+     ) -> ConfigOverrides {
++        let (base_instructions, developer_instructions) =
++            if model_provider.as_deref() == Some("opencore") {
++                let base = base_instructions.or_else(|| {
++                    Some(codex_protocol::models::BASE_INSTRUCTIONS_DEFAULT.to_owned())
++                });
++                let developer = developer_instructions.map(|instructions| {
++                    const LEGACY_PREFIX: &str = "You are OpenCore, running the pinned Codex app-server agent harness with the selected local OpenCore model. Work in ";
++                    const LEGACY_ENGINE: &str = ". Codex owns the agent loop, tool selection, and model/tool orchestration; OpenCore supplies the local Responses inference endpoint, project/conversation-scoped ECHO, and permission-checked app tools. ";
++                    match instructions.strip_prefix(LEGACY_PREFIX).and_then(|body| body.split_once(LEGACY_ENGINE)) {
++                        Some((workspace, rest)) => format!(
++                            "You are OpenCore. Work in {workspace}. Use the selected OpenCore model, scoped ECHO history, and permission-checked tools. {rest}"
++                        ),
++                        None => instructions,
++                    }
++                });
++                (base, developer)
++            } else {
++                (base_instructions, developer_instructions)
++            };
+         ConfigOverrides {
+             model,
+             model_provider,
