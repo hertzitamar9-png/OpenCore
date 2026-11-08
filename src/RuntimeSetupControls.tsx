@@ -15,9 +15,6 @@ export function RuntimeSetupControls({targetId, label, installed = false, autoSt
   const [starting, setStarting] = useState(false);
   const [acceptLicenses, setAcceptLicenses] = useState(false);
   const [allowAdministrator, setAllowAdministrator] = useState(false);
-  const [isoPath, setIsoPath] = useState('');
-  const [guestUser, setGuestUser] = useState('opencore');
-  const [passwordEnv, setPasswordEnv] = useState('OPENCORE_TEST_GUEST_PASSWORD');
   const reported = useRef<string | null>(null);
   const autoAttempt = useRef<string | null>(null);
   const callbacks = useRef({onRefresh, onNotice});
@@ -44,7 +41,7 @@ export function RuntimeSetupControls({targetId, label, installed = false, autoSt
     const timer = setInterval(() => void refresh(), 1500);
     return () => { alive = false; clearInterval(timer); };
   }, [targetId, label]);
-  const recipe = (Array.isArray(snapshot?.recipes) ? snapshot.recipes : []).find(value => value.modelIds.includes(targetId));
+  const recipe = (Array.isArray(snapshot?.recipes) ? snapshot.recipes : []).find(value => value.kind !== 'virtualbox-guest' && value.modelIds.includes(targetId));
   const job = [...(Array.isArray(snapshot?.jobs) ? snapshot.jobs : [])].reverse().find(value => value.targetId === targetId);
   const receipt = (Array.isArray(snapshot?.receipts) ? snapshot.receipts : []).find(value => value.targetId === targetId);
   const active = setup.isSetupActive(job);
@@ -53,9 +50,7 @@ export function RuntimeSetupControls({targetId, label, installed = false, autoSt
   async function start() {
     setStarting(true); setError('');
     try {
-      await setup.runtimeSetupStart(targetId, {installWeights: !!isModel && !installed,
-        acceptLicenses, allowAdministrator,
-        ...(recipe?.kind === 'virtualbox-guest' ? {isoPath: isoPath.trim(), guestUser: guestUser.trim(), passwordEnv: passwordEnv.trim()} : {})});
+      await setup.runtimeSetupStart(targetId, {installWeights: !!isModel && !installed, acceptLicenses, allowAdministrator});
       setSnapshot(await setup.runtimeSetupStatus());
       onNotice?.(`${label} setup started. Its progress and diagnostics are saved across app restarts.`);
     } catch (cause) { setError(String(cause)); }
@@ -67,7 +62,7 @@ export function RuntimeSetupControls({targetId, label, installed = false, autoSt
     catch (cause) { setError(String(cause)); }
   }
   useEffect(() => {
-    if (!autoStart || !snapshot || !recipe || receipt?.dependenciesVerified || job || active || starting || otherSetup || disabled || !setup.setupDesktopAvailable() || recipe.requiresLicenseAcceptance || recipe.requiresAdministrator || recipe.kind === 'virtualbox-guest' || autoAttempt.current === targetId) return;
+    if (!autoStart || !snapshot || !recipe || receipt?.dependenciesVerified || job || active || starting || otherSetup || disabled || !setup.setupDesktopAvailable() || recipe.requiresLicenseAcceptance || recipe.requiresAdministrator || autoAttempt.current === targetId) return;
     autoAttempt.current = targetId;
     void start();
   }, [autoStart, snapshot, recipe, receipt, job, active, starting, otherSetup, disabled, targetId]);
@@ -78,16 +73,11 @@ export function RuntimeSetupControls({targetId, label, installed = false, autoSt
         : receipt?.dependenciesVerified ? isModel ? 'Dependencies verified · inference not verified' : receipt.environmentVerified ? 'Testing environment verified' : 'Host tools verified'
         : 'Automatic setup available'}</strong></div>
       <small>{recipe.label} · {bytes(recipe.minimumDiskBytes)} free disk for dependencies · {bytes(recipe.minimumRamBytes)} host RAM minimum{recipe.requiresCuda ? ' · NVIDIA CUDA required' : ''}</small>
-      {recipe.requiresLicenseAcceptance && <label className="runtime-setup-check"><input type="checkbox" checked={acceptLicenses} onChange={event => setAcceptLicenses(event.target.checked)} disabled={active} />I accept the publisher licenses for this setup{recipe.kind === 'virtualbox-guest' ? ' and confirm I am entitled to use the selected OS image' : ''}.</label>}
+      {recipe.requiresLicenseAcceptance && <label className="runtime-setup-check"><input type="checkbox" checked={acceptLicenses} onChange={event => setAcceptLicenses(event.target.checked)} disabled={active} />I accept the publisher licenses for this setup.</label>}
       {recipe.requiresLicenseAcceptance && <div className="runtime-setup-sources">{recipe.sourceUrls.map((url, index) => <a key={url} href={url} target="_blank" rel="noreferrer">{index === 0 ? 'Publisher and license information' : `Publisher setup reference ${index + 1}`}</a>)}{recipe.kind === 'android' && <a href="https://developer.android.com/studio/terms" target="_blank" rel="noreferrer">Android SDK license terms</a>}</div>}
       {recipe.requiresAdministrator && <label className="runtime-setup-check"><input type="checkbox" checked={allowAdministrator} onChange={event => setAllowAdministrator(event.target.checked)} disabled={active} />Allow Windows to request administrator permission for the VirtualBox host drivers.</label>}
-      {recipe.kind === 'virtualbox-guest' && <div className="runtime-setup-fields">
-        <label>Licensed operating-system ISO<input aria-label="Licensed operating-system ISO" value={isoPath} onChange={event => setIsoPath(event.target.value)} placeholder="C:\\Images\\licensed-system.iso" disabled={active} /></label>
-        <label>Guest user<input value={guestUser} onChange={event => setGuestUser(event.target.value)} disabled={active} /></label>
-        <label>Guest password environment variable<input value={passwordEnv} onChange={event => setPasswordEnv(event.target.value)} disabled={active} /></label>
-      </div>}
       <div className="runtime-setup-actions">
-        <button type="button" disabled={disabled || active || starting || otherSetup || !setup.setupDesktopAvailable() || !!recipe.requiresLicenseAcceptance && !acceptLicenses || recipe.kind === 'virtualbox-guest' && !isoPath.trim()} onClick={() => void start()}>{receipt ? <RefreshCw size={14} /> : <Download size={14} />}{starting ? 'Starting setup…' : receipt ? 'Recheck runtime setup' : isModel ? installed ? 'Prepare runtime automatically' : 'Install and prepare automatically' : 'Set up automatically'}</button>
+        <button type="button" disabled={disabled || active || starting || otherSetup || !setup.setupDesktopAvailable() || !!recipe.requiresLicenseAcceptance && !acceptLicenses} onClick={() => void start()}>{receipt ? <RefreshCw size={14} /> : <Download size={14} />}{starting ? 'Starting setup…' : receipt ? 'Recheck runtime setup' : isModel ? installed ? 'Prepare runtime automatically' : 'Install and prepare automatically' : 'Set up automatically'}</button>
         {active && <button type="button" onClick={() => void cancel()} disabled={job?.status === 'cancelling'}><Square size={13} />{job?.status === 'cancelling' ? 'Cancelling setup…' : 'Cancel setup'}</button>}
       </div>
       {!setup.setupDesktopAvailable() && <small>Automatic installation runs in the desktop app.</small>}
@@ -123,7 +113,6 @@ export function RuntimeSetupPanel({onNotice}: {onNotice?: (message: string) => v
     </div>}
     <RuntimeSetupControls targetId="testing-android" label="Android emulator" onNotice={onNotice} />
     <RuntimeSetupControls targetId="testing-virtualbox" label="VirtualBox" onNotice={onNotice} />
-    <RuntimeSetupControls targetId="testing-pc-vm" label="PC testing VM" onNotice={onNotice} />
     {error && <p role="alert">{error}</p>}
   </section>;
 }

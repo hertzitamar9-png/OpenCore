@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { RuntimeSetupControls } from './RuntimeSetupControls';
+import { RuntimeSetupControls, RuntimeSetupPanel } from './RuntimeSetupControls';
 import * as setup from './runtimeSetupApi';
 
 const recipe: setup.SetupRecipe = {id: 'image-v1', label: 'Image runtime', kind: 'studio', modelIds: ['sana-16'], packages: {}, minimumDiskBytes: 9e9, minimumRamBytes: 8e9, requiresCuda: true, sourceUrls: [], limitations: 'Original precision'};
@@ -54,4 +54,16 @@ it('requires Android license acceptance before issuing provisioning', async () =
   fireEvent.click(screen.getByRole('checkbox', {name: /I accept/}));
   fireEvent.click(button);
   await waitFor(() => expect(start).toHaveBeenCalledWith('testing-android', expect.objectContaining({acceptLicenses: true, installWeights: false})));
+});
+
+it('keeps testing host setup available without the guest ISO and password form', async () => {
+  const android = {...recipe, kind: 'android' as const, label: 'Android SDK', modelIds: ['testing-android']};
+  const virtualbox = {...recipe, kind: 'virtualbox' as const, label: 'VirtualBox host', modelIds: ['testing-virtualbox']};
+  const guest = {...recipe, kind: 'virtualbox-guest' as const, modelIds: ['testing-pc-vm']};
+  vi.spyOn(setup, 'runtimeSetupStatus').mockResolvedValue({...snapshot, recipes: [android, virtualbox, guest]});
+  render(<RuntimeSetupPanel />);
+  expect(await screen.findByText(/VirtualBox host/)).toBeVisible();
+  expect(await screen.findByText(/Android SDK/)).toBeVisible();
+  expect(screen.queryByText('Licensed operating-system ISO')).not.toBeInTheDocument();
+  expect(screen.queryByText('Guest password environment variable')).not.toBeInTheDocument();
 });

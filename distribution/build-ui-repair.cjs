@@ -97,18 +97,23 @@ app=editFunction(app,'Kp',text=>replaceOnce(text,'function Kp(t){','function Kp(
 app=editFunction(app,'Rp',text=>replaceOnce(text,'return{id:t.id,','return{id:t.hubEntry?.profileId||t.id,'));
 app=editFunction(app,'pk',text=>{
   text=replaceOnce(text,'const u=await jj();','const u=$manualUpdatePolicy.normalize(await jj());');
+  text=replaceOnce(text,'Nf(!0),o(!0),r(', '$markUpdateAttempt(e.version),Nf(!0),o(!0),r(');
   return replaceOnce(text,'busy:a||l,check:c,install:d','busy:a||l,installing:l,check:c,install:d');
 });
 app=editFunction(app,'Pj',text=>{
-  text=replaceOnce(text,'const m=r??(o==null?void 0:o.currentVersion);','const m=$manualUpdatePolicy.currentVersion;');
+  text=replaceOnce(text,'function Pj(){','function Pj({blocked:$blocked=!1}={}){const $downloads=$useInstallState().active;');
+  text=replaceOnce(text,'const m=r??(o==null?void 0:o.currentVersion);','const m=$manualUpdatePolicy.currentVersion,$note=$useUpdateSchedule({version:o?.available?o.version:null,blocked:$blocked||!!$downloads,busy:c,install:b});');
   text=replaceOnce(text,'busy:c,check:d,install:u','busy:c,installing:$installing,check:d,install:u');
   text=replaceOnce(text,'async function b(){e(f=>!f),t||await d()}','async function b(){e(!0),await u()}');
   text=replaceOnce(text,'t&&(n||(o==null?void 0:o.available))','t&&n');
   text=replaceOnce(text,',(o==null?void 0:o.available)&&i.jsx("button",{type:"button",disabled:c,onClick:()=>void u(),children:c?"Updating…":"Install update"})','');
   text=replaceOnce(text,'"aria-label":"Update","aria-expanded":t','"aria-label":$installing?"Updating…":"Update ready","aria-busy":$installing');
-  text=replaceOnce(text,'className:"manual-update-control",children:[','className:"manual-update-control",children:[$installing?i.jsx($OpenCoreUpdateProgress,{}):null,');
+  text=replaceOnce(text,'className:"manual-update-control",children:[','className:"manual-update-control",children:[$note&&i.jsx("span",{className:"app-update-countdown",children:$note}),$installing?i.jsx($OpenCoreUpdateProgress,{}):null,');
   return replaceOnce(text,'children:"Update"','children:$installing?"Updating…":"Update ready"');
 });
+app=editFunction(app,'qj',text=>replaceOnce(text,
+  'i.jsx("p",{children:"OpenCore checks for updates on startup and every five minutes while open. You can also check here. Downloading and installing starts only when you choose Update."})',
+  'i.jsx($UpdatePreferences,{}),i.jsx("p",{children:"OpenCore checks for releases at startup and every five minutes while it is open."})'));
 // Local UI recovery can pin the version while the matching release is prepared.
 // Normal releases retain the manual update control above.
 if (process.env.OPENCORE_UI_PIN_RELEASE === '1') {
@@ -121,6 +126,16 @@ app=editFunction(app,'v8',text=>replaceOnce(text,
   'i.jsx(WI,{entries:a,liveStartedAt:o}),i.jsxs("span",{children:["GPU ",t.telemetry.gpuUtilization,"%"]})'));
 app = editFunction(app, 'Rs', text => {
   text = replaceOnce(text, '!s||!d||!F||E', '!s||!d||!F||F.kind==="speech"||E');
+  text = replaceOnce(text, 'd.recipes.find(T=>T.modelIds.includes(t))', 'd.recipes.find(T=>T.kind!=="virtualbox-guest"&&T.modelIds.includes(t))');
+  text = replaceOnce(text, ',[y,C]=p.useState(""),[j,_]=p.useState("opencore"),[O,P]=p.useState("OPENCORE_TEST_GUEST_PASSWORD")', '');
+  text = replaceOnce(text, ',...(F==null?void 0:F.kind)==="virtualbox-guest"?{isoPath:y.trim(),guestUser:j.trim(),passwordEnv:O.trim()}:{}', '');
+  text = replaceOnce(text, '||F.kind==="virtualbox-guest"||w.current===t', '||w.current===t');
+  text = replaceOnce(text, '"I accept the publisher licenses for this setup",F.kind==="virtualbox-guest"?" and confirm I am entitled to use the selected OS image":"","."', '"I accept the publisher licenses for this setup."');
+  text = replaceOnce(text, '||F.kind==="virtualbox-guest"&&!y.trim()', '');
+  const vmForm = text.indexOf('F.kind==="virtualbox-guest"&&i.jsxs("div",{className:"runtime-setup-fields"');
+  const setupActions = text.indexOf('i.jsxs("div",{className:"runtime-setup-actions"', vmForm);
+  if(vmForm<0||setupActions<0)throw Error('Missing the guest setup form');
+  text = text.slice(0,vmForm)+text.slice(setupActions);
   text = replaceOnce(text, 'const[d,u]=p.useState(null)', 'const[$localStatus,u]=p.useState(null)');
   text = replaceOnce(text, 'M=p.useRef(!1);', 'M=p.useRef(!1);const $jobSeenAtMount=p.useRef(false),$shared=$useInstallState(),d=$shared.runtime||$localStatus;');
   text = replaceOnce(text, 'const Ce=[...ge.jobs].reverse().find(D=>D.targetId===t);Ce&&!Of(Ce)',
@@ -134,6 +149,7 @@ app = editFunction(app, 'Rs', text => {
   text = replaceOnce(text, 'children:[(F==null?void 0:F.requiresLicenseAcceptance)', 'children:[H&&!Of(Q)&&i.jsx("p",{role:"status",children:$shared.progress?.currentFile||"Starting installation…"}),(F==null?void 0:F.requiresLicenseAcceptance)');
   return text;
 });
+app=editFunction(app,'kj',text=>replaceOnce(text,',i.jsx(Rs,{targetId:"testing-pc-vm",label:"PC testing VM",onNotice:t})',''));
 app = editFunction(app, 'yj', text => {
   text = replaceOnce(text, 'var Oe;', 'var Oe;const $shared=$useInstallState();');
   text = replaceOnce(text, 'const[a,o]=p.useState(null)', 'const[a,o]=p.useState(()=>globalThis.__opencoreModelLibrary.peek())');
@@ -168,6 +184,8 @@ app=editFunction(app,'yj',text=>{
 });
 // The recovered release frontend, not src/App.tsx, is the shipped UI.
 app=require('./release-mobile-navigation-patches.cjs')(app,{editFunction,replaceOnce});
+app=editFunction(app,'w8',text=>replaceOnce(text,'i.jsx(Pj,{})',
+  'i.jsx(Pj,{blocked:!!(J||D||ge||l.activeConversationIds?.length||l.runtime.status==="starting")})'));
 app=require('./group-conversation-patches.cjs')(app,{replaceOnce});
 app=editFunction(app,'h8',retainSupportPage);
 app=editFunction(app,'w8',text=>replaceOnce(text,
@@ -186,13 +204,15 @@ const coordinatorSource=fs.readFileSync(path.join(root,'install-coordinator.js')
 if(coordinatorBoundary<0)throw Error('Missing install coordinator entry');
 app += '\nimport{createInstallCoordinator}from"./model-catalog-B8SfuDgQ.js";\n'+coordinatorSource.slice(coordinatorBoundary);
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';
+app += '\nimport{createAppUpdatePreferences}from"./model-catalog-B8SfuDgQ.js";const{UpdatePreferences:$UpdatePreferences,markUpdateAttempt:$markUpdateAttempt,useUpdateSchedule:$useUpdateSchedule}=createAppUpdatePreferences(p);\n';
 
 (async () => {
   const report = [];
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
+  const preferencesCode='\nconst $createAppUpdatePreferences=(()=>{'+fs.readFileSync(path.join(root,'../src/app-update-preferences.js'),'utf8').replace('export function ','function ')+';return createAppUpdatePreferences})();export{$createAppUpdatePreferences as createAppUpdatePreferences};\n';
   const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode+'\n'+require('./hub-patches.cjs').featureInstallerSource();
-  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures]]) {
+  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures+preferencesCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,
       compress: { passes: name === 'App-kNA9sRUP.js' ? 3 : 1, unused: false },

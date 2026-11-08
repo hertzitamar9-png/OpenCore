@@ -1,9 +1,12 @@
+import * as React from 'react';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Download } from 'lucide-react';
 import * as api from './api';
+import { createAppUpdatePreferences } from './app-update-preferences.js';
 import './update-progress.css';
 
+const { UpdatePreferences, markUpdateAttempt, useUpdateSchedule } = createAppUpdatePreferences(React);
 type CheckedVersion = Awaited<ReturnType<typeof api.checkLatestAppVersion>>;
 
 let pendingVersionCheck: Promise<CheckedVersion> | null = null;
@@ -62,6 +65,7 @@ function useManualUpdate(checkOnMount = false) {
 
   async function install() {
     if (!checked?.available || installingUpdate) return;
+    markUpdateAttempt(checked.version);
     setInstallingUpdate(true);
     setBusy(true);
     setMessage(`Stopping active model work, then installing OpenCore ${checked.version}…`);
@@ -79,10 +83,13 @@ function useManualUpdate(checkOnMount = false) {
   return { checked, message, busy: busy || installing, installing, check, install };
 }
 
-export function UpdateButton() {
+export function UpdateButton({ blocked = false }: { blocked?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const { checked, message, busy, installing, check, install } = useManualUpdate(true);
+  const scheduleNote = useUpdateSchedule({
+    version: checked?.available ? checked.version : null, blocked, busy, install: startUpdate,
+  });
   useEffect(() => {
     if (!open || !message) { setShowMessage(false); return; }
     setShowMessage(true);
@@ -95,6 +102,7 @@ export function UpdateButton() {
   }
 
   return <div className="manual-update-control">
+    {scheduleNote && <span className="app-update-countdown">{scheduleNote}</span>}
     {installing && <div className="app-update-overlay" role="status" aria-live="polite">
       <div className="app-update-card"><h2>Updating OpenCore</h2>
         <p>Preparing and downloading the update…</p>
@@ -129,7 +137,8 @@ export function UpdateSettings() {
     }
   }
   return <div className="manual-update-settings">
-    <p>Check manually. OpenCore never downloads or installs an update without your action.</p>
+    <UpdatePreferences />
+    <p>OpenCore checks for releases at startup and every five minutes while it is open.</p>
     <div className="manual-update-actions">
       <button type="button" onClick={() => void check()} disabled={busy}>{busy ? 'Checking…' : 'Check latest version'}</button>
       {checked?.available && <button type="button" onClick={() => void install()} disabled={busy}><Download size={14} />{busy ? 'Updating…' : `Update to ${checked.version}`}</button>}

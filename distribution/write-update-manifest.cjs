@@ -14,7 +14,7 @@ function createUpdateManifest(release,version,signature){
   if(asset.browser_download_url!==canonicalUrl&&!(release.draft&&draftUrl&&asset.browser_download_url.endsWith('/'+encodeURIComponent(asset.name))))throw Error('Release installer URL does not match this repository and tag');
   // Draft URLs are temporary; publish the canonical tag URL that will exist once the draft is public.
   const entry={url:canonicalUrl,signature:signature.trim()};
-  return {version,notes:'OpenCore update from the main branch. Download and install only when you choose Update ready.',pub_date:new Date().toISOString(),platforms:{'windows-x86_64':entry,'windows-x86_64-nsis':entry}};
+  return {version,notes:'OpenCore update from the main branch. Choose Update ready to install manually, or enable automatic installation in Settings.',pub_date:new Date().toISOString(),platforms:{'windows-x86_64':entry,'windows-x86_64-nsis':entry}};
 }
 
 if(require.main===module){
