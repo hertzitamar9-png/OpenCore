@@ -55,7 +55,6 @@ index=editFunction(index,'bp',text=>replaceOnce(text,
 index=editFunction(index,'Xv',()=>fs.readFileSync(path.join(root,'startup-entry.js'),'utf8'));
 index+='\nconst $viewCacheVersion='+JSON.stringify(releaseVersion)+';\n'+fs.readFileSync(path.join(root,'model-view-cache.js'),'utf8');
 index+='\n'+fs.readFileSync(path.join(root,'conversation-deletion.js'),'utf8');
-index+='\nconst $sectionHighlights=document.createElement("style");$sectionHighlights.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/section-highlights.css'),'utf8'))+';document.head.appendChild($sectionHighlights);\n';
 index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement("style");style.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/navigation-divider.css'),'utf8'))+';document.head.appendChild(style);}\n';
 // This global style is independent of the App module. Put it in the entry
 // asset so the fixed native App slot retains room for normal release versions.
@@ -176,8 +175,8 @@ app=editFunction(app,'w8',text=>replaceOnce(text,
 app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
 // Keep independent shell assets in the companion bundle to fit the native App slot.
-const shellStyles=fs.readFileSync(path.join(root,'../src/menu-scroll.css'),'utf8')+
-  '.conversation-app-rail .nav-item:hover:not(:disabled),.conversation-app-rail .nav-item:focus-visible{background:color-mix(in srgb,var(--theme-accent,#6dacf5) 22%,var(--theme-panel,#10283d))!important;box-shadow:inset 0 0 0 1px var(--theme-accent,#6dacf5);color:var(--theme-ink,#fff)!important}';
+const shellStyles=['menu-scroll.css','section-highlights.css']
+  .map(name=>fs.readFileSync(path.join(root,'../src',name),'utf8')).join('\n');
 const shellFeatures='\n'+fs.readFileSync(path.join(root,'../src/menu-scroll.js'),'utf8').replace('export function ','function ')+
   '\nexport function installShellFeatures(){installMenuScrollGuard();const style=document.createElement("style");style.textContent='+JSON.stringify(shellStyles)+';document.head.appendChild(style);}\n';
 app+='\nimport{installShellFeatures as $installShellFeatures}from"./model-catalog-B8SfuDgQ.js";$installShellFeatures();\n';

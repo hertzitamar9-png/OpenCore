@@ -9,6 +9,7 @@ import "./styles.css";
 import "./historic-dark.css";
 import "./menu-scroll.css";
 import "./navigation-rail.css";
+import "./section-highlights.css";
 
 installExternalLinkGuard(openUrl);
 installMenuScrollGuard();

@@ -68,6 +68,7 @@ class LiveTranscript:
     """
 
     TURN, NOTE, MEMORY = "turn", "note", "echo_memory"
+    UNANSWERED_TOOL = "Not run: the user sent a new message before this action ran."
 
     def __init__(self, archive, conversation):
         self.archive = archive
@@ -231,7 +232,7 @@ class LiveTranscript:
         # expect every call to be answered.
         for call_id in self.pending_tool_calls():
             self.append({"role": "tool", "tool_call_id": call_id,
-                         "content": "Not run: the user sent a new message before this action ran."},
+                         "content": self.UNANSWERED_TOOL},
                         count_tokens)
         self.question, self.open = question, True
         self.last_answer_sha256 = None
@@ -244,7 +245,7 @@ class LiveTranscript:
         """Close a cancelled turn with explicit receipts for unfinished calls."""
         for call_id in self.pending_tool_calls():
             self.append({"role": "tool", "tool_call_id": call_id,
-                         "content": "Not run: the user sent a new message before this action ran."},
+                         "content": self.UNANSWERED_TOOL},
                         count_tokens)
         self.open = False
 

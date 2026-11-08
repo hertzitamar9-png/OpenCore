@@ -1,7 +1,38 @@
 :root {
-  --section-highlight-fill: color-mix(in srgb, var(--theme-accent, #6dacf5) 22%, var(--theme-panel, #10283d));
-  --section-highlight-border: var(--theme-accent, #6dacf5);
+  --theme-accent: color-mix(in srgb, var(--platform-accent, #245ca8) 40%, #376fad);
+  --section-highlight-fill: color-mix(in srgb, var(--theme-accent) 35%, var(--theme-panel, #101217));
+  --section-highlight-border: var(--theme-accent);
   --section-highlight-ink: var(--theme-ink, #f0f3f6);
+}
+
+:root[data-platform-theme] {
+  --theme-accent-border: var(--section-highlight-border);
+}
+
+:root[data-platform-high-contrast="true"] {
+  --section-highlight-border: var(--section-highlight-ink);
+}
+
+::selection {
+  background: var(--platform-accent, #245ca8);
+  color: var(--platform-accent-text, white);
+}
+
+.opencore-shell :is(.echo-storage-card, .reasoning-disclosure, .tool-group, .tool-activity:not(.failed)) {
+  border-color: var(--section-highlight-border) !important;
+}
+
+.opencore-shell :is(progress, input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--theme-accent) !important;
+}
+
+.opencore-shell .statusbar-context progress::-webkit-progress-value {
+  background: var(--theme-accent) !important;
+  box-shadow: none !important;
+}
+
+.opencore-shell .statusbar-context progress::-moz-progress-bar {
+  background: var(--theme-accent) !important;
 }
 
 /* The entire visible control, including the icon edges, is interactive. */

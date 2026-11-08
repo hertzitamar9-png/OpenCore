@@ -217,11 +217,7 @@ HARNESS_INSTRUCTIONS = (
 )
 
 
-def harness_checkpoint_request(messages, user_index, owns_timeline, tools):
-    """Recognize only the private harness's tool-free compaction request."""
-    if not owns_timeline or tools or user_index < 1:
-        return False
-    text = str(messages[user_index].get('content') or '').strip()
+def is_harness_checkpoint_prompt(text):
     return (
         text == ('Create a concise working-memory summary of the conversation above. Preserve active goals, '
                  'constraints, decisions, unresolved tasks, file paths, tool results, and facts needed to '
@@ -229,6 +225,31 @@ def harness_checkpoint_request(messages, user_index, owns_timeline, tools):
         or (text.startswith('You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary')
             and text.endswith('helping the next LLM seamlessly continue the work.'))
     )
+
+
+def harness_checkpoint_request(messages, user_index, owns_timeline, tools):
+    """Recognize only the private harness's tool-free compaction request."""
+    return (owns_timeline and not tools and user_index >= 0
+            and is_harness_checkpoint_prompt(str(messages[user_index].get('content') or '').strip()))
+
+
+def is_legacy_harness_auxiliary_turn(message):
+    content = message.get('content')
+    if not isinstance(content, str):
+        return False
+    text = content.strip()
+    if is_harness_checkpoint_prompt(text):
+        return True
+    text = text.removeprefix('HUMAN_SOURCE data:').strip()
+    if not text.startswith('{') or '"HUMAN_SOURCE"' not in text:
+        return False
+    try:
+        source = json.loads(text)
+    except (ValueError, RecursionError):
+        return False
+    return (isinstance(source, dict) and set(source) == {'HUMAN_SOURCE', 'deleted_keys', 'existing', 'has_project'}
+            and isinstance(source['HUMAN_SOURCE'], str) and isinstance(source['deleted_keys'], list)
+            and isinstance(source['existing'], list) and isinstance(source['has_project'], bool))
 
 
 def harness_checkpoint_marker(message):
@@ -1995,7 +2016,7 @@ class Handler(BaseHTTPRequestHandler):
             with self.state._backend_lock:
                 return self._controlled_context_serial(payload, conversation, level, archive_input)
 
-    def _merge_client_tools(self, live, messages, count):
+    def _merge_client_tools(self, live, messages, count, restore_assistant_text=False):
         compacted_ids = set(live.compacted_tool_ids)
         answered = live.tool_result_ids() | compacted_ids
         recorded = {call.get('id') for m in live.messages for call in (m.get('tool_calls') or [])} | compacted_ids
@@ -2005,9 +2026,50 @@ class Handler(BaseHTTPRequestHandler):
                 if calls:
                     live.append({'role':'assistant', 'content':message.get('content') or '', 'tool_calls':calls}, count)
                     recorded.update(call.get('id') for call in calls)
+                elif restore_assistant_text and not message.get('tool_calls') and message.get('content'):
+                    live.append_generated({'role':'assistant', 'content':message['content']}, count)
             elif message.get('role') == 'tool' and message.get('tool_call_id') not in answered:
                 live.append({'role':'tool', 'tool_call_id':message.get('tool_call_id'), 'content':message.get('content')}, count)
                 answered.add(message.get('tool_call_id'))
+
+    def _repair_harness_live_history(self, live):
+        """Keep old internal requests in the archive outside the working prompt."""
+        kept = []
+        task_index = None
+        auxiliary = False
+        for entry in live.entries:
+            if entry.get('kind') == live.TURN:
+                auxiliary = is_legacy_harness_auxiliary_turn(entry['message'])
+                if auxiliary:
+                    # The old transition falsely closed pending calls before
+                    # saving the auxiliary turn. Let their real results merge.
+                    while (kept and kept[-1]['message'].get('role') == 'tool'
+                           and kept[-1]['message'].get('content') == live.UNANSWERED_TOOL):
+                        kept.pop()
+                else:
+                    task_index = len(kept)
+            if not auxiliary:
+                kept.append(entry)
+        if len(kept) == len(live.entries):
+            return
+        live.entries = kept
+        if auxiliary:
+            # A previous version treated memory capture or a handoff as the
+            # current user turn. Restore the latest real task and its receipts.
+            task = kept[task_index:] if task_index is not None else []
+            live.question = _last_user_message([task[0]['message']]) if task else None
+            answer = next((entry['message']['content'] for entry in reversed(task)
+                           if entry.get('kind') == 'answer'), None)
+            live.open = bool(task) and answer is None
+            live.last_answer_sha256 = hashlib.sha256(answer.encode('utf-8')).hexdigest() if isinstance(answer, str) else None
+            note = next((entry for entry in reversed(task) if entry.get('checkpoint_turn_id')), {})
+            live.turn_id = (note.get('checkpoint_turn_id') or uuid.uuid4().hex) if task else None
+            live.compacted_tool_ids = [record['id'] for record in note.get('checkpoint_records', [])
+                                       if record.get('exact_arguments') and record.get('exact_result')]
+            live.compacted_tool_receipts = None
+        self.state._backend_conversation = None
+        self.state._backend_needs_reset = True
+        live.save()
 
     def _controlled_context_serial(self, payload, conversation, level="off", archive_input=True):
         """Answer one request against the conversation's live transcript.
@@ -2043,18 +2105,30 @@ class Handler(BaseHTTPRequestHandler):
         checkpoint_request = harness_checkpoint_request(supplied, user_index, owns_timeline, payload.get('tools'))
         window = self.state.context_size()
         live = LiveTranscript(self.state.archives.get(conversation), conversation)
+        if owns_timeline:
+            self._repair_harness_live_history(live)
         if checkpoint_request:
             # The harness may ask for a compressed handoff even though ECHO
             # already owns an exact transcript. Preserve pending tool results
             # and acknowledge the checkpoint without a second model call.
             before_checkpoint = supplied[:user_index]
-            if live.question and _last_user_message(before_checkpoint) == live.question:
-                last_task = max(index for index, item in enumerate(before_checkpoint) if _is_user_request(item))
-                self._merge_client_tools(live, before_checkpoint[last_task + 1:], count)
+            last_task = max((index for index, item in enumerate(before_checkpoint)
+                             if _is_user_request(item) and not is_legacy_harness_auxiliary_turn(item)), default=-1)
+            restore_task = False
+            if last_task >= 0:
+                task_message = before_checkpoint[last_task]
+                task_question = _last_user_message([task_message])
+                restore_task = task_question != live.question
+                if restore_task:
+                    # An unloaded or older conversation may lack a live copy.
+                    # Reuse the exact task and replies supplied by the harness.
+                    live.start_turn(task_question, count, task_message.get('content'))
+            if live.question is not None:
+                self._merge_client_tools(live, before_checkpoint[last_task + 1:], count, restore_task)
                 live.save()
-                result = {'choices': [{'message': {'role': 'assistant', 'content': HARNESS_CHECKPOINT},
-                                       'finish_reason': 'stop'}]}
-                return self._finish_live(result) if payload.get('stream') else self._send_json(200, result)
+            result = {'choices': [{'message': {'role': 'assistant', 'content': HARNESS_CHECKPOINT},
+                                   'finish_reason': 'stop'}]}
+            return self._finish_live(result) if payload.get('stream') else self._send_json(200, result)
         question = _last_user_message(supplied)
         agent_request = owns_timeline or bool(payload.get('tools'))
         assistant_tail = [message.get('content') for message in supplied[user_index + 1:]

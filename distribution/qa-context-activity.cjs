@@ -52,6 +52,8 @@ code+=String.raw`
       await reading.waitFor();
       assert.equal(await reading.getAttribute('value'),'400');
       assert.equal(await reading.getAttribute('max'),'1600');
+      const accent=await reading.evaluate(element=>getComputedStyle(element).accentColor);
+      assert.equal(await meter.evaluate(element=>getComputedStyle(element).accentColor),accent,'Both live progress bars must use the shared blue');
       await page.getByText('400 / 1,600 tokens · 25%',{exact:true}).waitFor();
       await page.evaluate(()=>{fixture.context.preview={id:'buffered-one',phase:'working',text:'<think></think></think>I found the main game file.'};});
       await page.getByText('I found the main game file.',{exact:true}).waitFor();
@@ -63,6 +65,7 @@ code+=String.raw`
         const nav=page.locator('.conversation-app-rail .nav-item.active').first(),row=page.locator('.conversation-row-shell.selected').first();
         const fill=element=>getComputedStyle(element).backgroundColor;
         assert.equal(await nav.evaluate(fill),await row.evaluate(fill),'Navigation and selected chats must use one highlight fill');
+        assert.equal(await nav.evaluate(element=>getComputedStyle(element).borderColor),accent,'Navigation and progress must use one highlight blue');
         const memory=page.locator('.conversation-app-rail .nav-item').nth(5);await memory.hover();
         await page.waitForFunction(()=>{const nav=document.querySelectorAll('.conversation-app-rail .nav-item')[5],row=document.querySelector('.conversation-row-shell.selected');return nav&&row&&getComputedStyle(nav).backgroundColor===getComputedStyle(row).backgroundColor;});
         assert.equal(await memory.evaluate(fill),await row.evaluate(fill),'Hover and selection must share the highlight color');
@@ -101,6 +104,9 @@ code+=String.raw`
       assert.equal(cards,1,'The saved reasoning and its preview must share one disclosure');
       assert.equal(await page.getByText('Game verification finished.',{exact:true}).count(),1,'The saved answer replaces its streamed copy across different item IDs');
       await page.getByText('Requested 1 tool · result missing',{exact:true}).waitFor();
+      const receipt=page.locator('.echo-storage-card').filter({hasText:'Memory receipt'}).first();
+      await receipt.waitFor();
+      assert.equal(await receipt.evaluate(element=>getComputedStyle(element).borderColor),accent,'Memory receipts must use the same blue as the active controls');
       const unload=page.getByRole('button',{name:'Unload model',exact:true}).and(page.locator('.send-button'));
       await unload.waitFor({timeout:7000});
       await unload.click();
@@ -121,7 +127,7 @@ code+=String.raw`
       await page.getByText('16.4K / 16.4K last',{exact:false}).waitFor();
       assert.deepEqual(errors,[]);
       await page.screenshot({path:path.join(folder,'context-activity-'+width+'.png')});
-      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedLastWindowVerified:true,liveContextSamples:[12480,12520],liveHardwareSamples:[87,63],liveOutputRates:[35,40],sharedHighlightsVerified:width>767,errors});
+      proof.push({width,contextUsed:12400,contextCapacity:32768,toolRetainedAcrossStalePoll:true,reasoningRetainedAcrossCheckpoint:true,savedPreviewDeduplicated:true,unloadedLastWindowVerified:true,liveContextSamples:[12480,12520],liveHardwareSamples:[87,63],liveOutputRates:[35,40],sharedHighlightsVerified:true,errors});
       await page.close();
     }
     fs.writeFileSync(path.join(folder,'context-activity-render.json'),JSON.stringify({passed:true,proof},null,2));

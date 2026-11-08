@@ -1,5 +1,5 @@
 .nav-rail .nav-group-start {
-  border-top: 2px solid var(--theme-accent-ink, #8ec4ff);
+  border-top: 2px solid var(--section-highlight-border, #376fad);
 }
 
 .conversation-app-rail nav {
@@ -25,6 +25,6 @@
   inset-inline: 0;
   top: -8px;
   height: 2px;
-  background: var(--theme-accent-ink, #8ec4ff);
+  background: var(--section-highlight-border, #376fad);
   pointer-events: none;
 }

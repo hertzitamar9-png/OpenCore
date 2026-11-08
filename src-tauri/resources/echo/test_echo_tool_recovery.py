@@ -58,6 +58,59 @@ class ToolRecoveryTests(unittest.TestCase):
                                  for item in requests[0]['messages']))
             self.assertEqual(LiveTranscript(archives.get(conversation), conversation).turn_id, turn_id)
 
+    def test_native_checkpoint_recovers_older_memory_turns_and_unloaded_chats(self):
+        with ExitStack() as stack:
+            root = Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives = ArchiveSet(root, idle_seconds=60)
+            stack.callback(archives.close)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            stack.callback(state.memory_controller.close)
+            state._ctx_size = 32768
+            state.count_tokens = lambda text: max(1, len(str(text)) // 4)
+            handler = Handler.__new__(Handler)
+            handler.state = state
+            handler.private_live_preview = True
+            handler.headers = {'X-OpenCore-Managed-Turn': '1'}
+            handler._finish_live = lambda result: result
+            handler._generate_live = lambda *_: self.fail('A native checkpoint must not run the model')
+            user = {'role': 'user', 'content': 'Finish the existing game.'}
+            narration = {'role': 'assistant', 'content': 'I will inspect index.html.'}
+            call = {'role': 'assistant', 'content': '',
+                    'tool_calls': [{'id': 'read', 'function': {'name': 'Read', 'arguments': '{}'}}]}
+            result = {'role': 'tool', 'tool_call_id': 'read', 'content': 'Found index.html.'}
+            compact = {'role': 'user', 'content':
+                'You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary for another LLM '
+                'that will resume the task.\r\n\r\nInclude:\r\n- Current progress and key decisions made\r\n'
+                '- Important context, constraints, or user preferences\r\n'
+                '- What remains to be done (clear next steps)\r\n'
+                '- Any critical data, examples, or references needed to continue\r\n\r\n'
+                'Be concise, structured, and focused on helping the next LLM seamlessly continue the work.\r\n'}
+            memory = json.dumps({'HUMAN_SOURCE': user['content'], 'deleted_keys': [],
+                                 'existing': [], 'has_project': False})
+            old = LiveTranscript(archives.get('old'), 'old')
+            old.start_turn(user['content'], state.count_tokens)
+            old.append(narration, state.count_tokens)
+            old.append(call, state.count_tokens)
+            old.start_turn(memory, state.count_tokens)
+            old.append({'role': 'assistant', 'content': '{"facts":[]}'}, state.count_tokens)
+            old.start_turn(compact['content'], state.count_tokens)
+            old.append({'role': 'assistant', 'content': 'A generated handoff.'}, state.count_tokens)
+            old.save()
+            payload = {'messages': [user, narration, call, result, compact], 'stream': True}
+            for conversation in ('old', 'unloaded'):
+                with self.subTest(conversation=conversation):
+                    response = handler._controlled_context_serial(payload, conversation)
+                    self.assertEqual(response['choices'][0]['message']['content'], HARNESS_CHECKPOINT)
+                    saved = LiveTranscript(archives.get(conversation), conversation)
+                    self.assertEqual(saved.question, user['content'])
+                    self.assertEqual(saved.messages, [user, narration, call, result])
+                    self.assertEqual(saved.pending_tool_calls(), [])
+                    handler._controlled_context_serial(payload, conversation)
+                    self.assertEqual(LiveTranscript(archives.get(conversation), conversation).messages, saved.messages)
+            response = handler._controlled_context_serial({'messages': [compact], 'stream': True}, 'empty')
+            self.assertEqual(response['choices'][0]['message']['content'], HARNESS_CHECKPOINT)
+            self.assertEqual(LiveTranscript(archives.get('empty'), 'empty').messages, [])
+
     def test_internal_memory_cycles_stop_with_a_specific_incomplete_reason(self):
         for queries,expected_calls in [(['one','two','three','four'],12),([''],3)]:
             with self.subTest(queries=queries), ExitStack() as stack:
