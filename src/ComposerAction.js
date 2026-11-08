@@ -29,7 +29,7 @@ function canControlModel(profile){
   return !!profile&&profile!=='stopped'&&(!profile.startsWith('api:')||!!globalThis.__opencoreLocalProfiles?.get(profile));
 }
 
-function useModelRuntime(profile,runtime){
+export function useModelRuntime(profile,runtime){
   const [sample,setSample]=React.useState(globalThis.__opencoreRuntimeSample);
   React.useEffect(()=>{
     const update=()=>setSample(globalThis.__opencoreRuntimeSample);

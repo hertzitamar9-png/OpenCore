@@ -1,4 +1,5 @@
 import React from 'react';
+import {useModelRuntime} from './ComposerAction.js';
 
 export const MEMORY_RELEVANCE_POLICY=`[OpenCore memory relevance v1]
 Use saved memories only when they directly help answer the current request. Do not mention unrelated memories or force a connection to old projects. A book-writing request, page count, task instructions and temporary topics are task context, not global facts about the user. Treat personal history, places, dates and sports positions as durable facts when explicitly stated by the user. Preserve the user's meaning; never reinterpret football as esports without evidence. Use relevant facts silently when helpful and cite dates accurately when asked. Never announce a memory was saved unless a persistence receipt confirms it.`;
@@ -23,9 +24,9 @@ function latestCapture(entries){
 }
 export function chatPostprocessing(entries){return latestCapture(entries)?.metadata?.status==='checking';}
 
-export function ChatMemoryStatus({conversationId,entries,runtime,profile,active,onRefresh}){
+export function ChatMemoryStatus({conversationId,entries,runtime,profile=runtime?.profile,active,onRefresh}){
   const h=React.createElement,capture=latestCapture(entries),id=capture?.metadata?.userEntryId;
-  const current=useModelRuntime(profile||runtime?.profile,runtime);
+  const current=useModelRuntime(profile,runtime);
   const[busy,setBusy]=React.useState(false),[error,setError]=React.useState(''),locked=React.useRef(false);
   const service=globalThis.__opencoreMemoryService;
   React.useEffect(()=>{void ensureMemoryRelevancePolicy().catch(()=>{});},[]);
