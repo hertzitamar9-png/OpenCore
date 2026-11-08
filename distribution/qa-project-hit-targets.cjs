@@ -28,11 +28,12 @@ fixture+=String.raw`
       const project=page.getByRole('button',{name:'Project: No project'});
       const bounds=await project.boundingBox();
       await page.mouse.move(1,1);
-      const idle=await project.evaluate(button=>getComputedStyle(button).boxShadow);
       for(const [x,y] of [[2,bounds.height/2],[bounds.width-2,bounds.height/2],[bounds.width/2,2],[bounds.width/2,bounds.height-2]]){
         await page.mouse.move(bounds.x+x,bounds.y+y);
         assert.equal(await project.evaluate(button=>button.matches(':hover')),true,'The whole project selector must respond to hover');
-        assert.notEqual(await project.evaluate(button=>getComputedStyle(button).boxShadow),idle,'The hover highlight must cover the selector');
+        const hover=await project.evaluate(button=>{const style=getComputedStyle(button);return {offset:parseFloat(style.outlineOffset),width:parseFloat(style.outlineWidth),style:style.outlineStyle};});
+        assert.equal(hover.style,'solid','The hover outline must cover the selector');
+        assert.ok(hover.width>=1&&hover.offset+hover.width<=0,'The hover outline must be visible inside the clickable area');
         await page.mouse.click(bounds.x+x,bounds.y+y);
         await page.getByRole('menu',{name:'Move conversation to project'}).waitFor();
         await page.keyboard.press('Escape');
