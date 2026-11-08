@@ -50,6 +50,10 @@ function LiveOutputStats({conversationId, fallback}) {
   return React.createElement('span',{className:'composer-token-speed'},live?`${(sample.tokensPerSecond||0).toFixed(1)} output tokens/s · ${sample.completionTokens.toLocaleString()} output tokens`:fallback);
 }
 
+function modelDisplayText(value='') {
+  return (value??'').replace(/^(?:\s*<\/?think>)+\s*/i,'');
+}
+
 function LiveModelActivity({conversationId, active, entries=[], fallback}) {
   const sample=useLiveMetrics(conversationId);
   const preview=sample?.preview;
@@ -77,21 +81,28 @@ function LiveModelActivity({conversationId, active, entries=[], fallback}) {
   const saved=entries.slice(lastUser+1).filter(entry=>entry.role==='assistant');
   const isSaved=(text,reasoning)=>saved.some(entry=>{
     const isReasoning=['generation','thinking'].includes(entry.kind);
-    return isReasoning===reasoning&&entry.content?.trim().includes(text.trim());
+    return isReasoning===reasoning&&modelDisplayText(entry.content).includes(text);
   });
   const records=draft?.key===key?draft.records:[];
   const visible=records.map(record=>{
-    const text=record.text?.split('<tool_call>')[0].trim();
-    const reasoning=record.reasoning?.trim();
+    const text=modelDisplayText(record.text?.split('<tool_call>')[0]).trim();
+    const reasoning=modelDisplayText(record.reasoning).trim();
     return {id:record.id,text:text&&!isSaved(text,false)?text:null,
       reasoning:reasoning&&!isSaved(reasoning,true)?reasoning:null};
   }).filter(record=>record.text||record.reasoning);
-  return h(React.Fragment,null,
-    ...visible.map(record=>h('div',{className:'assistant-response live-model-preview',key:record.id},
+  const blocks=visible.map(record=>h('div',{className:'assistant-response live-model-preview',key:record.id},
       record.reasoning?h('details',{className:'assistant-disclosure kind-thinking reasoning-disclosure',open:true},
         h('summary',null,h('span',{'aria-hidden':true},'◇'),h('strong',null,active&&record.id===preview?.id?'Reasoning':'Reasoned'),
           h('span',null,'Streamed model reasoning')),
         h('div',{className:'reasoning-output-body'},h('p',{className:'reasoning-text',style:{whiteSpace:'pre-wrap'}},record.reasoning))):null,
-      record.text?h('p',{className:'assistant-progress'},record.text):null)),
-    active?(label?h('div',{className:'generation-state',role:'status'},h('span',{className:'generation-pulse'}),label):fallback):null);
+      record.text?h('p',{className:'assistant-progress'},record.text):null));
+  const progress=phase==='reading-prompt'?preview.promptProgress:null;
+  const promptStatus=progress?h('div',{className:'generation-state prompt-read-progress',role:'status'},
+    h('progress',{'aria-label':'Reading prompt and context',value:progress.processed,max:progress.total}),
+    `${progress.processed.toLocaleString()} / ${progress.total.toLocaleString()} tokens · ${Math.floor(100*progress.processed/progress.total)}%`):null;
+  return h(React.Fragment,null,
+    active?blocks:blocks.length>0&&h('details',{className:'assistant-disclosure kind-thinking'},
+      h('summary',null,h('span',{'aria-hidden':true},'◇'),h('strong',null,'Uncommitted model output')),...blocks),
+    active?(label?h('div',{className:'generation-state',role:'status'},h('span',{className:'generation-pulse'}),label):fallback):null,
+    active&&promptStatus);
 }

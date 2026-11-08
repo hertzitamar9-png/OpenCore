@@ -21,9 +21,12 @@ function $mergeGenerationPreview(current,payload,saved){
   const combine=(before,after)=>{const result=[...before];for(const item of after){const index=result.findIndex(old=>same(old,item));if(index<0)result.push(item);else if(!result[index].content.startsWith(item.content))result[index]=item}return result};
   let retained=current.retainedSegments||[],active=combine(current.activeSegments||segments(current),segments(payload));
   if(payload.checkpoint||payload.done){
-    retained=combine(retained,active).filter(item=>!(saved||[]).some(entry=>entry.role==='assistant'&&
+    const timeline=saved||[];
+    const turn=timeline.slice(timeline.findLastIndex(entry=>entry.role==='user'&&entry.kind==='message')+1);
+    retained=combine(retained,active).filter(item=>!turn.some(entry=>entry.role==='assistant'&&
       (item.kind==='thinking'?['thinking','generation'].includes(entry.kind):['message','progress'].includes(entry.kind))&&
-      (!item.itemId||!entry.metadata?.itemId||item.itemId===entry.metadata.itemId)&&entry.content.trim().startsWith(item.content.trim())));
+      ($modelText(entry.content).trim()===$modelText(item.content).trim()||
+        (!item.itemId||!entry.metadata?.itemId||item.itemId===entry.metadata.itemId)&&$modelText(entry.content).trim().startsWith($modelText(item.content).trim()))));
     active=[];
   }
   const value={...current,...payload,checkpoint:undefined,retainedSegments:retained,activeSegments:active,segments:[...retained,...active]};

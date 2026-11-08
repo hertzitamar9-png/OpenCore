@@ -200,9 +200,9 @@ globalThis.__opencoreChangeModelRuntime=async (profile,action)=>{
   if(globalThis.__OPENCORE_PHONE__===true)return action==='unload'?native('stop_runtime',{}):
     native('start_profile',{request:{profile,attachUrl:null}});
   const snapshot=await native('get_snapshot',{});
-  if(snapshot?.activeConversationIds?.length)throw Error('Finish or stop the current response first.');
   const resolved=action==='load'?await $hubResolveDory(profile):profile;
   const entry=$hubState.catalog.find(value=>value.profileId===resolved);
+  if(snapshot?.activeConversationIds?.length&&!(entry&&action==='unload'))throw Error('Finish or stop the current response first.');
   if(entry){
     if(action==='unload')await $hubRequest('/runtime/unload',{id:entry.id});
     else {

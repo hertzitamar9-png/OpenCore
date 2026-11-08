@@ -10,6 +10,46 @@ import unittest
 from unittest.mock import patch
 
 import hf_bridge as bridge
+from hf_runtime import RuntimeManager, automatic_memory_request
+
+
+def automatic_capture():
+    return {'model': 'local-fixture', 'messages': [
+        {'role': 'system', 'content': 'Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only. Do not emit reasoning, markdown, tools or commentary.'},
+        {'role': 'user', 'content': 'HUMAN_SOURCE data:\n{"HUMAN_SOURCE":"I played football in Canada."}'},
+    ], 'max_tokens': 1024}
+
+
+class AutomaticMemoryRuntimeTests(unittest.TestCase):
+    def test_native_capture_does_not_start_an_unloaded_model(self):
+        payload = automatic_capture()
+        self.assertTrue(automatic_memory_request(payload))
+        self.assertFalse(automatic_memory_request({**payload, 'stream': True}))
+        with tempfile.TemporaryDirectory() as folder:
+            manager = RuntimeManager(folder, folder)
+            with patch.object(manager, 'prepare') as prepare:
+                with self.assertRaisesRegex(RuntimeError, 'unloaded'):
+                    manager.chat({'id': payload['model']}, payload)
+                prepare.assert_not_called()
+
+    def test_unload_interrupts_only_the_auxiliary_capture(self):
+        payload = automatic_capture()
+        with tempfile.TemporaryDirectory() as folder:
+            manager = RuntimeManager(folder, folder)
+            entry = {'id': payload['model']}
+            manager._active = {'id': entry['id'], 'mode': 'echo'}
+            manager.set_context(entry['id'], 'fixture-conversation', 'fixture-request')
+            with self.assertRaisesRegex(RuntimeError, 'active model request'):
+                manager.unload(entry['id'])
+            def capture(active, request, conversation):
+                self.assertEqual(conversation, 'fixture-conversation')
+                self.assertEqual(manager.unload(entry['id']), {'stopped': True})
+                raise RuntimeError('Capture cancelled')
+            with patch.object(manager, '_capture_memory', capture):
+                with self.assertRaisesRegex(RuntimeError, 'cancelled'):
+                    manager.chat(entry, payload)
+            self.assertIsNone(manager._active)
+            self.assertFalse(manager._generation.locked())
 
 
 class FakeRepair:

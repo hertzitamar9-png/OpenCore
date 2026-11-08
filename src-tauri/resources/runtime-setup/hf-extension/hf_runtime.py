@@ -22,6 +22,22 @@ if __name__ == '__main__':
 from model_modes import mode_context, supports_text_generation, NATIVE_TARGET, ECHO_TARGET
 
 
+def automatic_memory_request(payload):
+    # The installed native client sends this fixed two-message request after
+    # the reply. Keep it separate from ECHO's chat effort and working context.
+    messages = payload.get('messages')
+    if payload.get('stream') or payload.get('tools') or not isinstance(messages, list) or len(messages) != 2:
+        return False
+    if any(not isinstance(message, dict) or not isinstance(message.get('content'), str) for message in messages):
+        return False
+    system, source = messages
+    instructions = system['content'].strip()
+    return (system.get('role') in ('system', 'developer')
+            and instructions.startswith('Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only.')
+            and instructions.endswith('Do not emit reasoning, markdown, tools or commentary.')
+            and source.get('role') == 'user' and source['content'].lstrip().startswith('HUMAN_SOURCE data:'))
+
+
 def _hash(path, cancel=None):
     value = hashlib.sha256()
     with Path(path).open('rb') as stream:
@@ -341,7 +357,7 @@ class RuntimeManager:
 
     def unload(self, model_id):
         with self._state_lock:
-            if self._generation.locked() or self._preparation.locked() or self._context:
+            if self._preparation.locked() or (self._generation.locked() or self._context) and not self._automatic_memory:
                 raise RuntimeError('Finish or stop the active model request before unloading.')
             if self._active and self._active['id'] == model_id:
                 self.stop()
@@ -355,6 +371,8 @@ class RuntimeManager:
             url,key=active['url'],active['key']
         from urllib.parse import quote,urlsplit
         def read():
+            if self._automatic_memory:
+                return {'modelContextTokens':active['proof']['contextTokens'],'modelSessionActive':False}
             if active.get('mode')=='native':
                 metrics=active.get('usage',{})
                 value={'modelContextTokens':active['proof']['contextTokens'],'modelActiveTokens':metrics.get('prompt_tokens'),
@@ -384,6 +402,19 @@ class RuntimeManager:
         if type(port) is not int or not 1024 <= port <= 65535 or port in (8812, 8813) or profile.startswith('api:'):
             raise ValueError('Temporary chat needs the direct local model backend, separate from saved ECHO or cloud providers')
         return 'http://127.0.0.1:' + str(port), None
+
+    def memory_runtime(self, model_id, profile):
+        from urllib.parse import urlsplit
+        with self._state_lock:
+            active = self._active
+            if not active or active['id'] != model_id or any(child.poll() is not None for child in self._children):
+                raise ValueError('Load the selected local model before retrying memory capture.')
+            if active.get('mode') != 'echo':
+                raise ValueError('Memory recovery requires the loaded ECHO profile.')
+            return {'status':'running', 'profile':profile,
+                    'backendPort':urlsplit(active['upstream']).port, 'echoPort':urlsplit(active['url']).port,
+                    'authorization':'Bearer ' + active['key'], 'authenticatedEcho':True,
+                    'doryGrammar':active['proof'].get('engineId') == 'dory-cuda13-v1'}
     def __init__(self, root, resources):
         self.root, self.resources = Path(root).resolve(), Path(resources).resolve()
         self._children, self._logs = [], []
@@ -393,6 +424,7 @@ class RuntimeManager:
         self._memory_watchers = []
         self._state_lock = threading.RLock()
         self._generation = threading.Lock()
+        self._automatic_memory = False
         self._preparation = threading.Lock()
         self._cancel = threading.Event()
         self._stop_reason = ''
@@ -705,16 +737,61 @@ class RuntimeManager:
             proof.update(gpuModules=plan['gpuModules'], cpuModules=plan['cpuModules'])
         return proof
 
+    def _capture_memory(self, active, payload, conversation):
+        from hf_memory_repair import MAX_RESPONSE, SCHEMA
+        # Dory's forced budget-zero closer collides with its JSON grammar.
+        # Keep thinking off in the template and allow its natural delimiter.
+        budget = -1 if active['proof'].get('engineId') == 'dory-cuda13-v1' else 0
+        body = {'model': payload.get('model'), 'messages': payload['messages'], 'stream': False,
+                'max_tokens': 1024, 'temperature': 0, 'reasoning_effort': 'none',
+                'reasoning_budget_tokens': budget, 'reasoning_min_tokens': 0, 'reasoning_format': 'deepseek',
+                'chat_template_kwargs': {'enable_thinking': False},
+                'response_format': {'type': 'json_object', 'schema': SCHEMA}, 'cache_prompt': False}
+        nonce = None
+        if active.get('mode') == 'echo':
+            with self._request(active['url']+'/echo/kv/lease',
+                    {'action': 'acquire', 'conversation_id': conversation}, active['key'], timeout=3) as response:
+                lease = json.load(response)
+            nonce = lease.get('nonce') if lease.get('acquired') is True else None
+            if not nonce:
+                raise RuntimeError('The chat runtime is busy. Memory capture was deferred.')
+        try:
+            with self._request(active['upstream']+'/v1/chat/completions', body, active['key'], timeout=15) as response:
+                raw = response.read(MAX_RESPONSE + 1)
+            if len(raw) > MAX_RESPONSE:
+                raise RuntimeError('The local memory response was too large.')
+            result = json.loads(raw)
+            choice = (result.get('choices') or [{}])[0]
+            message = choice.get('message') or {}
+            if (choice.get('finish_reason') != 'stop' or message.get('reasoning_content') or message.get('reasoning')
+                    or message.get('tool_calls') or not isinstance(message.get('content'), str)):
+                raise RuntimeError('The local model did not return a completed memory extraction.')
+            return raw, 'application/json'
+        finally:
+            if nonce and self._active is active:
+                with self._request(active['url']+'/echo/kv/lease',
+                        {'action': 'release', 'nonce': nonce, 'invalidate': True}, active['key'], timeout=3) as response:
+                    if json.load(response).get('released') is not True:
+                        raise RuntimeError('The local runtime did not release the memory capture lease.')
+
     def chat(self, entry, payload):
-        if not self._active or self._active['id'] != entry['id'] or self._active.get('mode','echo')!=entry.get('operatingMode','echo') or any(child.poll() is not None for child in self._children):
+        automatic = automatic_memory_request(payload)
+        active = self._active
+        if not automatic and (not active or active['id'] != entry['id'] or active.get('mode','echo')!=entry.get('operatingMode','echo') or any(child.poll() is not None for child in self._children)):
             self.prepare(entry)
         with self._state_lock:
             active = self._active
+            if automatic and (not active or active['id'] != entry['id'] or any(child.poll() is not None for child in self._children)):
+                raise RuntimeError('Memory capture was skipped because the local model is unloaded.')
             if not active or active['id'] != entry['id'] or not self._generation.acquire(blocking=False):
                 raise RuntimeError('The local model is already generating or was unloaded. Retry when it is ready.')
+            self._automatic_memory = automatic
             selected = self._context if self._context and self._context['modelId'] == entry['id'] else None
         try:
             conversation = selected['conversationId'] if selected else 'hub-direct-' + uuid.uuid4().hex
+            if automatic:
+                return self._capture_memory(active, payload, active.get('conversationId') or conversation)
+            active['conversationId'] = conversation
             body = {**payload, 'conversation_id': conversation}
             if active.get('mode')=='native':
                 active['usage']={}
@@ -757,7 +834,10 @@ class RuntimeManager:
                     except (ValueError,AttributeError):pass
                 return data, response.headers.get('Content-Type', 'application/json')
         finally:
-            if locals().get('release',True):self._generation.release()
+            if locals().get('release',True):
+                with self._state_lock:
+                    self._automatic_memory = False
+                    self._generation.release()
 
     def stop(self, clear_context=True):
         self._cancel.set()

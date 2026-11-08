@@ -1592,7 +1592,7 @@ class Handler(BaseHTTPRequestHandler):
         except (OSError, ValueError, AttributeError):
             return False
 
-    def _show_preview(self, generation, phase, message=None, calls=None):
+    def _show_preview(self, generation, phase, message=None, calls=None, progress=None):
         conversation = getattr(self, '_preview_conversation', None)
         if not conversation:
             return
@@ -1600,6 +1600,7 @@ class Handler(BaseHTTPRequestHandler):
         self.state.set_preview(conversation, {
             'id': generation, 'phase': phase,
             'reasoning': (message.get('reasoning_content') or '')[-16000:],
+            **({'promptProgress': progress} if progress is not None else {}),
             'text': (message.get('content') or '')[-24000:],
             'tool': next((call['function']['name'] for call in (calls or {}).values()
                           if call['function']['name']), '')[:100],
@@ -3007,6 +3008,8 @@ class Handler(BaseHTTPRequestHandler):
         streaming = bool(body.get('stream'))
         if streaming:
             body = dict(body, stream_options={'include_usage': True})
+            if getattr(self, '_preview_conversation', None):
+                body['return_progress'] = True
         started = time.monotonic()
         generation = uuid.uuid4().hex
         self._show_preview(generation, 'reading-prompt')
@@ -3040,6 +3043,11 @@ class Handler(BaseHTTPRequestHandler):
                 event = json.loads(data)
                 if event.get('error'):
                     raise ValueError(str(event['error']))
+                progress = event.get('prompt_progress')
+                if isinstance(progress, dict):
+                    total, processed = progress.get('total'), progress.get('processed')
+                    if type(total) is int and type(processed) is int and 0 <= processed <= total and total > 0:
+                        self._show_preview(generation, 'reading-prompt', progress={'total': total, 'processed': processed})
                 upstream_preview = event.get('echo_preview')
                 if isinstance(upstream_preview, dict):
                     delta = upstream_preview.get('delta')
@@ -3077,7 +3085,7 @@ class Handler(BaseHTTPRequestHandler):
                             target['id'] = call['id']
                         for key in ('name', 'arguments'):
                             target['function'][key] += (call.get('function') or {}).get(key) or ''
-                    if delta:
+                    if delta.get('content') or delta.get('reasoning_content') or delta.get('tool_calls'):
                         self._show_preview(generation, 'preparing-tool' if calls else phase, message, calls)
                     if calls and not choice.get('finish_reason'):
                         oversized = any(_is_dev_tool(call['function']['name'])

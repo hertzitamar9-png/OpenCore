@@ -386,6 +386,7 @@ class MemoryRepair:
             return self._error(RepairError("backend_busy", "Another memory recovery is running"), diagnostics)
         lease = None
         echo = None
+        echo_authorization = ''
         touched = False
         cold = False
         portable = False
@@ -395,7 +396,9 @@ class MemoryRepair:
                 raise RepairError("invalid_source", "A recovery request object is required")
             state = self._read_state(request)
             backend, echo, authorization = self._runtime(request)
-            acquired = self._http(echo + "/echo/kv/lease", {"action": "acquire", "conversation_id": state["conversationId"]})
+            if request["runtime"].get('authenticatedEcho') is True:
+                echo_authorization = authorization
+            acquired = self._http(echo + "/echo/kv/lease", {"action": "acquire", "conversation_id": state["conversationId"]}, echo_authorization)
             lease = acquired.get("nonce") if acquired.get("acquired") is True else None
             if not isinstance(lease, str) or not 1 <= len(lease) <= 64:
                 lease = None
@@ -424,6 +427,8 @@ class MemoryRepair:
                         "tools": [], "tool_choice": "none", "response_format": {"type": "json_object", "schema": self._source_schema(state)},
                         "echo_append": True, "echo_cached_tool_header": False, "echo_memory_branch": branch,
                         "echo_session_id": before.get("echo_session_id"), "id_slot": 0, "cache_prompt": True}
+                if request["runtime"].get('doryGrammar') is True:
+                    body.update(reasoning_budget_tokens=-1, reasoning_format='deepseek')
                 if cold:
                     # No resident conversation tokens exist to preserve. A new
                     # temporary session excludes prior assistant context; ECHO
@@ -463,7 +468,7 @@ class MemoryRepair:
             if lease is not None:
                 try:
                     released = self._http(echo + "/echo/kv/lease", {"action": "release", "nonce": lease,
-                        "invalidate": touched and (cold or not diagnostics["cacheRestored"])})
+                        "invalidate": touched and (cold or not diagnostics["cacheRestored"])}, echo_authorization)
                     diagnostics["leaseReleased"] = released.get("released") is True
                     if cold and touched:
                         reset = released.get("invalidation") or {}

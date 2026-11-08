@@ -29,7 +29,11 @@ module.exports=function applyContextActivity(app,{editFunction,replaceOnce}){
   app=replaceOnce(app,'Vt(De=>FI(De,he))','Vt($toolPreviewState(he.conversationId))');
   app=editFunction(app,'YI',text=>{
     text=replaceOnce(text,'c.role==="assistant"&&c.metadata.phase==="reviewing"||','');
-    return replaceOnce(text,'if(c.metadata.phase==="reviewing")continue;','');
+    text=replaceOnce(text,'if(c.metadata.phase==="reviewing")continue;','');
+    text=replaceOnce(text,'const d=c.content.trim()','const d=$modelText(c.content).trim()');
+    text=replaceOnce(text,'b.content.trim().startsWith(d)','$modelText(b.content).trim().startsWith(d)');
+    return replaceOnce(text,'if(g&&x)return g===x;const v=m.content.trim();return!!d&&(v===d||d.length>=48&&v.startsWith(d))',
+      'const v=$modelText(m.content).trim();return !!d&&v===d||(g&&x?g===x:d.length>=48&&v.startsWith(d))');
   });
   app=editFunction(app,'w8',text=>{
     const update='Tt.current===Fe.conversationId&&Q(ae)';
@@ -57,8 +61,11 @@ module.exports=function applyContextActivity(app,{editFunction,replaceOnce}){
     const start=text.indexOf('const k=qu(x.title,x.content).label.replace('),end=text.indexOf(',y=Zv(x.content);',start);
     if(start<0||end<0)throw Error('Missing inferred tool-action label');
     text=text.slice(0,start)+'const y=Zv(x.content);'+text.slice(end+',y=Zv(x.content);'.length);
+    text=replaceOnce(text,'i.jsx(pf,{content:m.entry.content})','i.jsx(pf,{content:$modelText(m.entry.content)})');
     return replaceOnce(text,'`I’ll ${k}','`Tool action: ${qu(x.title,x.content).label}');
   });
+  app=editFunction(app,'_O',text=>replaceOnce(text,'e?`Using ${c}`:`Used ${c}`',
+    'e?`Using ${c}`:t.some(({call,result})=>call.kind==="tool_call"&&!result)?`Requested ${c} · result missing`:`Used ${c}`'));
   app=editFunction(app,'uO',text=>{
     text=replaceOnce(text,'&&C.metadata.reasoningSource!=="summary"','');
     text=replaceOnce(text,'b=d.filter((C,j)=>d.findIndex(_=>_.content===C.content)===j).map(C=>C.content).join(`\n\n`),m=b,f=t.flatMap','f=t.flatMap');

@@ -23,19 +23,20 @@ function latestCapture(entries){
 }
 export function chatPostprocessing(entries){return latestCapture(entries)?.metadata?.status==='checking';}
 
-export function ChatMemoryStatus({conversationId,entries,runtime,active,onRefresh}){
+export function ChatMemoryStatus({conversationId,entries,runtime,profile,active,onRefresh}){
   const h=React.createElement,capture=latestCapture(entries),id=capture?.metadata?.userEntryId;
-  const[busy,setBusy]=React.useState(false),[error,setError]=React.useState(''),attempted=React.useRef(new Set()),locked=React.useRef(false);
+  const current=useModelRuntime(profile||runtime?.profile,runtime);
+  const[busy,setBusy]=React.useState(false),[error,setError]=React.useState(''),locked=React.useRef(false);
   const service=globalThis.__opencoreMemoryService;
   React.useEffect(()=>{void ensureMemoryRelevancePolicy().catch(()=>{});},[]);
   const reviewable=capture?.metadata?.status==='failed'||capture?.metadata?.status==='deferred'||(capture?.metadata?.status==='unchanged'&&capture?.metadata?.skippedCount>0);
   async function retry(){
-    if(locked.current||active||!service||!id)return;
-    locked.current=true;setBusy(true);setError('');attempted.current.add(id);
+    if(locked.current||active||!service||!id||current?.status!=='running')return;
+    locked.current=true;setBusy(true);setError('');
     try{
-      let proof=await service('recover',{conversationId,userEntryId:id,temporaryChat:false,runtime});
+      let proof=await service('recover',{conversationId,userEntryId:id,temporaryChat:false,runtime:current});
       for(let count=0;proof.status==='ready'&&count<5;count++){
-        proof=await service('revalidate',{proof,runtime});
+        proof=await service('revalidate',{proof,runtime:current});
         if(proof.status!=='ready')break;
         const result=await window.__TAURI_INTERNALS__.invoke('agent_platform_action',{name:'agent_memory',args:proof.candidates[0].recordArgs});
         if(result?.persisted!==true)throw Error('Memory persistence was not confirmed.');
@@ -45,9 +46,10 @@ export function ChatMemoryStatus({conversationId,entries,runtime,active,onRefres
     }catch(reason){setError(String(reason).replace(/^Error:\s*/,''));}
     finally{locked.current=false;setBusy(false);}
   }
-  React.useEffect(()=>{if(reviewable&&runtime?.status==='running'&&!active&&!attempted.current.has(id))void retry();},[id,reviewable,runtime?.status,active]);
   if(busy)return h('div',{className:'chat-postprocessing',role:'status'},'Reply finished · retrying memory capture locally…');
-  if(capture?.metadata?.status==='checking')return h('div',{className:'chat-postprocessing',role:'status'},'Reply finished · saving memory locally…');
-  if(!reviewable||!service)return null;
-  return h('div',{className:'chat-postprocessing'},h('span',null,'Your reply is saved. Automatic memory needs another attempt.'),h('button',{type:'button',disabled:active||runtime?.status!=='running',onClick:()=>void retry()},'Retry saving memory'),error?h('details',null,h('summary',null,'Memory details'),h('small',null,error)):null,runtime?.status!=='running'?h('small',null,'Load a text model to retry.'):null);
+  if(capture?.metadata?.status==='checking'&&current?.status!=='stopped')return h('div',{className:'chat-postprocessing',role:'status'},'Reply finished · saving memory locally…');
+  if(!reviewable||!service||current?.status!=='running')return null;
+  return h('details',{className:'chat-postprocessing'},h('summary',null,'Memory details'),
+    h('button',{type:'button',disabled:active,onClick:()=>void retry()},'Retry saving memory'),
+    h('small',null,error||capture.metadata?.error||capture.content));
 }

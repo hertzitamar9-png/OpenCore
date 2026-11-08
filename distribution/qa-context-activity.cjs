@@ -46,10 +46,16 @@ code+=String.raw`
       assert.ok((await footer.innerText()).includes('6.0GB VRAM'));
       assert.ok((await footer.innerText()).includes('40.0 tokens/s'));
       await page.getByText('40.0 output tokens/s · 121 output tokens',{exact:true}).waitFor({state:'attached'});
-      await page.evaluate(()=>{fixture.context.preview={id:'buffered-one',phase:'reading-prompt'};});
+      await page.evaluate(()=>{fixture.context.preview={id:'buffered-one',phase:'reading-prompt',promptProgress:{processed:400,total:1600}};});
       await page.getByText('Reading prompt and context…',{exact:true}).waitFor();
-      await page.evaluate(()=>{fixture.context.preview={id:'buffered-one',phase:'working',text:'I found the main game file.'};});
+      const reading=page.getByRole('progressbar',{name:'Reading prompt and context',exact:true});
+      await reading.waitFor();
+      assert.equal(await reading.getAttribute('value'),'400');
+      assert.equal(await reading.getAttribute('max'),'1600');
+      await page.getByText('400 / 1,600 tokens · 25%',{exact:true}).waitFor();
+      await page.evaluate(()=>{fixture.context.preview={id:'buffered-one',phase:'working',text:'<think></think></think>I found the main game file.'};});
       await page.getByText('I found the main game file.',{exact:true}).waitFor();
+      assert.equal(await reading.count(),0);
       await page.evaluate(()=>{fixture.context.preview={id:'buffered-two',phase:'working',reasoning:'Check the next operation.'};});
       await page.getByText('Check the next operation.',{exact:true}).waitFor();
       assert.ok(await page.getByText('I found the main game file.',{exact:true}).isVisible(),'text disappeared when reasoning began');
@@ -84,16 +90,22 @@ code+=String.raw`
       await page.getByText(/Now I can validate the next step/).first().waitFor({state:'attached',timeout:10000});
       assert.ok(await page.getByText(/Used\s*1\s*tool/).first().isVisible(),'tool group disappeared after a stale poll');
       assert.ok(await page.getByText(/I will inspect the file that was found/).count(),'earlier reasoning disappeared after checkpoint');
-      // Save both items, then complete. The persisted copy replaces the preview.
-      await page.evaluate(({user,call,result,thinking,next})=>{fixture.timeline=[user,call,result,thinking,next];fixture.snapshot.activeConversationIds=[];fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',done:true});},{user,call,result,thinking:entry(5,'thinking','I will inspect the file that was found.',{itemId:'reason-1'}),next:entry(6,'thinking','Now I can validate the next step.',{itemId:'reason-2'})});
+      // The model and native history can assign different IDs to one reply.
+      await page.evaluate(()=>fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',phase:'answer',segments:[{kind:'text',itemId:'wire-answer',content:'<think></think></think>Game verification finished.'}]}));
+      await page.getByText('Game verification finished.',{exact:true}).waitFor();
+      const memory={...entry(10,'progress','Automatic memory did not complete.',{status:'failed',userEntryId:1}),title:'Automatic memory',role:'system'};
+      await page.evaluate(({user,call,result,thinking,next,pending,answer,memory})=>{fixture.timeline=[user,call,result,thinking,next,pending,answer,memory];fixture.snapshot.activeConversationIds=[];fixture.emit('opencore-generation',{conversationId:'preview',runId:'qa-run',done:true});},{user,call,result,thinking:entry(5,'thinking','I will inspect the file that was found.',{itemId:'reason-1'}),next:entry(6,'thinking','Now I can validate the next step.',{itemId:'reason-2'}),pending:entry(8,'tool_call','{"id":"pending-tool","name":"validate"}',{id:'pending-tool'}),answer:entry(9,'message','Game verification finished.',{itemId:'saved-answer'}),memory});
       await page.waitForTimeout(400);
       assert.ok(await page.getByText(/Used\s*1\s*tool/).first().isVisible());
       const cards=await page.getByText('I will inspect the file that was found.',{exact:true}).evaluateAll(items=>new Set(items.map(item=>item.closest('details'))).size);
       assert.equal(cards,1,'The saved reasoning and its preview must share one disclosure');
+      assert.equal(await page.getByText('Game verification finished.',{exact:true}).count(),1,'The saved answer replaces its streamed copy across different item IDs');
+      await page.getByText('Requested 1 tool · result missing',{exact:true}).waitFor();
       const unload=page.getByRole('button',{name:'Unload model',exact:true}).and(page.locator('.send-button'));
       await unload.waitFor({timeout:7000});
       await unload.click();
       await page.waitForFunction(()=>fixture.calls.some(item=>item.command==='stop_runtime'));
+      assert.equal(await page.evaluate(()=>fixture.calls.some(item=>item.path==='/api/memory/recover')),false,'Unload and failed receipts must not start memory recovery');
       if(width>767){
         await page.getByRole('button',{name:/Choose model profile, currently/}).click();
         await page.getByRole('button',{name:'Load model',exact:true}).click();

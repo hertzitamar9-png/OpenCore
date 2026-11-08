@@ -453,7 +453,10 @@ class BridgeState:
             return helper.revalidate(body.get('proof'))
         if action != 'recover':
             raise ValueError('Unknown memory recovery action')
-        runtime = self._memory_runtime(body.get('runtime'))
+        supplied = body.get('runtime')
+        profile = supplied.get('profile') if isinstance(supplied, dict) else None
+        entry = next((entry for entry in self.entries.values() if entry.get('profileId') == profile), None) if profile else None
+        runtime = self.runtime.memory_runtime(entry['id'], profile) if entry else self._memory_runtime(supplied)
         with self._memory_lock:
             helper.allowed_ports = frozenset((*helper.allowed_ports, runtime['backendPort'], runtime['echoPort']))
         return helper.recover({**body, 'runtime': runtime})

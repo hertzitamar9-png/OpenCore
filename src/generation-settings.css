@@ -8,3 +8,8 @@
 .generation-settings-dialog .generation-group-targets{grid-template-columns:1fr}
 .generation-settings-dialog .generation-group-targets label{display:flex;align-items:center;gap:10px}
 .generation-settings-dialog .generation-group-targets input{flex:none;width:18px;height:18px;min-height:18px;margin:0;accent-color:#4e9cf6}
+.generation-state.prompt-read-progress{flex-wrap:wrap;margin-top:-5px}
+.generation-state.prompt-read-progress progress{width:min(280px,45vw);height:8px}
+details.chat-postprocessing{display:block}
+details.chat-postprocessing summary{cursor:pointer}
+details.chat-postprocessing button{margin:4px 8px 0 0}
