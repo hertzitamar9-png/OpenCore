@@ -29,6 +29,14 @@ class NativeModes(unittest.TestCase):
         (self.receipts/'model-echo.json').write_text('{"personal":"preserve"}')
         with self.assertRaisesRegex(ValueError,'receipt'):activate(self.root,self.resources,'echo','native')
         self.assertEqual((self.receipts/'model-echo.json').read_text(),'{"personal":"preserve"}')
+
+    def test_repeated_activation_keeps_the_reviewed_receipt_timestamp(self):
+        receipt=self.receipts/'model-echo.json'
+        os.utime(receipt,(1_700_000_000,1_700_000_000))
+        reviewed=receipt.stat().st_mtime_ns
+        activate(self.root,self.resources,'echo','echo')
+        activate(self.root,self.resources,'echo','echo')
+        self.assertEqual(receipt.stat().st_mtime_ns,reviewed)
     def test_paths_and_profile_ids_are_frozen_not_caller_supplied(self):
         for identity in ('../echo','echo:other','missing'):
             with self.assertRaises(ValueError):activate(self.root,self.resources,identity,'native')

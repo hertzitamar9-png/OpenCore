@@ -59,7 +59,8 @@ def activate(root, resources, model_id, mode):
         selected=regular(root,'models/receipts/model-'+profile+'.json')
         # Only one receipt for this physical quant is active. Uninstall therefore
         # sees one package rather than retaining weights for a hidden mode alias.
-        atomic_json(selected,model['artifacts'])
+        if selected not in receipts:
+            atomic_json(selected,model['artifacts'])
         for path in receipts:
             if path!=selected:path.unlink()
         return {'profileId':profile,'operatingMode':mode,'contextTokens':target['contextTokens'],'weightsReused':True}

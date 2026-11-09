@@ -95,10 +95,11 @@ export function installModelModes(React, catalog, service) {
       const snapshot=await service.invoke('get_snapshot',{}),info=profileInfo(snapshot?.runtime?.profile);
       if(info?.mode==='native'&&info.contextTokens&&[undefined,27852,200000].includes(args.request.compactAtTokens))args.request.compactAtTokens=Math.floor(info.contextTokens*.85);
     }
-    if(['select_profile','start_profile','model_removal_plan','uninstall_model'].includes(command)){
-      const selected=args.profile||args.request?.profile||args.id,meta=byId.get(selected)||byProfile.get(selected);
-      const choice=meta&&['model_removal_plan','uninstall_model'].includes(command)?mode(meta):undefined;
-      const profile=await activate(selected,choice);
+    // Activation can write receipts. Removal must use the profile and files
+    // from its read-only review without changing either on confirmation.
+    if(command==='select_profile'||command==='start_profile'){
+      const selected=args.profile||args.request?.profile||args.id;
+      const profile=await activate(selected);
       if(profile!==selected){if(args.request?.profile)args.request.profile=profile;else if(args.profile)args.profile=profile;else args.id=profile;}
     }
   }

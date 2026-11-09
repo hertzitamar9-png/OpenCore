@@ -8,7 +8,9 @@ const modeScript='fixture.nativeModels='+JSON.stringify(family.map(m=>({...m,ins
 code=code.replace('const html=',data+'\nconst html=').replace('${fixture}</script>','${fixture}${modeScript}</script>')
   .replace("selectedProfile:'none'","selectedProfile:'neohorse-1-9b'").replace('runtimeActive:false','runtimeActive:true')
   .replace("case 'runtime_setup_probe':","case 'get_snapshot':return{activeConversationIds:[],runtime:{status:'running',profile:'neohorse-1-9b'}};case 'runtime_setup_probe':")
-  .replace("if(route==='/status')","if(route==='/runtime/modes')value=fixture.modes;else if(route==='/runtime/native-profile'){const model=fixture.modes.models.find(m=>m.id===body.id);value={profileId:model.modeProfiles[body.operatingMode],weightsReused:true};}else if(route==='/status')");
+  .replace("confirmationToken:'verified-native-removal-plan'","confirmationToken:args.id+':'+(fixture.receiptRevision||0)")
+  .replace("case 'uninstall_model':fixture.nativeModels=[];","case 'uninstall_model':if(args.confirmationToken!==args.id+':'+(fixture.receiptRevision||0))throw Error('Model files changed. Open Uninstall again and review the updated confirmation.');fixture.nativeModels=[];")
+  .replace("if(route==='/status')","if(route==='/runtime/modes')value=fixture.modes;else if(route==='/runtime/native-profile'){const model=fixture.modes.models.find(m=>m.id===body.id);fixture.receiptRevision=(fixture.receiptRevision||0)+1;value={profileId:model.modeProfiles[body.operatingMode],weightsReused:true};}else if(route==='/status')");
 code+=String.raw`
 (async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -40,6 +42,19 @@ code+=String.raw`
    check(width+' returning to ECHO retains quant options',JSON.stringify(await quant.locator('option').allTextContents())===JSON.stringify(before));
    await card.screenshot({path:path.join(output,'model-modes-'+width+'.png')});
    check(width+' mode selector stays within its card',await mode.evaluate(element=>{const a=element.getBoundingClientRect(),b=element.closest('.model-library-card').getBoundingClientRect();return a.left>=b.left&&a.right<=b.right;}));
+   const receiptRevision=await page.evaluate(()=>fixture.receiptRevision||0);
+   await card.getByRole('button',{name:/^Uninstall\b/}).click();
+   const dialog=page.getByRole('dialog');
+   await dialog.getByText('Files to remove',{exact:true}).waitFor();
+   await dialog.getByRole('button',{name:'Stop runtime and uninstall',exact:true}).click();
+   await dialog.waitFor({state:'hidden',timeout:5000}).catch(async error=>{
+     throw Error(await dialog.getByRole('alert').textContent().catch(()=>null)||error.message);
+   });
+   check(width+' removal confirms the reviewed receipt and scope without activation',await page.evaluate(revision=>{
+     const review=fixture.calls.find(call=>call.command==='model_removal_plan');
+     const removal=fixture.calls.find(call=>call.command==='uninstall_model');
+     return review&&removal?.args.id===review.args.id&&removal.args.scope==='verified-native-scope'&&(fixture.receiptRevision||0)===revision;
+   },receiptRevision));
    await page.close();
  }}finally{fs.writeFileSync(path.join(output,'model-modes.json'),JSON.stringify({checks,errors,inferenceVerified:false,weightsDownloaded:false},null,2)+'\n');await browser.close();server.close();}
  console.log(JSON.stringify({checks,errors,output},null,2));if(errors.length)process.exitCode=1;

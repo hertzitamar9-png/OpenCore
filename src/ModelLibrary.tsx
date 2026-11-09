@@ -153,9 +153,9 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       const phononPrecision = speech.runtimePrecision || 'bf16';
       const loadingSpeech = speechLoadingMessage(speech);
       return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : profileSelected) ? "selected" : ""}`}>
-      <DownloadQueue.Checkbox groupId={group.id} modelId={model.id} label={`${group.model.label} · ${model.precision}`} installed={model.installed} installable={model.installable!==false} modelIds={group.variants.map(value=>value.id)} legacyModelId={progress?.modelId} />
       <header><div><h3>{group.model.label}</h3><span>{modelMemoryMode(model) === "echo" ? "ECHO" : "Native"} · {model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
+      <DownloadQueue.CardProgress modelId={model.id} modelIds={group.variants.map(value=>value.id)} legacyModelId={progress?.modelId} />
       {progress && group.variants.some(value => value.id === progress.modelId || group.aliases[progress.modelId] === value.id) ? <ModelInstallProgress progress={progress} label={modelById.get(progress.modelId)?.label} onPause={() => api.cancelModelInstall()} onCancel={() => api.cancelModelInstallation(progress.modelId,progress.operationId)} onError={onNotice} /> : null}
       {availableModes.length > 1 || showQuantization ? <div className="model-variant-controls">
         {availableModes.length > 1 ? <label className="model-quantization-picker">Memory mode

@@ -35,7 +35,7 @@ module.exports=function(app,{editFunction,replaceOnce}){
     const children=cards[0].props.find(p=>p.key?.name==='children')?.value;
     if(children?.type!=='ArrayExpression')throw Error('Missing native card children');
     const at=children.elements[0].end;
-    text=text.slice(0,at)+',i.jsx($DownloadQueue.Checkbox,{groupId:se.id,modelId:de.id,label:(se.model.label||de.label)+" · "+de.precision,installed:de.installed,installable:de.installable!==false,managedInstallation:de.managedInstallation,modelIds:se.variants.map(model=>model.id),legacyModelId:K?.modelId}),K&&se.variants.some(model=>model.id===K.modelId||se.aliases?.[K.modelId]===model.id)?i.jsx($ModelInstallProgress,{'+common+'}):null'+text.slice(at);
+    text=text.slice(0,at)+',i.jsx($DownloadQueue.CardProgress,{modelId:de.id,modelIds:se.variants.map(model=>model.id),legacyModelId:K?.modelId}),K&&se.variants.some(model=>model.id===K.modelId||se.aliases?.[K.modelId]===model.id)?i.jsx($ModelInstallProgress,{'+common+'}):null'+text.slice(at);
     return replaceOnce(text,'disabled:n||B||!!O,onClick:()=>void X(de)',
       'disabled:!!O||(!$shared.queue&&(n||B))||$shared.queue?.items?.some(item=>item.modelId===de.id&&["queued","starting","downloading","preparing","paused"].includes(item.phase)),onClick:()=>void X(de)');
   });

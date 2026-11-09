@@ -10,7 +10,7 @@ const app=fs.readFileSync(path.join(dist,'assets',appName),'utf8')+'\nexport{yj 
 const html=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel=stylesheet href=/assets/index-CsoxYKnK.css><link rel=stylesheet href=/assets/App-C9duitZV.css><div id=root></div><script>
 window.fixture={calls:[],queue:{schema:1,mode:'sequential',paused:false,items:[],activeIds:[]}};
 const base={description:'Queue fixture',contextTokens:8192,license:'test',precision:'Q4_K_M',experimental:false,note:'test',selectable:true,installed:false,externalManaged:false,downloadBytes:5e9,totalBytes:5e9,category:'text',installable:true,runtimeReady:true,memoryMode:'native',backend:'gguf'};
-fixture.models=['A','B','C'].map(letter=>({...base,id:'model-'+letter,label:'Queue model '+letter}));
+fixture.models=['A','B','C','D'].map(letter=>({...base,id:'model-'+letter,label:'Queue model '+letter,installed:letter==='D'}));
 fixture.action=args=>{fixture.calls.push(args);const q=fixture.queue;
  if(args.action==='enqueue')for(const choice of args.items){if(q.items.some(item=>item.modelId===choice.modelId))continue;const id='job-'+q.items.length;const phase=q.mode==='parallel'||q.activeIds.length===0?'downloading':'queued';q.items.push({...choice,id,phase,position:q.items.length+1,downloadedBytes:1e9,totalBytes:5e9});if(phase==='downloading')q.activeIds.push(id);}
  if(args.action==='mode'){q.mode=args.mode;if(q.mode==='parallel')for(const item of q.items)if(item.phase==='queued'){item.phase='downloading';q.activeIds.push(item.id);}}
@@ -29,12 +29,21 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://loc
 (async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({headless:true,args:['--mute-audio']});try{for(const phone of [false,true]){
  const page=await browser.newPage({viewport:{width:phone?393:1440,height:900}}),errors=[];page.on('pageerror',error=>errors.push(error.message));await page.addInitScript(phone=>{globalThis.__OPENCORE_PHONE__=phone},phone);
  try{await page.goto('http://127.0.0.1:'+server.address().port);const card=label=>page.getByRole('article').filter({has:page.getByRole('heading',{name:'Queue model '+label,exact:true})});
- await card('A').getByRole('checkbox').check();await card('B').getByRole('checkbox').check();await page.getByRole('button',{name:'Download selected (2)'}).click();
+ const queue=page.getByRole('region',{name:'Model download queue'});
+ await queue.waitFor();
+ await card('D').getByText('Installed',{exact:true}).waitFor();
+ assert.equal(await page.getByRole('checkbox',{name:/Select download for/}).count(),0);
+ assert.equal(await queue.getByRole('button',{name:/Download selected|Clear selection/}).count(),0);
+ for(const label of ['A','B'])await card(label).getByRole('button',{name:'Install',exact:true}).click();
  await page.waitForFunction(()=>fixture.queue.items.length===2);assert.deepEqual(await page.evaluate(()=>fixture.queue.items.map(item=>item.phase)),['downloading','queued']);
+ await card('B').getByText('Queued · position 2',{exact:true}).waitFor();
  await card('C').getByRole('button',{name:'Install',exact:true}).click();await page.waitForFunction(()=>fixture.queue.items.length===3);assert.equal(await card('C').getByRole('button',{name:'Install',exact:true}).isDisabled(),true);
  await page.getByLabel('Model download mode').selectOption('parallel');await page.waitForFunction(()=>fixture.queue.activeIds.length===3);
- await page.getByRole('region',{name:'Model download queue'}).getByText('Queue model B',{exact:false}).first().waitFor();
+ await queue.getByText('3 active · 0 waiting',{exact:true}).waitFor();
  assert.ok(await page.getByRole('button',{name:'Cancel installation',exact:true}).count()>=3,'Separate cancel actions exist for active downloads');
- assert.deepEqual(errors,[]);console.log('PASS actual model cards: batch, queued Install, parallel and controls in '+(phone?'Phone':'PC')+' mode');
+ if(process.env.OPENCORE_QUEUE_QA_DIR)await page.screenshot({path:path.join(process.env.OPENCORE_QUEUE_QA_DIR,phone?'queue-phone.png':'queue-pc.png')});
+ await card('B').getByRole('button',{name:'Cancel installation',exact:true}).click();
+ await queue.getByText('2 active · 0 waiting',{exact:true}).waitFor();
+ assert.deepEqual(errors,[]);console.log('PASS model cards without selection checkboxes: queued Install, per-card progress, parallel and cancel in '+(phone?'Phone':'PC')+' mode');
  }finally{await page.close();}
  }}finally{await browser.close();server.close();}})().catch(error=>{console.error(error);server.close();process.exitCode=1;});

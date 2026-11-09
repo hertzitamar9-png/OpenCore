@@ -64,12 +64,19 @@ test('active generations block switching profiles before any receipt changes',as
   assert.equal(f.requests.length,1);
 });
 
-test('uninstall resolves the selected mode while explicit execution profile IDs remain authoritative',async()=>{
+test('removal reads the selected profile and confirms the reviewed ID without activating either mode',async()=>{
   const f=await fixture(),model=catalog.models.find(m=>m.modeProfiles?.native&&m.modeProfiles?.echo);
   const row=f.api.augment({models:[model]}).models[0];
   f.saved.set('opencore.model-mode.'+row.modeFamilyKey,'native');
-  const args={id:row.id};await f.api.before('model_removal_plan',args);
-  assert.equal(args.id,model.modeProfiles.native);
+  const review={id:row.id};
+  const confirmation={id:model.modeProfiles.echo,scope:'profile',confirmationToken:'reviewed-files'};
+  const confirmed=structuredClone(confirmation);
+  await f.api.before('model_removal_plan',review);
+  await f.api.before('uninstall_model',confirmation);
+  assert.equal(review.id,row.id);
+  assert.deepEqual(confirmation,confirmed);
+  assert.deepEqual(f.requests.map(call=>call.route),['/runtime/modes']);
+  assert.deepEqual(f.calls,[]);
   assert.equal(await f.api.activate(model.modeProfiles.echo),model.modeProfiles.echo);
 });
 
