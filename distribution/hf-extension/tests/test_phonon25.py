@@ -1,17 +1,68 @@
 """Dictation regressions for the separately pinned multilingual Phonon runtime."""
 import base64
+import io
 import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'src-tauri/resources/runtime-setup/hf-extension'))
 from hf_speech import SpeechManager, decode_audio, supports
 
 
 class Phonon25Tests(unittest.TestCase):
+    def test_cancelled_load_cannot_report_recording_after_health_returns(self):
+        child = Mock()
+        child.poll.return_value = None
+
+        def health(*args, **kwargs):
+            self.manager.cancel('cancel-at-health')
+            return io.BytesIO(b'{"status":"ok"}')
+
+        with patch.object(self.manager, 'ready', return_value=True):
+            self.manager.select(self.entry['id'])
+            with patch.object(self.manager, '_engine', return_value=self.root), \
+                    patch.object(self.manager, '_model_path', return_value=self.root / 'model.gguf'), \
+                    patch('hf_speech.subprocess.Popen', return_value=child), \
+                    patch('hf_speech.urlopen', side_effect=health):
+                with self.assertRaisesRegex(ValueError, 'cancelled'):
+                    self.manager.start('cancel-at-health')
+        self.assertIsNone(self.manager.session_id)
+        self.assertEqual(self.manager.phase, 'idle')
+
+    def test_failed_worker_launch_releases_the_microphone_for_retry(self):
+        with patch.object(self.manager, 'ready', return_value=True):
+            self.manager.select(self.entry['id'])
+            with patch.object(self.manager, '_engine', return_value=self.root), \
+                    patch.object(self.manager, '_model_path', return_value=self.root / 'model.gguf'), \
+                    patch('hf_speech.subprocess.Popen', side_effect=OSError('fixture launch failure')):
+                with self.assertRaises((OSError, ValueError)):
+                    self.manager.start('failed-start')
+        self.assertIsNone(self.manager.session_id)
+        self.assertEqual(self.manager.phase, 'idle')
+
+    def test_warm_worker_reports_recording_on_the_next_session(self):
+        child = Mock()
+        child.poll.return_value = None
+        with patch.object(self.manager, 'ready', return_value=True):
+            self.manager.select(self.entry['id'])
+            self.manager.child = child
+            self.manager.phase = 'idle'
+            self.assertEqual(self.manager.start('warm-next-session'), 'warm-next-session')
+        self.assertEqual(self.manager.phase, 'recording')
+
+    def test_saved_speech_settings_reject_invalid_field_types(self):
+        self.manager.settings_path.parent.mkdir(parents=True, exist_ok=True)
+        self.manager.settings_path.write_text(json.dumps({
+            'modelId': ['invalid'], 'enabled': 'false', 'idleMode': 'unknown',
+        }), encoding='utf-8')
+        restored = SpeechManager(self.root, self.root / 'resources', lambda identity: self.entry)
+        self.addCleanup(restored.close)
+        self.assertIsNone(restored.status())
+        self.assertEqual(restored.settings, {'modelId': None, 'enabled': False, 'idleMode': 'ram'})
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

@@ -65,7 +65,12 @@ class SpeechManager:
         try:
             saved = json.loads(self.settings_path.read_text(encoding='utf-8'))
             if isinstance(saved, dict):
-                self.settings.update({key: saved[key] for key in self.settings if key in saved})
+                model_id = saved.get('modelId')
+                if isinstance(model_id, str) and re.fullmatch(r'hf-[a-f0-9]{24}', model_id):
+                    self.settings['modelId'] = model_id
+                    self.settings['enabled'] = saved.get('enabled') is True
+                if saved.get('idleMode') in ('cold', 'ram'):
+                    self.settings['idleMode'] = saved['idleMode']
         except (OSError, ValueError):
             pass
         self.lock, self.operation = threading.RLock(), threading.Lock()
@@ -226,23 +231,26 @@ class SpeechManager:
             raise ValueError('Finish installing the selected Phonon-2.5 quantization in Models')
         entry = self.get_entry(status['modelId'])
         with self.operation:
-            with self.lock:
-                if self.session_id and self.session_id != session_id:
-                    raise ValueError('Finish the current microphone recording first')
-                self.session_id = session_id
-                if self.child and self.child.poll() is None:
-                    return session_id
-                self.phase, self.started_at = 'loading', time.monotonic()
-                with socket.socket() as probe:
-                    probe.bind(('127.0.0.1', 0))
-                    self.port = probe.getsockname()[1]
-                command = [self._engine() / 'parakeet-server.exe', '--model', self._model_path(entry),
-                           '--host', '127.0.0.1', '--port', str(self.port), '--threads', str(self._threads())]
-                self.child = subprocess.Popen([str(value) for value in command], stdin=subprocess.DEVNULL,
-                                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                              creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-                child, port = self.child, self.port
             try:
+                with self.lock:
+                    if self.settings['modelId'] != status['modelId'] or not self.settings['enabled']:
+                        raise ValueError('Speech selection changed. Start recording again')
+                    if self.session_id and self.session_id != session_id:
+                        raise ValueError('Finish the current microphone recording first')
+                    self.session_id = session_id
+                    if self.child and self.child.poll() is None:
+                        self.phase = 'recording'
+                        return session_id
+                    self.phase, self.started_at = 'loading', time.monotonic()
+                    with socket.socket() as probe:
+                        probe.bind(('127.0.0.1', 0))
+                        self.port = probe.getsockname()[1]
+                    command = [self._engine() / 'parakeet-server.exe', '--model', self._model_path(entry),
+                               '--host', '127.0.0.1', '--port', str(self.port), '--threads', str(self._threads())]
+                    self.child = subprocess.Popen([str(value) for value in command], stdin=subprocess.DEVNULL,
+                                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                                  creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                    child, port = self.child, self.port
                 while time.monotonic() - self.started_at < 40:
                     with self.lock:
                         if self.session_id != session_id:
@@ -253,12 +261,17 @@ class SpeechManager:
                         with urlopen('http://127.0.0.1:' + str(port) + '/health', timeout=.5) as response:
                             if json.load(response).get('status') == 'ok':
                                 with self.lock:
+                                    if self.session_id != session_id:
+                                        raise ValueError('Microphone recording cancelled')
                                     self.cold_ms = int((time.monotonic() - self.started_at) * 1000)
                                     self.phase = 'recording'
                                 return session_id
                     except OSError:
                         time.sleep(.1)
                 raise ValueError('The Phonon-2.5 speech worker took too long to load')
+            except OSError as error:
+                self.cancel(session_id)
+                raise ValueError('The speech worker could not start. Prepare its runtime in Models and retry') from error
             except Exception:
                 self.cancel(session_id)
                 raise
@@ -303,6 +316,7 @@ class SpeechManager:
     def _stop(self):
         with self.lock:
             child, self.child = self.child, None
+            self.port = None
             self.phase = 'idle'
             self.session_id = None
         if child is not None and child.poll() is None:

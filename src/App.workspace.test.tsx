@@ -25,7 +25,7 @@ describe('OpenCore shared workspace', () => {
   it('uses one sidebar icon and retains the selected workspace view when reopening', async () => {
     vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com'});
     vi.spyOn(api, 'desktopCommand').mockResolvedValue({windows: []});
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     expect(screen.queryByRole('button', {name: 'OpenCore Browser'})).not.toBeInTheDocument();
     expect(screen.queryByRole('button', {name: 'Computer use'})).not.toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('OpenCore shared workspace', () => {
       return {open: true} as never;
     });
     vi.spyOn(api, 'desktopCommand').mockResolvedValue({windows: []});
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
@@ -78,7 +78,7 @@ describe('OpenCore shared workspace', () => {
 
   it('opens the Browser workspace for an explicit agent navigation request', async () => {
     vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com/agent'});
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     await act(async () => {
       for (const handler of handlers.get('opencore-open-native-browser') ?? []) handler({payload: {source: 'agent'}});
@@ -100,7 +100,7 @@ describe('OpenCore shared workspace', () => {
     vi.spyOn(api, 'previewChatFile').mockResolvedValue({sourceFormat: 'hermes', sourcePath: path, conversations: 1, entries: 2, warnings: [], samples: [{sourceConversationId: 'session-1', title: copied.title, entries: 2, warnings: []}]});
     const importFile = vi.spyOn(api, 'importChatFile').mockImplementation(async () => { imported = true; return report; });
     const browser = vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com'});
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
@@ -134,7 +134,7 @@ describe('OpenCore shared workspace', () => {
     });
     vi.spyOn(api, 'importedConversationSummary').mockImplementation(async id => imported.find(item => item.id === id) ?? null);
     const history = vi.spyOn(api, 'conversation').mockResolvedValue([]);
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Imported'}));
     expect(await screen.findByText('Older imported notes 99')).toBeVisible();
@@ -153,7 +153,7 @@ describe('OpenCore shared workspace', () => {
   it('exports portable JSON through a format choice and keeps the current chat', async () => {
     const initial = await api.snapshot();
     const exported = vi.spyOn(api, 'exportConversation').mockResolvedValue('C:/exports/chat.json');
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Export conversation'}));
     const dialog = await screen.findByRole('dialog', {name: 'Export chat'});
@@ -164,13 +164,13 @@ describe('OpenCore shared workspace', () => {
   });
 
   it('keeps workspace access and compact navigation when changing sections', async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     expect(await screen.findByRole('complementary', {name: 'Workspace'})).toBeVisible();
     fireEvent.click(screen.getByRole('button', {name: 'Settings'}));
     const rail = screen.getByRole('navigation', {name: 'OpenCore sections'});
-    expect(within(rail).getByRole('button', {name: 'Jobs'})).toBeVisible();
+    expect(within(rail).getByRole('button', {name: 'Scheduled tasks'})).toBeVisible();
     expect(within(rail).getByRole('button', {name: 'Spaces'})).toBeVisible();
     expect(screen.getByRole('complementary', {name: 'Workspace'})).toBeVisible();
     expect(screen.getByRole('button', {name: 'Workspace'})).toHaveAttribute('aria-expanded', 'true');
@@ -180,7 +180,7 @@ describe('OpenCore shared workspace', () => {
   it('switches browser and computer inside one right panel and hides native pages', async () => {
     const command = vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com'});
     vi.spyOn(api, 'desktopCommand').mockResolvedValue({windows: []});
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
@@ -201,7 +201,7 @@ describe('OpenCore shared workspace', () => {
     const initial = await api.snapshot();
     vi.spyOn(api, 'conversation').mockResolvedValue([{id: 401, conversationId: initial.conversations[0].id, timestamp: '2026-10-06T10:00:00Z', kind: 'message', role: 'assistant', source: 'OpenCore', title: 'Output', content: '[Notes](</C:/project/notes.md>)', metadata: {}}]);
     vi.spyOn(api, 'previewComposerAttachment').mockResolvedValue({name: 'notes.md', mime: 'text/plain', size: 8, dataUrl: '', text: 'Saved workspace notes'});
-    render(<App />);
+    render(<App initialView="conversations" />);
     fireEvent.click(await screen.findByRole('link', {name: 'Notes'}));
     const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
     expect(within(workspace).getByRole('tab', {name: 'Files'})).toHaveAttribute('aria-selected', 'true');
@@ -210,7 +210,7 @@ describe('OpenCore shared workspace', () => {
   });
 
   it('supports keyboard resizing and preserves the sidebar width when reopening', async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     const resize = screen.getByRole('separator', {name: 'Resize workspace'});
@@ -229,7 +229,7 @@ describe('OpenCore shared workspace', () => {
     const external = vi.fn().mockResolvedValue(undefined);
     const dispose = installExternalLinkGuard(external);
     try {
-      render(<App />);
+      render(<App initialView="conversations" />);
       fireEvent.click(await screen.findByRole('link', {name: 'Source documentation'}));
       const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
       expect(within(workspace).getByRole('tab', {name: 'Browser'})).toHaveAttribute('aria-selected', 'true');
@@ -239,7 +239,7 @@ describe('OpenCore shared workspace', () => {
   });
 
   it('explains desktop requirements for a separate side chat branch', async () => {
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     fireEvent.click(screen.getByRole('tab', {name: 'Side chat'}));
@@ -251,7 +251,7 @@ describe('OpenCore shared workspace', () => {
   it('holds side chat creation while the main chat is active', async () => {
     const initial = await api.snapshot();
     vi.spyOn(api, 'snapshot').mockResolvedValue({...initial, activeConversationIds: [initial.conversations[0].id]});
-    render(<App />);
+    render(<App initialView="conversations" />);
     await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     fireEvent.click(screen.getByRole('tab', {name: 'Side chat'}));

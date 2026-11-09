@@ -1,5 +1,7 @@
 // Route the shared microphone to the separately managed Phonon decoder.
 export function createPhononSpeech(request, refresh) {
+  let managed = false;
+  const sessions = new Set();
   async function wavAudio(encoded) {
     const raw = Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
     if (raw.length > 32 * 1024 * 1024) throw Error('The recording is too large. Record a shorter message.');
@@ -41,28 +43,54 @@ export function createPhononSpeech(request, refresh) {
     async select(entry) {
       if (entry.runtime?.adapter !== 'phonon25') return false;
       await request('/speech/select', {id: entry.id});
+      managed = true;
+      sessions.clear();
       await refresh();
       return true;
     },
-    async invoke(command, args, native) {
+    async invoke(command, args = {}, native) {
       if (!command.startsWith('speech_')) return {handled: false};
       if (command === 'speech_set_model') {
         if (args.modelId?.startsWith('hf-')) {
-          return {handled: true, value: await request('/speech/select', {id: args.modelId})};
+          const value = await request('/speech/select', {id: args.modelId});
+          managed = true;
+          sessions.clear();
+          return {handled: true, value};
         }
         const value = await native();
         await request('/speech/select', {id: null});
+        managed = false;
+        sessions.clear();
         return {handled: true, value};
+      }
+      if (sessions.has(args.sessionId)) {
+        if (command === 'speech_cancel') {
+          const value = await request('/speech/cancel', args);
+          sessions.delete(args.sessionId);
+          return {handled: true, value};
+        }
+        if (command === 'speech_transcribe') {
+          return {handled: true, value: await request('/speech/transcribe', {...args, audio: await wavAudio(args.audio)})};
+        }
       }
       let status;
       try { status = (await request('/speech/status')).status; }
-      catch { return {handled: false}; }
+      catch (error) {
+        if (managed) throw error;
+        return {handled: false};
+      }
+      managed = !!status;
       if (!status) return {handled: false};
       let value;
       if (command === 'speech_status' || command === 'speech_set_runtime_precision') value = status;
       else if (command === 'speech_set_enabled') value = await request('/speech/enabled', args);
       else if (command === 'speech_set_idle_mode') value = await request('/speech/idle-mode', args);
-      else if (command === 'speech_start') value = await request('/speech/start', {sessionId: args.sessionId || crypto.randomUUID()});
+      else if (command === 'speech_start') {
+        const sessionId = args.sessionId || crypto.randomUUID();
+        sessions.add(sessionId);
+        try { value = await request('/speech/start', {sessionId}); }
+        catch (error) { sessions.delete(sessionId); throw error; }
+      }
       else if (command === 'speech_cancel') value = await request('/speech/cancel', args);
       else if (command === 'speech_transcribe') {
         value = await request('/speech/transcribe', {...args, audio: await wavAudio(args.audio)});

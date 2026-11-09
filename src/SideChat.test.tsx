@@ -27,7 +27,7 @@ describe('Side chat branch', () => {
     const order: string[] = [];
     vi.mocked(sideContext.refreshSideChatContext).mockImplementation(async () => {order.push('refresh'); return {...branch, inheritedEntries: 4, updatedEntries: 2};});
     vi.spyOn(sideChat, 'sendSideChatMessage').mockImplementation(async () => {order.push('send'); return {conversationId: branch.conversationId, title: branch.title};});
-    render(<App />); await screen.findByLabelText('Message OpenCore');
+    render(<App initialView="conversations" />); await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
     const input = await screen.findByLabelText('Message side chat'); const side = input.closest('main')!;
     fireEvent.click(within(side).getByRole('button', {name: /^Effort:/}));
@@ -52,7 +52,7 @@ describe('Side chat branch', () => {
     vi.spyOn(api, 'conversation').mockResolvedValue([]);
     vi.mocked(sideContext.refreshSideChatContext).mockRejectedValue(new Error('Main context could not be loaded'));
     const send = vi.spyOn(sideChat, 'sendSideChatMessage').mockResolvedValue({conversationId: 'side:refresh-failed', title: 'Failed refresh'});
-    render(<App />); await screen.findByLabelText('Message OpenCore');
+    render(<App initialView="conversations" />); await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
     const input = await screen.findByLabelText('Message side chat');
     fireEvent.change(input, {target: {value: 'Needs current context'}}); fireEvent.keyDown(input, {key: 'Enter'});
@@ -66,7 +66,7 @@ describe('Side chat branch', () => {
     vi.spyOn(api, 'conversation').mockResolvedValue([]);
     vi.spyOn(sideChat, 'createSideChat').mockResolvedValue({conversationId: branchId, parentId: parent.id, title: 'Changed branch settings', contextTokens: 32768, sharedWorkspace: true});
     const send = vi.spyOn(api, 'sendChatMessage').mockResolvedValue({conversationId: branchId, title: 'Changed branch settings'});
-    render(<App />); await screen.findByLabelText('Message OpenCore');
+    render(<App initialView="conversations" />); await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
     const input = await screen.findByLabelText('Message side chat'); const branch = input.closest('main')!;
     fireEvent.click(within(branch).getByRole('button', {name: /^Effort:/}));
@@ -92,7 +92,7 @@ describe('Side chat branch', () => {
       const left = side ? 600 : 50; const width = side ? 400 : 500;
       return {x: left, y: 650, left, right: left + width, top: 650, bottom: 750, width, height: 100, toJSON: () => ({})};
     });
-    render(<App />); const mainInput = await screen.findByLabelText('Message OpenCore');
+    render(<App initialView="conversations" />); const mainInput = await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
     const branchInput = await screen.findByLabelText('Message side chat');
     const main = mainInput.closest('main')!; const branch = branchInput.closest('main')!;
@@ -123,7 +123,7 @@ describe('Side chat branch', () => {
     const send = vi.spyOn(sideChat, 'sendSideChatMessage').mockResolvedValue({conversationId: branch.conversationId, title: branch.title});
     const mainSend = vi.spyOn(api, 'sendChatMessage').mockResolvedValue({conversationId: parent.id, title: parent.title});
     window.localStorage.setItem('opencore.reasoning-effort.v1', 'high');
-    render(<App />); const parentInput = await screen.findByLabelText('Message OpenCore');
+    render(<App initialView="conversations" />); const parentInput = await screen.findByLabelText('Message OpenCore');
     const main = parentInput.closest('main')!;
     fireEvent.click(within(main).getByRole('button', {name: 'Effort: High'}));
     fireEvent.change(screen.getByRole('slider', {name: 'Reasoning effort'}), {target: {value: '1'}});
@@ -155,7 +155,7 @@ describe('Side chat branch', () => {
     const original = await api.snapshot(); const parent = original.conversations[0];
     vi.spyOn(sideChat, 'createSideChat').mockResolvedValue({conversationId: 'side:stream', parentId: parent.id, title: 'Stream branch', contextTokens: 32768, sharedWorkspace: true});
     vi.spyOn(api, 'conversation').mockResolvedValue([]);
-    render(<App />); await screen.findByLabelText('Message OpenCore');
+    render(<App initialView="conversations" />); await screen.findByLabelText('Message OpenCore');
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
     await screen.findByLabelText('Message side chat');
     await waitFor(() => expect((handlers.get('opencore-generation')?.size || 0) >= 2).toBe(true));
@@ -172,7 +172,7 @@ describe('Side chat branch', () => {
     let finish: (() => void) | undefined;
     const send = vi.spyOn(sideChat, 'sendSideChatMessage').mockImplementation(() => new Promise(resolve => {finish = () => resolve({conversationId: 'side:busy', title: 'Busy branch'}); }));
     const mainSend = vi.spyOn(api, 'sendChatMessage').mockResolvedValue({conversationId: parent.id, title: parent.title});
-    render(<App />); const mainInput = await screen.findByLabelText('Message OpenCore');
+    render(<App initialView="conversations" />); const mainInput = await screen.findByLabelText('Message OpenCore');
     fireEvent.change(mainInput, {target: {value: 'Keep the main draft'}});
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
     const branchInput = await screen.findByLabelText('Message side chat');

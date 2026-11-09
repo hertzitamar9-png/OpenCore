@@ -92,11 +92,9 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
       - name: Apply the official OpenCore logo to browser-extension surfaces
         run: python distribution/sync-branding.py
-      - name: Test manual update controls and release version ordering
+      - name: Test all frontend flows and release version ordering
         run: |
-          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/media-catalog.test.ts src/image-generation-panel.test.ts src/image-model-picker.test.tsx src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx src/FileChangesReceipt.test.tsx src/generation-settings-phone.test.tsx src/phone-profile-preference.test.ts src/group-workspace-phone.test.mjs
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npx vitest run src/model-download-queue.test.mjs src/model-install-progress.test.mjs
+          npx vitest run --maxWorkers=2 --minWorkers=1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx tsc --noEmit
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -240,6 +238,8 @@ jobs:
           node qa-slash-menu.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-voice-call.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-phonon-microphone.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-workbench.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
