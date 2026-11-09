@@ -3,7 +3,7 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'hub-ui.js'),'u
 const node=acorn.parse(source,{ecmaVersion:'latest',sourceType:'script'}).body.find(value=>value.type==='FunctionDeclaration'&&value.id.name==='$hubInvoke');
 function fixture({phone=false,hub=null,clock=Date}={}){
   const calls=[];let progress={modelId:'native-one',phase:'downloading'};
-  const context={globalThis:{__OPENCORE_PHONE__:phone},window:{__TAURI_INTERNALS__:{invoke:async(command,args)=>{
+  const context={$hubResolveDory:async profile=>profile,globalThis:{__OPENCORE_PHONE__:phone},window:{__TAURI_INTERNALS__:{invoke:async(command,args)=>{
     calls.push({command,args});if(command==='model_install_progress')return progress;return null;
   }}},$hubState:{progress:hub,catalog:[],loaded:true},$hubRefresh:async()=>{},$hubRequest:async(route,args)=>{calls.push({route,args});return{}},setTimeout,Date:clock};
   const invoke=vm.runInNewContext(source.slice(node.start,node.end)+';$hubInvoke',context);

@@ -134,7 +134,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest -v test_update_handoff
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --test test-install-coordinator.cjs test-phonon-speech.cjs
+          node --test test-install-coordinator.cjs test-phonon-speech.cjs test-download-ui.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-model-view-cache.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

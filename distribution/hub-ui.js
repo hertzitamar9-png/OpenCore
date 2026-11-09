@@ -221,7 +221,7 @@ globalThis.__opencoreChangeModelRuntime=async (profile,action)=>{
 };
 
 async function $hubInvoke(command,args,run) {
-  const speech=await $phononSpeech.invoke(command,args,run);if(speech.handled)return speech.value;
+  if(command.startsWith('speech_')){const speech=await $phononSpeech.invoke(command,args,run);if(speech.handled)return speech.value;}
   if(command==='download_queue_action') {
     if(globalThis.__OPENCORE_PHONE__===true)return run();
     return $hubRequest('/download-queue/action',args);
