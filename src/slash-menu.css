@@ -69,3 +69,33 @@
   color:var(--theme-muted,#a8b8ca);
 }
 .composer-skill-menu .slash-command-requirement { font-size:calc(11px * var(--ui-scale,1)); }
+
+.chat-composer .composer-skill-links {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 0 5px;
+}
+.composer-skill-links button {
+  border: 0;
+  background: transparent;
+  color: var(--theme-link, #86b6e6);
+  font: inherit;
+  font-size: calc(12px * var(--ui-scale, 1));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 2px 3px;
+}
+
+.queue-message-summary { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.queue-message-summary > div { min-width: 0; }
+.queue-message-edit textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  resize: vertical;
+  font: inherit;
+}
+.queue-message-edit > div { display: flex; gap: 6px; }

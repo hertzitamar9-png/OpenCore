@@ -28,3 +28,29 @@
   .app-effect-barrel_roll, .app-effect-tilt, .app-effect-pulse,
   .app-effect-constellation::after, .app-effect-confetti::after { animation: none; }
 }
+
+.app-effect-bounce { animation: opencore-bounce 1s ease-in-out; }
+.app-effect-glow { animation: opencore-glow 1.1s ease-in-out; }
+.app-effect-dance { animation: opencore-dance 1.1s ease-in-out; }
+.app-effect-ripple::after, .app-effect-spotlight::after {
+  content: ""; position: absolute; inset: 0; z-index: 89; pointer-events: none;
+}
+.app-effect-ripple::after {
+  background: radial-gradient(circle, transparent 20%, #58a4ef88 29%, transparent 39%);
+  animation: opencore-ripple 1.1s ease-out both;
+}
+.app-effect-spotlight::after {
+  background: radial-gradient(ellipse 35% 42% at 50% 44%, transparent 65%, #030810a8);
+  animation: opencore-stars 1.2s ease both;
+}
+.app-effect-symbol { display: inline-block; margin-right: 8px; font-size: 24px; vertical-align: middle; }
+.app-effect-symbol.motion-dance { animation: opencore-dance .55s ease-in-out 4; }
+.app-effect-symbol.motion-bounce { animation: opencore-bounce .65s ease-in-out 3; }
+.app-effect-symbol.motion-float { animation: opencore-float 1.1s ease-in-out 2; }
+.app-effect-editor label, .app-effect-editor small { display: block; margin: 6px 0; }
+.app-effect-editor textarea { display: block; width: 100%; box-sizing: border-box; font: inherit; }
+@keyframes opencore-bounce { 32% { transform: translateY(-10px); } 68% { transform: translateY(-4px); } }
+@keyframes opencore-glow { 45% { box-shadow: inset 0 0 80px #5089ca; filter: brightness(1.12); } }
+@keyframes opencore-ripple { from { transform: scale(.1); } to { transform: scale(2.7); opacity: 0; } }
+@keyframes opencore-dance { 25% { transform: translateX(5px) rotate(2deg); } 70% { transform: translateX(-5px) rotate(-2deg); } }
+@keyframes opencore-float { 50% { transform: translateY(-9px) scale(1.12); } }

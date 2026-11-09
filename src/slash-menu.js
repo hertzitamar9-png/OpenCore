@@ -5,6 +5,46 @@ export function matchesSlashSkillName(item, query) {
   return [item.id, item.label].some(name => normalize(name).startsWith(normalize(query)));
 }
 
+// Recognize a command at the caret without treating a URL or path as a command.
+export function slashCommandAt(text, caret = text.length) {
+  if (caret < 1) return null;
+  const before = text.slice(0, caret);
+  const match = /\/([a-z0-9-]*)$/i.exec(before);
+  if (!match) return null;
+  const start = match.index;
+  const prefix = before.slice(0, start).split(/\s/).at(-1);
+  const suffix = /^[a-z0-9-]*/i.exec(text.slice(caret))[0];
+  const end = caret + suffix.length;
+  if (/[\\/:.@]/.test(prefix) || /[\\/.]/.test(text[end] || "")) return null;
+  return { start, end, query: match[1].toLowerCase() };
+}
+
+export function takeSlashCommand(text, caret) {
+  const range = slashCommandAt(text, caret);
+  if (!range) return { text, caret };
+  const before = text.slice(0, range.start);
+  let after = text.slice(range.end);
+  if (!before.trim() || /\s$/.test(before)) after = after.replace(/^[ \t]/, "");
+  const join = before && after && !/\s$/.test(before) && !/^\s/.test(after) ? " " : "";
+  return { text: before.trim() ? before + join + after : after, caret: before.trim() ? before.length + join.length : 0 };
+}
+
+export function applySlashSelection(editor, text, update) {
+  const next = takeSlashCommand(text, editor?.selectionStart ?? text.length);
+  update(next.text);
+  requestAnimationFrame(() => {
+    if (editor?.value === next.text) editor.setSelectionRange(next.caret, next.caret);
+  });
+}
+
+export function ComposerSkillLinks({ skills, table, remove }) {
+  if (!skills.length) return null;
+  return React.createElement("div", { className: "composer-skill-links", "aria-label": "Selected skills" },
+    skills.map(id => React.createElement("button", {
+      type: "button", key: id, "aria-label": "Remove " + id + " skill", onClick: () => remove(id),
+    }, table.find(item => item.id === id)?.label ?? id, React.createElement("span", { "aria-hidden": true }, " ×"))));
+}
+
 export function isDesktopChromeLaunch(text) {
   return /^(?:please\s+)?(?:(?:really|actually)\s+)?(?:open|launch|start)\s+(?:google\s+)?chrome(?:\s+on\s+(?:my|this|the)\s+(?:pc|computer|desktop))?[.!]?$/i.test(text.trim());
 }
@@ -92,7 +132,7 @@ export function SlashMenu({ items, input, onSelect, onClose, available }) {
       }
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (!["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(event.key) ||
-          event.key === "Enter" && (event.shiftKey || /\s/.test(editor.value.trim()))) return;
+          event.key === "Enter" && event.shiftKey) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       if (event.key === "Escape") onClose();

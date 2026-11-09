@@ -31,12 +31,16 @@ describe("composer skills", () => {
   it("finds the two computer skills from slash input", () => {
     expect(filterComposerSkills("/computer").map((skill) => skill.id)).toEqual(["computer-use"]);
     expect(filterComposerSkills("/chrome").map((skill) => skill.id)).toEqual(["chrome-control"]);
-    expect(filterComposerSkills("hello /computer")).toEqual([]);
+    expect(filterComposerSkills("hello /computer").map((skill) => skill.id)).toEqual(["computer-use"]);
+    expect(filterComposerSkills("https://example.com/computer")).toEqual([]);
+    expect(filterComposerSkills("./computer")).toEqual([]);
   });
 
   it("removes the slash token and preserves the task", () => {
     expect(resolveSlashSkill("/computer-use open Calculator", "computer-use"))
       .toBe("open Calculator");
     expect(resolveSlashSkill("/chrome", "chrome-control")).toBe("");
+    const draft = "Open Chrome/computer-use and show the page";
+    expect(resolveSlashSkill(draft, "computer-use", draft.indexOf(" and"))).toBe("Open Chrome and show the page");
   });
 });

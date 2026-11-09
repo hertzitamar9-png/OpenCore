@@ -50,6 +50,16 @@ const bridgeChange=require('./native-bridge-policy.cjs').disableAutomaticBridge(
 ranges.push([bridgeChange.raw,bridgeChange.raw+bridgeChange.bytes]);changes.push(bridgeChange);
 const historyChange=require('./native-startup-data.cjs').patchNativeStartupDefaults(result);
 ranges.push([historyChange.raw,historyChange.raw+historyChange.slotBytes]);changes.push(historyChange);
+// Keep Windows WebView2 HTTP loopback and allow only loopback WebSockets.
+const cspFrom = Buffer.from("default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:*; img-src 'self' data: https: http:; media-src 'self' data: blob:; ");
+const nextCsp = JSON.parse(fs.readFileSync(path.join(root,'../src-tauri/tauri.conf.json'),'utf8')).app.security.csp;
+const cspTo = Buffer.from(nextCsp.split('frame-src', 1)[0].padEnd(cspFrom.length, ' '));
+const cspOffset = source.indexOf(cspFrom);
+if (cspOffset < 0 || source.lastIndexOf(cspFrom) !== cspOffset || cspTo.length !== cspFrom.length)
+  throw Error('Native loopback policy does not match the verified baseline');
+cspTo.copy(result, cspOffset);
+ranges.push([cspOffset, cspOffset + cspTo.length]);
+changes.push({name:'sophon-live-loopback-policy',raw:cspOffset,bytes:cspTo.length});
 ranges.sort((a, b) => a[0] - b[0]);
 let checked = 0;
 for (const [start, end] of ranges) {

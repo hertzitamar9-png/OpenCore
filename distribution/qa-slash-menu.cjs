@@ -49,7 +49,7 @@ fixture+=String.raw`
       await menu.waitFor({state:'hidden'});
       assert.equal(await message.inputValue(),'','Enter must choose a command without sending it');
       assert.equal(await message.getAttribute('aria-activedescendant'),null,'Closing must clear the active command relationship');
-      assert.ok(await page.locator('.composer-skill-chips').innerText().then(text=>text.includes(nextLabel)));
+      assert.ok(await page.locator('.chat-composer .composer-skill-links').innerText().then(text=>text.includes(nextLabel)));
       assert.equal(await message.evaluate(element=>document.activeElement===element),true,'Selection keeps focus in the composer');
 
       await message.fill('/');
@@ -107,20 +107,34 @@ fixture+=String.raw`
       assert.equal(await menu.getByRole('option').count(),1,'Typing must filter commands');
       await message.press('Enter');
       await menu.waitFor({state:'hidden'});
-      assert.ok(await page.locator('.composer-skill-chips').innerText().then(text=>text.includes('Chrome control')));
+      assert.ok(await page.locator('.chat-composer .composer-skill-links').innerText().then(text=>text.includes('Chrome control')));
       await message.fill('  /CO');
       await menu.waitFor();
       assert.deepEqual(await menu.locator('.slash-command-heading').allTextContents(),['Computer use'],'Only skill names match a search prefix');
       await message.press('Enter');
       await menu.waitFor({state:'hidden'});
-      assert.ok(await page.locator('.composer-skill-chips').innerText().then(text=>text.includes('Computer use')));
+      assert.ok(await page.locator('.chat-composer .composer-skill-links').innerText().then(text=>text.includes('Computer use')));
+      await message.fill('really open chrome/');
+      await menu.getByRole('option').filter({hasText:'Computer use'}).click();
+      await menu.waitFor({state:'hidden'});
+      assert.equal(await message.inputValue(),'really open chrome','An inline command must preserve the existing text');
+      await message.fill('Update this /web and check it');
+      await message.evaluate(editor=>editor.setSelectionRange(16,16));
+      await message.press('Backspace');
+      await message.press('b');
+      await menu.waitFor();
+      await message.press('Enter');
+      await menu.waitFor({state:'hidden'});
+      assert.equal(await message.inputValue(),'Update this and check it','Keyboard selection must preserve the text after the command');
+      await message.fill('https://example.com/computer');
+      await menu.waitFor({state:'hidden'});
       await message.fill('/web-dev explain this');
       await menu.waitFor({state:'hidden'});
       await message.press('Enter');
-      assert.equal(await message.inputValue(),'explain this','The selected skill is a chip and the task stays in the draft');
+      assert.equal(await message.inputValue(),'explain this','The selected skill is an inline link and the task stays in the draft');
       assert.ok(await page.evaluate(()=>(fixture.notices||[]).includes('Text runtime is not loaded')),
         'A complete command with task text must reach the normal send handler');
-      assert.ok(await page.locator('.composer-skill-chips').innerText().then(text=>text.includes('Web development')));
+      assert.ok(await page.locator('.chat-composer .composer-skill-links').innerText().then(text=>text.includes('Web development')));
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Phone layout must not overflow horizontally');
       assert.deepEqual(errors,[]);
       if(process.env.OPENCORE_SLASH_QA_SCREENSHOTS){

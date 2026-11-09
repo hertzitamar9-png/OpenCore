@@ -10,9 +10,7 @@ module.exports=function applySlashMenu(app,{editFunction,replaceOnce}) {
   if(table?.init?.type!=='ArrayExpression')throw Error('Missing recovered slash command table');
   commandTable=app.slice(table.init.start,table.init.end);
   app=app.slice(0,table.init.start)+'globalThis.__opencoreSlashCommands'+app.slice(table.init.end);
-  app=editFunction(app,'LI',text=>replaceOnce(
-    replaceOnce(text,'if(!t.startsWith("/")','t=t.trimStart();if(!t.startsWith("/")'),
-    '[r.id,...r.aliases].some(a=>a.startsWith(n))','globalThis.__opencoreMatchesSlashName(r,n)'));
+  app=editFunction(app,'LI',()=> 'function LI(t,e,n){return globalThis.__opencoreSlashMatches(t,n,Wi)}');
   app=editFunction(app,'DI',text=>replaceOnce(
     replaceOnce(text,'const n=Wi.find','t=t.trimStart();const n=Wi.find'),
     '[n.id,...n.aliases].some(r=>r.startsWith(s))','(globalThis.__opencoreMatchesSlashName(n,s)||n.aliases.includes(s))'));
@@ -25,13 +23,18 @@ module.exports=function applySlashMenu(app,{editFunction,replaceOnce}) {
     'if(A.preventDefault(),Oi.length&&!/\\s/.test(fe.trim())&&!["/skills","/"].includes(fe.trim().toLowerCase())){nr(Oi[0].id);return}ta()',
     'A.preventDefault(),ta()');
   app=replaceOnce(app,'if(A.key==="Escape"&&ie){A.preventDefault(),z(!1);return}','');
+  const linksStart=app.indexOf('ke.length>0?i.jsx("div",{className:"composer-skill-chips",');
+  const linksEnd=app.indexOf(':null,i.jsxs("div",{className:',linksStart);
+  if(linksStart<0||linksEnd<0)throw Error('Missing recovered selected skills');
+  app=app.slice(0,linksStart)+app.slice(linksEnd+6);
+  app=replaceOnce(app,'i.jsx(globalThis.__opencoreComposerAction,{','i.jsx(globalThis.__opencoreSkillLinks,{skills:ke,table:Wi,remove:A=>Qe(ae=>ae.filter(he=>he!==A))}),i.jsx(globalThis.__opencoreComposerAction,{');
   return app;
 };
 
 module.exports.featureInstallerSource=function() {
-  const source=fs.readFileSync(path.join(__dirname,'../src/slash-menu.js'),'utf8')
-    .replace(/^import .*?;\r?$/gm,'').replace(/^export /gm,'');
-  const css=fs.readFileSync(path.join(__dirname,'../src/slash-menu.css'),'utf8');
+  const source=['slash-menu.js','queued-prompt-editor.js','sophon-live.js','voice-call.js'].map(name=>
+    fs.readFileSync(path.join(__dirname,'../src',name),'utf8').replace(/^import .*?;\r?$/gm,'').replace(/^export /gm,'')).join('\n');
+  const css=['slash-menu.css','voice-call.css'].map(name=>fs.readFileSync(path.join(__dirname,'../src',name),'utf8')).join('\n');
   if(!commandTable)throw Error('Apply slash menu patches before building its installer');
-  return '\nglobalThis.__opencoreSlashCommands='+commandTable+';const $installBeforeSlash=installImageFeatures;installImageFeatures=function(React){'+source+';globalThis.__opencoreSlashMenu=SlashMenu;globalThis.__opencoreMatchesSlashName=matchesSlashSkillName;globalThis.__opencoreDesktopChromeLaunch=isDesktopChromeLaunch;const style=document.createElement("style");style.textContent='+JSON.stringify(css)+';document.head.appendChild(style);return $installBeforeSlash(React)};\n';
+  return '\nglobalThis.__opencoreSlashCommands='+commandTable+';const $installBeforeSlash=installImageFeatures;installImageFeatures=function(React){'+source+';Object.assign(globalThis,{__opencoreSlashMenu:SlashMenu,__opencoreMatchesSlashName:matchesSlashSkillName,__opencoreSlashAt:slashCommandAt,__opencoreSlashMatches:(text,caret,skills)=>{const command=slashCommandAt(text,caret);if(!command)return [];const {query}=command;return !query||query==="skills"?skills:skills.filter(item=>matchesSlashSkillName(item,query))},__opencoreSelectSlash:applySlashSelection,__opencoreSkillLinks:ComposerSkillLinks,__opencoreUseQueueEditor:useQueuedPromptEditor,__opencoreQueuedPromptEditor:QueuedPromptEditor,__opencoreVoiceCall:VoiceCall,__opencoreVoiceMicSpacer:()=>React.createElement("span",{className:"speech-control","aria-hidden":true}),__opencoreRunVoice:runVoiceChat});globalThis.__opencoreDesktopChromeLaunch=isDesktopChromeLaunch;const style=document.createElement("style");style.textContent='+JSON.stringify(css)+';document.head.appendChild(style);return $installBeforeSlash(React)};\n';
 };

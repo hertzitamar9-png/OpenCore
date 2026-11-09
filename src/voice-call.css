@@ -1,0 +1,36 @@
+.voice-call {
+  max-width: 980px;
+  min-width: 0;
+  margin: 0 auto 6px;
+  padding: 8px 11px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--section-highlight-border, #346999);
+  border-radius: 11px;
+  background: var(--theme-panel, #131b25);
+  color: var(--theme-ink, #edf3fa);
+  font-size: calc(12px * var(--ui-scale, 1));
+}
+.voice-call-head, .voice-call-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+.voice-call-head strong { margin-right: 9px; }
+.voice-call-head [role="status"], .voice-call-note { color: var(--theme-muted, #adc0d2); }
+.voice-call button { min-height: 30px; padding: 2px 8px; font: inherit; }
+.voice-call button.voice-hangup { background: #842d3a; color: #fff; border-color: #be5967; }
+.voice-call button.voice-start { justify-self: start; background: var(--section-highlight-fill, #234a79); }
+.voice-call-config { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px,100%),1fr)); gap: 7px; }
+.voice-call-config label { display: grid; gap: 4px; min-width: 0; }
+.voice-call-config select, .voice-call-config input { width: 100%; min-width: 0; box-sizing: border-box; }
+.voice-brain .chat-model-picker { min-width: 0; }
+.voice-tool { display: flex; gap: 7px; align-items: center; }
+.voice-brain summary { width: fit-content; cursor: pointer; }
+.voice-brain .chat-model-picker { max-height: min(32dvh, 220px); overflow: auto; }
+.voice-call-transcript { display: grid; gap: 3px; max-height: min(15dvh, 96px); overflow: auto; overflow-wrap: anywhere; }
+.voice-call p { margin: 0; overflow-wrap: anywhere; }
+.voice-call-error { color: #ffc3c5; }
+.voice-call-delegation { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 5px; }
+.voice-call-delegation p { grid-column: 1 / -1; max-height: 15dvh; overflow: auto; }
+@media (max-width: 600px) {
+  .voice-call { max-height: 48dvh; overflow-y: auto; }
+  .voice-call button { min-height: 37px; }
+  .voice-call-config { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}

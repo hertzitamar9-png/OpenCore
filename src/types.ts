@@ -182,6 +182,7 @@ export interface ChatSendResult {
 
 export interface ChatQueueItem {
   id: string;
+  voice?: true;
   text: string;
   files: string[];
   reasoningEffort: ReasoningEffort;

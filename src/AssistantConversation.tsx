@@ -33,7 +33,8 @@ import { messageUrlTransform, parseArtifactLink, studioLinkCategory } from "./ar
 import { sanitizeMessageMarkdown } from "./message-markdown";
 import { localFilePath } from "./local-file-links";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, availableComposerSkills, exactSlashSkill, type ComposerSkillId } from "./composer-skills";
-import { SlashMenu, isDesktopChromeLaunch } from "./slash-menu.js";
+import { SlashMenu, ComposerSkillLinks, applySlashSelection, slashCommandAt, isDesktopChromeLaunch } from "./slash-menu.js";
+import { QueuedPromptEditor, useQueuedPromptEditor } from "./queued-prompt-editor.js";
 import { playAppEffect } from "./app-effects.js";
 import "./slash-menu.css";
 import { formatMessageTimestamp } from "./message-time";
@@ -46,6 +47,8 @@ import type { FileRecord } from "./workspaces";
 import type { WorkspacePreview, WorkspaceTab } from "./WorkspacePanel";
 import { FloatingWindow } from "./FloatingWindow";
 import { SpeechButton } from "./SpeechButton";
+import { VoiceCall, runVoiceChat } from "./voice-call.js";
+import "./voice-call.css";
 import { ModelProfileOptions, profileLabel } from "./ModelProfiles";
 import './message-media.css';
 import type { ApprovalMode, ChatQueueItem, ProjectSummary, ReasoningEffort, RuntimeProfile, RuntimeSnapshot, TelemetrySnapshot, TimelineEntry } from "./types";
@@ -531,6 +534,8 @@ export const AssistantConversation = memo(function AssistantConversation({
   const defaultSkillsKey = defaultSkills.join("\u0000");
   useEffect(() => { setSelectedSkills([...defaultSkills]); }, [defaultSkillsKey]);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [slashCaret, setSlashCaret] = useState(0);
   const [files, setFiles] = useState<string[]>(() => [...(initialDraft?.files || [])]);
   useEffect(() => { onDraftChange?.({ text: draft, files: [...files] }); }, [draft, files, onDraftChange]);
   const [draggingFiles, setDraggingFiles] = useState(false);
@@ -590,11 +595,12 @@ export const AssistantConversation = memo(function AssistantConversation({
   };
 
   const queueRef = useRef<ChatQueueItem[]>([]);
+  const queueEditor = useQueuedPromptEditor();
   const sendingRef = useRef(false);
   const conversationRef = useRef<string | undefined>(conversationId);
   const steerNextRef = useRef<ChatQueueItem | null>(null);
   const stopRequestedRef = useRef(false);
-  const runPromptRef = useRef<((item: ChatQueueItem) => Promise<void>) | null>(null);
+  const runPromptRef = useRef<((item: ChatQueueItem) => Promise<boolean | undefined>) | null>(null);
 
   conversationRef.current = conversationId ?? conversationRef.current;
   pendingToolRef.current = pendingTool;
@@ -718,6 +724,17 @@ export const AssistantConversation = memo(function AssistantConversation({
     setQueue(items);
   };
 
+  const saveQueued = (id: string, text: string) => {
+    setQueueBoth(queueRef.current.map(item => item.id === id ? { ...item, text } : item));
+  };
+
+  const drainQueue = () => {
+    if (sendingRef.current || stopRequestedRef.current || !queueRef.current.length || queueEditor.hold(drainQueue)) return;
+    const [next, ...remaining] = queueRef.current;
+    setQueueBoth(remaining);
+    void runPromptRef.current?.(next);
+  };
+
   const runPrompt = async (item: ChatQueueItem) => {
     if (sendingRef.current) return;
     if (inferenceBlocked) { onNotice(inferenceBlocked); return; }
@@ -737,7 +754,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     setSending(true);
     setLiveEntries([]);
     setActive(item);
-    const submissionId = crypto.randomUUID();
+    const submissionId = item.voice ? item.id : crypto.randomUUID();
     const optimisticEntry: TimelineEntry = {
       id: -Date.now(),
       conversationId: id,
@@ -781,16 +798,13 @@ export const AssistantConversation = memo(function AssistantConversation({
       onActivityChange?.(id, false);
       setSending(false);
 
-      let next = steerNextRef.current;
-      if (next) {
-        steerNextRef.current = null;
-      } else if (!interrupted && !stopRequestedRef.current && queueRef.current.length) {
-        next = queueRef.current[0];
-        setQueueBoth(queueRef.current.slice(1));
-      }
-      if (next && !failed) queueMicrotask(() => runPromptRef.current?.(next!));
-      if (next && failed) setQueueBoth([next, ...queueRef.current]);
+      const next = steerNextRef.current;
+      steerNextRef.current = null;
+      if (next && !failed) queueMicrotask(() => runPromptRef.current?.(next));
+      else if (next) setQueueBoth([next, ...queueRef.current]);
+      else if (!failed && !interrupted) queueMicrotask(drainQueue);
     }
+    return !failed && !interrupted;
   };
   runPromptRef.current = runPrompt;
   useEffect(() => {
@@ -890,6 +904,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   };
 
   const stop = async () => {
+    queueEditor.stop();
     steerNextRef.current = null;
     stopRequestedRef.current = true;
     if (conversationRef.current) {
@@ -898,10 +913,10 @@ export const AssistantConversation = memo(function AssistantConversation({
       await onRefresh();
     }
   };
-  const matchingSkills = skillPickerOpen ? filterComposerSkills(draft, skillModels) : [];
+  const matchingSkills = skillPickerOpen ? filterComposerSkills(draft, undefined, slashCaret) : [];
   const selectSkill = (id: ComposerSkillId) => {
     setSelectedSkills((current) => current.includes(id) ? current : [...current, id]);
-    setDraft((current) => resolveSlashSkill(current, id));
+    applySlashSelection(draftInput.current, draft, setDraft);
     setSkillPickerOpen(false);
   };
   return <ArtifactActionsContext.Provider value={artifactActions}><main className={`assistant-thread-panel chat-mode ${embedded ? "side-chat-thread" : ""}`}>
@@ -942,24 +957,32 @@ export const AssistantConversation = memo(function AssistantConversation({
     </AssistantRuntimeProvider>
 
     <div className="chat-composer-wrap">
+      {voiceOpen && <VoiceCall onClose={() => setVoiceOpen(false)} brainLabel={profileLabel(selectedProfile)}
+        brainPicker={<ModelProfileOptions selectedProfile={selectedProfile} onSelect={onSelectProfile} disabled={profileLocked} id={`voice-brain-${surfaceId}`}/>}
+        disabled={inferenceBlocked || (sending || backendActive ? "Wait for the current chat to finish." : imageChat.active ? "Choose a text Brain first." : undefined)}
+        sendTurn={(text, signal, computerUse) => runVoiceChat(text, signal, {
+          computerUse,
+          blocked: inferenceBlocked || (sendingRef.current || backendActive || queueRef.current.length ? "Wait for this chat and its queue to finish." : imageChat.active ? "Choose a text Brain first." : undefined),
+          currentId: () => conversationRef.current, cancel: api.cancelChatMessage, run: runPrompt,
+          settings: { reasoningEffort, approvalMode, skills: selectedSkills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens },
+        })}/>}
       <ImageGenerationPanel conversationId={conversationId} onConversationId={onConversationId} onNotice={onNotice} onRefresh={onRefresh} onStateChange={setImageChat} embedded={embedded}/>
       <ChatMemoryStatus conversationId={conversationId} entries={entries} runtime={runtimeSnapshot} active={sending||backendActive} onRefresh={onRefresh}/>
       <PromptAssistantTools prompt={draft} onPrompt={setDraft} conversationId={conversationId}/>
-      {matchingSkills.length > 0 ? <SlashMenu items={matchingSkills} input={draftInput} onSelect={selectSkill} onClose={() => setSkillPickerOpen(false)} /> : null}
+      {matchingSkills.length > 0 ? <SlashMenu items={matchingSkills} input={draftInput} available={(item) => availableComposerSkills(skillModels).some(skill => skill.id === item.id)} onSelect={selectSkill} onClose={() => setSkillPickerOpen(false)} /> : null}
       {queue.length > 0 && <div className="prompt-queue">
         <div className="queue-heading"><strong>Queued</strong><span>{queue.length}</span></div>
         {queue.map((item, index) => <div className="queue-item" key={item.id}>
           <span className="queue-index">{index + 1}</span>
-          <div><strong>{item.text || "Attachments"}</strong><small>{item.files.length ? `${item.files.length} file(s)` : "Waiting"}</small></div>
-          <button onClick={() => steer(item)} title="Interrupt current response and send this next"><CornerUpLeft size={13} /> Steer</button>
-          <button className="queue-remove" onClick={() => removeQueued(item.id)} title="Remove from queue"><X size={13} /></button>
+          <QueuedPromptEditor item={item} editor={queueEditor} save={saveQueued} />
+          <button disabled={queueEditor.id !== null} onClick={() => steer(item)} title="Interrupt current response and send this next"><CornerUpLeft size={13} /> Steer</button>
+          <button className="queue-remove" disabled={queueEditor.id !== null} onClick={() => removeQueued(item.id)} title="Remove from queue"><X size={13} /></button>
         </div>)}
       </div>}
 
       {files.length > 0 && <div className="attachment-row">
         {files.map((path) => <AttachedFilePreview key={path} file={{ name: path.split(/[\\/]/).pop() || "Attachment", path }} onRemove={() => setFiles((current) => current.filter((value) => value !== path))} />)}
       </div>}
-      {selectedSkills.length > 0 ? <div className="composer-skill-chips" aria-label="Selected skills">{selectedSkills.map((id) => <span key={id}>{COMPOSER_SKILLS.find((skill) => skill.id === id)?.label}<button type="button" aria-label={`Remove ${id} skill`} onClick={() => setSelectedSkills((current) => current.filter((item) => item !== id))}><X size={12} /></button></span>)}</div> : null}
 
       <div
         className={`chat-composer ${draggingFiles ? "file-drop-active" : ""}`}
@@ -990,6 +1013,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           <button ref={composerMenuTriggerRef} type="button" className="attach-button composer-plus-button" aria-label="Add files or choose model" aria-expanded={composerMenu !== null} aria-controls={composerMenuId} onClick={() => setComposerMenu((open) => open === null ? "actions" : null)} title="Add files or choose model"><Plus size={19} /></button>
           {composerMenu === "actions" ? <div className="composer-action-popover" id={composerMenuId} role="menu" aria-label="Composer actions">
             <button type="button" role="menuitem" onClick={() => { setComposerMenu(null); void chooseFiles(); }}><Paperclip size={16} /><span>Upload files or images</span></button>
+            <button type="button" role="menuitem" onClick={() => { setVoiceOpen(true); setComposerMenu(null); }}>Voice call</button>
             <button type="button" role="menuitem" aria-haspopup="menu" onClick={() => setComposerMenu("model")}><BrainCircuit size={16} /><span className="composer-action-model-copy">Model<small>{profileLabel(selectedProfile)}</small></span><ChevronRight size={15} /></button>
           </div> : null}
           {composerMenu === "model" ? <div className="composer-action-popover composer-model-popover" id={composerMenuId} role="menu" aria-label="Model selection">
@@ -997,14 +1021,21 @@ export const AssistantConversation = memo(function AssistantConversation({
             <ModelProfileOptions selectedProfile={selectedProfile} imageActive={imageChat.active} imageModelId={imageChat.modelId} imageAdapterId={imageChat.adapterId} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} onSelectImage={(model,event)=>{if(selectChatImageModel(model,{scope:event.currentTarget.closest('.chat-composer-wrap'),primary:!embedded}))setComposerMenu(null);}} disabled={profileLocked} id={embedded ? `side-model-options-${surfaceId}` : "composer-model-profile-options"} className="composer-model-options" />
           </div> : null}
         </div>
-        <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />
+        {voiceOpen ? <span className="speech-control" aria-hidden="true" /> : <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />}
         <textarea
           ref={draftInput}
           aria-label={embedded ? "Message side chat" : "Message OpenCore"}
           onPointerDown={() => { void focusDraft(); }}
           value={draft}
+          onSelect={(event) => {
+            const editor = event.currentTarget;
+            if (editor.selectionStart === editor.selectionEnd) setSlashCaret(editor.selectionStart);
+            else setSkillPickerOpen(false);
+          }}
           onChange={(event) => {
-            const value = event.target.value, leading = value.trimStart();
+            const { value, selectionStart } = event.currentTarget;
+            const leading = value.trimStart();
+            setSlashCaret(selectionStart);
             const command = /^\/\S+\s/.test(leading) ? exactSlashSkill(leading) : undefined;
             if (command && availableComposerSkills(skillModels).some(skill => skill.id === command.id)) {
               setSelectedSkills(current => current.includes(command.id) ? current : [...current, command.id]);
@@ -1012,7 +1043,7 @@ export const AssistantConversation = memo(function AssistantConversation({
               setSkillPickerOpen(false);
             } else {
               setDraft(value);
-              setSkillPickerOpen(leading.startsWith("/"));
+              setSkillPickerOpen(Boolean(slashCommandAt(value, selectionStart)));
             }
           }}
           onKeyDown={(event) => {
@@ -1066,6 +1097,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           </FloatingWindow> : null}
         </div>
         <ComposerAction active={generationActive} empty={!draft.trim()&&files.length===0} runtime={runtimeSnapshot} blocked={imageChat.active?null:inferenceBlocked} onSend={submit} onStop={()=>{if(!stopChatImagePrompt(draftInput.current?.closest('.chat-composer-wrap')))void stop();}} onRefresh={onRefresh} onNotice={onNotice}/>
+        <ComposerSkillLinks skills={selectedSkills} table={COMPOSER_SKILLS} remove={id => setSelectedSkills(current => current.filter(item => item !== id))} />
       </div>
       <div className="composer-hint"><span>{generationActive ? "OpenCore is working · press Stop to cancel" : inferenceBlocked || "Enter to send · Shift+Enter for a new line · paste or drop files"}</span><span>OpenCore can make mistakes. Check important results.</span><span className="composer-token-speed">{generationActive && promptProgress?.speed ? `${promptProgress.speed.toFixed(1)} input tokens/s` : (liveTokenSpeed ?? telemetry.tokensPerSecond) > 0 ? `${(liveTokenSpeed ?? telemetry.tokensPerSecond).toFixed(1)} output tokens/s` : "Waiting for token metrics"} · {(telemetry.totalCompletionTokens ?? telemetry.completionTokens).toLocaleString()} output tokens</span></div>
     </div>

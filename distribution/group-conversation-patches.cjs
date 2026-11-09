@@ -30,7 +30,9 @@ module.exports = function applyGroupConversation(app, {replaceOnce}) {
     change('function({conversationId:e,', 'function({groupChat:$group,conversationId:e,');
     change('const[fe,ge]=', 'const[$localDraft,ge]=');
     change('Ce=p.useRef(void 0);', 'Ce=p.useRef(void 0);const fe=$group?.draft??$localDraft;');
-    change('const D=p.useRef(null);', 'const D=p.useRef(null);p.useImperativeHandle($group?.inputRef,()=>D.current,[]);');
+    change('const D=p.useRef(null);', 'const D=p.useRef(null),[$voiceOpen,$setVoiceOpen]=p.useState(!1),[$slashCaret,$setSlashCaret]=p.useState(0);p.useImperativeHandle($group?.inputRef,()=>D.current,[]);');
+    change('Oi=ie?LI(fe,Xe):[],nr=A=>{Qe(ae=>ae.includes(A)?ae:[...ae,A]),ge(ae=>DI(ae,A)),z(!1)}',
+      'Oi=ie?LI(fe,Xe,$slashCaret):[],nr=A=>{Qe(ae=>ae.includes(A)?ae:[...ae,A]),globalThis.__opencoreSelectSlash(D.current,fe,ge),z(!1)}');
     change('[nt,Ft]=', '[$chatEffort,Ft]=');
     change('[Ke,vt]=', '[$chatApproval,vt]=');
     change('const gn=p.useRef(null)', 'const nt=$group?.effort??$chatEffort,Ke=$group?.approval??$chatApproval;const gn=p.useRef(null)');
@@ -42,6 +44,18 @@ module.exports = function applyGroupConversation(app, {replaceOnce}) {
     change('p.useEffect(()=>{try{window.localStorage.removeItem("opencore.fast-mode.v1")', 'p.useEffect(()=>{if($group)return;try{window.localStorage.removeItem("opencore.fast-mode.v1")');
     change('p.useEffect(()=>{let A=!1,ae;return $listenToolProgress', 'p.useEffect(()=>{if($group)return;let A=!1,ae;return $listenToolProgress');
     change('if(!("__TAURI_INTERNALS__"in window))return;let A=!1,ae;return It("opencore-tool-approval-request"', 'if($group||!("__TAURI_INTERNALS__"in window))return;let A=!1,ae;return It("opencore-tool-approval-request"');
+    change('ii=A=>{tn.current=A,He(A)},vs=async A=>',
+      '$queueEditor=globalThis.__opencoreUseQueueEditor(),ii=A=>{tn.current=A,He(A)},$drain=()=>{if(nn.current||oe.current||!tn.current.length||$queueEditor.hold($drain))return;const [next,...remaining]=tn.current;ii(remaining),_e.current?.(next)},vs=async A=>');
+    change('let jt=Z.current;jt?Z.current=null:!ft&&!oe.current&&tn.current.length&&(jt=tn.current[0],ii(tn.current.slice(1))),jt&&!Le&&queueMicrotask(()=>{var Pt;return(Pt=_e.current)==null?void 0:Pt.call(_e,jt)}),jt&&Le&&ii([jt,...tn.current])',
+      'const jt=Z.current;Z.current=null;jt?Le?ii([jt,...tn.current]):queueMicrotask(()=>_e.current?.(jt)):!Le&&!ft&&queueMicrotask($drain)');
+    change('const he=crypto.randomUUID(),De={id:-Date.now()', 'const he=A.voice?A.id:crypto.randomUUID(),De={id:-Date.now()');
+    change('!Le&&!ft&&queueMicrotask($drain)}};_e.current=vs;', '!Le&&!ft&&queueMicrotask($drain)}return !Le&&!ft};_e.current=vs;');
+    change('className:"chat-composer-wrap",children:[', 'className:"chat-composer-wrap",children:[$voiceOpen&&!$group&&i.jsx(globalThis.__opencoreVoiceCall,{onClose:()=>$setVoiceOpen(!1),brainLabel:Tn(b),brainPicker:i.jsx(Hp,{selectedProfile:b,onSelect:m,disabled:Ut,id:"voice-brain-"+bn}),disabled:ee||((bt||$imageChat.active)?"Wait for this chat to finish and choose a text Brain.":void 0),sendTurn:(text,signal,computerUse)=>globalThis.__opencoreRunVoice(text,signal,{computerUse,blocked:ee||((nn.current||g||tn.current.length||$imageChat.active)?"Wait for this chat and its queue to finish, and choose a text Brain.":void 0),currentId:()=>q.current,cancel:zu,run:vs,settings:{reasoningEffort:nt,approvalMode:Ke,skills:ke,subagentsEnabled:F,maxSubagents:Q,projectSkillsEnabled:E,compactAtTokens:G,fastMode:!1}})}),');
+    change('sa=async()=>{if(Z.current=null', 'sa=async()=>{$queueEditor.stop();if(Z.current=null');
+    change('i.jsxs("div",{children:[i.jsx("strong",{children:A.text||"Attachments"}),i.jsx("small",{children:A.files.length?`${A.files.length} file(s)`:"Waiting"})]})'.replace("\$","$"),
+      'i.jsx(globalThis.__opencoreQueuedPromptEditor,{item:A,editor:$queueEditor,save:(id,text)=>ii(tn.current.map(item=>item.id===id?{...item,text}:item))})');
+    change('onClick:()=>ia(A),title:"Interrupt current response', 'disabled:$queueEditor.id!==null,onClick:()=>ia(A),title:"Interrupt current response');
+    change('className:"queue-remove",onClick:()=>na(A.id)', 'className:"queue-remove",disabled:$queueEditor.id!==null,onClick:()=>na(A.id)');
     change('const ta=()=>{var jt,Pt;', 'const ta=()=>{var jt,Pt;if($group){if(!ee&&fe.trim())$group.onSend();return}');
 
     change('Ys=l.filter(A=>A.kind==="message"&&(A.role==="user"||A.role==="assistant")).length,Zs=l.length-Ys',
@@ -60,10 +74,11 @@ module.exports = function applyGroupConversation(app, {replaceOnce}) {
     change('onDrop:A=>{Gl(A.dataTransfer)', 'onDrop:A=>{!$group&&Gl(A.dataTransfer)');
     change('"aria-label":"Add files or choose model"', '"aria-label":$group?"Group composer actions":"Add files or choose model"');
     change('title:"Add files or choose model"', 'title:$group?"Group composer actions":"Add files or choose model"');
+    change('children:"Upload files or images"})]}),', 'children:"Upload files or images"})]}),i.jsx("button",{type:"button",role:"menuitem",onClick:()=>{$setVoiceOpen(!0);xe(null)},children:"Voice call"}),');
     change('"aria-label":"Composer actions",children:[', '"aria-label":"Composer actions",children:$group?i.jsxs("button",{type:"button",role:"menuitem",onClick:()=>{xe(null);$group.onMention()},children:[i.jsx(ud,{size:16}),"Mention an agent"]}):[');
-    change(String.raw`i.jsx(dO,{onTranscript:A=>ge(ae=>ae+(ae&&!/\s$/.test(ae)?" ":"")+A),onError:k}`, String.raw`i.jsx(dO,{onTranscript:A=>$group?$group.onDraftChange(fe+(fe&&!/\s$/.test(fe)?" ":"")+A):ge(ae=>ae+(ae&&!/\s$/.test(ae)?" ":"")+A),onError:k}`);
+    change(String.raw`i.jsx(dO,{onTranscript:A=>ge(ae=>ae+(ae&&!/\s$/.test(ae)?" ":"")+A),onError:k}`, String.raw`i.jsx($voiceOpen&&!$group?globalThis.__opencoreVoiceMicSpacer:dO,{onTranscript:A=>$group?$group.onDraftChange(fe+(fe&&!/\s$/.test(fe)?" ":"")+A):ge(ae=>ae+(ae&&!/\s$/.test(ae)?" ":"")+A),onError:k}`);
     change('"aria-label":K?"Message side chat":"Message OpenCore",onPointerDown:A=>{A.button===0&&tr()}', '"aria-label":$group?"Group message":K?"Message side chat":"Message OpenCore","aria-autocomplete":$group?"list":void 0,maxLength:$group?16000:void 0,onPointerDown:A=>{!$group&&A.button===0&&tr()}');
-    change('onChange:A=>{ge(A.target.value),z(A.target.value.startsWith("/"))}', String.raw`onChange:A=>{const value=A.target.value;if($group){$group.onDraftChange(value,A.target.selectionStart);return}const leading=value.trimStart(),skill=/^\/\S+\s/.test(leading)?KI(leading):null;if(skill&&RI(skill,Xe)){Qe(items=>items.includes(skill.id)?items:[...items,skill.id]),ge(DI(leading,skill.id)),z(!1)}else ge(value),z(leading.startsWith("/"))}`);
+    change('onChange:A=>{ge(A.target.value),z(A.target.value.startsWith("/"))}', String.raw`onSelect:A=>{if(!$group){const {selectionStart,selectionEnd}=A.currentTarget;if(selectionStart===selectionEnd)$setSlashCaret(selectionStart);else z(!1)}},onChange:A=>{const {value,selectionStart}=A.currentTarget;if($group){$group.onDraftChange(value,selectionStart);return}$setSlashCaret(selectionStart);const leading=value.trimStart(),skill=/^\/\S+\s/.test(leading)?KI(leading):null;if(skill&&RI(skill,Xe)){Qe(items=>items.includes(skill.id)?items:[...items,skill.id]),ge(DI(leading,skill.id)),z(!1)}else ge(value),z(!!globalThis.__opencoreSlashAt(value,selectionStart))}`);
     change('onKeyDown:A=>{if(A.key==="Enter"&&!A.shiftKey){A.preventDefault(),ta()}}', 'onKeyDown:A=>{if(A.nativeEvent.isComposing||$group?.onKeyDown(A))return;if(A.key==="Enter"&&!A.shiftKey){A.preventDefault(),ta()}}');
     change('onPaste:A=>{const ae=ed(A.clipboardData)', 'onPaste:A=>{if($group)return;const ae=ed(A.clipboardData)');
     change('placeholder:K?"Message this branch…":"Message OpenCore…"', 'placeholder:$group?.placeholder??(K?"Message this branch…":"Message OpenCore…")');
