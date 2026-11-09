@@ -32,7 +32,7 @@ async function $hubConnect() {
 }
 async function $hubRequest(path, body, method, retried=false) {
   const descriptor = await $hubConnect(), controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), path==='/memory/recover'||path==='/prompts/improve'?90000:45000);
+  const timeout = setTimeout(() => controller.abort(), path==='/speech/transcribe'?185000:path==='/memory/recover'||path==='/prompts/improve'?90000:45000);
   try {
     const response = await fetch(descriptor.url + '/api' + path, {method:method || (body === undefined ? 'GET' : 'POST'),
       headers:{'Content-Type':'application/json', [descriptor.authHeader || 'X-OpenCore-Hub-Secret']:descriptor.secret,
@@ -81,7 +81,7 @@ function $useHub() {
 }
 function $hubProgress() {
   const job=$hubState.progress;if(!job)return null;
-  const preparing=job.kind==='prepare'||/^(installing-runtime|installing-dependencies|checking-hardware|loading-model|verifying-files|verifying-inference|preparing-echo|verifying-echo)$/.test(job.stage);
+  const preparing=job.kind==='prepare'||/^(installing-runtime|installing-dependencies|checking-hardware|loading-model|verifying-files|verifying-inference|verifying-speech|preparing-quantization|preparing-echo|verifying-echo)$/.test(job.stage);
   const phase=job.status==='cancelling'?'cancelling':job.status==='cancelled'?'cancelled':job.status==='running'||job.status==='pausing'?preparing?'preparing':/verif/.test(job.stage)?'verifying':'downloading':
     job.status==='paused'?'paused':job.status==='failed'?'failed':job.status==='ready'||job.status==='installed'?'ready':null;
   return phase?{modelId:job.id,operationId:job.jobId,phase,downloadedBytes:job.bytesDone||0,totalBytes:preparing?0:job.bytesTotal||0,
@@ -221,6 +221,7 @@ globalThis.__opencoreChangeModelRuntime=async (profile,action)=>{
 };
 
 async function $hubInvoke(command,args,run) {
+  const speech=await $phononSpeech.invoke(command,args,run);if(speech.handled)return speech.value;
   if(command==='download_queue_action') {
     if(globalThis.__OPENCORE_PHONE__===true)return run();
     return $hubRequest('/download-queue/action',args);
@@ -545,7 +546,7 @@ function $hubChosenAdapterPath(entry) {
   return entry.installReceipt.files.find(file=>file.role==='model'&&typeof file.localPath==='string')?.localPath||null;
 }
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,selectedProfile}) {
-  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
+  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile||v.hubEntry?.speechSelected)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
   const model=group.variants.find(v=>v.id===choice)||group.variants[0],rawEntry=state.catalog.find(v=>v.id===model.id)||model.hubEntry,entry=globalThis.__opencoreModelModes?.entry(rawEntry)||rawEntry;
   const runtimeName=entry.format==='safetensors'?'Transformers':'llama.cpp';
   const queued=shared.queue?.items?.find(item=>item.modelId===entry.id&&['queued','starting','downloading','preparing','paused'].includes(item.phase));
@@ -623,7 +624,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function changeRuntime(preference){setBusy(true);setError('');try{await $hubRequest('/runtime/backend',{id:entry.id,runtimePreference:preference});await $hubRefresh(true);onNotice?.(entry.status==='installed'?'Runtime choice saved. Prepare the runtime to use this downloaded model.':'Runtime choice saved for this download.');}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function prepare(){setError('');try{await globalThis.__opencoreModelModes?.ensure(rawEntry);await Ue(entry.nativeProfile?'install_model':'hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
-  async function use(){setBusy(true);setError('');try{const prepared=await globalThis.__opencoreModelModes?.ensure(rawEntry)||entry;const profile=entry.nativeProfile?await globalThis.__opencoreModelModes?.activate(entry.id,globalThis.__opencoreModelModes.mode(entry))||entry.id:prepared.profileId||await $hubRegister(prepared);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function use(){setBusy(true);setError('');try{if(await $phononSpeech.select(entry)){onNotice?.('Phonon 2.5 is ready for the chat microphone.');return;}const prepared=await globalThis.__opencoreModelModes?.ensure(rawEntry)||entry;const profile=entry.nativeProfile?await globalThis.__opencoreModelModes?.activate(entry.id,globalThis.__opencoreModelModes.mode(entry))||entry.id:prepared.profileId||await $hubRegister(prepared);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function askRemove(){
     setError('');
     const native=entry.installReceipt?.nativeProfileId;
@@ -636,7 +637,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady||entry.specialistReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
     globalThis.__opencoreDownloadQueueUI?h(globalThis.__opencoreDownloadQueueUI.CardProgress,{modelId:entry.id,modelIds:group.variants.map(value=>value.id),legacyModelId:cardProgress?.modelId}):null,
     globalThis.__opencoreModelInstallProgress&&group.variants.some(value=>value.id===cardProgress?.modelId)?h(globalThis.__opencoreModelInstallProgress,{progress:cardProgress,label:state.catalog.find(value=>value.id===cardProgress.modelId)?.familyLabel||entry.familyLabel||entry.repository,busy:shared.active?.pausing||shared.active?.kind==='starting',onPause:()=>$installCoordinator.pause(),onCancel:()=>$installCoordinator.cancel(cardProgress),onError:setError}):null,
-    h('p',null,entry.origin==='autoloop'?'Local AutoLoop variant':entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,entry.gated?h('p',null,'Publisher-gated: accept the repository access terms on Hugging Face and save an authorized token in Settings before installing.'):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='computer'?'Computer-use · Action prediction':entry.specialist==='ocr'?'OCR · Image to text':entry.category==='image'?'Image model':entry.runtime?.adapter?(entry.operatingMode==='native'?'Native':'ECHO')+' · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:busy||!!disabled&&!shared.queue,onChange:e=>setChoice(e.target.value)},
+    h('p',null,entry.origin==='autoloop'?'Local AutoLoop variant':entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,entry.gated?h('p',null,'Publisher-gated: accept the repository access terms on Hugging Face and save an authorized token in Settings before installing.'):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='computer'?'Computer-use · Action prediction':entry.specialist==='ocr'?'OCR · Image to text':entry.category==='image'?'Image model':entry.category==='speech'?'Speech to text':entry.runtime?.adapter?(entry.operatingMode==='native'?'Native':'ECHO')+' · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:busy||!!disabled&&!shared.queue,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
     globalThis.__opencoreModelModes?h(globalThis.__opencoreModelModes.Control,{model:entry,disabled:locked,onChanged}):null,
     !entry.nativeProfile&&entry.runtimeChoices?.length?h('label',{className:'model-quantization-picker'},'Runtime',h('select',{'aria-label':'Runtime for '+entry.repository,value:entry.runtimePreference||'auto',disabled:locked||!!queued,onChange:e=>void changeRuntime(e.target.value)},
@@ -685,7 +686,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
       entry.specialist==='computer'&&entry.specialistReady?h('button',{disabled:locked,onClick:()=>setOCROpen(v=>!v)},ocrOpen?'Close computer-use':'Use computer-use'):
       entry.specialistReady?h('button',{disabled:locked,onClick:()=>setOCROpen(v=>!v)},ocrOpen?'Close OCR':'Use OCR'):
       entry.category==='image'&&(entry.format==='diffusers'||entry.imageRuntime==='iris-sdcpp-v1')?h('button',{disabled:locked,onClick:()=>{globalThis.__opencoreRequestedImageModel=entry.id;window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));}},'Generate images'):
-      entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':selectedProfile===entry.profileId?'Selected':'Use model'):
+      entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':entry.category==='speech'?entry.speechSelected?'Dictation selected':'Use for dictation':selectedProfile===entry.profileId?'Selected':'Use model'):
       h('button',{disabled:locked||!(entry.runtime?.adapter||entry.specialist==='ocr'),onClick:prepare},active?'Preparing…':entry.specialist==='ocr'?'Prepare OCR':'Prepare runtime'),
       entry.runtimeReady&&selectedProfile&&selectedProfile===entry.profileId?
         h(globalThis.__opencoreModelRuntimeButton,{profile:selectedProfile,disabled:locked,onNotice}):null,

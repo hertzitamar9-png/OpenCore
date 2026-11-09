@@ -245,7 +245,8 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
 
   const kind = config.kind === "sophon" ? "sophon" : "local";
   const speechModels = (models || []).filter(model => model.installed && model.category === "speech" &&
-    ["phonon-2", "whisper-large-v3-turbo", "whisper-large-v3"].includes(model.id));
+    (["phonon-2", "whisper-large-v3-turbo", "whisper-large-v3"].includes(model.id) ||
+      model.hubEntry?.speechRuntime === "parakeet-phonon25-v1" && model.runtimeReady));
   if (speech?.installed && !speechModels.some(model => model.id === speech.modelId))
     speechModels.push({ id: speech.modelId, label: speech.modelId });
   const stt = speechModels.find(model => model.id === config.stt) ??
@@ -425,7 +426,7 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
         field("Call mode", select("kind", kind, [["local", "Speech + Brain"], ["sophon", "Sophon Realtime v1"]])),
         kind === "local" ? h(React.Fragment, null,
           field("Speech-to-text", select("stt", stt?.id ?? "", speechModels.length ?
-            speechModels.map(model => [model.id, model.label]) : [["", models ? "Install a speech model in Models" : "Checking installed speech models…"]])),
+              speechModels.map(model => [model.id, model.label + (model.hubEntry?.speechRuntime ? " · " + model.precision : "")]) : [["", models ? "Install a speech model in Models" : "Checking installed speech models…"]])),
           field("Text-to-speech", select("tts", tts, [["device", "Device voice · low resource"], ...ttsModels.map(model => [model.id, model.label])])),
           tts === "device" ? field("Voice", select("voice", voices.some(voice => voice.voiceURI === config.voice) ? config.voice : "",
             [["", "Device default"], ...voices.map(voice => [voice.voiceURI, voice.name + " · " + voice.lang])]))

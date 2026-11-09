@@ -44,6 +44,13 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_managed_speech_routes_require_owner_authentication(self):
+        self.assertEqual(self.request('GET', '/api/speech/status', secret=None)[0], 401)
+        self.assertEqual(self.request('POST', '/api/speech/select', {'id': 'unknown'}, secret=None)[0], 401)
+        self.assertEqual(self.request('GET', '/api/speech/status')[2], {'status': None})
+        self.assertEqual(self.request('POST', '/api/speech/select', {'id': 'unknown'})[0], 400)
+        self.assertEqual(self.request('POST', '/api/speech/transcribe', {'sessionId': 'old', 'audio': 'bad'})[0], 400)
+
     def test_autoloop_routes_are_owner_authenticated_and_never_accept_runtime_overrides(self):
         from unittest.mock import Mock
         manager=Mock()

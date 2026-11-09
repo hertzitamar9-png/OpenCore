@@ -40,6 +40,7 @@ from hf_computer_runtime import ComputerManager, supports as supports_computer
 from hf_computer_driver import ComputerDriverManager
 from model_modes import apply_operating_modes, supports_text_generation, mode_context
 from hf_download_queue import DownloadQueue
+from hf_speech import SpeechManager, supports as supports_speech
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -104,6 +105,7 @@ class BridgeState:
         self.cancel_event = threading.Event()
         self._load_catalog()
         self._seed_publisher_catalog()
+        self.speech = SpeechManager(self.root, self.resources, lambda identity: self.entry(identity, installed=True))
         try:
             saved = _read_json(self.job_path, 1024 * 1024)
             if isinstance(saved, dict) and isinstance(saved.get("progress"), dict):
@@ -514,6 +516,11 @@ class BridgeState:
             raise ValueError('The bundled publisher catalog is invalid')
         changed = False
         for identity, existing in list(self.entries.items()):
+            if (existing.get('builtIn') and existing.get('familyId') == 'publisher-phonon-2-5'
+                    and not supports_speech(existing)):
+                del self.entries[identity]
+                changed = True
+                continue
             weights = [pin for pin in existing.get('files', []) if pin.get('role') == 'model']
             if existing.get('builtIn') and weights and all(DRAFT.search(pin.get('filename', '')) for pin in weights):
                 # Earlier catalogs advertised separate MTP draft components as
@@ -652,6 +659,9 @@ class BridgeState:
             recorded = preparation.get('engineId') or selected
             if selected and (recorded not in engine_variants(selected) or preparation.get('engineArchiveSha256') != definition(recorded)['sha256'] or mode=='echo' and preparation.get('echoMode') != 'main-context-v1'):
                 result['runtimeReady'] = False
+        if supports_speech(entry):
+            result['runtimeReady'] = self.speech.ready(result, preparation)
+            result['speechSelected'] = self.speech.selected(entry['id'])
         if receipt:
             result.update(localDirectory=receipt["localDirectory"], receiptPath=receipt["receiptPath"], installReceipt=copy.deepcopy(receipt))
         if self.progress and self.progress.get("id") == entry["id"] and self.progress.get("status") in ACTIVE | {"paused", "failed"}:
@@ -689,6 +699,9 @@ class BridgeState:
     def plan(self, repository):
         metadata = self.client.metadata(parse_repository(repository))
         plan = build_plan(metadata)
+        if metadata['id'].lower() == 'fermionresearch/phonon-2.5':
+            prepared = [copy.deepcopy(entry) for entry in self.entries.values() if supports_speech(entry)]
+            if prepared: plan['variants'] = prepared
         canonical, identities = source_identity(metadata)
         with self.lock:
             family = next((entry for entry in self.entries.values() if entry.get('familyId') and (
@@ -867,12 +880,21 @@ class BridgeState:
                 self.entries[entry['id']]['specialistPreparation'] = result
                 self.persist_catalog()
             return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
+        def prepare_speech():
+            result = self.speech.prepare(self.entry(entry['id'], installed=True), report, pause)
+            if pause.is_set(): raise Paused('Speech preparation paused; downloaded files were retained')
+            with self.lock:
+                self.entries[entry['id']]['runtimePreparation'] = result
+                self.persist_catalog()
+            return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
         try:
             if kind == "download":
                 result = self._download_entry(entry, pause, report)
                 if pause.is_set(): raise Paused('Installation stopped after downloading; completed files were retained')
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
-                if supports_computer(entry):
+                if supports_speech(entry):
+                    final = prepare_speech()
+                elif supports_computer(entry):
                     final = prepare_computer()
                 elif supports_ocr(entry):
                     final = prepare_ocr()
@@ -898,6 +920,8 @@ class BridgeState:
                         self.entries[entry['id']].setdefault('runtimePreparations',{})[entry.get('operatingMode','echo')]=copy.deepcopy(proof)
                         self.persist_catalog()
                     final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
+            elif supports_speech(entry):
+                final = prepare_speech()
             elif supports_computer(entry):
                 final = prepare_computer()
             elif supports_ocr(entry):
@@ -1055,11 +1079,14 @@ class BridgeState:
             if self.computer.operation.locked():
                 raise Conflict('Stop the active computer-use prediction before removing model files')
             if self.images.operation.locked():raise Conflict('Wait for the current image operation before removing model files')
+            if self.speech.operation.locked() or self.speech.session_id:
+                raise Conflict('Finish the microphone recording before removing model files')
             entry=self.entry(model_id)
             if getattr(self.runtime,'_generation',None) and self.runtime._generation.locked():
                 raise Conflict('Wait for the current response before removing this model')
             if getattr(self.runtime,'_active',None) and self.runtime._active['id']==model_id:
                 self.runtime.stop()
+            if self.speech.selected(model_id): self.speech.select(None)
             if folder.is_dir():shutil.rmtree(folder)
             self.entries[model_id].pop('runtimePreparation',None)
             self.entries[model_id].pop('specialistPreparation',None)
@@ -1080,6 +1107,7 @@ class BridgeState:
         self.closed = True
         self.pause_event.set()
         self.ocr.stop()
+        self.speech.close()
         self.images.stop()
         self.computer.stop()
         self.runtime.stop()
@@ -1272,6 +1300,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.ocr.status())
             elif route == '/specialist/computer/status':
                 self._send(200, state.computer.status())
+            elif route == '/speech/status':
+                self._send(200, {'status': state.speech.status()})
             elif route == '/computer-driver/status':
                 self._send(200, state.computer_driver.status())
             elif route == '/images/jobs':
@@ -1291,7 +1321,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.command == "DELETE" and route == "/token":
             self._send(200, state.tokens.clear())
             return
-        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 512 * 1024 if route.startswith('/groups/') else 256 * 1024)
+        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') or route == '/speech/transcribe' else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 512 * 1024 if route.startswith('/groups/') else 256 * 1024)
         if body is None:
             return
         if self.command == "PUT" and route == "/token":
@@ -1415,6 +1445,22 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.add(body.get("planId"), body.get("variantIds")))
         elif route == "/catalog/profile":
             self._send(200, state.profile(body))
+        elif route == '/speech/select':
+            selected = state.speech.select(body.get('id'))
+            with state.lock:
+                state.catalog_snapshot_at = 0
+            self._send(200, selected)
+        elif route == '/speech/enabled':
+            self._send(200, state.speech.configure('enabled', body.get('enabled')))
+        elif route == '/speech/idle-mode':
+            self._send(200, state.speech.configure('idleMode', body.get('mode')))
+        elif route == '/speech/start':
+            self._send(200, state.speech.start(body.get('sessionId')))
+        elif route == '/speech/transcribe':
+            self._send(200, state.speech.transcribe(body.get('sessionId'), body.get('audio')))
+        elif route == '/speech/cancel':
+            state.speech.cancel(body.get('sessionId'))
+            self._send(200, {'cancelled': True})
         elif route == '/download-queue/action':
             self._send(200, state.download_queue.action(body))
         elif route == "/install":

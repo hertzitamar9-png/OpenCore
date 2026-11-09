@@ -132144,13 +132144,13 @@
       "publishedContextTokens": 262144
     },
     {
-      "id": "hf-35a42169baab64eb11193eb7",
-      "repository": "FermionResearch/Phonon-2.5",
-      "revision": "2673618ad8636c8dfd20fe57e94d1f67f75bdeaa",
-      "variantKey": "archive:phonon-2.5.bps.tar.zst",
+      "id": "hf-2445e019868e9f99b2bc54dd",
+      "repository": "mudler/parakeet-cpp-gguf",
+      "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+      "variantKey": "phonon25-packed",
       "name": "Phonon-2.5 · Packed checkpoint",
-      "quantization": "Packed checkpoint",
-      "format": "archive",
+      "quantization": "Packed",
+      "format": "gguf",
       "subdirectory": "",
       "category": "speech",
       "inputModalities": [
@@ -132159,25 +132159,25 @@
       "outputModalities": [
         "text"
       ],
-      "bytes": 162588374,
+      "bytes": 241726225,
       "files": [
         {
-          "repository": "FermionResearch/Phonon-2.5",
-          "revision": "2673618ad8636c8dfd20fe57e94d1f67f75bdeaa",
-          "filename": "phonon-2.5.bps.tar.zst",
-          "bytes": 162587031,
-          "sha256": "1faa04053a472cabab3bc31d07f30c23f22906f71044ca10eb1f0de36d1f19a9",
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "phonon-2.5-packed.gguf",
+          "bytes": 241719776,
+          "sha256": "f0339284e385c89a73ebc860937f1c1c346311efee6a40d995f8623b2d8cf7a3",
           "gitBlobSha1": null,
           "role": "model",
           "pinned": true
         },
         {
-          "repository": "FermionResearch/Phonon-2.5",
-          "revision": "2673618ad8636c8dfd20fe57e94d1f67f75bdeaa",
-          "filename": "config.json",
-          "bytes": 1343,
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "NOTICE-phonon-2.5.txt",
+          "bytes": 6449,
           "sha256": null,
-          "gitBlobSha1": "d7ece98c88874205c11bdf48f568d8bea6136a23",
+          "gitBlobSha1": "9bef637c94c9dd8eea832fa01ec068860ab334f9",
           "role": "support",
           "pinned": true
         }
@@ -132187,14 +132187,14 @@
       "modelType": "parakeet_tdt_five_value",
       "architectures": [],
       "runtime": {
-        "adapter": null,
+        "adapter": "phonon25",
         "available": false,
         "inferenceVerified": false,
-        "reason": "Packed multilingual speech checkpoint. Its Phonon-2.5 CPU/MLX decoder is different from Phonon-2; the matching managed Windows decoder must be integrated before transcription."
+        "reason": "A lightweight local speech engine prepares automatically. Use for dictation enables the regular chat microphone."
       },
       "private": false,
       "gated": false,
-      "sourceUrl": "https://huggingface.co/FermionResearch/Phonon-2.5",
+      "sourceUrl": "https://huggingface.co/mudler/parakeet-cpp-gguf",
       "status": "not-installed",
       "familyId": "publisher-phonon-2-5",
       "familyLabel": "Phonon-2.5",
@@ -132202,10 +132202,293 @@
       "builtIn": true,
       "nativeModelIds": [],
       "libraryCategory": "speech",
-      "builtInDescription": "Packed multilingual Parakeet-derived speech recognition checkpoint for 25 languages. The compressed download size is not its runtime memory requirement.",
+      "builtInDescription": "Multilingual speech recognition for 25 languages. Fermion Research Phonon-2.5, converted by mudler for parakeet.cpp.",
+      "contextTokens": 8192,
+      "license": "cc-by-4.0",
+      "catalogOrder": 0,
+      "speechRuntime": "parakeet-phonon25-v1",
+      "speechQuantization": "packed",
+      "speechConversion": null,
+      "outputsText": true,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-21f89e8af275ee8854b3a2f1",
+      "repository": "mudler/parakeet-cpp-gguf",
+      "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+      "variantKey": "phonon25-q4_k",
+      "name": "Phonon-2.5 · Packed checkpoint",
+      "quantization": "Q4_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "speech",
+      "inputModalities": [
+        "audio"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 675207313,
+      "files": [
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "phonon-2.5-q4_k.gguf",
+          "bytes": 675200864,
+          "sha256": "1405f0cd3a71260c0029cf7ff73ab2619a383dbc4c21109923605a85886b1c7a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "NOTICE-phonon-2.5.txt",
+          "bytes": 6449,
+          "sha256": null,
+          "gitBlobSha1": "9bef637c94c9dd8eea832fa01ec068860ab334f9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "parakeet_tdt_five_value",
+      "architectures": [],
+      "runtime": {
+        "adapter": "phonon25",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "A lightweight local speech engine prepares automatically. Use for dictation enables the regular chat microphone."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mudler/parakeet-cpp-gguf",
+      "status": "not-installed",
+      "familyId": "publisher-phonon-2-5",
+      "familyLabel": "Phonon-2.5",
+      "originalRepository": "FermionResearch/Phonon-2.5",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "speech",
+      "builtInDescription": "Multilingual speech recognition for 25 languages. Fermion Research Phonon-2.5, converted by mudler for parakeet.cpp.",
       "contextTokens": 8192,
       "license": "cc-by-4.0",
       "catalogOrder": 1,
+      "speechRuntime": "parakeet-phonon25-v1",
+      "speechQuantization": "q4_k",
+      "speechConversion": null,
+      "outputsText": true,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-701b2688633253211f226ba5",
+      "repository": "mudler/parakeet-cpp-gguf",
+      "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+      "variantKey": "phonon25-q5_k",
+      "name": "Phonon-2.5 · Packed checkpoint",
+      "quantization": "Q5_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "speech",
+      "inputModalities": [
+        "audio"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1441052817,
+      "files": [
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "phonon-2.5-f16.gguf",
+          "bytes": 1441046368,
+          "sha256": "6be6fb7928c1732fd8b881aeaa2bb644fc2ff2464e5a88b3d1017fd34a931ee4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "NOTICE-phonon-2.5.txt",
+          "bytes": 6449,
+          "sha256": null,
+          "gitBlobSha1": "9bef637c94c9dd8eea832fa01ec068860ab334f9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "parakeet_tdt_five_value",
+      "architectures": [],
+      "runtime": {
+        "adapter": "phonon25",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "A lightweight local speech engine prepares automatically. Use for dictation enables the regular chat microphone."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mudler/parakeet-cpp-gguf",
+      "status": "not-installed",
+      "familyId": "publisher-phonon-2-5",
+      "familyLabel": "Phonon-2.5",
+      "originalRepository": "FermionResearch/Phonon-2.5",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "speech",
+      "builtInDescription": "Multilingual speech recognition for 25 languages. Fermion Research Phonon-2.5, converted by mudler for parakeet.cpp. This option downloads the verified F16 source and prepares Q5_K locally during installation.",
+      "contextTokens": 8192,
+      "license": "cc-by-4.0",
+      "catalogOrder": 2,
+      "speechRuntime": "parakeet-phonon25-v1",
+      "speechQuantization": "q5_k",
+      "speechConversion": "q5_k",
+      "outputsText": true,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-77632dec039fb6945eac76b5",
+      "repository": "mudler/parakeet-cpp-gguf",
+      "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+      "variantKey": "phonon25-q6_k",
+      "name": "Phonon-2.5 · Packed checkpoint",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "speech",
+      "inputModalities": [
+        "audio"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1441052817,
+      "files": [
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "phonon-2.5-f16.gguf",
+          "bytes": 1441046368,
+          "sha256": "6be6fb7928c1732fd8b881aeaa2bb644fc2ff2464e5a88b3d1017fd34a931ee4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "NOTICE-phonon-2.5.txt",
+          "bytes": 6449,
+          "sha256": null,
+          "gitBlobSha1": "9bef637c94c9dd8eea832fa01ec068860ab334f9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "parakeet_tdt_five_value",
+      "architectures": [],
+      "runtime": {
+        "adapter": "phonon25",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "A lightweight local speech engine prepares automatically. Use for dictation enables the regular chat microphone."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mudler/parakeet-cpp-gguf",
+      "status": "not-installed",
+      "familyId": "publisher-phonon-2-5",
+      "familyLabel": "Phonon-2.5",
+      "originalRepository": "FermionResearch/Phonon-2.5",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "speech",
+      "builtInDescription": "Multilingual speech recognition for 25 languages. Fermion Research Phonon-2.5, converted by mudler for parakeet.cpp. This option downloads the verified F16 source and prepares Q6_K locally during installation.",
+      "contextTokens": 8192,
+      "license": "cc-by-4.0",
+      "catalogOrder": 3,
+      "speechRuntime": "parakeet-phonon25-v1",
+      "speechQuantization": "q6_k",
+      "speechConversion": "q6_k",
+      "outputsText": true,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-69ddc6905700559bf72821ca",
+      "repository": "mudler/parakeet-cpp-gguf",
+      "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+      "variantKey": "phonon25-q8_0",
+      "name": "Phonon-2.5 · Packed checkpoint",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "speech",
+      "inputModalities": [
+        "audio"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 940670097,
+      "files": [
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "phonon-2.5-q8_0.gguf",
+          "bytes": 940663648,
+          "sha256": "be2955ea73ca36fb84e69d95abbc2de67e06dec7bb45cc3f53db15c1dca8eee8",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "mudler/parakeet-cpp-gguf",
+          "revision": "07a08a3a405d20c5434b9a1442f6e6cf571f57ad",
+          "filename": "NOTICE-phonon-2.5.txt",
+          "bytes": 6449,
+          "sha256": null,
+          "gitBlobSha1": "9bef637c94c9dd8eea832fa01ec068860ab334f9",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "parakeet_tdt_five_value",
+      "architectures": [],
+      "runtime": {
+        "adapter": "phonon25",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "A lightweight local speech engine prepares automatically. Use for dictation enables the regular chat microphone."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mudler/parakeet-cpp-gguf",
+      "status": "not-installed",
+      "familyId": "publisher-phonon-2-5",
+      "familyLabel": "Phonon-2.5",
+      "originalRepository": "FermionResearch/Phonon-2.5",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "speech",
+      "builtInDescription": "Multilingual speech recognition for 25 languages. Fermion Research Phonon-2.5, converted by mudler for parakeet.cpp.",
+      "contextTokens": 8192,
+      "license": "cc-by-4.0",
+      "catalogOrder": 4,
+      "speechRuntime": "parakeet-phonon25-v1",
+      "speechQuantization": "q8_0",
+      "speechConversion": null,
       "outputsText": true,
       "supportsTextGeneration": false,
       "operatingModes": []

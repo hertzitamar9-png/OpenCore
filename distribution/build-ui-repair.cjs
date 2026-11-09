@@ -195,6 +195,7 @@ app=editFunction(app,'w8',text=>replaceOnce(text,'i.jsx(Pj,{})',
   'i.jsx(Pj,{blocked:!!(J||D||ge||l.activeConversationIds?.length||l.runtime.status==="starting")})'));
 app=require('./group-conversation-patches.cjs')(app,{replaceOnce});
 app=workbench.patchApp(app,{editFunction,replaceOnce});
+app=replaceOnce(app,'Transcribing — GPU memory is released when finished','Transcribing speech…');
 index=workbench.patchAccount(index,{editFunction,replaceOnce});
 app=editFunction(app,'h8',retainSupportPage);
 app=editFunction(app,'w8',text=>replaceOnce(text,
@@ -213,15 +214,17 @@ const coordinatorSource=fs.readFileSync(path.join(root,'install-coordinator.js')
 if(coordinatorBoundary<0)throw Error('Missing install coordinator entry');
 app += '\nimport{createInstallCoordinator}from"./model-catalog-B8SfuDgQ.js";\n'+coordinatorSource.slice(coordinatorBoundary);
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';
+app += '\nimport{createPhononSpeech}from"./model-catalog-B8SfuDgQ.js";const $phononSpeech=createPhononSpeech($hubRequest,()=>$hubRefresh(true));\n';
 app += '\nimport{createAppUpdatePreferences}from"./model-catalog-B8SfuDgQ.js";const{UpdatePreferences:$UpdatePreferences,markUpdateAttempt:$markUpdateAttempt,useUpdateSchedule:$useUpdateSchedule}=createAppUpdatePreferences(p);\n';
 
 (async () => {
   const report = [];
+  const speechCode='\n'+fs.readFileSync(path.join(root,'../src/phonon-speech.js'),'utf8');
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
   const preferencesCode='\nconst $createAppUpdatePreferences=(()=>{'+fs.readFileSync(path.join(root,'../src/app-update-preferences.js'),'utf8').replace('export function ','function ')+';return createAppUpdatePreferences})();export{$createAppUpdatePreferences as createAppUpdatePreferences};\n';
   const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+workbench.featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode+'\n'+require('./hub-patches.cjs').featureInstallerSource();
-  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures+preferencesCode]]) {
+  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures+preferencesCode+speechCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,
       compress: { passes: name === 'App-kNA9sRUP.js' ? 3 : 1, unused: false },

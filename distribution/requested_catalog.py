@@ -193,4 +193,5 @@ def append_requested(entries, manifest, snapshots):
                 entries.append(entry)
                 existing.add(entry['id'])
                 known.add(identity)
-    return entries
+    from phonon_catalog import apply_presets
+    return apply_presets(entries, snapshots)

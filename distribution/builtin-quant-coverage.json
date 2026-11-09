@@ -3,7 +3,7 @@
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
   "families": 591,
-  "withFive": 236,
+  "withFive": 237,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5841,11 +5841,11 @@
       "id": "publisher-phonon-2-5",
       "label": "Phonon-2.5",
       "category": "speech",
-      "quantizations": 1,
-      "readyToInstallChoices": false,
+      "quantizations": 5,
+      "readyToInstallChoices": true,
       "source": "bundled packages",
       "repositories": [
-        "FermionResearch/Phonon-2.5"
+        "mudler/parakeet-cpp-gguf"
       ]
     },
     {

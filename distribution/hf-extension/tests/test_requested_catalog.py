@@ -15,6 +15,19 @@ from model_modes import apply_operating_modes, snapshot_metadata
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_phonon25_has_five_pinned_speech_options_for_the_same_checkpoint(self):
+        entries = self.family('phonon-2-5')
+        self.assertEqual({entry['quantization'] for entry in entries},
+                         {'Packed', 'Q4_K', 'Q5_K', 'Q6_K', 'Q8_0'})
+        self.assertEqual(len(entries), 5)
+        for entry in entries:
+            self.assertEqual(entry['originalRepository'], 'FermionResearch/Phonon-2.5')
+            self.assertEqual(entry['category'], 'speech')
+            self.assertEqual(entry['runtime']['adapter'], 'phonon25')
+            self.assertTrue(entry['installable'])
+            self.assertTrue(all(pin['pinned'] for pin in entry['files']))
+            validate_entry(entry)
+
     def test_glb_coder_has_exactly_the_two_published_decoders_and_the_shared_projector(self):
         entries = self.family('qwen35-4b-glb-3d-coder')
         self.assertEqual(len(entries), 2)
@@ -332,7 +345,7 @@ class RequestedCatalogTests(unittest.TestCase):
         self.assertTrue(all(e['revision']=='1bf0f958cb4bac8e04b98280dd9fb3f0e942c015' for e in coder))
 
     def test_latest_requested_models_have_all_verified_preset_options(self):
-        expected = {'qwen38-jumbo-fusion-neo-mtp':7, 'phonon-2-5':1, 'kat-coder-apex-miniplus-v2-1':1,
+        expected = {'qwen38-jumbo-fusion-neo-mtp':7, 'phonon-2-5':5, 'kat-coder-apex-miniplus-v2-1':1,
                     'simplesd-4b-thinking':27, 'cortiq-qwopus-dev':5, 'nemotron-3-5-bolt-e4b':10,
                     'fibo-2-0-dev':1, 'flux-3-image-klein':13, 'moss-image-nsfw-lora':2, 'qwen-image-2-1-nsfw-lora':1}
         for family, count in expected.items():
@@ -416,7 +429,7 @@ class RequestedCatalogTests(unittest.TestCase):
                     self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
         self.assertEqual(report['families'], len({row['familyId'] for row in self.rows}))
-        self.assertEqual(report['withFive'], 37)
+        self.assertEqual(report['withFive'], 38)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

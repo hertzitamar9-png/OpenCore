@@ -1,0 +1,73 @@
+// Route the shared microphone to the separately managed Phonon decoder.
+export function createPhononSpeech(request, refresh) {
+  async function wavAudio(encoded) {
+    const raw = Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
+    if (raw.length > 32 * 1024 * 1024) throw Error('The recording is too large. Record a shorter message.');
+    const context = new AudioContext();
+    try {
+      const buffer = await context.decodeAudioData(raw.buffer);
+      if (!buffer.duration || buffer.duration > 600) throw Error('Record up to ten minutes at a time.');
+      const renderer = new OfflineAudioContext(1, Math.ceil(buffer.duration * 16000), 16000);
+      const source = renderer.createBufferSource();
+      source.buffer = buffer;
+      source.connect(renderer.destination);
+      source.start();
+      const mono = (await renderer.startRendering()).getChannelData(0);
+      const bytes = new Uint8Array(44 + mono.length * 2);
+      const view = new DataView(bytes.buffer);
+      const word = (offset, text) => {
+        for (let index = 0; index < text.length; index++) bytes[offset + index] = text.charCodeAt(index);
+      };
+      word(0, 'RIFF'); view.setUint32(4, bytes.length - 8, true); word(8, 'WAVE');
+      word(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true); view.setUint32(24, 16000, true);
+      view.setUint32(28, 32000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+      word(36, 'data'); view.setUint32(40, mono.length * 2, true);
+      for (let index = 0; index < mono.length; index++) {
+        const sample = Math.max(-1, Math.min(1, mono[index]));
+        view.setInt16(44 + index * 2, sample * (sample < 0 ? 32768 : 32767), true);
+      }
+      let binary = '';
+      for (let offset = 0; offset < bytes.length; offset += 16384) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + 16384));
+      }
+      return btoa(binary);
+    } finally {
+      await context.close();
+    }
+  }
+
+  return {
+    async select(entry) {
+      if (entry.runtime?.adapter !== 'phonon25') return false;
+      await request('/speech/select', {id: entry.id});
+      await refresh();
+      return true;
+    },
+    async invoke(command, args, native) {
+      if (!command.startsWith('speech_')) return {handled: false};
+      if (command === 'speech_set_model') {
+        if (args.modelId?.startsWith('hf-')) {
+          return {handled: true, value: await request('/speech/select', {id: args.modelId})};
+        }
+        const value = await native();
+        await request('/speech/select', {id: null});
+        return {handled: true, value};
+      }
+      let status;
+      try { status = (await request('/speech/status')).status; }
+      catch { return {handled: false}; }
+      if (!status) return {handled: false};
+      let value;
+      if (command === 'speech_status' || command === 'speech_set_runtime_precision') value = status;
+      else if (command === 'speech_set_enabled') value = await request('/speech/enabled', args);
+      else if (command === 'speech_set_idle_mode') value = await request('/speech/idle-mode', args);
+      else if (command === 'speech_start') value = await request('/speech/start', {sessionId: args.sessionId || crypto.randomUUID()});
+      else if (command === 'speech_cancel') value = await request('/speech/cancel', args);
+      else if (command === 'speech_transcribe') {
+        value = await request('/speech/transcribe', {...args, audio: await wavAudio(args.audio)});
+      } else return {handled: false};
+      return {handled: true, value};
+    },
+  };
+}

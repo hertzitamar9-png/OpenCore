@@ -46,6 +46,8 @@ def main():
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
     stage_windows_agent(app, args.agent_engine.resolve(strict=True))
+    from phonon_runtime import stage as stage_phonon_runtime
+    stage_phonon_runtime(app, inputs)
     from bridge_policy import prepare as prepare_bridge_policy
     print(json.dumps(prepare_bridge_policy(app)))
     environment = dict(os.environ, OPENCORE_NATIVE_BASE=str(inputs / baseline['assets']['native']['name']),
