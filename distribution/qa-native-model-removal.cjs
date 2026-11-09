@@ -2,9 +2,28 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { chromium } = require(process.env.OPENCORE_PLAYWRIGHT || 'playwright');
+const { validateNativeFamilies, nativeCatalogOffsets, nativeCatalogSlotBytes } = require('./native-catalog.cjs');
+
+// Windows CI can verify the exact executable it installed without relying
+// on remote debugging being available in the runner's WebView2 policy.
+function inspectExecutable(executable) {
+  const data = fs.readFileSync(executable);
+  const slots = nativeCatalogOffsets.map(start => data.subarray(start, start + nativeCatalogSlotBytes));
+  assert.ok(slots.every(slot => slot.length === nativeCatalogSlotBytes && slot.equals(slots[0])),
+    'All embedded model catalogs must match');
+  const { models } = JSON.parse(slots[0].toString('utf8'));
+  assert.ok(models.length > 0);
+  validateNativeFamilies(models);
+  for (const [root, alias] of [['nanbeige-bf16', 'nanbeige-bf16-echo'], ['dualcore-kv', 'dualcore-echo']]) {
+    const familyRoot = models.find(model => model.id === root);
+    assert.ok(familyRoot && !familyRoot.variantOf, root + ' must be the family root');
+    assert.equal(models.find(model => model.id === alias)?.variantOf, root);
+  }
+  return { passed: true, catalogSlots: slots.length, profilesChecked: models.length };
+}
 
 async function checkModelRemoval(port, home) {
+  const { chromium } = require(process.env.OPENCORE_PLAYWRIGHT || 'playwright');
   assert.equal(path.basename(home), 'home');
   assert.match(path.basename(path.dirname(home)), /^opencore-(bridge-policy|native-removal-qa)-/);
   const root = path.join(home, 'OpenCore');
@@ -74,8 +93,9 @@ async function checkModelRemoval(port, home) {
 }
 
 if (require.main === module) {
-  const [port, home] = process.argv.slice(2);
-  checkModelRemoval(port, home).then(result => console.log(JSON.stringify(result))).catch(error => {
+  const [mode, target] = process.argv.slice(2);
+  const run = async () => mode === '--inspect-exe' ? inspectExecutable(target) : checkModelRemoval(mode, target);
+  run().then(result => console.log(JSON.stringify(result))).catch(error => {
     console.error(error);
     process.exitCode = 1;
   });

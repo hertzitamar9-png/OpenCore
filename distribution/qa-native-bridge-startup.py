@@ -7,7 +7,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import socket
 import sqlite3
 import subprocess
 import tempfile
@@ -118,6 +117,8 @@ def _windows_processes(exe, terminate=False):
     kernel.OpenProcess.restype=wintypes.HANDLE
     kernel.QueryFullProcessImageNameW.argtypes=[wintypes.HANDLE,wintypes.DWORD,wintypes.LPWSTR,ctypes.POINTER(wintypes.DWORD)]
     kernel.TerminateProcess.argtypes=[wintypes.HANDLE,wintypes.UINT]
+    kernel.WaitForSingleObject.argtypes=[wintypes.HANDLE,wintypes.DWORD]
+    kernel.WaitForSingleObject.restype=wintypes.DWORD
     kernel.CloseHandle.argtypes=[wintypes.HANDLE]
     snapshot=kernel.CreateToolhelp32Snapshot(2,0)
     if snapshot==ctypes.c_void_p(-1).value:raise ctypes.WinError(ctypes.get_last_error())
@@ -127,14 +128,22 @@ def _windows_processes(exe, terminate=False):
         ok=kernel.Process32FirstW(snapshot,ctypes.byref(entry))
         while ok:
             if entry.name.casefold()==exe.name.casefold():
-                process=kernel.OpenProcess(0x1000 | (1 if terminate else 0),False,entry.pid)
+                access=0x1000 | (0x100001 if terminate else 0)
+                process=kernel.OpenProcess(access,False,entry.pid)
                 if process:
                     try:
                         size=wintypes.DWORD(32768);path=ctypes.create_unicode_buffer(size.value)
                         if (kernel.QueryFullProcessImageNameW(process,0,path,ctypes.byref(size)) and
                                 os.path.normcase(os.path.abspath(path.value))==expected):
                             found.add(entry.pid)
-                            if terminate and not kernel.TerminateProcess(process,0):raise ctypes.WinError(ctypes.get_last_error())
+                            if terminate:
+                                if not kernel.TerminateProcess(process,0):
+                                    error=ctypes.get_last_error()
+                                    # Termination can race with an already signaled process.
+                                    if error!=5 or kernel.WaitForSingleObject(process,0)!=0:
+                                        raise ctypes.WinError(error)
+                                if kernel.WaitForSingleObject(process,5000)!=0:
+                                    raise RuntimeError('Timed out waiting for the isolated test process to exit')
                     finally:kernel.CloseHandle(process)
             ok=kernel.Process32NextW(snapshot,ctypes.byref(entry))
     finally:kernel.CloseHandle(snapshot)
@@ -155,12 +164,6 @@ def main():
         home=Path(directory)/'home'
         if not home.resolve().is_relative_to(Path(directory).resolve()):raise RuntimeError('Invalid isolated profile')
         env=isolated_windows_environment(home)
-        with socket.socket() as listener:
-            listener.bind(('127.0.0.1',0))
-            debug_port=listener.getsockname()[1]
-        env.update(OPENCORE_HOME=str(home/'OpenCore'),
-                   WEBVIEW2_USER_DATA_FOLDER=str(Path(directory)/'webview'),
-                   WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=f'--remote-debugging-port={debug_port}')
         app_data=Path(env['APPDATA'])/'ai.opencore.control-center'
         database=app_data/'control-center.sqlite3'
         bridge_paths=[app_data/'claude-bridge',app_data/'claude-marketplace']
@@ -190,9 +193,6 @@ def main():
             if json.loads(settings.read_text(encoding='utf-8'))!=baseline:raise RuntimeError('Startup changed the unrelated Claude setting')
             assert_no_automatic_history(database)
             assert_sources_preserved(home,source_files)
-            removal_check=Path(__file__).with_name('qa-native-model-removal.cjs').resolve()
-            removal_result=json.loads(subprocess.check_output(
-                ['node',str(removal_check),str(debug_port),str(home)],text=True,timeout=80))
         except Exception:
             print(json.dumps({'launcherExit':process.poll(),'matchingProcesses':sorted(_windows_processes(exe)),
                               'startupLog':new_log()[-4000:]}),flush=True)
@@ -202,12 +202,15 @@ def main():
             try:process.wait(timeout=10)
             except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
             _windows_processes(exe,terminate=True)
+    removal_check=Path(__file__).with_name('qa-native-model-removal.cjs').resolve()
+    removal_catalog=json.loads(subprocess.check_output(
+        ['node',str(removal_check),'--inspect-exe',str(exe)],text=True,timeout=30))
     with exe.open('rb') as source:app_hash=hashlib.file_digest(source,'sha256').hexdigest()
     result={'passed':True,'freshProfile':True,'appStartupObserved':True,'automaticClaudeBridgeCreated':False,'appExeSha256':app_hash,
             'bridgeTokenPresent':False,'externalPluginRegistryCreated':False,'unrelatedSettingPreserved':True,
             'syntheticClaudeAndCodexHistoriesPresent':True,'externalHistoryImported':False,
             'automaticHistorySyncStarted':False,'externalProfilesAndCredentialsPreserved':True,
-            'modelRemoval':removal_result}
+            'modelRemovalCatalog':removal_catalog}
     args.output.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result))
 

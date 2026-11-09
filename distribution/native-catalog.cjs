@@ -8,6 +8,8 @@ const legacyIds = new Map([
   ['fusioncore-echo', 'fusioncore-kv'],
 ]);
 const nanbeigeEcho = 'nanbeige-bf16-echo';
+const nativeCatalogOffsets = [30626254, 128366186, 134114815];
+const nativeCatalogSlotBytes = 5256247;
 
 function resolveLegacyId(id) {
   if (id === nanbeigeEcho || id.startsWith(nanbeigeEcho + '-'))
@@ -15,7 +17,7 @@ function resolveLegacyId(id) {
   return legacyIds.get(id) ?? id;
 }
 
-module.exports = function nativeCatalog(catalog) {
+function nativeCatalog(catalog) {
   const models = catalog.models.map(model => {
     const row = { ...model };
     for (const key of ['operatingModes', 'publishedContextTokens', 'supportsTextGeneration', 'modeProfiles', 'modeAliasOf'])
@@ -35,8 +37,14 @@ module.exports = function nativeCatalog(catalog) {
     }
   }
 
-  // A cycle in any row blocks the native planner for every model. Validate
-  // the effective links the recovered binary follows before packaging.
+  validateNativeFamilies(models);
+  return { ...catalog, models };
+}
+
+// A cycle in any row blocks the native planner for every model. Validate
+// the effective links the recovered binary follows.
+function validateNativeFamilies(models) {
+  const byId = new Map(models.map(model => [model.id, model]));
   for (const model of models) {
     const seen = new Set([model.id]);
     let id = resolveLegacyId(model.variantOf ?? model.id);
@@ -48,5 +56,6 @@ module.exports = function nativeCatalog(catalog) {
       id = parent ? resolveLegacyId(parent) : null;
     }
   }
-  return { ...catalog, models };
-};
+}
+
+module.exports = { nativeCatalog, validateNativeFamilies, nativeCatalogOffsets, nativeCatalogSlotBytes };
