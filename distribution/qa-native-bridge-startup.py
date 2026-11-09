@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import socket
 import sqlite3
 import subprocess
 import tempfile
@@ -154,6 +155,12 @@ def main():
         home=Path(directory)/'home'
         if not home.resolve().is_relative_to(Path(directory).resolve()):raise RuntimeError('Invalid isolated profile')
         env=isolated_windows_environment(home)
+        with socket.socket() as listener:
+            listener.bind(('127.0.0.1',0))
+            debug_port=listener.getsockname()[1]
+        env.update(OPENCORE_HOME=str(home/'OpenCore'),
+                   WEBVIEW2_USER_DATA_FOLDER=str(Path(directory)/'webview'),
+                   WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=f'--remote-debugging-port={debug_port}')
         app_data=Path(env['APPDATA'])/'ai.opencore.control-center'
         database=app_data/'control-center.sqlite3'
         bridge_paths=[app_data/'claude-bridge',app_data/'claude-marketplace']
@@ -183,6 +190,9 @@ def main():
             if json.loads(settings.read_text(encoding='utf-8'))!=baseline:raise RuntimeError('Startup changed the unrelated Claude setting')
             assert_no_automatic_history(database)
             assert_sources_preserved(home,source_files)
+            removal_check=Path(__file__).with_name('qa-native-model-removal.cjs').resolve()
+            removal_result=json.loads(subprocess.check_output(
+                ['node',str(removal_check),str(debug_port),str(home)],text=True,timeout=80))
         except Exception:
             print(json.dumps({'launcherExit':process.poll(),'matchingProcesses':sorted(_windows_processes(exe)),
                               'startupLog':new_log()[-4000:]}),flush=True)
@@ -196,7 +206,8 @@ def main():
     result={'passed':True,'freshProfile':True,'appStartupObserved':True,'automaticClaudeBridgeCreated':False,'appExeSha256':app_hash,
             'bridgeTokenPresent':False,'externalPluginRegistryCreated':False,'unrelatedSettingPreserved':True,
             'syntheticClaudeAndCodexHistoriesPresent':True,'externalHistoryImported':False,
-            'automaticHistorySyncStarted':False,'externalProfilesAndCredentialsPreserved':True}
+            'automaticHistorySyncStarted':False,'externalProfilesAndCredentialsPreserved':True,
+            'modelRemoval':removal_result}
     args.output.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result))
 

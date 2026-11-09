@@ -319,7 +319,7 @@ jobs:
           }
           python distribution/package.py --app distribution/.output/inputs/app --python distribution/.output/inputs/app/test-python --output distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION --commit $env:GITHUB_SHA --icon src-tauri/icons/icon.ico --logo src-tauri/icons/icon.png --webview distribution/.output/inputs/MicrosoftEdgeWebview2Setup.exe --nsis $nsis
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Verify an isolated install and the packaged Python and helpers
+      - name: Verify an isolated install, model removal and packaged dependencies
         run: |
           $installer = (Resolve-Path -LiteralPath 'distribution/.output/release/OpenCore Package.exe').Path
           $testRoot = Join-Path $env:RUNNER_TEMP 'opencore-installer-check'

@@ -26,8 +26,8 @@ for (const name of ['index-CD0EH-dA.js', 'App-kNA9sRUP.js','model-catalog-B8SfuD
   ranges.push([asset.raw, asset.raw + asset.length], [asset.reference + 8, asset.reference + 16]);
   changes.push({ name: asset.name, oldCompressedBytes: asset.length, newCompressedBytes: compressed.length, oldSha256: asset.sha256, newSha256: hash(text) });
 }
-const nativeCatalog=JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8'));
-for(const model of nativeCatalog.models)for(const key of ['operatingModes','publishedContextTokens','supportsTextGeneration','modeProfiles','modeAliasOf'])delete model[key];
+const nativeCatalog=require('./native-catalog.cjs')(
+  JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
 const catalog=Buffer.from(JSON.stringify(nativeCatalog));
 const catalogOldHash='444038c0030a3cba97b0112649f0f6b11e6ca19742a3dec6c8efe93c5161c6ba';
 for(const start of [30626254,128366186,134114815]){
