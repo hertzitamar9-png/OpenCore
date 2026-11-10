@@ -158,6 +158,38 @@ class KvInvalidationTests(unittest.TestCase):
         self.assertEqual(state._backend_conversation, "other-chat")
         self.assertFalse(state._backend_needs_reset)
 
+    def test_switching_chats_resets_context_without_reloading_model_weights(self):
+        with tempfile.TemporaryDirectory() as folder:
+            archives = echo_server.ArchiveSet(Path(folder), 0)
+            state = echo_server.EchoState(archives, "http://127.0.0.1:1", 0, 4, False)
+            try:
+                state._ctx_size = 32768
+                state.count_tokens = lambda text: max(1, len(str(text)) // 4)
+                handler = object.__new__(echo_server.Handler)
+                handler.state, handler.headers = state, {}
+                handler._send_json = lambda code, result: result
+                requests = []
+                def generate(body, phase):
+                    requests.append(json.loads(json.dumps(body)))
+                    return {"choices": [{"finish_reason": "stop", "message": {
+                        "role": "assistant", "content": "Finished this chat."}}]}
+                handler._generate_live = generate
+                first = "FIRST_CHAT_PRIVATE_MARKER " * 800
+                handler._controlled_context({"messages": [{"role": "user", "content": first}], "max_tokens": 128}, "first-chat")
+                handler._controlled_context({"messages": [{"role": "user", "content": "Hello, new chat."}], "max_tokens": 128}, "second-chat")
+                self.assertTrue(requests[1]["echo_reset"])
+                self.assertFalse(requests[1]["echo_append"])
+                self.assertNotEqual(requests[0]["echo_session_id"], requests[1]["echo_session_id"])
+                self.assertNotIn("FIRST_CHAT_PRIVATE_MARKER", json.dumps(requests[1]["messages"]))
+                first_live = echo_server.LiveTranscript(archives.get("first-chat"), "first-chat")
+                second_live = echo_server.LiveTranscript(archives.get("second-chat"), "second-chat")
+                self.assertGreater(first_live.prompt_tokens, second_live.prompt_tokens)
+                self.assertEqual(first_live.question, first)
+                self.assertEqual(second_live.question, "Hello, new chat.")
+            finally:
+                state.memory_controller.close()
+                archives.close()
+
 
 if __name__ == "__main__":
     unittest.main()

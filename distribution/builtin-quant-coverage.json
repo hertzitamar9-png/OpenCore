@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 591,
-  "withFive": 237,
+  "families": 596,
+  "withFive": 238,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5323,6 +5323,28 @@
       ]
     },
     {
+      "id": "publisher-gui-swift-4b",
+      "label": "GUI-Swift 4B",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "dongjintao/GUI-Swift-4B"
+      ]
+    },
+    {
+      "id": "publisher-gui-swift-mobile-2b",
+      "label": "GUI-Swift Mobile 2B",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "dongjintao/GUI-Swift-Mobile-2B"
+      ]
+    },
+    {
       "id": "publisher-herculis-cua-gui-actioner-4b",
       "label": "Herculis CUA GUI Actioner 4B",
       "category": "computer-use",
@@ -5559,6 +5581,17 @@
       ]
     },
     {
+      "id": "publisher-kormo-gui-4b",
+      "label": "KORMo GUI 4B",
+      "category": "computer-use",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "KORMo-VL/GUI_4B"
+      ]
+    },
+    {
       "id": "publisher-lfm3-1-7b",
       "label": "LFM3 1.7B",
       "category": "text",
@@ -5695,6 +5728,18 @@
       ]
     },
     {
+      "id": "publisher-lfm3-coder-claude-distill",
+      "label": "LFM3 Coder Claude Distill 1.7B",
+      "category": "text",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Schnuckade/LFM-3-Coder-Claude-Distill",
+        "mradermacher/LFM-3-Coder-Claude-Distill-GGUF"
+      ]
+    },
+    {
       "id": "publisher-lfm3-omni-2b",
       "label": "LFM3 Omni 2B",
       "category": "text",
@@ -5777,6 +5822,17 @@
         "Mininglamp-2718/Mano-CUA-2.0-4B",
         "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
         "mradermacher/Mano-CUA-2.0-4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-mobilegym-4b",
+      "label": "MobileGym 4B",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "GUI-Gym/MobileGym-4B"
       ]
     },
     {

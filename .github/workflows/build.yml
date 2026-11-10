@@ -299,6 +299,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-context-activity.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-conversation-status.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-activity-retention.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-autoloop.cjs

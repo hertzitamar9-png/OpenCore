@@ -61,6 +61,10 @@ index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement
 index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
 index+='\nconst $speechControlsStyle=document.createElement("style");$speechControlsStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/speech-controls.css'),'utf8'))+';document.head.appendChild($speechControlsStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
+app=replaceOnce(app,'className:`client-dot client-${a.client.toLowerCase().replaceAll(" ","-")}`',
+  'className:`client-dot client-${a.client.toLowerCase().replaceAll(" ","-")}`,style:/^(active|running|complete|completed|stop)$/.test(a.status)?{background:"var(--green)"}:void 0');
+app=replaceOnce(app,'i.jsx(l8,{conversations:l.conversations,',
+  'i.jsx(l8,{conversations:l.conversations.map(a=>l.activeConversationIds?.includes(a.id)?{...a,status:"running"}:a),');
 app = replaceOnce(app, 'When enabled, the Codex agent runtime can read', 'When enabled, OpenCore Agent can read');
 app=replaceOnce(app,'const Xf=()=>{try{const t=window.localStorage.getItem("opencore.model-profile");if(t&&g2(t))return t}catch{}return"doucode"}',
   'const Xf=()=>{const e=globalThis.__OPENCORE_PHONE__===true;try{const t=window.localStorage.getItem("opencore.model-profile");if(e)return t||"stopped";if(t&&g2(t))return t}catch{}return "stopped"}');

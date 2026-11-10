@@ -96425,6 +96425,194 @@
       "computerBaseBytes": 608863580
     },
     {
+      "id": "hf-1ee6f1c4e2f47fd3cdb987c0",
+      "variantKey": "gui-swift:desktop131",
+      "repository": "dongjintao/GUI-Swift-4B",
+      "revision": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+      "format": "safetensors",
+      "quantization": "Publisher LoRA",
+      "subdirectory": "",
+      "category": "computer-use",
+      "files": [
+        {
+          "repository": "dongjintao/GUI-Swift-4B",
+          "revision": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+          "filename": "adapter_model.safetensors",
+          "bytes": 132185000,
+          "sha256": "7d381f31bb1649cca4c59ed2e3e78ea78b3fc5dfdbfa7e5274f7d292123dbd61",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-4B",
+          "revision": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+          "filename": "codebook.json",
+          "bytes": 26961,
+          "sha256": null,
+          "gitBlobSha1": "5ec85c7898b16ae1a335a37c13af99dcf7c161eb",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-4B",
+          "revision": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+          "filename": "gui_swift_config.json",
+          "bytes": 7782,
+          "sha256": null,
+          "gitBlobSha1": "8c64ba018f36cdb8124f1c803b2300fdf575c621",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-4B",
+          "revision": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+          "filename": "language_adapter_config.json",
+          "bytes": 907,
+          "sha256": null,
+          "gitBlobSha1": "51e0470a7f4e741fbe264769b08633bcd05463b4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-4B",
+          "revision": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+          "filename": "provenance.json",
+          "bytes": 4750,
+          "sha256": null,
+          "gitBlobSha1": "051e9320ef2768a5007747fa40c40a9598cc5aa2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-4B",
+          "revision": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+          "filename": "upstream.json",
+          "bytes": 751,
+          "sha256": null,
+          "gitBlobSha1": "6a2c85170ded97764902a2592df9e1ff30f3acf0",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 132226151,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/dongjintao/GUI-Swift-4B",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The 131-slot GUI-Swift inference path requires its publisher decoder and matching GUI-Owl base. The ordinary text-generation LoRA loader cannot execute this protocol."
+      },
+      "familyId": "publisher-gui-swift-4b",
+      "familyLabel": "GUI-Swift 4B",
+      "originalRepository": "dongjintao/GUI-Swift-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher desktop GUI action adapter for GUI-Owl-1.5-4B-Instruct. Predicts one action with 131 fixed slots in a single forward pass. Requires the matching base, codebook and publisher prediction runtime. This package is an action-prediction adapter; chat generation and autonomous desktop execution are unverified.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "GUI-Swift 4B · Publisher LoRA",
+      "baseRepository": "mPLUG/GUI-Owl-1.5-4B-Instruct",
+      "packageKind": "adapter",
+      "catalogOrder": 1,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-1657237c803f5b05592dcfcc",
+      "variantKey": "gui-swift:mobile105",
+      "repository": "dongjintao/GUI-Swift-Mobile-2B",
+      "revision": "b7fc81a6953c47d2dcba42d9dde2e462484b6a52",
+      "format": "safetensors",
+      "quantization": "Publisher LoRA",
+      "subdirectory": "",
+      "category": "computer-use",
+      "files": [
+        {
+          "repository": "dongjintao/GUI-Swift-Mobile-2B",
+          "revision": "b7fc81a6953c47d2dcba42d9dde2e462484b6a52",
+          "filename": "adapter_config.json",
+          "bytes": 1163,
+          "sha256": null,
+          "gitBlobSha1": "f32db7e7c488d4068dd2edd9e171227b0391d051",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-Mobile-2B",
+          "revision": "b7fc81a6953c47d2dcba42d9dde2e462484b6a52",
+          "filename": "adapter_model.safetensors",
+          "bytes": 1734827240,
+          "sha256": "7312466ddb1f9a1137de4a2e3b0bd311a3f7662b64331b0cb2dd5ac33636aa0c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-Mobile-2B",
+          "revision": "b7fc81a6953c47d2dcba42d9dde2e462484b6a52",
+          "filename": "gui_swift_mobile_config.json",
+          "bytes": 4692,
+          "sha256": null,
+          "gitBlobSha1": "39ca3aa635bfb77ddc2313ebf8db7e25c7b0dd6a",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-Mobile-2B",
+          "revision": "b7fc81a6953c47d2dcba42d9dde2e462484b6a52",
+          "filename": "provenance.json",
+          "bytes": 2524,
+          "sha256": null,
+          "gitBlobSha1": "1a220854df7a1263e7798cc20842cc094eaa8f67",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dongjintao/GUI-Swift-Mobile-2B",
+          "revision": "b7fc81a6953c47d2dcba42d9dde2e462484b6a52",
+          "filename": "upstream.json",
+          "bytes": 587,
+          "sha256": null,
+          "gitBlobSha1": "0725c68f6e96805ce69b13b01937d896385e27e5",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 1734836206,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/dongjintao/GUI-Swift-Mobile-2B",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The 105-slot mobile prediction protocol requires the publisher decoder and exact GUI-Owl base. A standard autoregressive LoRA runtime is insufficient."
+      },
+      "familyId": "publisher-gui-swift-mobile-2b",
+      "familyLabel": "GUI-Swift Mobile 2B",
+      "originalRepository": "dongjintao/GUI-Swift-Mobile-2B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Publisher Android GUI action LoRA for GUI-Owl-1.5-2B-Instruct. Predicts structured mobile actions with 105 masked slots in one forward pass. Requires the matching base and publisher fixed-slot decoder. This checkpoint does not by itself provide an Android device-control harness.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "GUI-Swift Mobile 2B · Publisher LoRA",
+      "baseRepository": "mPLUG/GUI-Owl-1.5-2B-Instruct",
+      "packageKind": "adapter",
+      "catalogOrder": 1,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
       "id": "hf-6811cd67cfbae2b0ff86f89a",
       "repository": "mradermacher/Herculis-CUA-GUI-Actioner-4B-GGUF",
       "revision": "f1c98cb296169493b9d3d7a63d404f31a77dcefc",
@@ -112337,6 +112525,163 @@
       "publishedContextTokens": 262144
     },
     {
+      "id": "hf-3df2a7d1ec3fc34d8afaa8ea",
+      "repository": "KORMo-VL/GUI_4B",
+      "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+      "variantKey": "safetensors:.",
+      "name": "KORMo GUI 4B · Original",
+      "quantization": "Original",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 10370036473,
+      "files": [
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "model.safetensors",
+          "bytes": 10350019328,
+          "sha256": "173f2891ee6c0d737d9b23a80c1617878f118fc33325645c361bfabe57b7d88a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "chat_template.jinja",
+          "bytes": 7756,
+          "sha256": null,
+          "gitBlobSha1": "a585dec894e63da457d9440ec6aa7caa16d20860",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "config.json",
+          "bytes": 2851,
+          "sha256": null,
+          "gitBlobSha1": "890b6392fe1bc23dbe07535f4404ebc220964e31",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "generation_config.json",
+          "bytes": 116,
+          "sha256": null,
+          "gitBlobSha1": "26a38965d019cf32f95c03c88a4b2192d02e82ec",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "processor_config.json",
+          "bytes": 1191,
+          "sha256": null,
+          "gitBlobSha1": "33818c7f9e991ad735fd240209f4fa73e6c28c50",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "tokenizer.json",
+          "bytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "tokenizer_config.json",
+          "bytes": 1165,
+          "sha256": null,
+          "gitBlobSha1": "1d134cd298be1e3be25db393d93a1cefe80e3214",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "system_prompt.md",
+          "bytes": 3124,
+          "sha256": null,
+          "gitBlobSha1": "a74f36422dbc2f6479c1c98ff77d4c0f3e9a2d10",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "revision": "dbcf2450151472c8de06fa5ff2d1210773d912ee",
+          "filename": "tools.json",
+          "bytes": 11617,
+          "sha256": null,
+          "gitBlobSha1": "8bfc0c6c97c7c7acdaab8379cd98f0ba20ea13eb",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": true,
+      "sourceUrl": "https://huggingface.co/KORMo-VL/GUI_4B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-kormo-gui-4b",
+      "familyLabel": "KORMo GUI 4B",
+      "originalRepository": "KORMo-VL/GUI_4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Korean/English Qwen3.5-4B vision-language web agent. The publisher serves it with a 128K limit and its own system prompt, 21 tool definitions and chat template. Access approval and a Hugging Face token are required. Text runtime preparation is separate from verified screenshot reasoning and browser action execution.",
+      "license": "Publisher terms",
+      "supportedContextTokens": 131072,
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 32768,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null
+    },
+    {
       "id": "hf-e0ca700fd7aadc535eb26c2b",
       "repository": "LiquidAI/LFM3-1.7B-GGUF",
       "revision": "bad5729bba61d076fff20d2548e62526665af215",
@@ -121077,6 +121422,1021 @@
       "publishedContextTokens": null
     },
     {
+      "id": "hf-0be887cf65ac781a9ba3a71e",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q2_K.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 750157088,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q2_K.gguf",
+          "bytes": 750157088,
+          "sha256": "0c1924d42d8fba5fc548e6b7e8b3c208cffd1013a49a83d6745dc1dc34613d34",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-6d30b4ad66a240838f7862f1",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q3_K_S.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 854879264,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q3_K_S.gguf",
+          "bytes": 854879264,
+          "sha256": "4750cff6e635d5bdb11f5dfd4d449b19b1ba06d35d7ba0eff43a4befdd3a80f2",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-009092cd3c5b09c1c34352d5",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q3_K_M.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 914902048,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q3_K_M.gguf",
+          "bytes": 914902048,
+          "sha256": "9b49e0bb87c82a4100d6d1db282adc4b40c2f819bca332ab954b655e42e744fc",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-d2f1cac881a977a58a48d63c",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q3_K_L.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 967068704,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q3_K_L.gguf",
+          "bytes": 967068704,
+          "sha256": "942336cc5776b5de3af52fc9fb5ffad25076c3d094bb9c56b3f84cdb7945d30b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-d7171d1938f0fae4edab0b96",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.IQ4_XS.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1011170080,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.IQ4_XS.gguf",
+          "bytes": 1011170080,
+          "sha256": "5a88e86fbe68c7e9d31bc45671392a87294857a57ba20b4ab64a5fb024d6d274",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-6b116ab741543e2f0ba9963f",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q4_K_S.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1056040736,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q4_K_S.gguf",
+          "bytes": 1056040736,
+          "sha256": "a18b719f56ce5029b670f224c39dcd1f963e055bd6209e88bbfad9d2f4e38135",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-73b018f6676597db658009bd",
+      "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q4_K_M.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1099627104,
+      "files": [
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+          "filename": "LFM-3-Coder-Claude-Distill.Q4_K_M.gguf",
+          "bytes": 1099627104,
+          "sha256": "16ca5ce2efd0aea9a794d8205acd9bbf8f050431a1fad3f66e1af05c8bc2aedd",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [
+        "Lfm3ForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Schnuckade/LFM-3-Coder-Claude-Distill",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-2adee8423bc1189eadcdd90f",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q5_K_S.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1232901920,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q5_K_S.gguf",
+          "bytes": 1232901920,
+          "sha256": "83b9228b0d107e2296757afc3fbcad5f828a8554a31351536b7abe1006ac4ffb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-b5db02386d7069d1eba287e6",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q5_K_M.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1258665760,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q5_K_M.gguf",
+          "bytes": 1258665760,
+          "sha256": "3be90f5bc2777a6d8b12a43597d8a79b64109c0c06a3f003f6afaee7395b410c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-1fbdd6b6ac3eca69252669bc",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q6_K.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1427640864,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q6_K.gguf",
+          "bytes": 1427640864,
+          "sha256": "ef788586f5befff25bed7efcddaf39e67eca2dc50fa20b95d1cc5262ae74b6ad",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-48482f320bbe69fb8d0e8f6e",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.Q8_0.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1846241056,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.Q8_0.gguf",
+          "bytes": 1846241056,
+          "sha256": "fe03faf74ca69aa0b1b0a95e1f9126595c4d35b41e370e11d687012c993c843a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-74a43c181001e887cfd379fa",
+      "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+      "variantKey": "gguf:LFM-3-Coder-Claude-Distill.f16.gguf",
+      "name": "LFM3 Coder Claude Distill 1.7B · F16",
+      "quantization": "F16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3466628896,
+      "files": [
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "revision": "d4f962f1369900febfc55ba962eb0010bfef5494",
+          "filename": "LFM-3-Coder-Claude-Distill.f16.gguf",
+          "bytes": 3466628896,
+          "sha256": "9b59ef1dca02803866a4a7e3d860a41cd8e9497c11003b2a12180bbe04cb09c5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "managedEngine": "lfm3-cpu-v1",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-36a5d50f792eaf9d0f20eb2a",
+      "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+      "variantKey": "safetensors:.",
+      "name": "LFM3 Coder Claude Distill 1.7B · FP16",
+      "quantization": "FP16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 3475559593,
+      "files": [
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+          "filename": "model.safetensors",
+          "bytes": 3457635160,
+          "sha256": "013eb47143cd05c2300af1d61c9b1676b44f7f241295e854b9752cb1a949589a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+          "filename": "chat_template.jinja",
+          "bytes": 12129,
+          "sha256": null,
+          "gitBlobSha1": "d0747b8b5fc99eaecfe02a04eefcff75eb181334",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+          "filename": "config.json",
+          "bytes": 1482,
+          "sha256": null,
+          "gitBlobSha1": "c4810d60d8dd4ef620e157eb735c89cbf271ce72",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+          "filename": "generation_config.json",
+          "bytes": 328,
+          "sha256": null,
+          "gitBlobSha1": "7e054dc2c4a49a0f03551b1eef5e0516ad197698",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+          "filename": "tokenizer.json",
+          "bytes": 17908634,
+          "sha256": "41927bd314d17d7d7fadb44e10cd0919f7b71528d7741596d8cbd15c6945ec44",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "revision": "20a4a8dd8544a0cc3f0440c3b03519aa7ed4b55c",
+          "filename": "tokenizer_config.json",
+          "bytes": 1860,
+          "sha256": null,
+          "gitBlobSha1": "81d099fef20214bc06e3472c9a2651b10f0f6efc",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "lfm3",
+      "architectures": [
+        "Lfm3ForCausalLM"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Schnuckade/LFM-3-Coder-Claude-Distill",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "familyLabel": "LFM3 Coder Claude Distill 1.7B",
+      "originalRepository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
       "id": "hf-f0964412b6b8069faaf7cf9f",
       "repository": "LiquidAI/LFM3-Omni-2B-GGUF",
       "revision": "3d29af2ad166f8299c2d820937e47dc0add20ffc",
@@ -129612,6 +130972,212 @@
           "targetContextTokens": 32768,
           "contextTokens": 32768,
           "supported": false
+        }
+      ],
+      "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-4f5ad2d2f3a6eb29faffc84a",
+      "repository": "GUI-Gym/MobileGym-4B",
+      "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+      "variantKey": "safetensors:.",
+      "name": "MobileGym 4B · FP32",
+      "quantization": "FP32",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 9669583482,
+      "files": [
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "model-00001-of-00002.safetensors",
+          "bytes": 4966529832,
+          "sha256": "20959c1aec6c9991f7407f8647e11f66ea44190adb9076e587f7ffac92e3c21c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "model-00002-of-00002.safetensors",
+          "bytes": 4687102008,
+          "sha256": "9351b7fff24c89200f04de014b3a979d64ca9620e4d4b04a474b55d6face8a20",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "added_tokens.json",
+          "bytes": 707,
+          "sha256": null,
+          "gitBlobSha1": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "chat_template.jinja",
+          "bytes": 5292,
+          "sha256": null,
+          "gitBlobSha1": "124386803f142761528f710e77ae483f5f8c4fc4",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "config.json",
+          "bytes": 1597,
+          "sha256": null,
+          "gitBlobSha1": "203876e3988f5cbd86b4b9befd00f917ef10b73d",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "generation_config.json",
+          "bytes": 213,
+          "sha256": null,
+          "gitBlobSha1": "9a7dcbe7624a85aa6b33b11acced8e86653e93cf",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "merges.txt",
+          "bytes": 1671853,
+          "sha256": null,
+          "gitBlobSha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "model.safetensors.index.json",
+          "bytes": 64836,
+          "sha256": null,
+          "gitBlobSha1": "e009ebb28eeddaa4b25fde8d2274752e96c5560b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "preprocessor_config.json",
+          "bytes": 782,
+          "sha256": null,
+          "gitBlobSha1": "2fa6553554f69b4e3a6b742a75264ff9dff90ad0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "special_tokens_map.json",
+          "bytes": 613,
+          "sha256": null,
+          "gitBlobSha1": "ac23c0aaa2434523c494330aeb79c58395378103",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "tokenizer.json",
+          "bytes": 11422654,
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "tokenizer_config.json",
+          "bytes": 5445,
+          "sha256": null,
+          "gitBlobSha1": "fec7f182135c384a08ea2fc9635566ca79c45afc",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "GUI-Gym/MobileGym-4B",
+          "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 817,
+          "sha256": null,
+          "gitBlobSha1": "e32b1d90356f74457edbfca27aa1e121dab7cdc7",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3_vl",
+      "architectures": [
+        "Qwen3VLForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/GUI-Gym/MobileGym-4B",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo",
+      "familyId": "publisher-mobilegym-4b",
+      "familyLabel": "MobileGym 4B",
+      "originalRepository": "GUI-Gym/MobileGym-4B",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Qwen3-VL-4B mobile GUI agent checkpoint trained with reinforcement learning. Includes both complete model shards, tokenizer, chat template and image/video processor configuration. Native context follows the published 262K configuration; ECHO uses 32K. Screenshot prediction and Android action execution require a compatible vision and device harness.",
+      "license": "Publisher terms",
+      "catalogOrder": 0,
+      "echoWorkingWindowTokens": 32768,
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 262144,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 32768,
+          "supported": true
         }
       ],
       "publishedContextTokens": 262144

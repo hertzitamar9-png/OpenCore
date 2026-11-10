@@ -2897,6 +2897,120 @@
           "runtimeReason": "This community edition uses compressed-tensors NVFP4A16 and needs a compatible quantized Qwen3.5-VL runtime. Choose a GGUF or the original BF16 checkpoint for OpenCore's managed runtime."
         }
       ]
+    },
+    {
+      "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+      "familyId": "publisher-lfm3-coder-claude-distill",
+      "label": "LFM3 Coder Claude Distill 1.7B",
+      "category": "text",
+      "description": "LFM3-1.7B coding and reasoning finetune. Includes the publisher Q4_K_M and FP16 checkpoint plus all twelve verified mradermacher GGUF quants. Native context follows the published 262K limit; ECHO uses a 32K working window. Local quality and action execution must be verified on the installed runtime.",
+      "sources": [
+        {
+          "repository": "Schnuckade/LFM-3-Coder-Claude-Distill",
+          "managedEngine": "lfm3-cpu-v1"
+        },
+        {
+          "repository": "mradermacher/LFM-3-Coder-Claude-Distill-GGUF",
+          "managedEngine": "lfm3-cpu-v1"
+        }
+      ]
+    },
+    {
+      "repository": "dongjintao/GUI-Swift-4B",
+      "familyId": "publisher-gui-swift-4b",
+      "label": "GUI-Swift 4B",
+      "category": "computer-use",
+      "baseRepository": "mPLUG/GUI-Owl-1.5-4B-Instruct",
+      "description": "Publisher desktop GUI action adapter for GUI-Owl-1.5-4B-Instruct. Predicts one action with 131 fixed slots in a single forward pass. Requires the matching base, codebook and publisher prediction runtime. This package is an action-prediction adapter; chat generation and autonomous desktop execution are unverified.",
+      "sources": [
+        {
+          "repository": "dongjintao/GUI-Swift-4B",
+          "runtimeReason": "The 131-slot GUI-Swift inference path requires its publisher decoder and matching GUI-Owl base. The ordinary text-generation LoRA loader cannot execute this protocol.",
+          "packages": [
+            {
+              "key": "gui-swift:desktop131",
+              "format": "safetensors",
+              "quantization": "Publisher LoRA",
+              "files": [
+                "adapter_model.safetensors",
+                "language_adapter_config.json",
+                "gui_swift_config.json",
+                "codebook.json",
+                "upstream.json",
+                "provenance.json"
+              ],
+              "requiredFiles": [
+                "adapter_model.safetensors",
+                "language_adapter_config.json",
+                "gui_swift_config.json",
+                "codebook.json"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "dongjintao/GUI-Swift-Mobile-2B",
+      "familyId": "publisher-gui-swift-mobile-2b",
+      "label": "GUI-Swift Mobile 2B",
+      "category": "computer-use",
+      "baseRepository": "mPLUG/GUI-Owl-1.5-2B-Instruct",
+      "description": "Publisher Android GUI action LoRA for GUI-Owl-1.5-2B-Instruct. Predicts structured mobile actions with 105 masked slots in one forward pass. Requires the matching base and publisher fixed-slot decoder. This checkpoint does not by itself provide an Android device-control harness.",
+      "sources": [
+        {
+          "repository": "dongjintao/GUI-Swift-Mobile-2B",
+          "runtimeReason": "The 105-slot mobile prediction protocol requires the publisher decoder and exact GUI-Owl base. A standard autoregressive LoRA runtime is insufficient.",
+          "packages": [
+            {
+              "key": "gui-swift:mobile105",
+              "format": "safetensors",
+              "quantization": "Publisher LoRA",
+              "files": [
+                "adapter_model.safetensors",
+                "adapter_config.json",
+                "gui_swift_mobile_config.json",
+                "upstream.json",
+                "provenance.json"
+              ],
+              "requiredFiles": [
+                "adapter_model.safetensors",
+                "adapter_config.json",
+                "gui_swift_mobile_config.json"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "GUI-Gym/MobileGym-4B",
+      "familyId": "publisher-mobilegym-4b",
+      "label": "MobileGym 4B",
+      "category": "computer-use",
+      "description": "Qwen3-VL-4B mobile GUI agent checkpoint trained with reinforcement learning. Includes both complete model shards, tokenizer, chat template and image/video processor configuration. Native context follows the published 262K configuration; ECHO uses 32K. Screenshot prediction and Android action execution require a compatible vision and device harness.",
+      "sources": [
+        {
+          "repository": "GUI-Gym/MobileGym-4B"
+        }
+      ]
+    },
+    {
+      "repository": "KORMo-VL/GUI_4B",
+      "familyId": "publisher-kormo-gui-4b",
+      "label": "KORMo GUI 4B",
+      "category": "computer-use",
+      "supportedContextTokens": 131072,
+      "description": "Korean/English Qwen3.5-4B vision-language web agent. The publisher serves it with a 128K limit and its own system prompt, 21 tool definitions and chat template. Access approval and a Hugging Face token are required. Text runtime preparation is separate from verified screenshot reasoning and browser action execution.",
+      "sources": [
+        {
+          "repository": "KORMo-VL/GUI_4B",
+          "supportFiles": [
+            "system_prompt.md",
+            "tools.json"
+          ]
+        }
+      ]
     }
   ]
 }

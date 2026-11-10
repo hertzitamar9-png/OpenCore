@@ -7,6 +7,11 @@ upstream app-server entry point, its local-model instructions, and recovery of m
 OpenCore session state. The upstream shell, file patching, sandbox, approvals, MCP,
 thread storage, streaming and subagent implementations run inside the compiled engine.
 
+The private OpenCore provider flattens tool namespaces for the installed desktop
+gateway and restores them on streamed tool calls before dispatch. The reversible
+wire aliases preserve separate MCP namespaces, argument schemas and approvals.
+Other model providers keep their original protocol.
+
 The Windows host uses the existing v2 IPC and on-disk session format. The private
 installation path remains compatible with the recovered Windows host. OpenCore selects
 the model and adds its developer instructions, ECHO, user preferences and enabled app

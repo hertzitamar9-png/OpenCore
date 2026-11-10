@@ -69,6 +69,7 @@ def prepare_source(source):
     with tarfile.open(archive) as snapshot:
         snapshot.extractall(source, filter="data")
     shutil.copy2(HERE / "main.rs", source / "codex-rs/app-server/src/main.rs")
+    shutil.copy2(HERE / "legacy-tools.rs", source / "codex-rs/core/src/opencore_legacy_tools.rs")
     subprocess.run(["git", "apply", str(HERE / "opencore.patch")], cwd=source, check=True)
     # The upstream release tag bumps the workspace version but leaves the
     # path-only lock entries at 0.0.0. Registry versions and hashes stay pinned.
@@ -102,6 +103,7 @@ def build(output, cache, jobs):
         for license_file in ("LICENSE", "NOTICE"):
             shutil.copy2(source / license_file, output / license_file)
     receipt = {"sourceRevision": REVISION, "version": VERSION,
+               "openCoreSources": {name: sha256(HERE / name) for name in ("main.rs", "opencore.patch", "legacy-tools.rs")},
                "sha256": {name: sha256(output / name) for name in [*BINARIES.values(), "LICENSE", "NOTICE"]}}
     (output / "engine-build.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
 
@@ -110,6 +112,7 @@ def stage_windows_agent(app, binaries):
     receipt = json.loads((binaries / "engine-build.json").read_text(encoding="utf-8"))
     expected_files = {*BINARIES.values(), "LICENSE", "NOTICE"}
     if (receipt.get("sourceRevision") != REVISION or receipt.get("version") != VERSION
+            or receipt.get("openCoreSources") != {name: sha256(HERE / name) for name in ("main.rs", "opencore.patch", "legacy-tools.rs")}
             or set(receipt.get("sha256", {})) != expected_files):
         raise ValueError("The OpenCore agent build receipt does not match the pinned sources")
     for name, digest in receipt["sha256"].items():

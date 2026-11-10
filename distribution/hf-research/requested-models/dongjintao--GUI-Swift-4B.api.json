@@ -1,0 +1,345 @@
+{
+  "_id": "6aed809531c2d52dd4f37ba1",
+  "id": "dongjintao/GUI-Swift-4B",
+  "private": false,
+  "tags": [
+    "safetensors",
+    "gui-agent",
+    "computer-use",
+    "vision-language",
+    "single-pass",
+    "fixed-slot",
+    "custom-inference",
+    "en",
+    "base_model:mPLUG/GUI-Owl-1.5-4B-Instruct",
+    "base_model:adapter:mPLUG/GUI-Owl-1.5-4B-Instruct",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 2,
+  "modelId": "dongjintao/GUI-Swift-4B",
+  "author": "dongjintao",
+  "sha": "8da55ccb4634b77fb89c8964a84ba158834b6dcc",
+  "lastModified": "2026-11-06T08:47:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "language": [
+      "en"
+    ],
+    "license": "apache-2.0",
+    "base_model": "mPLUG/GUI-Owl-1.5-4B-Instruct",
+    "base_model_relation": "adapter",
+    "tags": [
+      "gui-agent",
+      "computer-use",
+      "vision-language",
+      "single-pass",
+      "fixed-slot",
+      "custom-inference"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0eabd0b032ef0d17603ba666c111246c02dd4465",
+      "size": 1872
+    },
+    {
+      "rfilename": ".gitignore",
+      "blobId": "4d18bcb4777bc030c13fb7f973d678f27d495303",
+      "size": 34
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "2c06fbd4f98b8cc6a750d5b5a30ddd0862ad9f0f",
+      "size": 11340
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ae6ee8c3613aa5fd7a7715cc1107f206972003d1",
+      "size": 13400
+    },
+    {
+      "rfilename": "README_zh.md",
+      "blobId": "f04928622186aad40874925d19edf6324d0384de",
+      "size": 9912
+    },
+    {
+      "rfilename": "SHA256SUMS.json",
+      "blobId": "5c12e56aa9de738d8a2ecb63ccb4c1c4267ca834",
+      "size": 5171
+    },
+    {
+      "rfilename": "THIRD_PARTY.md",
+      "blobId": "c9da712528081251f32112e9a78bdd18725d9ea8",
+      "size": 2052
+    },
+    {
+      "rfilename": "adapter_model.safetensors",
+      "blobId": "11aabbdeeaf501c64a93c886f53e75485efefe02",
+      "size": 132185000,
+      "lfs": {
+        "sha256": "7d381f31bb1649cca4c59ed2e3e78ea78b3fc5dfdbfa7e5274f7d292123dbd61",
+        "size": 132185000,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "assets/gimp-click.svg",
+      "blobId": "908e3f842b9838a06053f09037343b3587d72f5e",
+      "size": 762108
+    },
+    {
+      "rfilename": "assets/hero.svg",
+      "blobId": "5cc41e5bf0a5ee19267ef194dbdb35082f105d3d",
+      "size": 11011
+    },
+    {
+      "rfilename": "assets/workflow.svg",
+      "blobId": "448993bf9066a2fa8afc27bbc5a69cf0004f30f1",
+      "size": 2052
+    },
+    {
+      "rfilename": "codebook.json",
+      "blobId": "5ec85c7898b16ae1a335a37c13af99dcf7c161eb",
+      "size": 26961
+    },
+    {
+      "rfilename": "docs/coordinate-tolerance.json",
+      "blobId": "91345049df01db62302e7d4fc29636134d675dda",
+      "size": 1301
+    },
+    {
+      "rfilename": "docs/technical-details.md",
+      "blobId": "1ed5f6ea94deac3ef8df9bdb0be85913488f2ae0",
+      "size": 10561
+    },
+    {
+      "rfilename": "evaluation.json",
+      "blobId": "9b360ccde884173702b6bef0242098af47b8fdd8",
+      "size": 2386
+    },
+    {
+      "rfilename": "examples/output.json",
+      "blobId": "28ba475660b0e2591db3fdd9573f20caaa1c6a16",
+      "size": 1838
+    },
+    {
+      "rfilename": "examples/request.json",
+      "blobId": "c02cdcf929489347cd847380de5fe9d330d58880",
+      "size": 88
+    },
+    {
+      "rfilename": "examples/screen.png",
+      "blobId": "86d2efa6c61a902afc05ac44a1250859ecf10173",
+      "size": 4136
+    },
+    {
+      "rfilename": "examples/validation/01-gimp.json",
+      "blobId": "bd2dddf8478a6000e0fb68691109d816f99a4a4a",
+      "size": 1399
+    },
+    {
+      "rfilename": "examples/validation/01-gimp.png",
+      "blobId": "b99a44df6c7dffc8f6ec298515d543c25ad83b1d",
+      "size": 570735,
+      "lfs": {
+        "sha256": "b8288ee8650cdb49eca4a69cd12382a0af2f964f7183811c747863d38f1663b2",
+        "size": 570735,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/02-writer.json",
+      "blobId": "e41e8a7c2c4219beec58f601c80e55923d003c6c",
+      "size": 1424
+    },
+    {
+      "rfilename": "examples/validation/02-writer.png",
+      "blobId": "bfdb2b843613edda467d4b9fbaacf47d4216379d",
+      "size": 638635,
+      "lfs": {
+        "sha256": "4102453bd1d77e9807c1066124f1134097c34d665c4b722a905bc5a4c62744bf",
+        "size": 638635,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/03-impress.json",
+      "blobId": "1f91846bfa4094ad7633fce460fe576ea63b84c9",
+      "size": 1482
+    },
+    {
+      "rfilename": "examples/validation/03-impress.png",
+      "blobId": "4bca23d02e2d2369d2870d3884a271b81949b35c",
+      "size": 555366,
+      "lfs": {
+        "sha256": "0029c90ae7806d9e086205f4b988c7c8b62a8b360542cbdcd7af93af3df626e7",
+        "size": 555366,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/04-calc.json",
+      "blobId": "187a5f8980c94d843d814e88a5504098e9f5e695",
+      "size": 1278
+    },
+    {
+      "rfilename": "examples/validation/04-calc.png",
+      "blobId": "6b852b4b93d0f0e704fda2c5aded0d40ddcfd18f",
+      "size": 479799,
+      "lfs": {
+        "sha256": "ae636934686c75001d29c143c28164a1804bf69635b7caf1116786f228a20050",
+        "size": 479799,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/05-text-failure.json",
+      "blobId": "10e4a543743a1a82d649964aa392020300df9ad4",
+      "size": 1515
+    },
+    {
+      "rfilename": "examples/validation/05-text-failure.png",
+      "blobId": "fc194e3897ec5eb45fcb731a4037f1caa585a616",
+      "size": 492621,
+      "lfs": {
+        "sha256": "4990e9c99d8b227a80b40179ccc8c7fda6ab7e5510a76fb30c975ebaa250a079",
+        "size": 492621,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/AGENTNET-LICENSE.txt",
+      "blobId": "af0e89bf99cb5c2450448877048c5d44d338ddfb",
+      "size": 1076
+    },
+    {
+      "rfilename": "examples/validation/manifest.json",
+      "blobId": "b04f7a4e97979105be36f496598536519e037f36",
+      "size": 907
+    },
+    {
+      "rfilename": "frozen/gui_owl_desktop131.py",
+      "blobId": "0ec2b87efb7d37ade345f140a7d15ed54e88a1dc",
+      "size": 9242
+    },
+    {
+      "rfilename": "frozen/gui_owl_native134.py",
+      "blobId": "6a474490bcf5337ed624bc63846bf20eb3f701b5",
+      "size": 14553
+    },
+    {
+      "rfilename": "frozen/runtime_parts.py",
+      "blobId": "e11a1873aede7aae28f5a8e9421d80314108a4e6",
+      "size": 3990
+    },
+    {
+      "rfilename": "frozen/trace2task/__init__.py",
+      "blobId": "d91e42aee7c2f6cd24f4c4209473433d84995517",
+      "size": 46
+    },
+    {
+      "rfilename": "frozen/trace2task/actions.py",
+      "blobId": "4806c97ec1a9d4536001b1430056a869d855534e",
+      "size": 13702
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_fill_table.py",
+      "blobId": "a334a7e493c0ef194b0344c0829a83578803ee4e",
+      "size": 12348
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_native_table.py",
+      "blobId": "036b4dcc7038f66f9683c57ebe9d8b1dd99a325f",
+      "size": 8002
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_owl_native_sft_model.py",
+      "blobId": "90669ced13a12d6550ca07842e6e453ffc26f9e0",
+      "size": 15892
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_owl_parallel137_codec.py",
+      "blobId": "772b6fd7d6221727a01962312797806c36c5f51a",
+      "size": 14970
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_owl_parallel4075_model.py",
+      "blobId": "ed66bb13718484a4e7012da7cdbf2dad5fd3bb9b",
+      "size": 14353
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_owl_short_parallel_input.py",
+      "blobId": "4e477feab729ebfed7fbe74e961a615c324a53f6",
+      "size": 2977
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_owl_standard40_model.py",
+      "blobId": "1260fb49a4af3e1db75d36f9072edef0b7266ca2",
+      "size": 14095
+    },
+    {
+      "rfilename": "frozen/trace2task/gui_standard40.py",
+      "blobId": "26d62591057256a288c0202763aaa84758990131",
+      "size": 12534
+    },
+    {
+      "rfilename": "frozen/trace2task/visual_nanojev_agentnet.py",
+      "blobId": "946b7432d8d9e467ec3d2e7c255f84328379f0fd",
+      "size": 11269
+    },
+    {
+      "rfilename": "frozen/trace2task/visual_nanojev_data.py",
+      "blobId": "83d50a3c095638b64e869f6c86706f7355d08181",
+      "size": 15981
+    },
+    {
+      "rfilename": "gui_swift_config.json",
+      "blobId": "8c64ba018f36cdb8124f1c803b2300fdf575c621",
+      "size": 7782
+    },
+    {
+      "rfilename": "infer.py",
+      "blobId": "26260560f1014dc21e256aa5b6aceac9dc4c4e27",
+      "size": 7148
+    },
+    {
+      "rfilename": "language_adapter_config.json",
+      "blobId": "51e0470a7f4e741fbe264769b08633bcd05463b4",
+      "size": 907
+    },
+    {
+      "rfilename": "prepare_dependencies.py",
+      "blobId": "dc73c81bae455d3971976282b8ef2f225e8c0763",
+      "size": 1786
+    },
+    {
+      "rfilename": "provenance.json",
+      "blobId": "051e9320ef2768a5007747fa40c40a9598cc5aa2",
+      "size": 4750
+    },
+    {
+      "rfilename": "release-validation.json",
+      "blobId": "07627d627a25dabc78df875657b178b1bb168cbc",
+      "size": 1025
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "5f1221897c39731f005e447cde09b3d5f91f3126",
+      "size": 256
+    },
+    {
+      "rfilename": "upstream.json",
+      "blobId": "6a2c85170ded97764902a2592df9e1ff30f3acf0",
+      "size": 751
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-06T07:24:05.000Z",
+  "usedStorage": 134922156
+}

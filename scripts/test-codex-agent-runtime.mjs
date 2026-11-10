@@ -160,9 +160,11 @@ function sendModelTurn(response, id, output) {
   response.end();
 }
 
-function modelFunctionCall() {
+function modelFunctionCall(payload) {
+  const wireTool = payload.tools.find(tool => tool.name === 'ocns_13_mcp__opencore_test_action');
   return { id: 'fc_open_core_test', type: 'function_call', status: 'completed', call_id: 'call_open_core_test',
-    namespace: 'mcp__opencore', name: 'test_action', arguments: JSON.stringify({ value: 'bridge me' }) };
+    ...(wireTool ? { name: wireTool.name } : { namespace: 'mcp__opencore', name: 'test_action' }),
+    arguments: JSON.stringify({ value: 'bridge me' }) };
 }
 
 function responseForText(id, text) {
@@ -297,6 +299,8 @@ try {
       assert.equal(request.headers['x-opencore-timeline-owner'], 'app');
       const payload = JSON.parse(raw || '{}');
       assert.equal(payload.model, 'opencore');
+      if (sourceBuiltEngine) assert.ok(payload.tools.every(tool => tool.type !== 'namespace'),
+        'The installed desktop gateway requires flat wire tools; the private engine must retain MCP routing internally');
       modelRequests.push({ model: payload.model, instructions: payload.instructions, input: payload.input, tools: payload.tools });
       requestCount++;
       signalRequestCount();
@@ -314,7 +318,7 @@ try {
         localShellCheck = 'passed';
         sendModelTurn(response, 'resp_shell_done', responseForText('shell_done', 'The local shell returned its output.'));
       } else if (requestCount === 1) sendModelTurn(response, 'resp_local', responseForText('local', 'Local OpenCore response passed.'));
-      else if (requestCount === 2) sendModelTurn(response, 'resp_tool', [modelFunctionCall()]);
+      else if (requestCount === 2) sendModelTurn(response, 'resp_tool', [modelFunctionCall(payload)]);
       else if (requestCount === 3) sendModelTurn(response, 'resp_answer', responseForText('answer', 'OpenCore MCP tool loop passed.'));
       else if (requestCount === 4) {
         response.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' });

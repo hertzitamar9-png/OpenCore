@@ -1,0 +1,274 @@
+{
+  "_id": "6af0a246f264c137a044a531",
+  "id": "dongjintao/GUI-Swift-Mobile-2B",
+  "private": false,
+  "library_name": "peft",
+  "tags": [
+    "peft",
+    "safetensors",
+    "gui-agent",
+    "android",
+    "lora",
+    "fixed-slot",
+    "en",
+    "base_model:mPLUG/GUI-Owl-1.5-2B-Instruct",
+    "base_model:adapter:mPLUG/GUI-Owl-1.5-2B-Instruct",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 20,
+  "likes": 1,
+  "modelId": "dongjintao/GUI-Swift-Mobile-2B",
+  "author": "dongjintao",
+  "sha": "b7fc81a6953c47d2dcba42d9dde2e462484b6a52",
+  "lastModified": "2026-11-08T16:35:25.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "peft": {
+      "base_model_name_or_path": "mPLUG/GUI-Owl-1.5-2B-Instruct"
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "mPLUG/GUI-Owl-1.5-2B-Instruct",
+    "base_model_relation": "adapter",
+    "library_name": "peft",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "gui-agent",
+      "android",
+      "lora",
+      "fixed-slot",
+      "safetensors"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "1ac36aa6201c75bf18f4cec8d5bcef27abee99b9",
+      "size": 1800
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "2c06fbd4f98b8cc6a750d5b5a30ddd0862ad9f0f",
+      "size": 11340
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "19d48d4362848505ea44be917dd63d64f44069f5",
+      "size": 11657
+    },
+    {
+      "rfilename": "README_zh.md",
+      "blobId": "d464b739db6b2248fba53f7970fa900a842cc14c",
+      "size": 6562
+    },
+    {
+      "rfilename": "SHA256SUMS.json",
+      "blobId": "08cb4d3443bca332da93092d6da3e47ca83e77d0",
+      "size": 3746
+    },
+    {
+      "rfilename": "THIRD_PARTY.md",
+      "blobId": "8f99947a7b18bc936dc92aad4d11d71742334785",
+      "size": 2464
+    },
+    {
+      "rfilename": "adapter_config.json",
+      "blobId": "f32db7e7c488d4068dd2edd9e171227b0391d051",
+      "size": 1163
+    },
+    {
+      "rfilename": "adapter_model.safetensors",
+      "blobId": "2938520e0baa4a63cba7401a5c510f81ebfc2ae0",
+      "size": 1734827240,
+      "lfs": {
+        "sha256": "7312466ddb1f9a1137de4a2e3b0bd311a3f7662b64331b0cb2dd5ac33636aa0c",
+        "size": 1734827240,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "assets/hero.svg",
+      "blobId": "d36ac20a44f68982fbec9ad9a157897c1d35be4e",
+      "size": 9002
+    },
+    {
+      "rfilename": "assets/results.svg",
+      "blobId": "62e60aaeb1f3640082a092364c000e530885b7d3",
+      "size": 1334
+    },
+    {
+      "rfilename": "assets/workflow.svg",
+      "blobId": "be7171a0178f0c4e91c0e9d8a14a96897624cbcb",
+      "size": 1910
+    },
+    {
+      "rfilename": "bundle/native/src/trace2task/gui_owl_parallel137_codec.py",
+      "blobId": "772b6fd7d6221727a01962312797806c36c5f51a",
+      "size": 14970
+    },
+    {
+      "rfilename": "bundle/native/src/trace2task/gui_owl_short_parallel_input.py",
+      "blobId": "4e477feab729ebfed7fbe74e961a615c324a53f6",
+      "size": 2977
+    },
+    {
+      "rfilename": "bundle/source/gui_owl_native134.py",
+      "blobId": "6a474490bcf5337ed624bc63846bf20eb3f701b5",
+      "size": 14553
+    },
+    {
+      "rfilename": "bundle/source/gui_owl_unified133.py",
+      "blobId": "e0afb1c89327d4fe64dfe64a3fe2f39999122d43",
+      "size": 20585
+    },
+    {
+      "rfilename": "bundle/source/native134_executor.py",
+      "blobId": "4913b0df14560bdf70769f7f2eb48567d3492d40",
+      "size": 3488
+    },
+    {
+      "rfilename": "evaluation.json",
+      "blobId": "b118e36652130cbaf83dda130be9ec8df4d86284",
+      "size": 5107
+    },
+    {
+      "rfilename": "examples/validation/01-tap.json",
+      "blobId": "3f787c694d49a876ead8e24f97d9bb5bac50d8e3",
+      "size": 593
+    },
+    {
+      "rfilename": "examples/validation/01-tap.png",
+      "blobId": "14cefc8263c4344575ef875ead1ce928f68940a5",
+      "size": 190961,
+      "lfs": {
+        "sha256": "c9856999aaf949b9d747a8a26fbcaaddc110a03778528180a9180d3f84308f18",
+        "size": 190961,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/02-text.json",
+      "blobId": "09769b38aa0a5bcab940f4cfdc8fafb7aa52b86c",
+      "size": 549
+    },
+    {
+      "rfilename": "examples/validation/02-text.png",
+      "blobId": "ffa03bdecfce39367259554f7505815dec3c4b38",
+      "size": 112754,
+      "lfs": {
+        "sha256": "49c8f1c89e4998bcbf60886cc81ffda34dfdf85b176e3589b8976b10795208f7",
+        "size": 112754,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/03-scroll.json",
+      "blobId": "1df604f70f3274815b3cd6910f37b54f9c3334c6",
+      "size": 487
+    },
+    {
+      "rfilename": "examples/validation/03-scroll.png",
+      "blobId": "0975c7beeb2a5813bc75157d86e1db291a9fde90",
+      "size": 671995,
+      "lfs": {
+        "sha256": "356ddc7dfca28c6d5b08645a2c914d291424e4f0c9abfe9d823a16c7b5de771b",
+        "size": 671995,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "examples/validation/04-text-failure.json",
+      "blobId": "7851f9d2ba50f0075329123a971e8d50a7093312",
+      "size": 563
+    },
+    {
+      "rfilename": "examples/validation/04-text-failure.png",
+      "blobId": "50d66c09896c0850e8b49e08a42bb0aa5ac1a053",
+      "size": 104200,
+      "lfs": {
+        "sha256": "0655a9acb5d81a55770b09bed308c8d2402c5122218ed8a4a848b4d925e8e091",
+        "size": 104200,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gallery-provenance.json",
+      "blobId": "6a21f8ac74e106ddae7266a3603eb33a04344586",
+      "size": 2968
+    },
+    {
+      "rfilename": "gui_swift_mobile_config.json",
+      "blobId": "39ca3aa635bfb77ddc2313ebf8db7e25c7b0dd6a",
+      "size": 4692
+    },
+    {
+      "rfilename": "infer.py",
+      "blobId": "bdb768d4f191541ddf8fcbfce6741f5003c3f9cd",
+      "size": 7368
+    },
+    {
+      "rfilename": "prepare_dependencies.py",
+      "blobId": "10b500cf4f09a6512d88dca438466c7739f69bf6",
+      "size": 2435
+    },
+    {
+      "rfilename": "provenance.json",
+      "blobId": "1a220854df7a1263e7798cc20842cc094eaa8f67",
+      "size": 2524
+    },
+    {
+      "rfilename": "release-validation.json",
+      "blobId": "fee3ac982699fb73686d8614606b78342756ff24",
+      "size": 567
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "5f1221897c39731f005e447cde09b3d5f91f3126",
+      "size": 256
+    },
+    {
+      "rfilename": "runtime/runtime_parts.py",
+      "blobId": "c0480de241db30e46e77d79c66e2a5aee0ae894b",
+      "size": 6001
+    },
+    {
+      "rfilename": "runtime/trace2task/__init__.py",
+      "blobId": "3a6987e126e98c1498198868398ea682cca2de19",
+      "size": 35
+    },
+    {
+      "rfilename": "runtime/trace2task/mobile105_codec.py",
+      "blobId": "26697acc33e38ba18fddf3ee07c04d63bbc8a97e",
+      "size": 12327
+    },
+    {
+      "rfilename": "runtime/trace2task/mobile105_conversation.py",
+      "blobId": "82f41b4c74593ddd92ba79aec04b480d058f4240",
+      "size": 9104
+    },
+    {
+      "rfilename": "runtime/trace2task/mobile133_codec.py",
+      "blobId": "fb42e4a2ea7ae4c47e679e5f696c30633a23b3f1",
+      "size": 12041
+    },
+    {
+      "rfilename": "runtime/trace2task/mobile133_protocol.py",
+      "blobId": "db1498e4fd688c678e5580df572c6eb9b6e8e185",
+      "size": 2981
+    },
+    {
+      "rfilename": "upstream.json",
+      "blobId": "0725c68f6e96805ce69b13b01937d896385e27e5",
+      "size": 587
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-08T16:24:38.000Z",
+  "usedStorage": 1735907150
+}

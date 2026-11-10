@@ -141,3 +141,50 @@
          ConfigOverrides {
              model,
              model_provider,
+--- a/codex-rs/core/src/client.rs
++++ b/codex-rs/core/src/client.rs
+@@ -24,6 +24,9 @@
+ //!
+ //! WebSocket prewarm is treated as the first websocket connection attempt for a turn. If it
+ //! fails, normal stream retry/fallback logic handles recovery on the same turn.
++
++#[path = "opencore_legacy_tools.rs"]
++mod opencore_legacy_tools;
+ 
+ use std::collections::HashMap;
+ use std::sync::Arc;
+@@ -986,7 +989,7 @@
+             }
+         }
+         let client_metadata = responses_metadata.client_metadata(include_internal);
+-        let request = ResponsesApiRequest {
++        let mut request = ResponsesApiRequest {
+             model: model_info.slug.clone(),
+             instructions,
+             input,
+@@ -1004,6 +1007,9 @@
+             client_metadata: Some(client_metadata),
+             access_programs: None,
+         };
++        if self.state.provider.info().name.starts_with("OpenCore") {
++            opencore_legacy_tools::prepare(&mut request)?;
++        }
+         Ok(request)
+     }
+ 
+@@ -2407,9 +2413,14 @@
+                 }
+                 event = api_stream.next() => event,
+             };
+-            let Some(event) = event else {
++            let Some(mut event) = event else {
+                 break;
+             };
++            if provider.info().name.starts_with("OpenCore") {
++                if let Ok(event) = &mut event {
++                    opencore_legacy_tools::restore(event);
++                }
++            }
+             match event {
+                 Ok(ResponseEvent::OutputItemDone(item)) => {
+                     items_added.push(item.clone());

@@ -1,0 +1,235 @@
+{
+  "_id": "6aebe42a45d36e660f95f140",
+  "id": "GUI-Gym/MobileGym-4B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3_vl",
+    "image-text-to-text",
+    "reinforcement-learning",
+    "grpo",
+    "visual-agent",
+    "mobile-gui",
+    "conversational",
+    "arxiv:2605.26114",
+    "base_model:Qwen/Qwen3-VL-4B-Instruct",
+    "base_model:finetune:Qwen/Qwen3-VL-4B-Instruct",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 35,
+  "likes": 0,
+  "modelId": "GUI-Gym/MobileGym-4B",
+  "author": "GUI-Gym",
+  "sha": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",
+  "lastModified": "2026-11-05T02:05:47.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3VLForConditionalGeneration"
+    ],
+    "dtype": "float32",
+    "eos_token_id": 151645,
+    "image_token_id": 151655,
+    "model_type": "qwen3_vl",
+    "pad_token_id": 151643,
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "bos_token_id": 151643,
+      "dtype": "float32",
+      "eos_token_id": 151645,
+      "head_dim": 128,
+      "hidden_act": "silu",
+      "hidden_size": 2560,
+      "initializer_range": 0.02,
+      "intermediate_size": 9728,
+      "max_position_embeddings": 262144,
+      "model_type": "qwen3_vl_text",
+      "num_attention_heads": 32,
+      "num_hidden_layers": 36,
+      "num_key_value_heads": 8,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          24,
+          20,
+          20
+        ],
+        "rope_type": "default"
+      },
+      "rope_theta": 5000000,
+      "tie_word_embeddings": true,
+      "use_cache": true,
+      "vocab_size": 151936
+    },
+    "tie_word_embeddings": true,
+    "transformers_version": "4.57.6",
+    "video_token_id": 151656,
+    "vision_config": {
+      "deepstack_visual_indexes": [
+        5,
+        11,
+        17
+      ],
+      "depth": 24,
+      "dtype": "float32",
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1024,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4096,
+      "model_type": "qwen3_vl",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 2560,
+      "patch_size": 16,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 151653,
+    "vision_start_token_id": 151652
+  },
+  "cardData": {
+    "base_model": "Qwen/Qwen3-VL-4B-Instruct",
+    "library_name": "transformers",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "reinforcement-learning",
+      "grpo",
+      "visual-agent",
+      "mobile-gui"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0fd17d2f7c330afce8bc2b472393143fa66f68a1",
+      "size": 101
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "fe0badb692ba8d23f50430647c3ed73fa2caf611",
+      "size": 3381
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+      "size": 707
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "124386803f142761528f710e77ae483f5f8c4fc4",
+      "size": 5292
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "203876e3988f5cbd86b4b9befd00f917ef10b73d",
+      "size": 1597
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "9a7dcbe7624a85aa6b33b11acced8e86653e93cf",
+      "size": 213
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "d9dddd2d8ebca68e60a282ec688a074fda4d7b59",
+      "size": 4966529832,
+      "lfs": {
+        "sha256": "20959c1aec6c9991f7407f8647e11f66ea44190adb9076e587f7ffac92e3c21c",
+        "size": 4966529832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "9da4d400cb4c3ebde3c61b3d5fd2a12ec7292b12",
+      "size": 4687102008,
+      "lfs": {
+        "sha256": "9351b7fff24c89200f04de014b3a979d64ca9620e4d4b04a474b55d6face8a20",
+        "size": 4687102008,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "e009ebb28eeddaa4b25fde8d2274752e96c5560b",
+      "size": 64836
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "2fa6553554f69b4e3a6b742a75264ff9dff90ad0",
+      "size": 782
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "cd71f61a15a522601badb3dc960d800d9cb3766c",
+      "size": 11422654,
+      "lfs": {
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "size": 11422654,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "fec7f182135c384a08ea2fc9635566ca79c45afc",
+      "size": 5445
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "e32b1d90356f74457edbfca27aa1e121dab7cdc7",
+      "size": 817
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-05T02:04:26.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 4826771968
+    },
+    "total": 4826771968
+  },
+  "usedStorage": 9665054494
+}
