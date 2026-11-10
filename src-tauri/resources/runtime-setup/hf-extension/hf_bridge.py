@@ -1453,7 +1453,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif route == '/speech/enabled':
             self._send(200, state.speech.configure('enabled', body.get('enabled')))
         elif route == '/speech/idle-mode':
-            self._send(200, state.speech.configure('idleMode', body.get('mode')))
+            self._send(200, state.speech.configure('idleMode', body.get('mode', body.get('idleMode'))))
         elif route == '/speech/start':
             self._send(200, state.speech.start(body.get('sessionId')))
         elif route == '/speech/transcribe':

@@ -44,6 +44,18 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_speech_idle_mode_http_contract_preserves_both_client_versions(self):
+        self.assertEqual(self.request('POST', '/api/speech/idle-mode', {'mode': 'cold'})[0], 200)
+        self.assertEqual(self.state.speech.settings['idleMode'], 'cold')
+        self.assertEqual(self.request('POST', '/api/speech/idle-mode', {'idleMode': 'ram'})[0], 200)
+        self.assertEqual(self.state.speech.settings['idleMode'], 'ram')
+        self.assertEqual(self.request('POST', '/api/speech/idle-mode', {'idleMode': 'cold'})[0], 200)
+        self.assertEqual(self.state.speech.settings['idleMode'], 'cold')
+        for body in ({}, {'mode': 'disk'}, {'idleMode': None}, {'mode': []}):
+            self.assertEqual(self.request('POST', '/api/speech/idle-mode', body)[0], 400)
+        self.assertEqual(self.state.speech.settings['idleMode'], 'cold')
+        self.assertEqual(self.request('POST', '/api/speech/idle-mode', {'mode': 'ram'}, secret=None)[0], 401)
+
     def test_managed_speech_routes_require_owner_authentication(self):
         self.assertEqual(self.request('GET', '/api/speech/status', secret=None)[0], 401)
         self.assertEqual(self.request('POST', '/api/speech/select', {'id': 'unknown'}, secret=None)[0], 401)

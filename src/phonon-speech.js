@@ -101,13 +101,13 @@ export function createPhononSpeech(request, refresh) {
             h('legend', null, 'When the microphone starts'),
             h('label', null,
               h('input', {type: 'radio', name: 'phonon25-idle-' + entry.id, checked: speech?.idleMode === 'cold',
-                onChange: () => void change('/speech/idle-mode', {idleMode: 'cold'})}),
+                onChange: () => void change('/speech/idle-mode', {mode: 'cold'})}),
               h('span', null, h('strong', null, 'Load from disk each time'),
                 h('small', null, 'Cold start · ' + (selected && speech.coldStartMs != null
                   ? 'about ' + (speech.coldStartMs / 1000).toFixed(2) + ' s on this device' : 'startup time is measured on first use')))),
             h('label', null,
               h('input', {type: 'radio', name: 'phonon25-idle-' + entry.id, checked: (speech?.idleMode || 'ram') === 'ram',
-                onChange: () => void change('/speech/idle-mode', {idleMode: 'ram'})}),
+                onChange: () => void change('/speech/idle-mode', {mode: 'ram'})}),
               h('span', null, h('strong', null, 'Keep sleeping in RAM'),
                 h('small', null, 'Recommended for frequent dictation · weights stay in system RAM between recordings.')))),
           h('p', {className: 'whisper-runtime-status', role: 'status'}, !ready

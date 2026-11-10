@@ -241,7 +241,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-phonon-microphone.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node qa-phonon-settings.cjs
+          python qa-phonon-settings.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-workbench.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
