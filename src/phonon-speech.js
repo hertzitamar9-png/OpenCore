@@ -40,6 +40,87 @@ export function createPhononSpeech(request, refresh) {
   }
 
   return {
+    createControls(React) {
+      const h = React.createElement;
+      return function ManagedSpeechControls({entry, disabled = false}) {
+        const [speech, setSpeech] = React.useState(null);
+        const [pending, setPending] = React.useState(false);
+        const [error, setError] = React.useState('');
+        const [connectionError, setConnectionError] = React.useState('');
+        const alive = React.useRef(true);
+        const mutation = React.useRef(0);
+        React.useEffect(() => {
+          alive.current = true;
+          let active = true;
+          async function load() {
+            const revision = mutation.current;
+            if (revision % 2) return;
+            try {
+              const value = (await request('/speech/status')).status;
+              if (active && revision === mutation.current) { managed = !!value; setSpeech(value); setConnectionError(''); }
+            } catch (error) {
+              if (active && revision === mutation.current) setConnectionError(String(error.message || error));
+            }
+          }
+          void load();
+          const timer = setInterval(load, 1500);
+          return () => { active = false; alive.current = false; clearInterval(timer); };
+        }, [entry.id]);
+        const selected = speech?.modelId === entry.id;
+        const enabled = selected && speech.enabled;
+        const ready = entry.status === 'installed' && entry.runtimeReady;
+        const locked = disabled || pending || !ready;
+        async function change(route, args) {
+          mutation.current++;
+          setPending(true); setError('');
+          try {
+            if (!selected) {
+              await request('/speech/select', {id: entry.id});
+              managed = true;
+              sessions.clear();
+            }
+            const value = await request(route, args);
+            if (alive.current) setSpeech(value);
+            await refresh();
+          } catch (error) {
+            if (alive.current) setError(String(error.message || error));
+          } finally {
+            mutation.current++;
+            if (alive.current) setPending(false);
+          }
+        }
+        const starting = selected && speech.phase === 'loading';
+        return h('div', {className: 'whisper-controls', 'aria-label': (entry.familyLabel || 'Phonon-2.5') + ' speech settings'},
+          h('div', {className: 'whisper-enable-row'},
+            h('div', null, h('strong', null, 'Microphone dictation'),
+              h('small', null, 'Runs locally on CPU. RAM standby keeps weights ready between recordings.')),
+            h('button', {type: 'button', role: 'switch', 'aria-checked': !!enabled, 'aria-label': 'Speech to text',
+              className: 'whisper-toggle' + (enabled ? ' on' : ''), disabled: locked,
+              onClick: () => void change('/speech/enabled', {enabled: !enabled})}, h('span'), enabled ? 'On' : 'Off')),
+          h('fieldset', {disabled: locked || starting || selected && ['recording', 'transcribing'].includes(speech.phase)},
+            h('legend', null, 'When the microphone starts'),
+            h('label', null,
+              h('input', {type: 'radio', name: 'phonon25-idle-' + entry.id, checked: speech?.idleMode === 'cold',
+                onChange: () => void change('/speech/idle-mode', {idleMode: 'cold'})}),
+              h('span', null, h('strong', null, 'Load from disk each time'),
+                h('small', null, 'Cold start · ' + (selected && speech.coldStartMs != null
+                  ? 'about ' + (speech.coldStartMs / 1000).toFixed(2) + ' s on this device' : 'startup time is measured on first use')))),
+            h('label', null,
+              h('input', {type: 'radio', name: 'phonon25-idle-' + entry.id, checked: (speech?.idleMode || 'ram') === 'ram',
+                onChange: () => void change('/speech/idle-mode', {idleMode: 'ram'})}),
+              h('span', null, h('strong', null, 'Keep sleeping in RAM'),
+                h('small', null, 'Recommended for frequent dictation · weights stay in system RAM between recordings.')))),
+          h('p', {className: 'whisper-runtime-status', role: 'status'}, !ready
+            ? 'Finish installing this speech model to enable the microphone.'
+            : pending ? 'Saving speech settings…' : !enabled ? 'Speech is off. The model stays installed on disk.'
+            : starting ? 'Loading the speech model…'
+            : speech.phase === 'recording' ? 'Microphone recording is active.'
+            : speech.phase === 'transcribing' ? 'Transcribing the recording…'
+            : speech.idleMode === 'cold' ? 'Loads from disk when you click the microphone.'
+            : speech.workerReady ? 'Sleeping in system RAM; ready for dictation.' : 'RAM standby loads before the next recording.'),
+          error || connectionError ? h('p', {role: 'alert'}, error || connectionError) : null);
+      };
+    },
     async select(entry) {
       if (entry.runtime?.adapter !== 'phonon25') return false;
       await request('/speech/select', {id: entry.id});

@@ -59,6 +59,7 @@ index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement
 // This global style is independent of the App module. Put it in the entry
 // asset so the fixed native App slot retains room for normal release versions.
 index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
+index+='\nconst $speechControlsStyle=document.createElement("style");$speechControlsStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/speech-controls.css'),'utf8'))+';document.head.appendChild($speechControlsStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 app = replaceOnce(app, 'When enabled, the Codex agent runtime can read', 'When enabled, OpenCore Agent can read');
 app=replaceOnce(app,'const Xf=()=>{try{const t=window.localStorage.getItem("opencore.model-profile");if(t&&g2(t))return t}catch{}return"doucode"}',
@@ -214,7 +215,7 @@ const coordinatorSource=fs.readFileSync(path.join(root,'install-coordinator.js')
 if(coordinatorBoundary<0)throw Error('Missing install coordinator entry');
 app += '\nimport{createInstallCoordinator}from"./model-catalog-B8SfuDgQ.js";\n'+coordinatorSource.slice(coordinatorBoundary);
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';
-app += '\nimport{createPhononSpeech}from"./model-catalog-B8SfuDgQ.js";const $phononSpeech=createPhononSpeech($hubRequest,()=>$hubRefresh(true));\n';
+app += '\nimport{createPhononSpeech}from"./model-catalog-B8SfuDgQ.js";const $phononSpeech=createPhononSpeech($hubRequest,()=>$hubRefresh(true)),$PhononSpeechControls=$phononSpeech.createControls(p);\n';
 app += '\nimport{createAppUpdatePreferences}from"./model-catalog-B8SfuDgQ.js";const{UpdatePreferences:$UpdatePreferences,markUpdateAttempt:$markUpdateAttempt,useUpdateSchedule:$useUpdateSchedule}=createAppUpdatePreferences(p);\n';
 
 (async () => {

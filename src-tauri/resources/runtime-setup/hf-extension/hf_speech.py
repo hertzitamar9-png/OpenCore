@@ -23,6 +23,20 @@ QUANTS = {'packed', 'q4_k', 'q5_k', 'q6_k', 'q8_0'}
 MAX_AUDIO_BYTES = 32 * 1024 * 1024
 
 
+def native_command(command):
+    # The native decoder's Windows argument expansion treats the '?' device
+    # prefix as a wildcard. Python keeps that prefix for its own filesystem I/O.
+    result = []
+    for value in command:
+        value = str(value)
+        if value.startswith('\\\\?\\UNC\\'):
+            value = '\\\\' + value[8:]
+        elif value.startswith('\\\\?\\') and re.match(r'^[A-Za-z]:\\', value[4:]):
+            value = value[4:]
+        result.append(value)
+    return result
+
+
 def supports(entry):
     return (entry.get('speechRuntime') == 'parakeet-phonon25-v1'
             and entry.get('repository') == 'mudler/parakeet-cpp-gguf'
@@ -122,7 +136,7 @@ class SpeechManager:
             return False
 
     def _run(self, command, pause, timeout=180):
-        child = subprocess.Popen([str(value) for value in command], stdout=subprocess.PIPE,
+        child = subprocess.Popen(native_command(command), stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE, stdin=subprocess.DEVNULL,
                                  creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         deadline = time.monotonic() + timeout
@@ -138,7 +152,9 @@ class SpeechManager:
                 except subprocess.TimeoutExpired:
                     continue
             if child.returncode:
-                raise ValueError('The Phonon-2.5 decoder could not finish its execution test')
+                details = stderr.decode('utf-8', errors='replace').strip().splitlines()
+                detail = details[-1][:240] if details else 'No decoder diagnostics were returned'
+                raise ValueError(f'The Phonon-2.5 decoder failed (exit {child.returncode}): {detail}')
             return stdout.decode('utf-8'), stderr.decode('utf-8', errors='replace')
         finally:
             if child.poll() is None:
@@ -247,7 +263,7 @@ class SpeechManager:
                         self.port = probe.getsockname()[1]
                     command = [self._engine() / 'parakeet-server.exe', '--model', self._model_path(entry),
                                '--host', '127.0.0.1', '--port', str(self.port), '--threads', str(self._threads())]
-                    self.child = subprocess.Popen([str(value) for value in command], stdin=subprocess.DEVNULL,
+                    self.child = subprocess.Popen(native_command(command), stdin=subprocess.DEVNULL,
                                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
                     child, port = self.child, self.port

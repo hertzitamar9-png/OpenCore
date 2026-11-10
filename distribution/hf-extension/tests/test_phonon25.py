@@ -13,6 +13,23 @@ from hf_speech import SpeechManager, decode_audio, supports
 
 
 class Phonon25Tests(unittest.TestCase):
+    def test_native_workers_receive_ordinary_windows_paths(self):
+        child = Mock()
+        child.communicate.return_value = (b'{}', b'')
+        child.returncode = 0
+        child.poll.return_value = 0
+        with patch('hf_speech.subprocess.Popen', return_value=child) as spawn:
+            self.manager._run([
+                r'\\?\C:\OpenCore\parakeet-cli.exe', 'transcribe', '--model',
+                r'\\?\C:\OpenCore\models\phonon.gguf', '--input',
+                r'\\?\UNC\server\share\verification.wav',
+            ], Mock(is_set=lambda: False))
+        self.assertEqual(spawn.call_args.args[0], [
+            r'C:\OpenCore\parakeet-cli.exe', 'transcribe', '--model',
+            r'C:\OpenCore\models\phonon.gguf', '--input',
+            r'\\server\share\verification.wav',
+        ])
+
     def test_cancelled_load_cannot_report_recording_after_health_returns(self):
         child = Mock()
         child.poll.return_value = None

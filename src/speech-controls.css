@@ -1,0 +1,15 @@
+/* Keep native and managed speech controls identical, including phone targets. */
+@media (max-width: 600px) {
+  .model-library-card:has(.whisper-controls) select,
+  .model-library-card:has(.whisper-controls) footer button,
+  .model-library-card:has(.whisper-controls) .whisper-toggle {
+    min-height: 44px;
+  }
+  .model-library-card:has(.whisper-controls) select {
+    font-size: 16px;
+  }
+  .model-library-card:has(.whisper-controls) :is(small, dt, dd, label, legend, .whisper-runtime-status, header span),
+  .model-library-card .whisper-controls strong {
+    font-size: 14px;
+  }
+}

@@ -17,6 +17,7 @@ spec.loader.exec_module(phone_catalog)
 
 class MinicoCatalogTests(unittest.TestCase):
     def test_pinned_weights_and_modes_are_selectable_on_desktop_and_phone(self):
+        self.assertEqual({q[0] for q in QUANTS.values()}, {'Q4_K_M', 'Q6_K', 'Q8_0', 'F16', 'BF16'})
         catalog = json.loads((ROOT / "src-tauri/resources/model-catalog.json").read_text(encoding="utf-8"))
         models = {m["id"]: m for m in catalog["models"]}
         artifacts = {a["id"]: a for a in catalog["artifacts"]}
@@ -32,6 +33,8 @@ class MinicoCatalogTests(unittest.TestCase):
             self.assertEqual(source["runtimeModelPath"], weight["path"])
             self.assertEqual(native["runtimeModelPath"], weight["path"])
             self.assertEqual((source["memoryMode"], native["memoryMode"]), ("echo", "native"))
+            self.assertEqual((source["contextTokens"], source["echoWorkingWindowTokens"], native["contextTokens"]),
+                             (32768, 32768, 128000))
             for model in (source, native):
                 self.assertEqual(model["precision"], precision)
                 self.assertTrue(model["selectable"] and model["installable"] and model["runtimeReady"])

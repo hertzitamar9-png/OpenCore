@@ -31,7 +31,10 @@ def main():
         root = Path(temporary)
         resources = root / 'resources'
         stage(resources)
-        state = BridgeState(root / 'home', resources, runtime=RuntimeUnavailable())
+        # Tauri supplies extended Windows paths; exercise the same boundary as
+        # the installed app rather than only normal temporary-directory paths.
+        device_path = lambda path: Path('\\\\?\\' + str(path.resolve())) if os.name == 'nt' else path
+        state = BridgeState(device_path(root / 'home'), device_path(resources), runtime=RuntimeUnavailable())
         try:
             state.entries = {entry['id']: entry for entry in entries}
             state.persist_catalog()
