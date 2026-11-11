@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 599,
+  "families": 601,
   "withFive": 238,
   "models": [
     {
@@ -5267,6 +5267,17 @@
       ]
     },
     {
+      "id": "publisher-dots-tts-edit",
+      "label": "dots.tts.edit",
+      "category": "tts",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "dots-studio/dots.tts.edit"
+      ]
+    },
+    {
       "id": "publisher-fibo-2-0-dev",
       "label": "Fibo 2.0 Dev",
       "category": "image",
@@ -6132,6 +6143,17 @@
       "source": "bundled packages",
       "repositories": [
         "openbmb/VoxCPM2"
+      ]
+    },
+    {
+      "id": "publisher-zonos3-mini",
+      "label": "ZONOS3-Mini",
+      "category": "tts",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Zyphra/ZONOS3-Mini"
       ]
     }
   ]

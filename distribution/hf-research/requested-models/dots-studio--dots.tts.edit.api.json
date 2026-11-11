@@ -1,0 +1,285 @@
+{
+  "_id": "6a6853ee2180d6c0db82280e",
+  "id": "dots-studio/dots.tts.edit",
+  "private": false,
+  "pipeline_tag": "text-to-speech",
+  "tags": [
+    "safetensors",
+    "dots_tts",
+    "audio",
+    "speech-editing",
+    "text-to-speech",
+    "en",
+    "zh",
+    "arxiv:2608.02673",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 422,
+  "likes": 12,
+  "modelId": "dots-studio/dots.tts.edit",
+  "author": "dots-studio",
+  "sha": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+  "lastModified": "2026-11-05T08:50:04.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "DotsTTSForConditionalGeneration"
+    ],
+    "model_type": "dots_tts",
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|endoftext|>",
+      "unk_token": null,
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- messages[0]['content'] }}\n    {%- else %}\n        {{- 'You are a helpful assistant.' }}\n    {%- endif %}\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are a helpful assistant.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content %}\n            {{- '\\n' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {{- tool_call.arguments | tojson }}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "latent_dim": 128,
+    "patch_size": 4,
+    "jit_mode": "1d",
+    "encoder_type": "vse",
+    "prediction_type": "v",
+    "cfg_droprate": 0.2,
+    "PatchEncoder": {
+      "num_layers": 24,
+      "num_heads": 16,
+      "hidden_size": 1024,
+      "ffn_hidden_size": 4096,
+      "modulation": false,
+      "qkv_bias": false,
+      "qk_norm": true,
+      "attn_dropout": 0.0,
+      "dropout": 0.1,
+      "norm_layer": "RMSNorm",
+      "alibi_bias": false,
+      "rotary_bias": true,
+      "rotary_theta": 10000.0,
+      "input_dim": 128,
+      "causal": true
+    },
+    "DiT": {
+      "num_layers": 18,
+      "num_heads": 16,
+      "hidden_size": 1024,
+      "ffn_hidden_size": 4096,
+      "modulation": true,
+      "qkv_bias": false,
+      "qk_norm": true,
+      "attn_dropout": 0.0,
+      "dropout": 0.0,
+      "norm_layer": "RMSNorm",
+      "alibi_bias": false,
+      "rotary_bias": true,
+      "rotary_theta": 10000.0,
+      "attn_backend": "sdpa",
+      "max_tokens": 8192
+    },
+    "vocoder": {
+      "type": "audio_vae",
+      "use_cuda_kernel": false,
+      "sample_rate": 48000,
+      "upsample_rates": [
+        10,
+        6,
+        4,
+        2,
+        2,
+        2
+      ],
+      "upsample_kernel_sizes": [
+        20,
+        12,
+        8,
+        4,
+        4,
+        4
+      ],
+      "upsample_initial_channel": 1536,
+      "resblock": "1",
+      "resblock_kernel_sizes": [
+        3,
+        7,
+        11
+      ],
+      "resblock_dilation_sizes": [
+        [
+          1,
+          3,
+          5
+        ],
+        [
+          1,
+          3,
+          5
+        ],
+        [
+          1,
+          3,
+          5
+        ]
+      ],
+      "downsample_rates": [
+        2,
+        2,
+        2,
+        4,
+        6,
+        10
+      ],
+      "downsample_channels": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384,
+        768
+      ],
+      "activation": "snakebeta",
+      "snake_logscale": true,
+      "latent_dim": 128,
+      "causal": true,
+      "mi_num_layers": 4,
+      "mi_skip": true,
+      "causal_encoder": true,
+      "use_bias_at_final": false,
+      "use_tanh_at_final": false
+    },
+    "fm_sigma": 0.0,
+    "t_sample_mode": "uniform",
+    "P_mean": -0.8,
+    "P_std": 0.8,
+    "xvec_drop_rate": 0.2,
+    "campplus_embedding_size": 512,
+    "xvec_max_audio_seconds": 10.0
+  },
+  "cardData": {
+    "license": "other",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "pipeline_tag": "text-to-speech",
+    "tags": [
+      "audio",
+      "speech-editing",
+      "text-to-speech",
+      "safetensors"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "afe91d897bcdf5cfdd0a654c2e0536b17ecd3484",
+      "size": 5394
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "2ae62523b7cf19c9b3e5e6693314bbd5b0a6a430",
+      "size": 831
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "28028c056af412405debd878cdda0171e35fa5d1",
+      "size": 2427
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "3312a4d3682b550b28a1775fb5eb859372f00959",
+      "size": 2196
+    },
+    {
+      "rfilename": "latent_stats.pt",
+      "blobId": "dedd8db5beeee125c4a01c292c833df97c386d2a",
+      "size": 2893,
+      "lfs": {
+        "sha256": "047cddab7ae613a43f7147ef0a7dead409f5a3875c2e40ab413fe2e4107d76e0",
+        "size": 2893,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "llm_config.json",
+      "blobId": "1254ff42643b0d5c0982cea429546a242b2d651d",
+      "size": 2727
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "fd18d550016ae07dc769f51a4d7dc97e5568c4f0",
+      "size": 4396292364,
+      "lfs": {
+        "sha256": "d5f08d64459bbd2f6bde1000fde7aa620736a2b762114c819d1e725820768966",
+        "size": 4396292364,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "speaker_encoder.safetensors",
+      "blobId": "fa25162d041b5275dbe4d098a7c06cb4e7fa29f5",
+      "size": 29150484,
+      "lfs": {
+        "sha256": "1cf3861c9dee79e4db34bd0b8a4155e68bed27a7c6274e168bb6ee4fed191c85",
+        "size": 29150484,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "a409eee4b08832c992778315b115942ed0568412",
+      "size": 516
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "ec8d56b564e035ac3d6e9191b8cd93ae46c5b2bd",
+      "size": 11423263,
+      "lfs": {
+        "sha256": "c16521f66774c7a4774e5303b7c8ec5c99830c0be5aef6c6edde3ca2a5e05dd0",
+        "size": 11423263,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "d908a5e51cdd4eff233a44d6f040e6d4153ce484",
+      "size": 5886
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    },
+    {
+      "rfilename": "vocoder.safetensors",
+      "blobId": "329d1fc624a7f3676dd8a35719bbe16ec8c4758f",
+      "size": 723585584,
+      "lfs": {
+        "sha256": "c0e45c08f480df67ac4c354b465355fcc7e2f6c8765263b6dfeddd1f4671c93d",
+        "size": 723585584,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "dots-studio/dots.tts.edit-demo"
+  ],
+  "createdAt": "2026-07-28T07:02:06.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 2198093314
+    },
+    "total": 2198093314
+  },
+  "usedStorage": 9556746952
+}

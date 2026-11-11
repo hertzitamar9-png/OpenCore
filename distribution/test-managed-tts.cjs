@@ -9,12 +9,20 @@ const catalog = [
   {id: 'hf-kitten', ttsRuntime: 'kitten-tts-2-v1'},
   {id: 'hf-vox', ttsRuntime: 'voxcpm2-v1'},
   {id: 'hf-text', category: 'text'},
+  {id: 'hf-zonos', ttsRuntime: 'zonos3-mini-v1'},
+  {id: 'hf-dots', ttsRuntime: 'dots-tts-edit-v1'},
 ];
 const status = {models: {
   'hf-kitten': {capabilities: {label: 'Kitten TTS 2', maxText: 5000, voices: true, instruction: null, presets: ['stable', 'expressive'], cfg: null, steps: null},
     voices: [{id: 'Bella', voice_id: 'expr-voice-2-f'}, {id: 'Jasper', voice_id: 'expr-voice-3-m'}]},
   'hf-vox': {capabilities: {label: 'VoxCPM2', maxText: 2000, voices: false, instruction: {label: 'Voice design or style'}, presets: null,
     cfg: {min: 1, max: 5}, steps: {min: 4, max: 30}}, voices: []},
+  'hf-zonos': {capabilities: {label: 'ZONOS3-Mini', maxText: 1000, voices: true, instruction: null, presets: ['Neutral', 'Happy'],
+    cfg: null, steps: null, languages: [{id: 'en_us', label: 'English (US)'}, {id: 'ja', label: 'Japanese'}]},
+    voices: [{id: 'Cillian', language: 'en_us', gender: 'male', style: 'Irish'}]},
+  'hf-dots': {capabilities: {label: 'dots.tts.edit', maxText: 500, voices: false, instruction: null, presets: null,
+    cfg: {min: 1, max: 3}, steps: {min: 4, max: 32}, editTags: true, languages: [{id: 'en', label: 'English'}, {id: 'zh', label: 'Mandarin Chinese'}]},
+    voices: []},
 }};
 
 function bridge({hold = false} = {}) {
@@ -76,6 +84,27 @@ test('for voice-design models the voice field becomes the style instruction', as
   await collect(tts.speak('hf-vox', 'No style.', ''));
   assert.deepEqual(fake.calls.filter(([route, value]) => route === '/tts/jobs' && value).at(-1)[1].request.settings, {});
   await assert.rejects(collect(tts.speak('hf-text', 'Hi.', '')), /installed speech model/);
+});
+
+test('voice calls use the voice, delivery and language saved in the studio, and drop edit markup they cannot apply', async () => {
+  const {createManagedTts} = await loaded;
+  const store = new Map([['opencore-tts-studio-v1', JSON.stringify({
+    'hf-zonos': {voice: 'Cillian', preset: 'Happy', language: 'ja'}, 'hf-dots': {language: 'fr', cfg: 1.5}})]]);
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', {configurable: true, value: {
+    getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, String(value))}});
+  try {
+    const fake = bridge();
+    const tts = createManagedTts(fake.request, async () => {}, () => catalog);
+    await collect(tts.speak('hf-zonos', 'Hello there.', ''));
+    await collect(tts.speak('hf-dots', 'Say <emo type="happy" level="2">this</emo> now, <pause act="ins" level="2"/>then <SUB targ="x">that</sub>.', ''));
+    const [zonos, dots] = fake.calls.filter(([route, body]) => route === '/tts/jobs' && body).map(([, body]) => body.request);
+    assert.deepEqual(zonos.settings, {voice: 'Cillian', preset: 'Happy', language: 'ja'});
+    // French is not a dots.tts.edit language, so the saved choice is not sent.
+    assert.deepEqual(dots, {modelId: 'hf-dots', text: 'Say this now, then that.', settings: {cfg: 1.5}});
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous); else delete globalThis.localStorage;
+  }
 });
 
 test('long replies are split at sentence ends under the per-request limit and played in order', async () => {

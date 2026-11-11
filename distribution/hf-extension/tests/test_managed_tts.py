@@ -1,4 +1,5 @@
-"""Offline regressions for the managed text-to-speech packages (Kitten TTS 2, VoxCPM2, Breeze-TTS-2).
+"""Offline regressions for the managed text-to-speech packages (Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini,
+dots.tts.edit).
 
 Nothing here downloads a model or starts the speech worker: the catalog is built from the
 reviewed Hugging Face snapshots, and job execution is replaced by a fake that writes a WAV.
@@ -61,9 +62,10 @@ class CatalogTests(unittest.TestCase):
                 self.assertEqual(mappings.get(target), 'src-tauri/resources/' + target)
                 self.assertTrue((REPO / mappings[target]).is_file())
 
-    def test_three_pinned_packages_match_the_reviewed_runtime_revisions(self):
+    def test_pinned_packages_match_the_reviewed_runtime_revisions(self):
         values = entries()
-        self.assertEqual(set(values), {'kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1'})
+        self.assertEqual(set(values), set(hf_tts.FAMILIES))
+        self.assertEqual(set(values), {'kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1', 'zonos3-mini-v1', 'dots-tts-edit-v1'})
         for runtime, entry in values.items():
             family = hf_tts.FAMILIES[runtime]
             self.assertEqual(entry['repository'], family['repository'])
@@ -89,6 +91,16 @@ class CatalogTests(unittest.TestCase):
         vox = {pin['filename'] for pin in values['voxcpm2-v1']['files']}
         self.assertNotIn('tokenization_voxcpm2.py', vox)
         self.assertTrue({'model.safetensors', 'audiovae.pth', 'tokenizer.json'} <= vox)
+        zonos = {pin['filename'] for pin in values['zonos3-mini-v1']['files']}
+        self.assertTrue({'lm/zonos3_mini/model.pth', 'lm/zonos3_mini/params.json', 'lm/zonos3_mini/tokenizer/superbpe8192.json',
+                         'autoencoder/generator.pt', 'speaker_encoders/ownmect_s2/ckpt_0037.pth', 'web/voices/voices.json'} <= zonos)
+        self.assertEqual(len([name for name in zonos if name.endswith('.embedding.npy')]), 27)
+        # The GGUF builds, the teacher and the browser studio's audio are never loaded by the torch path.
+        self.assertFalse([name for name in zonos if name.endswith(('.gguf', '.wav', '.codes.npy')) or 'teacher' in name])
+        self.assertEqual(values['zonos3-mini-v1']['format'], 'pytorch')
+        dots = {pin['filename'] for pin in values['dots-tts-edit-v1']['files']}
+        self.assertTrue({'model.safetensors', 'vocoder.safetensors', 'speaker_encoder.safetensors', 'tokenizer.json'} <= dots)
+        self.assertNotIn('README.md', dots)
         for entry in values.values():
             self.assertFalse([pin['filename'] for pin in entry['files'] if pin['filename'].endswith(('.py', '.sh', '.exe', '.dll'))])
 
@@ -96,6 +108,8 @@ class CatalogTests(unittest.TestCase):
         values = entries()
         self.assertEqual(values['kitten-tts-2-v1']['ttsComponentBytes'], hf_tts.COMPONENTS['s3genMeanflow']['bytes'])
         self.assertEqual(values['voxcpm2-v1']['ttsComponentBytes'], 0)
+        self.assertEqual(values['zonos3-mini-v1']['ttsComponentBytes'], hf_tts.COMPONENTS['zonos3Source']['bytes'])
+        self.assertEqual(values['dots-tts-edit-v1']['ttsComponentBytes'], hf_tts.COMPONENTS['dotsSource']['bytes'])
 
     def test_a_snapshot_that_is_not_the_reviewed_checkpoint_is_refused(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -112,7 +126,7 @@ class CatalogTests(unittest.TestCase):
     def test_rebuilding_replaces_earlier_tts_cards_instead_of_duplicating_them(self):
         first = append_tts([], SNAPSHOTS)
         again = append_tts(first, SNAPSHOTS)
-        self.assertEqual(len(again), 3)
+        self.assertEqual(len(again), len(hf_tts.FAMILIES))
 
 
 class RequestValidationTests(unittest.TestCase):
@@ -124,7 +138,8 @@ class RequestValidationTests(unittest.TestCase):
         return hf_tts.validate_request(entry, {'modelId': entry['id'], 'text': text, 'settings': settings})
 
     def test_text_limits_follow_each_family(self):
-        for runtime, limit in (('kitten-tts-2-v1', 5000), ('voxcpm2-v1', 2000), ('breeze-tts-2-v1', 800)):
+        for runtime, limit in (('kitten-tts-2-v1', 5000), ('voxcpm2-v1', 2000), ('breeze-tts-2-v1', 800),
+                               ('zonos3-mini-v1', 1000), ('dots-tts-edit-v1', 500)):
             self.assertEqual(self.check(runtime, 'a' * limit)['text'], 'a' * limit)
             with self.assertRaises(ValueError):
                 self.check(runtime, 'a' * (limit + 1))
@@ -158,6 +173,12 @@ class RequestValidationTests(unittest.TestCase):
             self.check('voxcpm2-v1', referenceText='No recording attached')
         with self.assertRaises(ValueError):
             self.check('voxcpm2-v1', referenceAudio=clip, referenceText='x' * 2001)
+        # ZONOS3 clones from the sound alone; dots.tts.edit takes an optional transcript.
+        self.assertEqual(self.check('zonos3-mini-v1', referenceAudio=clip)['settings']['referenceText'], '')
+        with self.assertRaisesRegex(ValueError, 'clones from the recording alone'):
+            self.check('zonos3-mini-v1', referenceAudio=clip, referenceText='Words.')
+        self.assertEqual(self.check('dots-tts-edit-v1', referenceAudio=clip)['settings']['referenceText'], '')
+        self.assertEqual(self.check('dots-tts-edit-v1', referenceAudio=clip, referenceText='Words.')['settings']['referenceText'], 'Words.')
 
     def test_instruction_only_for_families_that_take_one(self):
         with self.assertRaises(ValueError):
@@ -172,13 +193,18 @@ class RequestValidationTests(unittest.TestCase):
                          {'seed': 1234, 'voice': 'Bella', 'preset': 'expressive'})
         cloned = self.check('kitten-tts-2-v1', voice='Bella', referenceAudio=wav(), referenceText='Words.')
         self.assertNotIn('voice', cloned['settings'])
-        for runtime in ('voxcpm2-v1', 'breeze-tts-2-v1'):
+        for runtime in ('voxcpm2-v1', 'breeze-tts-2-v1', 'dots-tts-edit-v1'):
             with self.assertRaises(ValueError):
                 self.check(runtime, voice='Bella')
             with self.assertRaises(ValueError):
                 self.check(runtime, preset='stable')
         with self.assertRaises(ValueError):
             self.check('kitten-tts-2-v1', preset='loud')
+        for preset in hf_tts.ZONOS3_STYLES:
+            self.assertEqual(self.check('zonos3-mini-v1', voice='Cillian', preset=preset)['settings']['preset'], preset)
+        with self.assertRaises(ValueError):
+            self.check('zonos3-mini-v1', preset='expressive')
+        self.assertNotIn('voice', self.check('zonos3-mini-v1', voice='Cillian', referenceAudio=wav())['settings'])
 
     def test_cfg_and_steps_ranges(self):
         self.assertEqual(self.check('voxcpm2-v1', cfg=2.5, steps=12)['settings']['steps'], 12)
@@ -189,21 +215,54 @@ class RequestValidationTests(unittest.TestCase):
             with self.assertRaises(ValueError, msg=(runtime, settings)):
                 self.check(runtime, **settings)
 
-    def test_sampling_controls_only_for_kitten(self):
+    def test_sampling_controls_only_for_language_model_families(self):
         value = self.check('kitten-tts-2-v1', temperature=0.8, topP=0.9, topK=50, minP=0.05, maxNewTokens=1000)['settings']
         self.assertEqual((value['temperature'], value['topK']), (0.8, 50))
         with self.assertRaises(ValueError):
             self.check('kitten-tts-2-v1', temperature=3)
-        for runtime in ('voxcpm2-v1', 'breeze-tts-2-v1'):
+        self.assertEqual(self.check('zonos3-mini-v1', temperature=0.7, topP=0.9)['settings']['topP'], 0.9)
+        for runtime in ('voxcpm2-v1', 'breeze-tts-2-v1', 'dots-tts-edit-v1'):
             with self.assertRaises(ValueError):
                 self.check(runtime, temperature=0.8)
 
-    def test_normalize_is_a_kitten_switch(self):
+    def test_normalize_is_a_switch_where_the_family_has_one(self):
         self.assertIs(self.check('kitten-tts-2-v1', normalize=False)['settings']['normalize'], False)
+        self.assertIs(self.check('zonos3-mini-v1', normalize=True)['settings']['normalize'], True)
         self.assertNotIn('normalize', self.check('voxcpm2-v1', normalize=False)['settings'])
-        for runtime, value in (('kitten-tts-2-v1', 1), ('voxcpm2-v1', True)):
+        for runtime, value in (('kitten-tts-2-v1', 1), ('voxcpm2-v1', True), ('dots-tts-edit-v1', True)):
             with self.assertRaises(ValueError):
                 self.check(runtime, normalize=value)
+
+    def test_language_is_one_the_family_speaks(self):
+        self.assertEqual(self.check('zonos3-mini-v1', language='ja')['settings']['language'], 'ja')
+        self.assertEqual(self.check('dots-tts-edit-v1', language='zh')['settings']['language'], 'zh')
+        self.assertNotIn('language', self.check('zonos3-mini-v1', language='')['settings'])
+        for runtime, language in (('zonos3-mini-v1', 'zh'), ('zonos3-mini-v1', 'hi'), ('dots-tts-edit-v1', 'fr'),
+                                  ('kitten-tts-2-v1', 'en'), ('voxcpm2-v1', 'en')):
+            with self.assertRaises(ValueError, msg=(runtime, language)):
+                self.check(runtime, language=language)
+
+    def test_dots_edit_tags_change_a_reference_recording(self):
+        edit = 'The quick brown <sub targ="red cat">fox</sub> jumps.'
+        with self.assertRaisesRegex(ValueError, 'Add the recording to edit'):
+            self.check('dots-tts-edit-v1', edit)
+        for text in (edit, 'Say <emo type="happy" level="2">this</emo>.', 'A <pause act="ins" level="2"/> gap.',
+                     'Make it <PITCH, semitones=5>higher</pitch>.', '< del>gone</del>'):
+            self.assertEqual(self.check('dots-tts-edit-v1', text, referenceAudio=wav())['text'], text)
+            with self.assertRaises(ValueError, msg=text):
+                self.check('dots-tts-edit-v1', text)
+        # Plain text, including angle brackets that are not edit tags, needs no recording.
+        self.assertEqual(self.check('dots-tts-edit-v1', 'Two < three and <b>bold</b>.')['settings'], {'seed': 1234})
+        self.assertEqual(self.check('dots-tts-edit-v1', cfg=2.0, steps=16)['settings']['steps'], 16)
+        for settings in ({'cfg': 3.5}, {'steps': 3}, {'steps': 33}, {'instruction': 'Warm'}):
+            with self.assertRaises(ValueError, msg=settings):
+                self.check('dots-tts-edit-v1', **settings)
+
+    def test_zonos3_takes_no_cfg_steps_tags_or_instruction(self):
+        for settings in ({'cfg': 2.0}, {'steps': 10}, {'instruction': 'Warm'}):
+            with self.assertRaises(ValueError, msg=settings):
+                self.check('zonos3-mini-v1', **settings)
+        self.assertEqual(hf_tts.capabilities(self.values['zonos3-mini-v1'])['tags'], [])
 
     def test_reference_audio_must_be_short_mono_pcm(self):
         self.assertTrue(hf_tts.decode_reference(wav(1.0, 16000)).startswith(b'RIFF'))
@@ -244,6 +303,13 @@ class JobLifecycleTests(unittest.TestCase):
         voices = self.root / 'models/hub' / self.values['kitten-tts-2-v1']['id'] / 'voices'
         voices.mkdir(parents=True)
         (voices / 'voices.json').write_text(json.dumps({'Bella': {'description': 'Bright female voice'}, 'Jasper': {}}), encoding='utf-8')
+        zonos = self.root / 'models/hub' / self.values['zonos3-mini-v1']['id'] / 'web/voices'
+        zonos.mkdir(parents=True)
+        (zonos / 'voices.json').write_text(json.dumps([
+            {'id': 'default_1', 'label': 'Cillian en Irish M 1', 'embedding': 'English/Cillian_en-Irish_M_1.embedding.npy'},
+            {'id': 'default_2', 'label': 'Imogen en British F 1'}, {'id': 'default_3', 'label': 'Gaspard fr M 1'},
+            {'id': 'default_4', 'label': 'Haoran zh energetic M 1'}, {'id': 'default_5', 'label': 'Ananya hi F 1'},
+            {'id': 'bad', 'label': 'Nameless'}, {'id': 'dup', 'label': 'Cillian en Irish M 2'}, 'not a voice']), encoding='utf-8')
 
     def submit(self, runtime, text='Hello.', internal=False, **settings):
         entry = self.values[runtime]
@@ -281,6 +347,30 @@ class JobLifecycleTests(unittest.TestCase):
         self.assertEqual(names, ['Bella', 'Jasper'])
         with self.assertRaises(ValueError):
             self.submit('kitten-tts-2-v1', voice='Nobody')
+
+    def test_zonos3_voices_come_from_the_release_voice_index(self):
+        voices = self.manager.voices(self.values['zonos3-mini-v1'])
+        self.assertEqual(voices, [
+            {'id': 'Cillian', 'language': 'en_us', 'gender': 'male', 'style': 'Irish'},
+            {'id': 'Imogen', 'language': 'en_gb', 'gender': 'female', 'style': 'British'},
+            {'id': 'Gaspard', 'language': 'fr_fr', 'gender': 'male', 'style': ''},
+            {'id': 'Haoran', 'language': 'cmn', 'gender': 'male', 'style': 'energetic'},
+            # Hindi and Telugu speakers are kept as voices; the model speaks one of its own languages with them.
+            {'id': 'Ananya', 'language': 'en_us', 'gender': 'female', 'style': ''}])
+        languages = {item['id'] for item in hf_tts.FAMILIES['zonos3-mini-v1']['languages']}
+        self.assertTrue(all(voice['language'] in languages for voice in voices))
+        job = self.submit('zonos3-mini-v1', voice='Imogen', preset='Calm', language='en_gb', temperature=0.7, normalize=True)
+        self.assertEqual(self.finished(job['id'])['request']['settings']['voice'], 'Imogen')
+        with self.assertRaises(ValueError):
+            self.submit('zonos3-mini-v1', voice='Nobody')
+        self.assertEqual(self.manager.voices(self.values['dots-tts-edit-v1']), [])
+
+    def test_dots_edit_job_keeps_the_recording_it_edits(self):
+        job = self.submit('dots-tts-edit-v1', text='The quick <sub targ="red">brown</sub> fox.', referenceAudio=wav())
+        done = self.finished(job['id'])
+        self.assertTrue(Path(done['request']['settings']['referencePath']).read_bytes().startswith(b'RIFF'))
+        with self.assertRaises(ValueError):
+            self.submit('dots-tts-edit-v1', text='The quick <sub targ="red">brown</sub> fox.')
 
     def test_requests_need_an_installed_matching_model(self):
         entry = copy.deepcopy(self.values['voxcpm2-v1'])
@@ -325,6 +415,32 @@ class JobLifecycleTests(unittest.TestCase):
         vox = status['models'][self.values['voxcpm2-v1']['id']]
         self.assertEqual(vox['capabilities']['steps']['max'], 30)
         self.assertEqual(vox['components'], [])
+        zonos = status['models'][self.values['zonos3-mini-v1']['id']]
+        self.assertEqual(zonos['capabilities']['reference'], 'audio-only')
+        self.assertEqual(zonos['capabilities']['presets'], hf_tts.ZONOS3_STYLES)
+        self.assertEqual(len(zonos['capabilities']['languages']), 10)
+        self.assertEqual(zonos['components'][0]['repository'], 'Zyphra/ZONOS3-Mini')
+        dots = status['models'][self.values['dots-tts-edit-v1']['id']]
+        self.assertIs(dots['capabilities']['editTags'], True)
+        self.assertEqual([item['id'] for item in dots['capabilities']['languages']], ['en', 'zh'])
+        self.assertTrue(all(tag['insert'] and (not tag.get('wrap') or len(tag['wrap']) == 2) for tag in dots['capabilities']['tags']))
+        self.assertTrue(all(hf_tts.DOTS_EDIT_TAG.search(tag['insert']) for tag in dots['capabilities']['tags']))
+        self.assertEqual(dots['components'][0]['repository'], 'studio-dots-ai/dots.tts')
+        self.assertIsNone(status['models'][self.values['kitten-tts-2-v1']['id']]['capabilities']['editTags'])
+
+    def test_the_worker_starts_isolated_in_utf8_mode_at_low_priority(self):
+        seen = {}
+
+        def popen(command, **options):
+            seen.update(command=command, **options)
+            raise OSError('stop here')
+        with mock.patch.object(hf_tts.subprocess, 'Popen', popen), self.assertRaises(OSError):
+            self.manager._start_worker()
+        self.assertEqual(seen['command'][1:4], ['-I', '-X', 'utf8'])
+        self.assertTrue(seen['command'][4].endswith('tts_worker.py'))
+        self.assertEqual(seen['env']['HF_HUB_OFFLINE'], '1')
+        if sys.platform == 'win32':
+            self.assertTrue(seen['creationflags'] & hf_tts.subprocess.BELOW_NORMAL_PRIORITY_CLASS)
 
     def test_ready_needs_matching_proof(self):
         entry = self.values['voxcpm2-v1']
@@ -510,6 +626,29 @@ class DeviceSelectionTests(unittest.TestCase):
         self.assertIn('needs a card with about 12 GB', fit('breeze-tts-2-v1', rtx3080)['reason'])
         self.assertIsNone(fit('breeze-tts-2-v1', None)['device'])
         self.assertIn('cannot run on the CPU', fit('breeze-tts-2-v1', None)['reason'])
+
+    def test_new_families_fall_back_to_the_cpu_on_any_computer(self):
+        fit = hf_tts.hardware_fit
+        rtx3060 = {'name': 'NVIDIA GeForce RTX 3060', 'totalGiB': 12.0, 'capability': [8, 6]}
+        rtx3050 = {'name': 'NVIDIA GeForce RTX 3050', 'totalGiB': 6.0, 'capability': [8, 6]}
+        rtx3070 = {'name': 'NVIDIA GeForce RTX 3070', 'totalGiB': 8.0, 'capability': [8, 6]}
+        gtx1660 = {'name': 'NVIDIA GeForce GTX 1660', 'totalGiB': 6.0, 'capability': [7, 5]}
+        for runtime in ('zonos3-mini-v1', 'dots-tts-edit-v1'):
+            self.assertEqual(fit(runtime, rtx3060)['device'], 'cuda')
+            # No NVIDIA driver: CPU-only computers and AMD or Intel graphics.
+            self.assertEqual(fit(runtime, None)['device'], 'cpu')
+            self.assertIn('no NVIDIA GPU was found', fit(runtime, None)['reason'])
+            self.assertEqual(fit(runtime, gtx1660)['device'], 'cpu')
+            self.assertIn('no native BF16 support', fit(runtime, gtx1660)['reason'])
+            self.assertEqual(fit(runtime, rtx3050)['device'], 'cpu')
+        self.assertEqual(fit('zonos3-mini-v1', rtx3070)['device'], 'cuda')
+        self.assertEqual(fit('dots-tts-edit-v1', rtx3070)['device'], 'cpu')
+        self.assertIn('needs a card with about 10 GB', fit('dots-tts-edit-v1', rtx3070)['reason'])
+        zonos = dict(hf_tts.FAMILIES['zonos3-mini-v1']['hardware'], label='ZONOS3-Mini')
+        device, note = self.choose(zonos, name='NVIDIA GeForce RTX 4070', capability=(8, 9), free_gib=4.8)
+        self.assertEqual(device, 'cpu')
+        self.assertIn('4.8 GB of free memory and ZONOS3-Mini needs about 6 GB', note)
+        self.assertEqual(self.choose(zonos, available=False)[0], 'cpu')
 
     def test_the_gpu_probe_never_fails_the_catalog(self):
         with mock.patch('ctypes.CDLL', side_effect=OSError('no driver')):

@@ -1,4 +1,4 @@
-"""Pinned managed text-to-speech packages: Kitten TTS 2, VoxCPM2 and Breeze-TTS-2.
+"""Pinned managed text-to-speech packages: Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini and dots.tts.edit.
 
 Each package pins exactly the files its managed runtime loads. Revisions and
 runtime identities come from hf_tts.FAMILIES so the catalog and the runtime can
@@ -36,6 +36,25 @@ PACKAGES = (
                      'vocal events such as (laugh) or [笑] and voice cloning from a recording with its transcript. '
                      'Non-commercial license. Needs an NVIDIA RTX 30-series or newer GPU with 12 GB or more of memory; '
                      'it cannot run on the CPU.')},
+    # Only the files the torch reference path loads: the LM, the codec generator with its pruned KEEP-2 iSTFT head,
+    # the speaker encoder used for cloning and the preset voice embeddings. The GGUF, web and teacher files are not used.
+    {'runtime': 'zonos3-mini-v1', 'familyId': 'publisher-zonos3-mini', 'quantization': 'BF16', 'format': 'pytorch',
+     'include': ('lm/zonos3_mini/model.pth', 'lm/zonos3_mini/params.json', 'lm/zonos3_mini/tokenizer/superbpe8192.json',
+                 'autoencoder/generator.pt', 'autoencoder/heads/keep2_plain/*',
+                 'speaker_encoders/ownmect_s2/ckpt_0037.pth', 'web/voices/voices.json', 'web/voices/*.embedding.npy'),
+     'exclude': (),
+     'license': 'apache-2.0',
+     'description': ('Multilingual speech with 27 preset voices, moods and speaking styles such as a newsreader or a '
+                     'late-night radio host, and voice cloning from a short recording alone. Speaks English, French, '
+                     'German, Spanish, Italian, Portuguese, Japanese, Mandarin and Korean. Best on an NVIDIA RTX '
+                     '30-series or newer GPU with 6 GB or more; other computers run it much more slowly on the CPU.')},
+    {'runtime': 'dots-tts-edit-v1', 'familyId': 'publisher-dots-tts-edit', 'quantization': 'BF16',
+     'include': ('*',), 'exclude': ('.gitattributes', 'README.md'),
+     'license': 'other (the dots.tts project releases its checkpoints under Apache-2.0)',
+     'description': ('English and Mandarin speech that can also edit a recording: replace, insert or delete words, '
+                     'change the emotion, pitch, speed or pauses of a part of it with edit tags. Without tags it '
+                     'speaks the text, cloning the voice of a recording when you add one. Best on an NVIDIA RTX '
+                     '30-series or newer GPU with 8 GB or more; other computers run it much more slowly on the CPU.')},
 )
 
 
@@ -83,7 +102,7 @@ def append_tts(entries, snapshots):
         entry = {
             'id': identity, 'repository': repository, 'revision': revision, 'variantKey': key,
             'name': family['label'] + ' · ' + package['quantization'], 'quantization': package['quantization'],
-            'format': 'safetensors', 'subdirectory': '', 'category': 'tts', 'libraryCategory': 'tts',
+            'format': package.get('format', 'safetensors'), 'subdirectory': '', 'category': 'tts', 'libraryCategory': 'tts',
             'inputModalities': ['text', 'audio'], 'outputModalities': ['audio'],
             'files': pins, 'bytes': sum(pin['bytes'] for pin in pins), 'installable': True, 'reason': None,
             'runtime': {'adapter': 'managed-tts', 'available': False, 'inferenceVerified': False,

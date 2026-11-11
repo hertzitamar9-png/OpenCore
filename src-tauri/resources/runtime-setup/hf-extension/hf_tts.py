@@ -1,4 +1,4 @@
-"""Managed local text-to-speech for Kitten TTS 2, VoxCPM2 and Breeze-TTS-2.
+"""Managed local text-to-speech for Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini and dots.tts.edit.
 
 The manager owns one isolated Python environment installed from a hashed lock,
 the pinned third-party components those models need at run time, and one
@@ -16,6 +16,7 @@ import json
 import os
 from pathlib import Path
 import queue
+import re
 import shutil
 import subprocess
 import sys
@@ -50,9 +51,33 @@ COMPONENTS = {
         'label': 'Breeze-TTS inference source', 'kind': 'source',
         'repository': 'breezeblue-ai/breeze-tts', 'revision': 'daa6cb2efe5471f09369229f322d20bb956cb3c3',
         'bytes': 219923, 'sha256': '5c559c6af0d04845c5174f99e970137320664b78cabef68060b42da493266ca4',
-        'members': ('breeze_infer/', 'models/', 'LICENSE'), 'license': 'Breeze-TTS license (non-commercial)',
+        'members': ('breeze_infer/', 'models/', 'LICENSE'), 'marker': 'breeze_infer/runtime.py',
+        'license': 'Breeze-TTS license (non-commercial)',
+    },
+    'zonos3Source': {
+        'label': 'ZONOS3 inference source', 'kind': 'source',
+        'repository': 'Zyphra/ZONOS3-Mini', 'revision': 'f9863b31d0af6f4390bba183a0c9231601b70d61',
+        'bytes': 41479827, 'sha256': '4922202528fd9b7a5100118761888ff3ad548fb9e4680326f4510fcbf9a4b1b9',
+        'members': ('model/src/zonos3/', 'assets/steering/', 'LICENSE', 'NOTICE'),
+        'marker': 'model/src/zonos3/reference/synth.py', 'license': 'MIT',
+    },
+    'dotsSource': {
+        'label': 'dots.tts inference source', 'kind': 'source',
+        'repository': 'studio-dots-ai/dots.tts', 'revision': '4cf7d6b13f42066f97784e7d7cf2a9ed5f956997',
+        'bytes': 802981, 'sha256': '43e1960ea48b37fb0c5396e331a26b9517fff5052801645faadbd8497e58ba1e',
+        'members': ('src/dots_tts/', 'LICENSE'), 'marker': 'src/dots_tts/edit_runtime.py', 'license': 'Apache-2.0',
     },
 }
+
+ZONOS3_LANGUAGES = [('en_us', 'English (US)'), ('en_gb', 'English (UK)'), ('fr_fr', 'French'), ('de', 'German'),
+                    ('es', 'Spanish'), ('it', 'Italian'), ('pt_br', 'Portuguese (Brazil)'), ('ja', 'Japanese'),
+                    ('cmn', 'Mandarin Chinese'), ('ko', 'Korean')]
+ZONOS3_STYLES = ['Neutral', 'Angry', 'Happy', 'Sad', 'Calm', 'Scared', 'Confused', 'British newsreader',
+                 'Elderly Scottish narrator', 'Young Australian', 'Gravelly old man', 'Soft-spoken Irish woman',
+                 'Indian English caller', 'Chatty podcaster', 'Late-night radio']
+DOTS_EMOTIONS = ['happy', 'angry', 'sad', 'afraid', 'disgusted', 'melancholic', 'surprised', 'calm']
+# dots.tts.edit treats a request that contains one of its edit tags as an edit of the reference recording.
+DOTS_EDIT_TAG = re.compile(r'<\s*/?\s*(?:sub|ins|del|emo|pitch|rate|pause|enhance|bg|spk_transfer)\b', re.IGNORECASE)
 
 KITTEN_EMOTIONS = ['angry', 'contemplative', 'excited', 'joyful', 'mundane', 'nervous', 'sad', 'stern', 'surprised', 'tender']
 KITTEN_EVENTS = ['gasp', 'giggle', 'growl', 'gulp', 'laugh', 'pause', 'scoff', 'sigh', 'sob', 'um']
@@ -106,10 +131,64 @@ FAMILIES = {
                                  'it cannot run on the CPU')},
         'verification': {'text': 'OpenCore speech check. The local voice is ready.', 'settings': {'seed': 7}},
     },
+    'zonos3-mini-v1': {
+        'label': 'ZONOS3-Mini', 'repository': 'Zyphra/ZONOS3-Mini',
+        'revision': '24f39592cf5521d675d96db41fc379af3ad369be', 'components': ('zonos3Source',),
+        'maxText': 1000, 'reference': 'audio-only', 'instruction': None, 'voices': True,
+        'voiceIndex': 'web/voices/voices.json', 'presets': ZONOS3_STYLES, 'cfg': None, 'steps': None,
+        'sampling': True, 'normalize': True,
+        'languages': [{'id': code, 'label': label} for code, label in ZONOS3_LANGUAGES],
+        'tags': [],
+        'notes': ('Pick a voice, or add a recording to clone any voice from the sound alone. Moods and the style presets '
+                  'steer the delivery and accent. Speaks English, French, German, Spanish, Italian, Portuguese, Japanese, '
+                  'Mandarin and Korean; choose the language when it differs from the voice.'),
+        'hardware': {'gpuGiB': 6, 'bf16': True, 'cpu': True,
+                     'summary': ('an NVIDIA RTX 30-series or newer GPU with 6 GB of free memory; other computers use the '
+                                 'CPU, which is much slower')},
+        'verification': {'text': 'OpenCore speech check. The local voice is ready.', 'settings': {'seed': 7}},
+    },
+    'dots-tts-edit-v1': {
+        'label': 'dots.tts.edit', 'repository': 'dots-studio/dots.tts.edit',
+        'revision': 'bef1e97b4d942c62843b92c30a68961d1902b6ec', 'components': ('dotsSource',),
+        'maxText': 500, 'reference': 'transcript-optional', 'instruction': None, 'voices': False, 'presets': None,
+        'cfg': {'min': 1.0, 'max': 3.0, 'default': 1.2, 'step': 0.1}, 'steps': {'min': 4, 'max': 32, 'default': 10},
+        'sampling': False, 'normalize': False, 'editTags': True,
+        'languages': [{'id': 'en', 'label': 'English'}, {'id': 'zh', 'label': 'Mandarin Chinese'}],
+        'tags': [
+            {'group': 'Edit the recording', 'label': 'replace words', 'insert': '<sub targ="new words">old words</sub>',
+             'wrap': ['<sub targ="new words">', '</sub>']},
+            {'group': 'Edit the recording', 'label': 'insert words', 'insert': '<ins>new words</ins>'},
+            {'group': 'Edit the recording', 'label': 'delete words', 'insert': '<del>words</del>', 'wrap': ['<del>', '</del>']},
+            {'group': 'Edit the recording', 'label': 'longer pause', 'insert': '<pause act="ins" level="2"/>'},
+            {'group': 'Edit the recording', 'label': 'shorter pause', 'insert': '<pause act="red" level="2"/>'},
+        ] + [
+            {'group': 'Emotion (edit)', 'label': name, 'insert': '<emo type="' + name + '" level="2">words</emo>',
+             'wrap': ['<emo type="' + name + '" level="2">', '</emo>']} for name in DOTS_EMOTIONS
+        ] + [
+            {'group': 'Emotion (edit)', 'label': 'describe it', 'insert': '<emo desc="quiet, warm delivery">words</emo>',
+             'wrap': ['<emo desc="quiet, warm delivery">', '</emo>']},
+            {'group': 'Pitch and speed (edit)', 'label': 'higher', 'insert': '<pitch, semitones=5>words</pitch>',
+             'wrap': ['<pitch, semitones=5>', '</pitch>']},
+            {'group': 'Pitch and speed (edit)', 'label': 'lower', 'insert': '<pitch, semitones=-5>words</pitch>',
+             'wrap': ['<pitch, semitones=-5>', '</pitch>']},
+            {'group': 'Pitch and speed (edit)', 'label': 'slower', 'insert': '<rate, factor=0.75>words</rate>',
+             'wrap': ['<rate, factor=0.75>', '</rate>']},
+            {'group': 'Pitch and speed (edit)', 'label': 'faster', 'insert': '<rate, factor=1.3>words</rate>',
+             'wrap': ['<rate, factor=1.3>', '</rate>']},
+        ],
+        'notes': ('Add a recording to clone its voice (the transcript is optional), or leave it out for a new voice. To edit '
+                  'the recording instead, type its exact words and wrap the part to change in an edit tag: replace, insert '
+                  'or delete words, change the emotion, pitch, speed or a pause. English and Mandarin. Only clone or edit '
+                  'voices with the speaker\'s consent, and disclose that the speech is AI-generated.'),
+        'hardware': {'gpuGiB': 8, 'bf16': True, 'cpu': True,
+                     'summary': ('an NVIDIA RTX 30-series or newer GPU with 8 GB of free memory; other computers use the '
+                                 'CPU, which is much slower')},
+        'verification': {'text': 'OpenCore speech check. The local voice is ready.', 'settings': {'seed': 7}},
+    },
 }
 
 SETTINGS = {'voice', 'preset', 'instruction', 'referenceAudio', 'referenceText', 'cfg', 'steps', 'seed',
-            'temperature', 'topP', 'topK', 'minP', 'normalize', 'maxNewTokens'}
+            'temperature', 'topP', 'topK', 'minP', 'normalize', 'maxNewTokens', 'language'}
 
 
 def supports(entry):
@@ -119,9 +198,9 @@ def supports(entry):
 
 def capabilities(entry):
     family = FAMILIES[entry['ttsRuntime']]
-    return {key: copy.deepcopy(family[key]) for key in
+    return {key: copy.deepcopy(family.get(key)) for key in
             ('label', 'maxText', 'reference', 'instruction', 'voices', 'presets', 'cfg', 'steps', 'sampling', 'normalize', 'tags', 'notes',
-             'hardware')}
+             'hardware', 'languages', 'editTags')}
 
 
 def nvidia_gpu():
@@ -237,9 +316,18 @@ def validate_request(entry, request):
         decode_reference(reference)
         if family['reference'] == 'transcript-required' and not transcript:
             raise ValueError(f'{family["label"]} needs the exact words spoken in the reference recording')
+        if family['reference'] == 'audio-only' and transcript:
+            raise ValueError(f'{family["label"]} clones from the recording alone; leave the transcript empty')
         clean['referenceText'] = transcript
     elif transcript:
         raise ValueError('Add a reference recording for this transcript')
+    if family.get('editTags') and DOTS_EDIT_TAG.search(text) and not reference:
+        raise ValueError('Add the recording to edit; edit tags change a reference recording')
+    language = settings.get('language')
+    if language:
+        if not family.get('languages') or language not in {item['id'] for item in family['languages']}:
+            raise ValueError(f'Choose one of the languages {family["label"]} speaks')
+        clean['language'] = language
     instruction = settings.get('instruction')
     if instruction:
         if not family['instruction']:
@@ -430,7 +518,9 @@ class TtsManager:
             self._run_setup(common + ['-r', build_tools], report, 'Installing verified build tools')
             self._run_setup(common + ['--no-build-isolation', '-r', lock], report,
                             'Downloading and installing the speech runtime (PyTorch CUDA, about 4 GB)')
-            probe = ('import json,torch,torchaudio,transformers,soundfile,librosa,kittenml,voxcpm,qwen_tts;'
+            probe = ('import json,importlib.util,torch,torchaudio,transformers,soundfile,librosa,kittenml,voxcpm,qwen_tts,'
+                     'langcodes,loguru,torchdiffeq,zyphra_textnorm;'
+                     'assert importlib.util.find_spec("dac"),"descript-audio-codec is missing";'
                      'print(json.dumps({"torch":torch.__version__,"cuda":torch.cuda.is_available(),'
                      '"gpu":torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}))')
             result = subprocess.run([str(python), '-I', '-c', probe], capture_output=True, text=True, timeout=600,
@@ -466,7 +556,7 @@ class TtsManager:
             return True
         try:
             receipt = json.loads((path.parent / 'source-receipt.json').read_text(encoding='utf-8'))
-            return receipt.get('sha256') == spec['sha256'] and (path / 'breeze_infer/runtime.py').is_file()
+            return receipt.get('sha256') == spec['sha256'] and (path / spec['marker']).is_file()
         except (OSError, ValueError, AttributeError):
             return False
 
@@ -489,13 +579,13 @@ class TtsManager:
                 for member in bundle.infolist():
                     name_in_zip = member.filename.replace('\\', '/')
                     if not name_in_zip.startswith(prefix):
-                        raise ValueError('The Breeze-TTS source archive has an unexpected layout')
+                        raise ValueError('The ' + spec['label'] + ' archive has an unexpected layout')
                     relative = name_in_zip[len(prefix):]
                     if not relative or not any(relative == item or relative.startswith(item) for item in spec['members']):
                         continue
                     parts = relative.split('/')
                     if any(part in ('', '.', '..') or ':' in part for part in parts[:-1]) or relative.startswith('/'):
-                        raise ValueError('The Breeze-TTS source archive contains an unsafe path')
+                        raise ValueError('The ' + spec['label'] + ' archive contains an unsafe path')
                     destination = _inside(staging / relative, staging) if parts[-1] else None
                     if member.is_dir() or destination is None:
                         continue
@@ -536,11 +626,19 @@ class TtsManager:
     def voices(self, entry):
         if not supports(entry) or not FAMILIES[entry['ttsRuntime']]['voices'] or entry.get('status') != 'installed':
             return []
+        index = FAMILIES[entry['ttsRuntime']].get('voiceIndex') or 'voices/voices.json'
         try:
-            data = json.loads((self.model_directory(entry) / 'voices/voices.json').read_text(encoding='utf-8'))
+            data = json.loads((self.model_directory(entry) / index).read_text(encoding='utf-8'))
         except (OSError, ValueError):
             return []
         voices = []
+        if isinstance(data, list):
+            from tts_worker import zonos3_voice
+            for item in data:
+                voice = zonos3_voice(item) if isinstance(item, dict) else None
+                if voice and len(voice['id']) <= 100 and all(voice['id'] != known['id'] for known in voices):
+                    voices.append(voice)
+            return voices[:400]
         for name, spec in sorted(data.items()) if isinstance(data, dict) else []:
             if not isinstance(name, str) or len(name) > 100:
                 continue
@@ -676,7 +774,9 @@ class TtsManager:
                            NUMBA_CACHE_DIR=str(cache / 'numba'), TOKENIZERS_PARALLELISM='false')
         stream = log.open('ab')
         try:
-            child = subprocess.Popen([str(self.python()), '-I', str(self.resources / 'runtime-setup/hf-extension/tts_worker.py')],
+            # -X utf8: model code reads its JSON with the default codec, which is not UTF-8 on many Windows locales.
+            child = subprocess.Popen([str(self.python()), '-I', '-X', 'utf8',
+                                      str(self.resources / 'runtime-setup/hf-extension/tts_worker.py')],
                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stream, env=environment, cwd=str(cache),
                                      creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0))
         finally:

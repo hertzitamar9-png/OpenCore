@@ -1,0 +1,3010 @@
+{
+  "_id": "6af1543d87f725ebcea858b9",
+  "id": "Zyphra/ZONOS3-Mini",
+  "private": false,
+  "pipeline_tag": "text-to-speech",
+  "library_name": "zonos3",
+  "tags": [
+    "zonos3",
+    "safetensors",
+    "gguf",
+    "text-to-speech",
+    "tts",
+    "speech-synthesis",
+    "voice-cloning",
+    "multilingual",
+    "zonos",
+    "zyphra",
+    "en",
+    "fr",
+    "es",
+    "de",
+    "it",
+    "pt",
+    "nl",
+    "pl",
+    "ru",
+    "sv",
+    "tr",
+    "uk",
+    "cs",
+    "da",
+    "fi",
+    "el",
+    "hu",
+    "no",
+    "ro",
+    "sk",
+    "bg",
+    "zh",
+    "ja",
+    "ko",
+    "ar",
+    "he",
+    "vi",
+    "id",
+    "th",
+    "tl",
+    "ms",
+    "ka",
+    "hi",
+    "bn",
+    "ta",
+    "te",
+    "mr",
+    "gu",
+    "kn",
+    "ml",
+    "pa",
+    "or",
+    "ur",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 4170,
+  "likes": 144,
+  "modelId": "Zyphra/ZONOS3-Mini",
+  "author": "Zyphra",
+  "sha": "24f39592cf5521d675d96db41fc379af3ad369be",
+  "lastModified": "2026-11-10T18:44:54.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "text-to-speech",
+    "library_name": "zonos3",
+    "language": [
+      "en",
+      "fr",
+      "es",
+      "de",
+      "it",
+      "pt",
+      "nl",
+      "pl",
+      "ru",
+      "sv",
+      "tr",
+      "uk",
+      "cs",
+      "da",
+      "fi",
+      "el",
+      "hu",
+      "no",
+      "ro",
+      "sk",
+      "bg",
+      "zh",
+      "ja",
+      "ko",
+      "ar",
+      "he",
+      "vi",
+      "id",
+      "th",
+      "tl",
+      "ms",
+      "ka",
+      "hi",
+      "bn",
+      "ta",
+      "te",
+      "mr",
+      "gu",
+      "kn",
+      "ml",
+      "pa",
+      "or",
+      "ur"
+    ],
+    "tags": [
+      "text-to-speech",
+      "tts",
+      "speech-synthesis",
+      "voice-cloning",
+      "multilingual",
+      "gguf",
+      "zonos",
+      "zonos3",
+      "zyphra"
+    ]
+  },
+  "gguf": {
+    "total": 11332480,
+    "architecture": "mect_spk",
+    "totalFileSize": 45385728
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6cbfbaa23ebcc85befbf4839ea6d43fae699cf6b",
+      "size": 10675
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "7045e0a84f05673df122167db225f28606b96646",
+      "size": 8234
+    },
+    {
+      "rfilename": "assets/arch_zac1_dark.png",
+      "blobId": "ae6848ff8cd9cd62264494ffb0483e0bec69b7d3",
+      "size": 145981,
+      "lfs": {
+        "sha256": "665c7e614d589e93379d134ad5177a3f4dabdc6e5e681a95f82908ae08321652",
+        "size": 145981,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/eval_pareto.png",
+      "blobId": "e57efc0b95469680c26a689d600eec82f415f1cc",
+      "size": 308756,
+      "lfs": {
+        "sha256": "c225dcb8c2ff951b86705d6e96f1b5460f83aaf5eb2d104da8c4aefd71d703b5",
+        "size": 308756,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/zonos3_mini_arloop_animated.gif",
+      "blobId": "65aa283129e49f3c9127a85208980e8f918d5aea",
+      "size": 3586387,
+      "lfs": {
+        "sha256": "b81430e1ec1e1fc2383d877be8fa937fa0ec67efa24d75b3dacd11f009a57308",
+        "size": 3586387,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/zonos3_mini_hero.webp",
+      "blobId": "743503cc393cbb4a81f97555eccc3f1640fff9ad",
+      "size": 7006556,
+      "lfs": {
+        "sha256": "400b7056d52bb96f17ee65251a4127ad1ce1a84036a633f98325e57de693d6ba",
+        "size": 7006556,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "autoencoder/generator.pt",
+      "blobId": "178a2c04b5fbf69146d266828072fd8206f0739d",
+      "size": 7960647220,
+      "lfs": {
+        "sha256": "75a587a3eda9ca3d345f0c305756a7ff8619b01685c261b08ae243c69c2caf9a",
+        "size": 7960647220,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "autoencoder/heads/full_mr/config_full_unfreezeall_mr.json",
+      "blobId": "03965decaaab37e96378d918d5e3448203af544a",
+      "size": 11828
+    },
+    {
+      "rfilename": "autoencoder/heads/full_mr/step_0050000.pt",
+      "blobId": "77b528e280a11185fc24647b8af18b71facc85f9",
+      "size": 4012134189,
+      "lfs": {
+        "sha256": "9d2e2340c74f763340535f84e5dda59b5eabea668360400f8fac6b641598a1e9",
+        "size": 4012134189,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "autoencoder/heads/keep2_plain/config_full_unfreezeall_mr_drop30_4x10.json",
+      "blobId": "bbb84d0ef66e1c37e0a0c0d2905e3bcaec410b08",
+      "size": 10304
+    },
+    {
+      "rfilename": "autoencoder/heads/keep2_plain/step_0050000.pt",
+      "blobId": "94dc38c0f3eefaf2498fcbb0efabacc04e483409",
+      "size": 518498361,
+      "lfs": {
+        "sha256": "7432e335e717417961267f2242547ce389a796cdc296a8b8d5289658e3c28936",
+        "size": 518498361,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "autoencoder/teacher/config.json",
+      "blobId": "b5ed54e0eb10e51eb3806abf71e78aac16a5cc58",
+      "size": 1863
+    },
+    {
+      "rfilename": "autoencoder/teacher/model.safetensors",
+      "blobId": "06a0d064e03db3313f0f5ff5b518e983b48a9a9a",
+      "size": 774162368,
+      "lfs": {
+        "sha256": "a15182741d6ee3cd780b8b830f49fa6b7fcce383655d451970841b24114767a5",
+        "size": 774162368,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "gguf/edit/accents.gguf",
+      "blobId": "e9996f7df67a7b56491b42a2a021141b86116c02",
+      "size": 256592064,
+      "lfs": {
+        "sha256": "ac77fc95e91a6b0c28135f27ee3e4fef1411b8ac3dba969e06f99ce9f84e7376",
+        "size": 256592064,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "gguf/spk-encoder.gguf",
+      "blobId": "54dee82a96bf8d6ab6babdf9474e5d3e675f1802",
+      "size": 45385728,
+      "lfs": {
+        "sha256": "9539f340b70be246005403b9c254732e180e85e0b3c57fb1973f0d6bc6c59bdc",
+        "size": 45385728,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "gguf/ssl-teacher.gguf",
+      "blobId": "96c0163aa374eee5dd7b40bda1c1a4a76b1abb55",
+      "size": 1548700000,
+      "lfs": {
+        "sha256": "59e4f150e1ccdf54e6349b06605c2274f2262139678688025b6614f1393e415a",
+        "size": 1548700000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "gguf/steer.gguf",
+      "blobId": "7475ee0be0a9dd6c9678fecba154ced9dd75715f",
+      "size": 204960,
+      "lfs": {
+        "sha256": "6e8e3f86e89a09801ce083b9286f43263ec696acfaff72e25aca537aa9efa90c",
+        "size": 204960,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Cillian_en-Irish_M_1.codes.npy",
+      "blobId": "caea1949be1f0c5fbf37fa2d8cb005622964e618",
+      "size": 5928,
+      "lfs": {
+        "sha256": "dadae1124c63cda7a0627fd282d54aa255a8800155eae1b9da54b08b345c2f10",
+        "size": 5928,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Cillian_en-Irish_M_1.embedding.npy",
+      "blobId": "1f13ba7b9f31bbb7ae9b3bded3f08c192b3beb8c",
+      "size": 896,
+      "lfs": {
+        "sha256": "f3125fae2f679fb5c8128d308ddd02986fd7d914975d17cc6dadf9eb130b1061",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Cillian_en-Irish_M_1.wav",
+      "blobId": "a0357b3daee30be79fabb672f2a07092eb9a5940",
+      "size": 852644,
+      "lfs": {
+        "sha256": "d43eda64c4928dfb30ecf547e4a00100b8f83ed0eb5c1e07116725794da72ea2",
+        "size": 852644,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Imogen_en-British_F_1.codes.npy",
+      "blobId": "dc617c561eefd6488a0b1665418b9b491836bc8d",
+      "size": 7728,
+      "lfs": {
+        "sha256": "c906f6c405c9078607fe9c54cf1b71ef0e112839490499e34bf8791ed1ad7e86",
+        "size": 7728,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Imogen_en-British_F_1.embedding.npy",
+      "blobId": "cdd610f83ccd9a7f74450516233bd81722f354ac",
+      "size": 896,
+      "lfs": {
+        "sha256": "683424b91faeade48c8a92e05e1c3679366abbba443ef62eccba8dc40de48e9e",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Imogen_en-British_F_1.wav",
+      "blobId": "9b0aa2216fb3d51f7f08f9319e8acaa8f2d66ab6",
+      "size": 1117244,
+      "lfs": {
+        "sha256": "dde4691a6ccd95f4928fbbc4e2d49089824b264575bc0bf0ac4986dd2f8082c5",
+        "size": 1117244,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Jett_en-energetic_M_1.codes.npy",
+      "blobId": "ddb65521df5c47b513f215a4959e76f6910661f9",
+      "size": 6608,
+      "lfs": {
+        "sha256": "8f32e946509673ae422c37cc9b79957cb569f212360745f9110d343f6f1f9f2c",
+        "size": 6608,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Jett_en-energetic_M_1.embedding.npy",
+      "blobId": "75fe426b10bfde91fe83c0b3811b392fd8eadfe5",
+      "size": 896,
+      "lfs": {
+        "sha256": "624b749d220dac7fdcda479b1964cb8f7de58c838c1357f2f0161dac06e34f48",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Jett_en-energetic_M_1.wav",
+      "blobId": "7f6e9b52ca5296fde3846fb1436a0bfb71c86a0d",
+      "size": 952604,
+      "lfs": {
+        "sha256": "107c8350f191d47401da6844158528d0f493cbf46be4dee6bb81dd71bc052619",
+        "size": 952604,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Morgana_en-witch_F_1.codes.npy",
+      "blobId": "2cdd9341832bcd2b4b5ad93c7f7be35c63b5b990",
+      "size": 12448,
+      "lfs": {
+        "sha256": "2f60227a9f7cdc6ce696548f4c28c199d3f5afeadf7317a1bde132575a1ed731",
+        "size": 12448,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Morgana_en-witch_F_1.embedding.npy",
+      "blobId": "8671c2114bc5bfb18d83670f28cb3ba0b338b637",
+      "size": 896,
+      "lfs": {
+        "sha256": "a817387697c43138639aa1e52a9e42d9f3a629655e0faea5ac8565eb8e57c091",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Morgana_en-witch_F_1.mp3",
+      "blobId": "5364a53463212237eee08d5027a2c37d50cfebf0",
+      "size": 329812,
+      "lfs": {
+        "sha256": "8fec617ca7a4044f930c108ded0daf814ca93e61d97a7df626373aa182240ece",
+        "size": 329812,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Rupert_en-British_M_1.codes.npy",
+      "blobId": "17dcdc3d9db449dc0bd44691fcab253c20be624f",
+      "size": 8048,
+      "lfs": {
+        "sha256": "abf42171c7402fea5888ec350a50b64fd78777e44d7caf665c04e4e2b629fc79",
+        "size": 8048,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Rupert_en-British_M_1.embedding.npy",
+      "blobId": "4d29433a1eee6225edf53d7e3abaac9f0353b416",
+      "size": 896,
+      "lfs": {
+        "sha256": "0c68e699376dbafdc1ab0fadc133f48e7df9cb33b3a7b80b05f42c5c0aad8fa7",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Rupert_en-British_M_1.wav",
+      "blobId": "a1a46bd19f71bc483e1dbbfd26764fb62f0d6e80",
+      "size": 1164284,
+      "lfs": {
+        "sha256": "3743b94cfc35c004fb5c2bcc9c2a537b605e3e15d4677e2b5b811bc18d95151e",
+        "size": 1164284,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Sakura_en-anime_F_1.codes.npy",
+      "blobId": "f2044c7eb91b8b8fe1e79420cd34bc4ff86ba2fd",
+      "size": 9168,
+      "lfs": {
+        "sha256": "4b8c8288b45e1a3ff5aa3adc05a4af386f5889e9ab47902ff36f9daa8900ded2",
+        "size": 9168,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Sakura_en-anime_F_1.embedding.npy",
+      "blobId": "4705c78ae92ff261e95f7afd90cce9b9e10decd4",
+      "size": 896,
+      "lfs": {
+        "sha256": "daf3e82d2e6f2ce2fe90c73473a312a721295ae7f85763f99c87ee2f861063a9",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Sakura_en-anime_F_1.wav",
+      "blobId": "03ba61bdd9a9dbbca9c2f78a87e99871571733e3",
+      "size": 1328924,
+      "lfs": {
+        "sha256": "01e8f47241546efd1223bd1cac09ea81f1d9ae2cf3148260f37413f05db40229",
+        "size": 1328924,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Savannah_en-American_F_1.codes.npy",
+      "blobId": "de5d99cd545914328947b5e6e1b5d648063af5c2",
+      "size": 6968,
+      "lfs": {
+        "sha256": "f6e450fea8fa521c6be32b64fc61f48d6f9fd8301fe5759abd2315ce6ac946fb",
+        "size": 6968,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Savannah_en-American_F_1.embedding.npy",
+      "blobId": "b8d478227a96ede89bb99a32ea01acf1686ee285",
+      "size": 896,
+      "lfs": {
+        "sha256": "dd81587e66f96fb62da47ef13d5d867de464ca386a83f01b4403cdd19629ca6c",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Savannah_en-American_F_1.mp3",
+      "blobId": "4d29c41b0af4ab4bfaeab66b5256ae820536ee35",
+      "size": 183527,
+      "lfs": {
+        "sha256": "f8d5eaf8f6c18a0a3b452652da62d821f819d4e95f6347aa29986a503e219d14",
+        "size": 183527,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Thaddeus_en-announcervoice_M_1.codes.npy",
+      "blobId": "63c4a8b3a621d23a1a35d10c23190641bdc29ef2",
+      "size": 9368,
+      "lfs": {
+        "sha256": "5c76de5bf16fd10282fced313c6c00a03fa2150b1df4c2382e19c6cbad65f179",
+        "size": 9368,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Thaddeus_en-announcervoice_M_1.embedding.npy",
+      "blobId": "1157f327e02d6509275e8df150aa716449e783f2",
+      "size": 896,
+      "lfs": {
+        "sha256": "fc8e21356730988aa20da70123991404345e0bdbfe3afe31e6371d8d93095461",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Thaddeus_en-announcervoice_M_1.mp3",
+      "blobId": "535a4f2e756c5612c1d2d4cb34cefead60a28b37",
+      "size": 247474,
+      "lfs": {
+        "sha256": "c7fc96a18645b129b1e55659379ba796f5cfd70a800068b977d37f1254e93c52",
+        "size": 247474,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Willow_en-asrm_F_1.codes.npy",
+      "blobId": "2013b28868bbae0b6e5cf62f0bad73fc6c55ae98",
+      "size": 15048,
+      "lfs": {
+        "sha256": "29ca4c14c16bb09b2bc48bb93f2d5a56327558d64271e54ebd1f713a4204905b",
+        "size": 15048,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Willow_en-asrm_F_1.embedding.npy",
+      "blobId": "876e2b26c5f65d74bbdbe78bb5194d6a2eba1070",
+      "size": 896,
+      "lfs": {
+        "sha256": "6ebb84309f21f1dcbe6371e2355dc98f8ee3d0aee5850c305d06a73fe0a7c222",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Willow_en-asrm_F_1.wav",
+      "blobId": "6fe08b9e567b2a842f2a23e04f8abae3499f6f0a",
+      "size": 2193284,
+      "lfs": {
+        "sha256": "6a7574e4b91794390867027eb5c2c2a12f6cef557fc7d804b45f985144a50e5e",
+        "size": 2193284,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Wyatt_en-American_M_1.codes.npy",
+      "blobId": "fe7a4ace704badd4adb74aa5e2673ab0ca475f5e",
+      "size": 10248,
+      "lfs": {
+        "sha256": "7a854f9b66eefa9203a9f752c2a1ec808345b4d72ac34f8547ee776c58e4b72f",
+        "size": 10248,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Wyatt_en-American_M_1.embedding.npy",
+      "blobId": "921f4a78256265a482a9e3b77315d283fff74d24",
+      "size": 896,
+      "lfs": {
+        "sha256": "b39d377b653ebaca6bbd4ecd13c382fe16d81f0cfae27217d9b626e5589a0511",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/English/Wyatt_en-American_M_1.ogg",
+      "blobId": "6270fbf65e394ac9c10dca0fc5f4e5a66359a846",
+      "size": 147400,
+      "lfs": {
+        "sha256": "92c17f6eff4c9612ece96f0efae6f74f8e6b381f8c851ce739cdf0854a5a5831",
+        "size": 147400,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/French/Gaspard_fr_M_1.codes.npy",
+      "blobId": "4d2ff3bdde469bbf30576d96b077b36d7698ec21",
+      "size": 11488,
+      "lfs": {
+        "sha256": "34293ea302d3a47c17ab2f8514fb3a3354dc4ad695581d9b2f93fb37476ee1f7",
+        "size": 11488,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "gguf/voices/French/Gaspard_fr_M_1.embedding.npy",
+      "blobId": "abfe47d70ee675c56022c81827bcae4beacb1ff5",
+      "size": 896,
+      "lfs": {
+        "sha256": "6e19a9a545af6a263c00b997368d8396ff8abc761b53dce2a6d4df735f0766e9",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/French/Gaspard_fr_M_1.mp3",
+      "blobId": "810b988fd7948429884a6eca555c36f7eac88fe2",
+      "size": 303899,
+      "lfs": {
+        "sha256": "b353c4f7cccb9ffd335dde8428cae212373db2cf9c7018afc22cbb8f3d6c949a",
+        "size": 303899,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/German/Liesel_de_F_1.codes.npy",
+      "blobId": "d62fd1f381037c01a0dc19983af6ad877387154a",
+      "size": 6928,
+      "lfs": {
+        "sha256": "6952aa3383e1181610b3b88115ff2fa20a2a2da0686c9b19f2cf0f57f96ab92e",
+        "size": 6928,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/German/Liesel_de_F_1.embedding.npy",
+      "blobId": "0dcae442d4c1aa6fcc89932ab0355c83726eb94d",
+      "size": 896,
+      "lfs": {
+        "sha256": "2d44e40f8c1f43fcabaabf301e14bfc48325bf4596cb04e076d662d8b2724c5d",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/German/Liesel_de_F_1.mp3",
+      "blobId": "2f867b17e59dedade064ae5ea7246d46a4ea17f1",
+      "size": 182273,
+      "lfs": {
+        "sha256": "1a8909ca74065967d74534f438fcd15b770fc2ec55d2cbe217836a720cfff091",
+        "size": 182273,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/German/Wolfgang_de_M_1.codes.npy",
+      "blobId": "43300e7972337a22556f1fbc14b53e432f02a66c",
+      "size": 7488,
+      "lfs": {
+        "sha256": "553a4dd74cc650ea333c49033f5b459e1faa7244cfa4185862cce1a223fe41e1",
+        "size": 7488,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/German/Wolfgang_de_M_1.embedding.npy",
+      "blobId": "a6c13b43dff6f3731b049ded26caab918135674e",
+      "size": 896,
+      "lfs": {
+        "sha256": "3a0e305b2789f79b843d96628b275b5d8f3f877f89c80e87fe57bf6078901467",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/German/Wolfgang_de_M_1.mp3",
+      "blobId": "bc3a985c2aba3ce64f378648a24e10b159897e2a",
+      "size": 196483,
+      "lfs": {
+        "sha256": "5ca32af842970e58c2769f1a191438f44b36e721071e058ed51a8c2febb2f261",
+        "size": 196483,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Hindi/Ananya_hi_F_1.codes.npy",
+      "blobId": "f62a54922826e0bfc98f78b966dbe889aef84857",
+      "size": 7768,
+      "lfs": {
+        "sha256": "85288fd646bb836b2424faad617d13f311c4ce129a48d7f9577bbfe29df9aa5b",
+        "size": 7768,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Hindi/Ananya_hi_F_1.embedding.npy",
+      "blobId": "93bea48002970de357c5f9291db6b0e76024d1fb",
+      "size": 896,
+      "lfs": {
+        "sha256": "f7acf756273d86131de701d51b25a7e0b3323d724b7e98a0c890fcf176f85a14",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Hindi/Ananya_hi_F_1.wav",
+      "blobId": "9a5d8c4682eca8e6944f52eaaa0c8772a4ae0cde",
+      "size": 1123124,
+      "lfs": {
+        "sha256": "4c0417c4f1a76d3290281c932a35b5b25b8e4cfe9acb328e24abf68b7f232840",
+        "size": 1123124,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Hindi/Arjun_hi_M_1.codes.npy",
+      "blobId": "aa4f5879c59754392f545a2af43ccb864cf6697a",
+      "size": 7128,
+      "lfs": {
+        "sha256": "dec52799002595008cf710381b5eb5f2acf0edd82fb28636c1bbef4aba9df618",
+        "size": 7128,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Hindi/Arjun_hi_M_1.embedding.npy",
+      "blobId": "a0484aa4ebc17f3a9eea865f3a7139f708404ded",
+      "size": 896,
+      "lfs": {
+        "sha256": "9cb0eb4cc81b79acadedb173e1fbbc0203bf71ea9ae66e56bd76393386f25815",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Hindi/Arjun_hi_M_1.wav",
+      "blobId": "0b96ec58e36eeb250fa4a0e941019621f2d7d327",
+      "size": 1029044,
+      "lfs": {
+        "sha256": "760b13421993d4d453cf9c3ce789da2425922c54a483a1e1d2daff3a226a6043",
+        "size": 1029044,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Italian/Ginevra_it_F_1.codes.npy",
+      "blobId": "91fdf1c82b8dd56391e95cd5c83f4ba94b8f99fb",
+      "size": 6808,
+      "lfs": {
+        "sha256": "91e5f1a6ccc71d55840e4277a4f00c900e01e446e956949a5651c2e5657f2d4f",
+        "size": 6808,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Italian/Ginevra_it_F_1.embedding.npy",
+      "blobId": "aec377f7acfac99d7291086aa545e197b5335197",
+      "size": 896,
+      "lfs": {
+        "sha256": "950ecf44f57fd053effd83c65f7f35059df0dcd1bb99dbc197b6649507171621",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Italian/Ginevra_it_F_1.mp3",
+      "blobId": "7a1ec31196747542c0b9127d2f272a2026e7240d",
+      "size": 179347,
+      "lfs": {
+        "sha256": "8dc9a8ebaa97b6c9a32aab707f1384a37d275e9a001029fedbfe7897a92514d9",
+        "size": 179347,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Italian/Lorenzo_it_M_1.codes.npy",
+      "blobId": "652c6ab3b0206b4cc6af4ec85e81b7cea9a56830",
+      "size": 7488,
+      "lfs": {
+        "sha256": "e25cc35719d796ba7ace4a0ec563d159cfe31e978f78098b126b2a8c7f3fbc02",
+        "size": 7488,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Italian/Lorenzo_it_M_1.embedding.npy",
+      "blobId": "3a5ad500e72832e9f83b6787565124ce50f9cb87",
+      "size": 896,
+      "lfs": {
+        "sha256": "a355bb33b907130985b74eae3fa05e4aa19d7fe7233f26c0416afad0726c2367",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Italian/Lorenzo_it_M_1.mp3",
+      "blobId": "50ad8ae5aa90b234b243e01ad503856cd3c3f64d",
+      "size": 196483,
+      "lfs": {
+        "sha256": "be0f69f123a15d1c7c1100abf94c6f1c649034f16239f2926a87f20550d2ebcb",
+        "size": 196483,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Korean/Minjun_ko_M_1.codes.npy",
+      "blobId": "16421b9ee9fcd33be1f4cedd2aa38888a16e5874",
+      "size": 7288,
+      "lfs": {
+        "sha256": "2b40a0d108b5188be2fb8695eb0f28b5a6f16c4dd485fba4ab82876b46e79522",
+        "size": 7288,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Korean/Minjun_ko_M_1.embedding.npy",
+      "blobId": "d061dd4b5576c83fcb8878176db1f4f48dfb975e",
+      "size": 896,
+      "lfs": {
+        "sha256": "ab3d9c60c3f36080fd7e9eebd20c8ece42059236dd83f19980e5e4dbca94fc4e",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Korean/Minjun_ko_M_1.wav",
+      "blobId": "0fb74b715dd76131b5e0cb0b8cb2e2f040e3e05e",
+      "size": 1052564,
+      "lfs": {
+        "sha256": "c1c1e59241314afe001d565ab4e0c92224f598f6bbc1e4aaaac2ce5b036d16aa",
+        "size": 1052564,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Korean/Seoyeon_ko_F_1.codes.npy",
+      "blobId": "9602313d4f036596632a2311afcb8a9ac4a354d6",
+      "size": 7048,
+      "lfs": {
+        "sha256": "d6ca0cb788e610d56b02824108aa7c54e115bdab1eaeca81330b1475f6de9d15",
+        "size": 7048,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Korean/Seoyeon_ko_F_1.embedding.npy",
+      "blobId": "c5910a8e8505215a45248ace72fba1cea616f0f2",
+      "size": 896,
+      "lfs": {
+        "sha256": "dddb6aa68c3febe83ca656c959f4d78246c72e011cde72c3745d1a46a37d8345",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Korean/Seoyeon_ko_F_1.wav",
+      "blobId": "4df539aca7e22f904b944cce6c0a9a38cfa3c88b",
+      "size": 1017284,
+      "lfs": {
+        "sha256": "558801500e68ee38fabca81c12fe2f7ec763e989e94430b3573be3df2e0ebf30",
+        "size": 1017284,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Mandarin Chinese/Haoran_zh-energetic_M_1.codes.npy",
+      "blobId": "e21b1f382a77943ee8bc41d394e883ed6958ac92",
+      "size": 6608,
+      "lfs": {
+        "sha256": "033e6e1acb03cacf2dc9278f752c43774224747e3aa91882113422ab35dbfbb6",
+        "size": 6608,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Mandarin Chinese/Haoran_zh-energetic_M_1.embedding.npy",
+      "blobId": "2be500d11f859dd80709bf87c9dc4da7630515eb",
+      "size": 896,
+      "lfs": {
+        "sha256": "b056f91bcbf4ffda432459f8c6a80b37cdc98cd82fd296e29cf2584325809c6c",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Mandarin Chinese/Haoran_zh-energetic_M_1.mp3",
+      "blobId": "50b4fa73a2749a706893e066e5c8e51e3fb86983",
+      "size": 173914,
+      "lfs": {
+        "sha256": "ddd027b458401d46f893d51e42cbd0c7d9634592a7401a43127c1a639215d6be",
+        "size": 173914,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Mandarin Chinese/Meilin_zh-energetic_F_1.codes.npy",
+      "blobId": "80d3b46d8ea4c18f2fe837ddd563c6833a32b70c",
+      "size": 6888,
+      "lfs": {
+        "sha256": "8a3b3aef695ca75788eea98d94d8580d2147c783f427e08cf4ed2d66ecf5c4c6",
+        "size": 6888,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Mandarin Chinese/Meilin_zh-energetic_F_1.embedding.npy",
+      "blobId": "abd3a15322b931f3577892005cbeab5ccffe30a9",
+      "size": 896,
+      "lfs": {
+        "sha256": "8430a2852291d874f327666d05bd15ee854a009cc54b9d3cdba9005d6bc7f59b",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Mandarin Chinese/Meilin_zh-energetic_F_1.wav",
+      "blobId": "c9a136199bc27b1f200396deea6bb1e99c174eab",
+      "size": 993764,
+      "lfs": {
+        "sha256": "4200f7e397be1ff2a5dac9169daba8338af911e12cf47e925999016d65969612",
+        "size": 993764,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Portuguese/Leonor_pt_F_1.codes.npy",
+      "blobId": "b6b757c4f900ac178e754ef8d343a5c569a3be73",
+      "size": 7448,
+      "lfs": {
+        "sha256": "56f4c8d2d6f856305e250966710fa7669244ef1d86ffd82659ade969755c7f88",
+        "size": 7448,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Portuguese/Leonor_pt_F_1.embedding.npy",
+      "blobId": "90e575bda94727597a9607a39750871da0ae4d5b",
+      "size": 896,
+      "lfs": {
+        "sha256": "c4074805d713ac20444253f1b98f814b7f27c43b6ab29bb2f0feeaaae8f7e4b2",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Portuguese/Leonor_pt_F_1.wav",
+      "blobId": "e9a1fb35730eb513c5b28851f8e44dd8fff11a2f",
+      "size": 1076084,
+      "lfs": {
+        "sha256": "4cb21b761a7c808b2552451485ca14b32529b68294ef4b478c96665cabc8fcd1",
+        "size": 1076084,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Portuguese/Thiago_pt_M_1.codes.npy",
+      "blobId": "2e81ca3ba731ef659fc1e2c47410ee8420750355",
+      "size": 8848,
+      "lfs": {
+        "sha256": "b63efbc88127b88ad89740eed377a0f1600c4e2ae0deb030e574f8b7b9c6c667",
+        "size": 8848,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Portuguese/Thiago_pt_M_1.embedding.npy",
+      "blobId": "78663a9f553cdcb5f40b317e2aa1d7653b37334d",
+      "size": 896,
+      "lfs": {
+        "sha256": "fd1eee487091ef60636fe08cbafc15133c34a3f697629e1057e749c5b9893dc0",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Portuguese/Thiago_pt_M_1.wav",
+      "blobId": "b630f1e1b166fd5a31b8e902123f72055dbca947",
+      "size": 1281884,
+      "lfs": {
+        "sha256": "c2c02110a5f10765a9bf9c533a6cbf25bb39fca3bf23023f58b70a3a67fe89d2",
+        "size": 1281884,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/README.md",
+      "blobId": "78b590b33ecd7651c0cb404550b03fa75b772b8d",
+      "size": 2446
+    },
+    {
+      "rfilename": "gguf/voices/Spanish/Rodrigo_es_M_1.codes.npy",
+      "blobId": "c6a017443005bd0eb9af7e9b39a3b1d7aa5f11d0",
+      "size": 6408,
+      "lfs": {
+        "sha256": "1d6ff61ab49a2f3cfeb116afa80adcc33290cd5c7d7cb4c50181f4359c52b1c0",
+        "size": 6408,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Spanish/Rodrigo_es_M_1.embedding.npy",
+      "blobId": "925b63ef08d127275695231cda09a4f00df77316",
+      "size": 896,
+      "lfs": {
+        "sha256": "0305b7ab40d5d4a1df07ed7aa1c164f64ede1ac4b6250fa56383b4c3ae03e1e1",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Spanish/Rodrigo_es_M_1.wav",
+      "blobId": "a32099d399427861f6b88d0eb87f1122cafb88b3",
+      "size": 923204,
+      "lfs": {
+        "sha256": "2559c50978b50ad660b82528558047a684b1ff6d3c91dd59691a3c0c13c4eaf5",
+        "size": 923204,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Spanish/Ximena_es_F_1.codes.npy",
+      "blobId": "2a26e00300eea6da608c1692ca081b2723c0359d",
+      "size": 7968,
+      "lfs": {
+        "sha256": "b571c52d7543867bb2299e0626cea9d6f6c6c9a3bffabc85570baf08897dafb9",
+        "size": 7968,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Spanish/Ximena_es_F_1.embedding.npy",
+      "blobId": "c7098dcd92def5a8902ab4c3a69ca2a8e8d8ea2f",
+      "size": 896,
+      "lfs": {
+        "sha256": "b9cc1284c52003705619b37f2c25c59e170d2c70650af39e5692b2fe91782bd6",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Spanish/Ximena_es_F_1.wav",
+      "blobId": "cb5d7ff4ece58bf7bde05208ee5dceff38db0c74",
+      "size": 1152524,
+      "lfs": {
+        "sha256": "6b029ff5ef03907d401d92d9fe037d14ea6eb363c0d4e78512fc13c7b6eedfc0",
+        "size": 1152524,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Telugu/Chaitanya_te_M_1.codes.npy",
+      "blobId": "17a12ece83fcc04a35371862f8178c6fdf0999d8",
+      "size": 6368,
+      "lfs": {
+        "sha256": "7003a4812a759171470f3187955e1b5c27f37bd449eb4bc012d7ac8620d0e9f7",
+        "size": 6368,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Telugu/Chaitanya_te_M_1.embedding.npy",
+      "blobId": "85c6a5bfda9ee412c99285415d0cbf9068856c84",
+      "size": 896,
+      "lfs": {
+        "sha256": "ca818012cf5656d12eb3bccdfad4086831a6a892f8e7bf2277ca11bf921e5eb7",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Telugu/Chaitanya_te_M_1.wav",
+      "blobId": "9b8796a9cc77710265a623305e5ad3c4251628a1",
+      "size": 917324,
+      "lfs": {
+        "sha256": "327c73a145533f1cb874736e9194048a22a43a10e74c7b9b8c354306068c54b0",
+        "size": 917324,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Telugu/Sravya_te_F_1.codes.npy",
+      "blobId": "a9118e45d06cf6355789322625a6fa95c825e689",
+      "size": 6928,
+      "lfs": {
+        "sha256": "e938016bb413c48bb5deb0bf80515f646bd5b7374f5bfb4d616a8ba3e254f373",
+        "size": 6928,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Telugu/Sravya_te_F_1.embedding.npy",
+      "blobId": "3d97b979df67c697d241511505cc6a580957f17e",
+      "size": 896,
+      "lfs": {
+        "sha256": "a62e330ccfe900dbc4caac3e57d661adf284da8c967072dbe91bab154df79c0f",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "gguf/voices/Telugu/Sravya_te_F_1.wav",
+      "blobId": "d6dca208add9b9c3a1b6b8e00a6b815380f8a1fa",
+      "size": 999644,
+      "lfs": {
+        "sha256": "931ba97b7fd35bd808d32e4bf082c07da1fe7a813e469336d6eeeac83e7a42a8",
+        "size": 999644,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "gguf/zac-encoder.gguf",
+      "blobId": "9ace3240846aefe2f997c3d3695b1499b2ea8e09",
+      "size": 4034646368,
+      "lfs": {
+        "sha256": "4c4335196486fd24cc56b24a40ac4548f8cc58a6400bce8e4af4e72160b18053",
+        "size": 4034646368,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "gguf/zac-keep2.gguf",
+      "blobId": "91d8da698c92d4fa3ab8a6a3f01fdf5d00afe2f6",
+      "size": 452325440,
+      "lfs": {
+        "sha256": "834e5b70b88294afc3c702a478487e0664dcc6b574c16fc6167d72444aabeafd",
+        "size": 452325440,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "gguf/zac.gguf",
+      "blobId": "1d6d51b92fe9198844a96f4d519de26a406bbada",
+      "size": 2199903264,
+      "lfs": {
+        "sha256": "9dc8e29cb681dae320bd77329c0f7a39806ad5de6c231ad111adab1a1f6774d8",
+        "size": 2199903264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "gguf/zonos3-ptq-edit.gguf",
+      "blobId": "2fe20e5daede63b3c7956e6a8a8bc160be670b4c",
+      "size": 663481408,
+      "lfs": {
+        "sha256": "df9a42d503b396eb1a70ebdf7aa1ac2b2827fccf24984c760a0cca4ddb8fcb2b",
+        "size": 663481408,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "gguf/zonos3-ptq.gguf",
+      "blobId": "744ddec9ead7690bf839600c84fcfc696b3d491a",
+      "size": 663150624,
+      "lfs": {
+        "sha256": "66fceb6d73a8c30bde80249e4112bb308380ab7f3384fa11c8e4048115e4ceec",
+        "size": 663150624,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lm/zonos3_mini/model.pth",
+      "blobId": "d52d0a9d3ba4700f528cfa2acaf3d6947856a1e6",
+      "size": 1772391535,
+      "lfs": {
+        "sha256": "3b4ac0a6e3002bd575ad9a0761ae7524806a908f553042171dead8f3a2146caa",
+        "size": 1772391535,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "lm/zonos3_mini/params.json",
+      "blobId": "e04fe9ee0e4d52b20c9f26c35d4b4dd02c75196b",
+      "size": 2500
+    },
+    {
+      "rfilename": "lm/zonos3_mini/tokenizer/superbpe8192.json",
+      "blobId": "831cbcdc98e45a5109fa25baefb3298efd958ec8",
+      "size": 559287
+    },
+    {
+      "rfilename": "registries/codec_registry.json",
+      "blobId": "cf5222ee8c093a4ef34c5e779f25dd94e59fcb2b",
+      "size": 561
+    },
+    {
+      "rfilename": "registries/codec_registry_keep2_plain.json",
+      "blobId": "2ef2586e016b05d6fd143844597d2067666bc05e",
+      "size": 565
+    },
+    {
+      "rfilename": "registries/silence_frame_opus_dual_3n_600k_sched600k_r4096_step600000.json",
+      "blobId": "c0fba7eb146509089a0bb85e2f83d73e1d3fc5e3",
+      "size": 179
+    },
+    {
+      "rfilename": "registries/speaker_encoder_registry.json",
+      "blobId": "c297dae58b4a8786514dbf5a4faeda13e93ff315",
+      "size": 655
+    },
+    {
+      "rfilename": "speaker_encoders/ownmect_s2/ckpt_0037.pth",
+      "blobId": "93dac04c6e96379e4e34525c246a967e507b4fc4",
+      "size": 50277003,
+      "lfs": {
+        "sha256": "3cef65631f3161cbd8eacc6ea40e59a237c79656d85c7232dcbe0c8d07cae88f",
+        "size": 50277003,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/manifest.json",
+      "blobId": "ab05f1bf8dbe9652887be8e5a3223610ada4f55b",
+      "size": 33075
+    },
+    {
+      "rfilename": "web/aligner/shard-000.bin",
+      "blobId": "dfe61d2f1b924b95a4e7e4519e740a16ba33ea27",
+      "size": 57696256,
+      "lfs": {
+        "sha256": "2bc02ec58ba7b5760ada25024f9e5a15fca15a3e08502790f2283286e811d038",
+        "size": 57696256,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-001.bin",
+      "blobId": "f9e6c091eff6614a19dc1372f2ff9c933380c49a",
+      "size": 61366272,
+      "lfs": {
+        "sha256": "2b0cb744ee41425683914111ce4707431e331e8dfa02b515d569e5738387c5b6",
+        "size": 61366272,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-002.bin",
+      "blobId": "39fb8e571e4b9a875713cda6be8859269d55157e",
+      "size": 66076672,
+      "lfs": {
+        "sha256": "fd275cfd21e0303ed201a3e722aa49c515015cfcf0370d0c92e89871abeb3a87",
+        "size": 66076672,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-003.bin",
+      "blobId": "79e4c4896cf2ae5e756d92f1c014ce0d26b2899b",
+      "size": 61366272,
+      "lfs": {
+        "sha256": "3d4e82f6a1b48bd5a8b90a5d4456874b7e062eabe7b2231adcf99d0ad8ee1560",
+        "size": 61366272,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-004.bin",
+      "blobId": "17c946aa6da67ebe1bfb5c2ce4c1b8a9be1d6510",
+      "size": 64655360,
+      "lfs": {
+        "sha256": "338eded79e4a34f6abfb159dc53afe126351ddd4abe620d8f5608866dcef6824",
+        "size": 64655360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-005.bin",
+      "blobId": "030e4dacec4852b83711cd13593eec2758ff677e",
+      "size": 66084864,
+      "lfs": {
+        "sha256": "1f19903532133f57a65dfe1ffe233813327fab48fae0356899fd7205950bbc59",
+        "size": 66084864,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-006.bin",
+      "blobId": "dc4dfb3aaf4ac23db5f65cd72f709b1384658c3c",
+      "size": 66093056,
+      "lfs": {
+        "sha256": "4eca591867ebdf58d1bd98cbe6f5c7d7e22840208d7a490f747a2b3fa239bd09",
+        "size": 66093056,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-007.bin",
+      "blobId": "11e1e1168b83318163e2271f39f39216e314a0b0",
+      "size": 66084864,
+      "lfs": {
+        "sha256": "542c719a0d595d9ace3b0d99835354cdd4ed9dd633e5a0229e0583fe3442609f",
+        "size": 66084864,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/aligner/shard-008.bin",
+      "blobId": "55f71f58a35784170c9b2f65be109c3e3f48c9cd",
+      "size": 33067012,
+      "lfs": {
+        "sha256": "d8b4611c2c9bc4de6a50cb508ffcafe2c57302385087806262614866fd358763",
+        "size": 33067012,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/manifest.json",
+      "blobId": "c825691cecf29bf7963c72827edd45f4b3a86652",
+      "size": 31563
+    },
+    {
+      "rfilename": "web/backbone/shard-000.bin",
+      "blobId": "30dfaff6cc7550c588de639b8ac7e650b0eb0467",
+      "size": 100714496,
+      "lfs": {
+        "sha256": "52f63dc2954f6c01bbdad7596c2e49251547bbc68c4b4ca3ddab8c15b5393c6f",
+        "size": 100714496,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-001.bin",
+      "blobId": "183281442c8c8c55d12c2aefba2e0dac4306ecaf",
+      "size": 65155584,
+      "lfs": {
+        "sha256": "c0516d4e20f421ee92b4ec87449f48d89ad266f39408e36ba1aca572e64a8c69",
+        "size": 65155584,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-002.bin",
+      "blobId": "5bb3640c614f1788b8f58be511f049dc4ccaee77",
+      "size": 54345984,
+      "lfs": {
+        "sha256": "9eed55b5cf23af6b88c73cd485b6bbf1fdffbbb51212511149717a858bfd35cc",
+        "size": 54345984,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-003.bin",
+      "blobId": "68b9474dce2cd0e7e66108352833c577d27dc777",
+      "size": 64696832,
+      "lfs": {
+        "sha256": "36847259c95af1398459616cb27ce51978e1e9993eccb675d253d91124fb98ee",
+        "size": 64696832,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-004.bin",
+      "blobId": "71f451a97f20cf48ab783f1154e15a6e9b1865c0",
+      "size": 67090688,
+      "lfs": {
+        "sha256": "cd3c788c83f4c07e38c6df3958ac743c3be6a38dea50e5109446385fcfe692ff",
+        "size": 67090688,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-005.bin",
+      "blobId": "a8dfb634d6bff752b477e455b7d7fee55a657b23",
+      "size": 67090688,
+      "lfs": {
+        "sha256": "29390aeb6bc52ea192b7d259115922cfe7599d4ca6632f8fcf29e36f6c6adfae",
+        "size": 67090688,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-006.bin",
+      "blobId": "40eae16ec883510a7b135d6fb8a971199975ebe9",
+      "size": 53144320,
+      "lfs": {
+        "sha256": "49518efa5d4e382b9da5e4c2537589288acff9e191cbf2deabecc31694523423",
+        "size": 53144320,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-007.bin",
+      "blobId": "b60d1a063047a1581b0c8850289a37bc789a10ca",
+      "size": 67090688,
+      "lfs": {
+        "sha256": "e26b316ddcdde1a200529502c60359a0016888df91b7a84b5d633b354c263a68",
+        "size": 67090688,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-008.bin",
+      "blobId": "571a78604f1bed07a6d718a333764e90e5723033",
+      "size": 67090688,
+      "lfs": {
+        "sha256": "193fa3416c553b939282c30bfb0468a882a3b3f20c1177baed6155b3545a7b1a",
+        "size": 67090688,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-009.bin",
+      "blobId": "17a5ac642d53bbd572f8a74a1103a4690ad384f6",
+      "size": 67090688,
+      "lfs": {
+        "sha256": "f98db299230cebb19c3022e13c00565d1f598db00774893b1a6f2674c8b045c7",
+        "size": 67090688,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/backbone/shard-010.bin",
+      "blobId": "9b606ff32930bf39b94d7ea756d35fac9cadf8f9",
+      "size": 1184000,
+      "lfs": {
+        "sha256": "75b3d78bb498e829e4a79255cf21fdf6ec59c1159869557dd887b484d13ba4e0",
+        "size": 1184000,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/companions/steer.gguf",
+      "blobId": "7475ee0be0a9dd6c9678fecba154ced9dd75715f",
+      "size": 204960,
+      "lfs": {
+        "sha256": "6e8e3f86e89a09801ce083b9286f43263ec696acfaff72e25aca537aa9efa90c",
+        "size": 204960,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/edit/lora-000.bin",
+      "blobId": "cd4f7ab1e3195a7adf1dfde8fb9242e68dbe3e13",
+      "size": 61940992,
+      "lfs": {
+        "sha256": "ca79993cf77a276c601d32c563db51bd5bce85a820a4d5c5330db90f3e98d675",
+        "size": 61940992,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/edit/lora-001.bin",
+      "blobId": "d42ce3f6c0712c93bf3cbd656e1e59f2d578ba20",
+      "size": 66745088,
+      "lfs": {
+        "sha256": "a982a2a32fe499d54eaaa560ff0c527a4b7217ca9670a88e09b7374fb12d0432",
+        "size": 66745088,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/edit/lora-002.bin",
+      "blobId": "dd8b71395d037b6ed958b45f586fa033ff92695f",
+      "size": 526848,
+      "lfs": {
+        "sha256": "708df9224e1d3af621b6fcf3c3463a20cb325b35c180fd1d9e3304c7d612633d",
+        "size": 526848,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/edit/manifest.json",
+      "blobId": "41fbc1be588774d7951545bfd27306977689ac8d",
+      "size": 30242
+    },
+    {
+      "rfilename": "web/encoder/manifest.json",
+      "blobId": "9c9f9bb955bedf281c45ad63959059c4c7e73e43",
+      "size": 144436
+    },
+    {
+      "rfilename": "web/encoder/shard-000.bin",
+      "blobId": "e3adfcba4d42479c28ca3caf109062de9b06a56f",
+      "size": 65531648,
+      "lfs": {
+        "sha256": "540757a0d91817869ad64b89aaaa4b12f9e1b4c391a7f02713f19b4fcf41cbfc",
+        "size": 65531648,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-001.bin",
+      "blobId": "4deab7b8802717628bdb35184d308dd604f4caff",
+      "size": 66152448,
+      "lfs": {
+        "sha256": "91f43217e0c8537296d05100f501fbfccece1db94ab3dc61fe9ab284d145c053",
+        "size": 66152448,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-002.bin",
+      "blobId": "ae0d64007bc8380a2313ca3f7ae656d956a42dce",
+      "size": 63184896,
+      "lfs": {
+        "sha256": "4c5bdb1b04fe3cb0aeaa90c11d949bc308d68ea37c62b2b09a2bcaf86e230a8d",
+        "size": 63184896,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-003.bin",
+      "blobId": "4364d4e33f7d09491a2b52fe7eb9d563f863e416",
+      "size": 66152448,
+      "lfs": {
+        "sha256": "b7bd1ca0a7f3bf1857f2b4e65b545acdc8d5ab4561398bb5d3f9b895c293eeeb",
+        "size": 66152448,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-004.bin",
+      "blobId": "3f998068de524fad0b0d23c61a0bcfdd343723b0",
+      "size": 66152448,
+      "lfs": {
+        "sha256": "7e94069da7830083c63b2cbaf41736b0db0f5151fc2965fa0ca628185fc9f3f5",
+        "size": 66152448,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-005.bin",
+      "blobId": "17d7fd7c47638d9043f41c50afcb2d4745c7af2f",
+      "size": 63184896,
+      "lfs": {
+        "sha256": "316a601e0feea80a241eda1b92292fd8fae388c20ba05eae96bd41568d5d0d87",
+        "size": 63184896,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-006.bin",
+      "blobId": "d7a7bc536b05ef4c1ce56883b571720c8dcd76e0",
+      "size": 66152448,
+      "lfs": {
+        "sha256": "e9811da5394c971529813db767760c324ef9b43c52059f055dd0efc907155eb2",
+        "size": 66152448,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-007.bin",
+      "blobId": "f7b172b36e4ce166795c8abc01be69889ff9883d",
+      "size": 66134016,
+      "lfs": {
+        "sha256": "3b672b215d0c6b99ec8bb23f4c22457e0cdde006f3eb1cebf7649cbfeb5b6a91",
+        "size": 66134016,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-008.bin",
+      "blobId": "3ceacfdb8b9186900c77894e9fe2b3ae880ff2f2",
+      "size": 63596544,
+      "lfs": {
+        "sha256": "63226d00580aa3d46989606e123aac7df5da7714b671911d78739bbe8dc429a7",
+        "size": 63596544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-009.bin",
+      "blobId": "19be3b1b975702c7de60b8bd672d8fb55fa31838",
+      "size": 66134016,
+      "lfs": {
+        "sha256": "8e67690f38ba0ca856dee86704c61f20bf40db451065f3576b4ff718a2ce1d60",
+        "size": 66134016,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-010.bin",
+      "blobId": "2941a53c863a3a166c71ea590ed7fcacbacd6662",
+      "size": 66277376,
+      "lfs": {
+        "sha256": "9899aa6948cfacaab89606246ad389851ff880befec5e7f9ec1f16be73aec115",
+        "size": 66277376,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-011.bin",
+      "blobId": "2447e4e62332aa75aeb3d56ebbeb534a39a3ef12",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "9d235c7c87e7889f96f178683f8a933e5eb04b243dd652f97a8da7a3dc1de7d5",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-012.bin",
+      "blobId": "4f778ca1f378cd40565f9ec560ea2acad7219de3",
+      "size": 65566720,
+      "lfs": {
+        "sha256": "1e74fb78507dfc1b41532e40db8b1ec1a33eea78b4feb3a72d5f478fa3d3cc66",
+        "size": 65566720,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-013.bin",
+      "blobId": "5220b9bbea25304ea900fedc2461822637b75c43",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "cdd80e3d8fb503b60eec1ce260a704449f940fea6cc8f505593420833955c465",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-014.bin",
+      "blobId": "69de69d491e3041f2f47a9cbcb140f4584dbc894",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "eb3d9d216620ba9ab8716995911994fff9b0f0ca28281fd4a135de6c62ed82a3",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-015.bin",
+      "blobId": "3505131810ce44d57c205e4c4e4b7a54f2ccbc45",
+      "size": 65566720,
+      "lfs": {
+        "sha256": "934ba7b6052b7bb9c69ec2b7236e87a26155407ab0b7c223ed42879c27c7c303",
+        "size": 65566720,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-016.bin",
+      "blobId": "350116ea72036f36cb4a212172f443d66f8fcad5",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "6187de8b6f19c2db756ac1997d7491851d68c80a2334f49e731ed9588ef7a798",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-017.bin",
+      "blobId": "8a5810c82e415cd32a68bc8dccca75c83b18ce30",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "8c1e2adcdfc91e7764d4029d696383c142b7dec29ac5080b5276e7396730465c",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-018.bin",
+      "blobId": "7936190e1f9b01e5c236132168dfa47ef6786baf",
+      "size": 65566720,
+      "lfs": {
+        "sha256": "98a0d56beffb3fe02f6dafad6732318038ce429f5af37bbfb0fedf083cf98aaf",
+        "size": 65566720,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-019.bin",
+      "blobId": "f38debf09de62e1baaa9916acfce6ca79744015b",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "a4508857f39571fe2f15eb561287cc0af472b4f4101bc0fb3320efa187dc7972",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-020.bin",
+      "blobId": "2b278e6eb6df0f236fdb98c4912b9072645e4fac",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "16f2b8a7ae4a6aa764464dcf336274cfef1cd57febf3255a4fd9c34de371a362",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-021.bin",
+      "blobId": "1085dde6fec84faec1cedaf798ba8122a1c764ee",
+      "size": 65566720,
+      "lfs": {
+        "sha256": "33cec9256d471f03511aa569b5510c55f253d28a7df3fb6bee91b69e4a235a0b",
+        "size": 65566720,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-022.bin",
+      "blobId": "93fc78e09fabb65c998ddd296289895aa869219a",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "dac19d1ecd544fc6339d2a03aa25cb578d3d035d533083d5d1e56563a5f94355",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-023.bin",
+      "blobId": "131fd718edec241f55d46fe03e7d5ab71d33e6c9",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "ff5f3d1011898b9f429cc489bc62b6f0309e11c3cde02d994e5a998ef9043967",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-024.bin",
+      "blobId": "90c693d5f6b242d5aefa351a9173985dda90fef9",
+      "size": 65566720,
+      "lfs": {
+        "sha256": "485a0db85d985c9e952e6f2b78411e6965c0e793138bf8d0fdcb17a189ba4a50",
+        "size": 65566720,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-025.bin",
+      "blobId": "028a5c82e00b1298bd923e3b07714f7c64e5b863",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "698e335d0affc57e2cf5851b7e45bcee8c2e46121cc02652de91e4c11f92ec9b",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-026.bin",
+      "blobId": "8078f20d8b71f4efc858e1a8fbfda593cbf935ba",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "1b5d8da1a57c82d40ee9036c529c0e5f3e84790ce6af3a1b48a4c40b4de5106e",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-027.bin",
+      "blobId": "7c205f24f62e01a1213a4395800e4ae0bb0ac2a3",
+      "size": 65566720,
+      "lfs": {
+        "sha256": "2e0ee467b93f692bfdd757070f9e6c2d4628960438eba3ba6d37c91fdcaaa607",
+        "size": 65566720,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-028.bin",
+      "blobId": "92ae0eab224372cee9b9acef03724b227aa5c0d0",
+      "size": 65597440,
+      "lfs": {
+        "sha256": "5788e2367ff8b1c04b77471dcd2e55a56085efdb5f29f0b2c665cd096b851db1",
+        "size": 65597440,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-029.bin",
+      "blobId": "4c68585debe2323daa77a781a59fac83fc7c0bd7",
+      "size": 65566720,
+      "lfs": {
+        "sha256": "959eaa6d27cd1e46d21bc752b91302143157ac3c274e3375cdd8ef5c8998f521",
+        "size": 65566720,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/encoder/shard-030.bin",
+      "blobId": "ce5aa11d6803057afdd402d3e2206dc133775663",
+      "size": 55812608,
+      "lfs": {
+        "sha256": "1218ed375e462efd343dcb952411b2bda7a15b56d4d0251d57ad63b5c4e83fc4",
+        "size": 55812608,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/laci/index.json",
+      "blobId": "36e1f04f5030ec6819309aa3c67627a1cdb81363",
+      "size": 921
+    },
+    {
+      "rfilename": "web/laci/zonos3_mini_mect60k_heads.json",
+      "blobId": "efa9a81661e0a0c30d637369a6ea91a7a18b7841",
+      "size": 7534
+    },
+    {
+      "rfilename": "web/laci/zonos3_mini_mect60k_heads_zh.json",
+      "blobId": "fe2b8cae1b5b71e48a60fa05bd9b77499ef40cc8",
+      "size": 7611
+    },
+    {
+      "rfilename": "web/spk/manifest.json",
+      "blobId": "4d76c6649ae9d9b77999ef291d3b0b39e268838d",
+      "size": 124805
+    },
+    {
+      "rfilename": "web/spk/shard-000.bin",
+      "blobId": "fd258913e069d55144cb37ad03cd1400910d4fef",
+      "size": 45324544,
+      "lfs": {
+        "sha256": "59fd4b33f87e4cfb6767d926cdca75d01f38b7a324939a8a0304d089477697b6",
+        "size": 45324544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/manifest.json",
+      "blobId": "ca600df05b0a9b340922f47760e756de74b0631d",
+      "size": 74269
+    },
+    {
+      "rfilename": "web/teacher/shard-000.bin",
+      "blobId": "95a310de33662423a9cf4610dd8543a424c8f7f5",
+      "size": 66022400,
+      "lfs": {
+        "sha256": "45be157b2a72487ec18a04592d449a5b84d7f55a85f9ac8bd6d82482f7f2e069",
+        "size": 66022400,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-001.bin",
+      "blobId": "11a0ec3f81456124febc3520c9bece8ee4b76da5",
+      "size": 65292544,
+      "lfs": {
+        "sha256": "78456248c2b30ce5aa41345c8e2bc2c740f5e0d6e7ae137c42f458c5976f1c9d",
+        "size": 65292544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-002.bin",
+      "blobId": "72b62bab14f9c937bea58db3df2c5ea0d97a11d9",
+      "size": 63361536,
+      "lfs": {
+        "sha256": "9ba9b06d6cd4df50f004fdc676295fe95e8d64531cf3c4a74ba68559be850234",
+        "size": 63361536,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-003.bin",
+      "blobId": "3927898fede230d9b1118ce52ce3b8ca006c803f",
+      "size": 65292544,
+      "lfs": {
+        "sha256": "8f312854b2e33c5d4df134024b739aca052db4a50e950376076bbf8d941a1ce3",
+        "size": 65292544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-004.bin",
+      "blobId": "3e355b273fc91ec0631c871abf9bfbeb68253ee4",
+      "size": 65292544,
+      "lfs": {
+        "sha256": "ee7b9400de3b3d443a3dbe353c87b69ff27e58a9e3d34eb742cea5f19db293fd",
+        "size": 65292544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-005.bin",
+      "blobId": "73b0d46fd8cc558907e9bc6142bbb809bf5c0798",
+      "size": 63361536,
+      "lfs": {
+        "sha256": "3d2257b509f63240107441a020cf92b56243fafac4861b9cc046e4e507f34785",
+        "size": 63361536,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-006.bin",
+      "blobId": "1f260c5f32d6b8edd2ae40837530ebe13da16d46",
+      "size": 65292544,
+      "lfs": {
+        "sha256": "d0b574aa0739956b62b73089a80ac6975f1fdc393e904332a71c893ae1804862",
+        "size": 65292544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-007.bin",
+      "blobId": "2e3235ced267171468a146b552bc8316cf2de77b",
+      "size": 65292544,
+      "lfs": {
+        "sha256": "75280269f68c110ee72057e5c975f2e0004bf253dd56c9b480f32e44d20c2085",
+        "size": 65292544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-008.bin",
+      "blobId": "32ff418351cdf8015c808fb6afd22a1842f5923d",
+      "size": 63361536,
+      "lfs": {
+        "sha256": "65aad23a764fea1a951283507fabbb732415e974e70a6bfc0f8e359e38d35cd1",
+        "size": 63361536,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-009.bin",
+      "blobId": "c08dda801dd464185ed0685fd7f81b9691a6ea3c",
+      "size": 65292544,
+      "lfs": {
+        "sha256": "c12c75cff05ad241b534f87436c866ab1933eaa7ea23c2f69ae98cf213afb98d",
+        "size": 65292544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-010.bin",
+      "blobId": "292f7f0f3c37d5fbf77dbadc59f6e9873fed19bf",
+      "size": 65292544,
+      "lfs": {
+        "sha256": "9d76c93e62b9e78e8f8fd8191cbcb61f5f23fbdbfe8d49b4fb55433954963a88",
+        "size": 65292544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/teacher/shard-011.bin",
+      "blobId": "cbd56bc049634c6d17f11bbc2a359c2c8ea55e06",
+      "size": 63353344,
+      "lfs": {
+        "sha256": "99e7ee4ecac5310479baf2bb05d1d48d39f59b32918ead649266f6719e68349f",
+        "size": 63353344,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Cillian_en-Irish_M_1.codes.npy",
+      "blobId": "caea1949be1f0c5fbf37fa2d8cb005622964e618",
+      "size": 5928,
+      "lfs": {
+        "sha256": "dadae1124c63cda7a0627fd282d54aa255a8800155eae1b9da54b08b345c2f10",
+        "size": 5928,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Cillian_en-Irish_M_1.embedding.npy",
+      "blobId": "1f13ba7b9f31bbb7ae9b3bded3f08c192b3beb8c",
+      "size": 896,
+      "lfs": {
+        "sha256": "f3125fae2f679fb5c8128d308ddd02986fd7d914975d17cc6dadf9eb130b1061",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Cillian_en-Irish_M_1.wav",
+      "blobId": "a0357b3daee30be79fabb672f2a07092eb9a5940",
+      "size": 852644,
+      "lfs": {
+        "sha256": "d43eda64c4928dfb30ecf547e4a00100b8f83ed0eb5c1e07116725794da72ea2",
+        "size": 852644,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Imogen_en-British_F_1.codes.npy",
+      "blobId": "dc617c561eefd6488a0b1665418b9b491836bc8d",
+      "size": 7728,
+      "lfs": {
+        "sha256": "c906f6c405c9078607fe9c54cf1b71ef0e112839490499e34bf8791ed1ad7e86",
+        "size": 7728,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Imogen_en-British_F_1.embedding.npy",
+      "blobId": "cdd610f83ccd9a7f74450516233bd81722f354ac",
+      "size": 896,
+      "lfs": {
+        "sha256": "683424b91faeade48c8a92e05e1c3679366abbba443ef62eccba8dc40de48e9e",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Imogen_en-British_F_1.wav",
+      "blobId": "9b0aa2216fb3d51f7f08f9319e8acaa8f2d66ab6",
+      "size": 1117244,
+      "lfs": {
+        "sha256": "dde4691a6ccd95f4928fbbc4e2d49089824b264575bc0bf0ac4986dd2f8082c5",
+        "size": 1117244,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Jett_en-energetic_M_1.codes.npy",
+      "blobId": "ddb65521df5c47b513f215a4959e76f6910661f9",
+      "size": 6608,
+      "lfs": {
+        "sha256": "8f32e946509673ae422c37cc9b79957cb569f212360745f9110d343f6f1f9f2c",
+        "size": 6608,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Jett_en-energetic_M_1.embedding.npy",
+      "blobId": "75fe426b10bfde91fe83c0b3811b392fd8eadfe5",
+      "size": 896,
+      "lfs": {
+        "sha256": "624b749d220dac7fdcda479b1964cb8f7de58c838c1357f2f0161dac06e34f48",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Jett_en-energetic_M_1.wav",
+      "blobId": "7f6e9b52ca5296fde3846fb1436a0bfb71c86a0d",
+      "size": 952604,
+      "lfs": {
+        "sha256": "107c8350f191d47401da6844158528d0f493cbf46be4dee6bb81dd71bc052619",
+        "size": 952604,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Morgana_en-witch_F_1.codes.npy",
+      "blobId": "2cdd9341832bcd2b4b5ad93c7f7be35c63b5b990",
+      "size": 12448,
+      "lfs": {
+        "sha256": "2f60227a9f7cdc6ce696548f4c28c199d3f5afeadf7317a1bde132575a1ed731",
+        "size": 12448,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Morgana_en-witch_F_1.embedding.npy",
+      "blobId": "8671c2114bc5bfb18d83670f28cb3ba0b338b637",
+      "size": 896,
+      "lfs": {
+        "sha256": "a817387697c43138639aa1e52a9e42d9f3a629655e0faea5ac8565eb8e57c091",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Morgana_en-witch_F_1.mp3",
+      "blobId": "5364a53463212237eee08d5027a2c37d50cfebf0",
+      "size": 329812,
+      "lfs": {
+        "sha256": "8fec617ca7a4044f930c108ded0daf814ca93e61d97a7df626373aa182240ece",
+        "size": 329812,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Rupert_en-British_M_1.codes.npy",
+      "blobId": "17dcdc3d9db449dc0bd44691fcab253c20be624f",
+      "size": 8048,
+      "lfs": {
+        "sha256": "abf42171c7402fea5888ec350a50b64fd78777e44d7caf665c04e4e2b629fc79",
+        "size": 8048,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Rupert_en-British_M_1.embedding.npy",
+      "blobId": "4d29433a1eee6225edf53d7e3abaac9f0353b416",
+      "size": 896,
+      "lfs": {
+        "sha256": "0c68e699376dbafdc1ab0fadc133f48e7df9cb33b3a7b80b05f42c5c0aad8fa7",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Rupert_en-British_M_1.wav",
+      "blobId": "a1a46bd19f71bc483e1dbbfd26764fb62f0d6e80",
+      "size": 1164284,
+      "lfs": {
+        "sha256": "3743b94cfc35c004fb5c2bcc9c2a537b605e3e15d4677e2b5b811bc18d95151e",
+        "size": 1164284,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Sakura_en-anime_F_1.codes.npy",
+      "blobId": "f2044c7eb91b8b8fe1e79420cd34bc4ff86ba2fd",
+      "size": 9168,
+      "lfs": {
+        "sha256": "4b8c8288b45e1a3ff5aa3adc05a4af386f5889e9ab47902ff36f9daa8900ded2",
+        "size": 9168,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Sakura_en-anime_F_1.embedding.npy",
+      "blobId": "4705c78ae92ff261e95f7afd90cce9b9e10decd4",
+      "size": 896,
+      "lfs": {
+        "sha256": "daf3e82d2e6f2ce2fe90c73473a312a721295ae7f85763f99c87ee2f861063a9",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Sakura_en-anime_F_1.wav",
+      "blobId": "03ba61bdd9a9dbbca9c2f78a87e99871571733e3",
+      "size": 1328924,
+      "lfs": {
+        "sha256": "01e8f47241546efd1223bd1cac09ea81f1d9ae2cf3148260f37413f05db40229",
+        "size": 1328924,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Savannah_en-American_F_1.codes.npy",
+      "blobId": "de5d99cd545914328947b5e6e1b5d648063af5c2",
+      "size": 6968,
+      "lfs": {
+        "sha256": "f6e450fea8fa521c6be32b64fc61f48d6f9fd8301fe5759abd2315ce6ac946fb",
+        "size": 6968,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Savannah_en-American_F_1.embedding.npy",
+      "blobId": "b8d478227a96ede89bb99a32ea01acf1686ee285",
+      "size": 896,
+      "lfs": {
+        "sha256": "dd81587e66f96fb62da47ef13d5d867de464ca386a83f01b4403cdd19629ca6c",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Savannah_en-American_F_1.mp3",
+      "blobId": "4d29c41b0af4ab4bfaeab66b5256ae820536ee35",
+      "size": 183527,
+      "lfs": {
+        "sha256": "f8d5eaf8f6c18a0a3b452652da62d821f819d4e95f6347aa29986a503e219d14",
+        "size": 183527,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Thaddeus_en-announcervoice_M_1.codes.npy",
+      "blobId": "63c4a8b3a621d23a1a35d10c23190641bdc29ef2",
+      "size": 9368,
+      "lfs": {
+        "sha256": "5c76de5bf16fd10282fced313c6c00a03fa2150b1df4c2382e19c6cbad65f179",
+        "size": 9368,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Thaddeus_en-announcervoice_M_1.embedding.npy",
+      "blobId": "1157f327e02d6509275e8df150aa716449e783f2",
+      "size": 896,
+      "lfs": {
+        "sha256": "fc8e21356730988aa20da70123991404345e0bdbfe3afe31e6371d8d93095461",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Thaddeus_en-announcervoice_M_1.mp3",
+      "blobId": "535a4f2e756c5612c1d2d4cb34cefead60a28b37",
+      "size": 247474,
+      "lfs": {
+        "sha256": "c7fc96a18645b129b1e55659379ba796f5cfd70a800068b977d37f1254e93c52",
+        "size": 247474,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Willow_en-asrm_F_1.codes.npy",
+      "blobId": "2013b28868bbae0b6e5cf62f0bad73fc6c55ae98",
+      "size": 15048,
+      "lfs": {
+        "sha256": "29ca4c14c16bb09b2bc48bb93f2d5a56327558d64271e54ebd1f713a4204905b",
+        "size": 15048,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Willow_en-asrm_F_1.embedding.npy",
+      "blobId": "876e2b26c5f65d74bbdbe78bb5194d6a2eba1070",
+      "size": 896,
+      "lfs": {
+        "sha256": "6ebb84309f21f1dcbe6371e2355dc98f8ee3d0aee5850c305d06a73fe0a7c222",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Willow_en-asrm_F_1.wav",
+      "blobId": "6fe08b9e567b2a842f2a23e04f8abae3499f6f0a",
+      "size": 2193284,
+      "lfs": {
+        "sha256": "6a7574e4b91794390867027eb5c2c2a12f6cef557fc7d804b45f985144a50e5e",
+        "size": 2193284,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Wyatt_en-American_M_1.codes.npy",
+      "blobId": "fe7a4ace704badd4adb74aa5e2673ab0ca475f5e",
+      "size": 10248,
+      "lfs": {
+        "sha256": "7a854f9b66eefa9203a9f752c2a1ec808345b4d72ac34f8547ee776c58e4b72f",
+        "size": 10248,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Wyatt_en-American_M_1.embedding.npy",
+      "blobId": "921f4a78256265a482a9e3b77315d283fff74d24",
+      "size": 896,
+      "lfs": {
+        "sha256": "b39d377b653ebaca6bbd4ecd13c382fe16d81f0cfae27217d9b626e5589a0511",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/English/Wyatt_en-American_M_1.ogg",
+      "blobId": "6270fbf65e394ac9c10dca0fc5f4e5a66359a846",
+      "size": 147400,
+      "lfs": {
+        "sha256": "92c17f6eff4c9612ece96f0efae6f74f8e6b381f8c851ce739cdf0854a5a5831",
+        "size": 147400,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/French/Gaspard_fr_M_1.codes.npy",
+      "blobId": "4d2ff3bdde469bbf30576d96b077b36d7698ec21",
+      "size": 11488,
+      "lfs": {
+        "sha256": "34293ea302d3a47c17ab2f8514fb3a3354dc4ad695581d9b2f93fb37476ee1f7",
+        "size": 11488,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "web/voices/French/Gaspard_fr_M_1.embedding.npy",
+      "blobId": "abfe47d70ee675c56022c81827bcae4beacb1ff5",
+      "size": 896,
+      "lfs": {
+        "sha256": "6e19a9a545af6a263c00b997368d8396ff8abc761b53dce2a6d4df735f0766e9",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/French/Gaspard_fr_M_1.mp3",
+      "blobId": "810b988fd7948429884a6eca555c36f7eac88fe2",
+      "size": 303899,
+      "lfs": {
+        "sha256": "b353c4f7cccb9ffd335dde8428cae212373db2cf9c7018afc22cbb8f3d6c949a",
+        "size": 303899,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/German/Liesel_de_F_1.codes.npy",
+      "blobId": "d62fd1f381037c01a0dc19983af6ad877387154a",
+      "size": 6928,
+      "lfs": {
+        "sha256": "6952aa3383e1181610b3b88115ff2fa20a2a2da0686c9b19f2cf0f57f96ab92e",
+        "size": 6928,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/German/Liesel_de_F_1.embedding.npy",
+      "blobId": "0dcae442d4c1aa6fcc89932ab0355c83726eb94d",
+      "size": 896,
+      "lfs": {
+        "sha256": "2d44e40f8c1f43fcabaabf301e14bfc48325bf4596cb04e076d662d8b2724c5d",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/German/Liesel_de_F_1.mp3",
+      "blobId": "2f867b17e59dedade064ae5ea7246d46a4ea17f1",
+      "size": 182273,
+      "lfs": {
+        "sha256": "1a8909ca74065967d74534f438fcd15b770fc2ec55d2cbe217836a720cfff091",
+        "size": 182273,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/German/Wolfgang_de_M_1.codes.npy",
+      "blobId": "43300e7972337a22556f1fbc14b53e432f02a66c",
+      "size": 7488,
+      "lfs": {
+        "sha256": "553a4dd74cc650ea333c49033f5b459e1faa7244cfa4185862cce1a223fe41e1",
+        "size": 7488,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/German/Wolfgang_de_M_1.embedding.npy",
+      "blobId": "a6c13b43dff6f3731b049ded26caab918135674e",
+      "size": 896,
+      "lfs": {
+        "sha256": "3a0e305b2789f79b843d96628b275b5d8f3f877f89c80e87fe57bf6078901467",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/German/Wolfgang_de_M_1.mp3",
+      "blobId": "bc3a985c2aba3ce64f378648a24e10b159897e2a",
+      "size": 196483,
+      "lfs": {
+        "sha256": "5ca32af842970e58c2769f1a191438f44b36e721071e058ed51a8c2febb2f261",
+        "size": 196483,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/Hindi/Ananya_hi_F_1.codes.npy",
+      "blobId": "f62a54922826e0bfc98f78b966dbe889aef84857",
+      "size": 7768,
+      "lfs": {
+        "sha256": "85288fd646bb836b2424faad617d13f311c4ce129a48d7f9577bbfe29df9aa5b",
+        "size": 7768,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Hindi/Ananya_hi_F_1.embedding.npy",
+      "blobId": "93bea48002970de357c5f9291db6b0e76024d1fb",
+      "size": 896,
+      "lfs": {
+        "sha256": "f7acf756273d86131de701d51b25a7e0b3323d724b7e98a0c890fcf176f85a14",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Hindi/Ananya_hi_F_1.wav",
+      "blobId": "9a5d8c4682eca8e6944f52eaaa0c8772a4ae0cde",
+      "size": 1123124,
+      "lfs": {
+        "sha256": "4c0417c4f1a76d3290281c932a35b5b25b8e4cfe9acb328e24abf68b7f232840",
+        "size": 1123124,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/Hindi/Arjun_hi_M_1.codes.npy",
+      "blobId": "aa4f5879c59754392f545a2af43ccb864cf6697a",
+      "size": 7128,
+      "lfs": {
+        "sha256": "dec52799002595008cf710381b5eb5f2acf0edd82fb28636c1bbef4aba9df618",
+        "size": 7128,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Hindi/Arjun_hi_M_1.embedding.npy",
+      "blobId": "a0484aa4ebc17f3a9eea865f3a7139f708404ded",
+      "size": 896,
+      "lfs": {
+        "sha256": "9cb0eb4cc81b79acadedb173e1fbbc0203bf71ea9ae66e56bd76393386f25815",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Hindi/Arjun_hi_M_1.wav",
+      "blobId": "0b96ec58e36eeb250fa4a0e941019621f2d7d327",
+      "size": 1029044,
+      "lfs": {
+        "sha256": "760b13421993d4d453cf9c3ce789da2425922c54a483a1e1d2daff3a226a6043",
+        "size": 1029044,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/Italian/Ginevra_it_F_1.codes.npy",
+      "blobId": "91fdf1c82b8dd56391e95cd5c83f4ba94b8f99fb",
+      "size": 6808,
+      "lfs": {
+        "sha256": "91e5f1a6ccc71d55840e4277a4f00c900e01e446e956949a5651c2e5657f2d4f",
+        "size": 6808,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Italian/Ginevra_it_F_1.embedding.npy",
+      "blobId": "aec377f7acfac99d7291086aa545e197b5335197",
+      "size": 896,
+      "lfs": {
+        "sha256": "950ecf44f57fd053effd83c65f7f35059df0dcd1bb99dbc197b6649507171621",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Italian/Ginevra_it_F_1.mp3",
+      "blobId": "7a1ec31196747542c0b9127d2f272a2026e7240d",
+      "size": 179347,
+      "lfs": {
+        "sha256": "8dc9a8ebaa97b6c9a32aab707f1384a37d275e9a001029fedbfe7897a92514d9",
+        "size": 179347,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/Italian/Lorenzo_it_M_1.codes.npy",
+      "blobId": "652c6ab3b0206b4cc6af4ec85e81b7cea9a56830",
+      "size": 7488,
+      "lfs": {
+        "sha256": "e25cc35719d796ba7ace4a0ec563d159cfe31e978f78098b126b2a8c7f3fbc02",
+        "size": 7488,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Italian/Lorenzo_it_M_1.embedding.npy",
+      "blobId": "3a5ad500e72832e9f83b6787565124ce50f9cb87",
+      "size": 896,
+      "lfs": {
+        "sha256": "a355bb33b907130985b74eae3fa05e4aa19d7fe7233f26c0416afad0726c2367",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Italian/Lorenzo_it_M_1.mp3",
+      "blobId": "50ad8ae5aa90b234b243e01ad503856cd3c3f64d",
+      "size": 196483,
+      "lfs": {
+        "sha256": "be0f69f123a15d1c7c1100abf94c6f1c649034f16239f2926a87f20550d2ebcb",
+        "size": 196483,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/Korean/Minjun_ko_M_1.codes.npy",
+      "blobId": "16421b9ee9fcd33be1f4cedd2aa38888a16e5874",
+      "size": 7288,
+      "lfs": {
+        "sha256": "2b40a0d108b5188be2fb8695eb0f28b5a6f16c4dd485fba4ab82876b46e79522",
+        "size": 7288,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Korean/Minjun_ko_M_1.embedding.npy",
+      "blobId": "d061dd4b5576c83fcb8878176db1f4f48dfb975e",
+      "size": 896,
+      "lfs": {
+        "sha256": "ab3d9c60c3f36080fd7e9eebd20c8ece42059236dd83f19980e5e4dbca94fc4e",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Korean/Minjun_ko_M_1.wav",
+      "blobId": "0fb74b715dd76131b5e0cb0b8cb2e2f040e3e05e",
+      "size": 1052564,
+      "lfs": {
+        "sha256": "c1c1e59241314afe001d565ab4e0c92224f598f6bbc1e4aaaac2ce5b036d16aa",
+        "size": 1052564,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/Korean/Seoyeon_ko_F_1.codes.npy",
+      "blobId": "9602313d4f036596632a2311afcb8a9ac4a354d6",
+      "size": 7048,
+      "lfs": {
+        "sha256": "d6ca0cb788e610d56b02824108aa7c54e115bdab1eaeca81330b1475f6de9d15",
+        "size": 7048,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Korean/Seoyeon_ko_F_1.embedding.npy",
+      "blobId": "c5910a8e8505215a45248ace72fba1cea616f0f2",
+      "size": 896,
+      "lfs": {
+        "sha256": "dddb6aa68c3febe83ca656c959f4d78246c72e011cde72c3745d1a46a37d8345",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Korean/Seoyeon_ko_F_1.wav",
+      "blobId": "4df539aca7e22f904b944cce6c0a9a38cfa3c88b",
+      "size": 1017284,
+      "lfs": {
+        "sha256": "558801500e68ee38fabca81c12fe2f7ec763e989e94430b3573be3df2e0ebf30",
+        "size": 1017284,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/Mandarin Chinese/Haoran_zh-energetic_M_1.codes.npy",
+      "blobId": "e21b1f382a77943ee8bc41d394e883ed6958ac92",
+      "size": 6608,
+      "lfs": {
+        "sha256": "033e6e1acb03cacf2dc9278f752c43774224747e3aa91882113422ab35dbfbb6",
+        "size": 6608,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Mandarin Chinese/Haoran_zh-energetic_M_1.embedding.npy",
+      "blobId": "2be500d11f859dd80709bf87c9dc4da7630515eb",
+      "size": 896,
+      "lfs": {
+        "sha256": "b056f91bcbf4ffda432459f8c6a80b37cdc98cd82fd296e29cf2584325809c6c",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Mandarin Chinese/Haoran_zh-energetic_M_1.mp3",
+      "blobId": "50b4fa73a2749a706893e066e5c8e51e3fb86983",
+      "size": 173914,
+      "lfs": {
+        "sha256": "ddd027b458401d46f893d51e42cbd0c7d9634592a7401a43127c1a639215d6be",
+        "size": 173914,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/Mandarin Chinese/Meilin_zh-energetic_F_1.codes.npy",
+      "blobId": "80d3b46d8ea4c18f2fe837ddd563c6833a32b70c",
+      "size": 6888,
+      "lfs": {
+        "sha256": "8a3b3aef695ca75788eea98d94d8580d2147c783f427e08cf4ed2d66ecf5c4c6",
+        "size": 6888,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Mandarin Chinese/Meilin_zh-energetic_F_1.embedding.npy",
+      "blobId": "abd3a15322b931f3577892005cbeab5ccffe30a9",
+      "size": 896,
+      "lfs": {
+        "sha256": "8430a2852291d874f327666d05bd15ee854a009cc54b9d3cdba9005d6bc7f59b",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Mandarin Chinese/Meilin_zh-energetic_F_1.wav",
+      "blobId": "c9a136199bc27b1f200396deea6bb1e99c174eab",
+      "size": 993764,
+      "lfs": {
+        "sha256": "4200f7e397be1ff2a5dac9169daba8338af911e12cf47e925999016d65969612",
+        "size": 993764,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/Portuguese/Leonor_pt_F_1.codes.npy",
+      "blobId": "b6b757c4f900ac178e754ef8d343a5c569a3be73",
+      "size": 7448,
+      "lfs": {
+        "sha256": "56f4c8d2d6f856305e250966710fa7669244ef1d86ffd82659ade969755c7f88",
+        "size": 7448,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Portuguese/Leonor_pt_F_1.embedding.npy",
+      "blobId": "90e575bda94727597a9607a39750871da0ae4d5b",
+      "size": 896,
+      "lfs": {
+        "sha256": "c4074805d713ac20444253f1b98f814b7f27c43b6ab29bb2f0feeaaae8f7e4b2",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Portuguese/Leonor_pt_F_1.wav",
+      "blobId": "e9a1fb35730eb513c5b28851f8e44dd8fff11a2f",
+      "size": 1076084,
+      "lfs": {
+        "sha256": "4cb21b761a7c808b2552451485ca14b32529b68294ef4b478c96665cabc8fcd1",
+        "size": 1076084,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/Portuguese/Thiago_pt_M_1.codes.npy",
+      "blobId": "2e81ca3ba731ef659fc1e2c47410ee8420750355",
+      "size": 8848,
+      "lfs": {
+        "sha256": "b63efbc88127b88ad89740eed377a0f1600c4e2ae0deb030e574f8b7b9c6c667",
+        "size": 8848,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Portuguese/Thiago_pt_M_1.embedding.npy",
+      "blobId": "78663a9f553cdcb5f40b317e2aa1d7653b37334d",
+      "size": 896,
+      "lfs": {
+        "sha256": "fd1eee487091ef60636fe08cbafc15133c34a3f697629e1057e749c5b9893dc0",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Portuguese/Thiago_pt_M_1.wav",
+      "blobId": "b630f1e1b166fd5a31b8e902123f72055dbca947",
+      "size": 1281884,
+      "lfs": {
+        "sha256": "c2c02110a5f10765a9bf9c533a6cbf25bb39fca3bf23023f58b70a3a67fe89d2",
+        "size": 1281884,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/Spanish/Rodrigo_es_M_1.codes.npy",
+      "blobId": "c6a017443005bd0eb9af7e9b39a3b1d7aa5f11d0",
+      "size": 6408,
+      "lfs": {
+        "sha256": "1d6ff61ab49a2f3cfeb116afa80adcc33290cd5c7d7cb4c50181f4359c52b1c0",
+        "size": 6408,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Spanish/Rodrigo_es_M_1.embedding.npy",
+      "blobId": "925b63ef08d127275695231cda09a4f00df77316",
+      "size": 896,
+      "lfs": {
+        "sha256": "0305b7ab40d5d4a1df07ed7aa1c164f64ede1ac4b6250fa56383b4c3ae03e1e1",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Spanish/Rodrigo_es_M_1.wav",
+      "blobId": "a32099d399427861f6b88d0eb87f1122cafb88b3",
+      "size": 923204,
+      "lfs": {
+        "sha256": "2559c50978b50ad660b82528558047a684b1ff6d3c91dd59691a3c0c13c4eaf5",
+        "size": 923204,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/Spanish/Ximena_es_F_1.codes.npy",
+      "blobId": "2a26e00300eea6da608c1692ca081b2723c0359d",
+      "size": 7968,
+      "lfs": {
+        "sha256": "b571c52d7543867bb2299e0626cea9d6f6c6c9a3bffabc85570baf08897dafb9",
+        "size": 7968,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Spanish/Ximena_es_F_1.embedding.npy",
+      "blobId": "c7098dcd92def5a8902ab4c3a69ca2a8e8d8ea2f",
+      "size": 896,
+      "lfs": {
+        "sha256": "b9cc1284c52003705619b37f2c25c59e170d2c70650af39e5692b2fe91782bd6",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Spanish/Ximena_es_F_1.wav",
+      "blobId": "cb5d7ff4ece58bf7bde05208ee5dceff38db0c74",
+      "size": 1152524,
+      "lfs": {
+        "sha256": "6b029ff5ef03907d401d92d9fe037d14ea6eb363c0d4e78512fc13c7b6eedfc0",
+        "size": 1152524,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/voices/Telugu/Chaitanya_te_M_1.codes.npy",
+      "blobId": "17a12ece83fcc04a35371862f8178c6fdf0999d8",
+      "size": 6368,
+      "lfs": {
+        "sha256": "7003a4812a759171470f3187955e1b5c27f37bd449eb4bc012d7ac8620d0e9f7",
+        "size": 6368,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Telugu/Chaitanya_te_M_1.embedding.npy",
+      "blobId": "85c6a5bfda9ee412c99285415d0cbf9068856c84",
+      "size": 896,
+      "lfs": {
+        "sha256": "ca818012cf5656d12eb3bccdfad4086831a6a892f8e7bf2277ca11bf921e5eb7",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Telugu/Chaitanya_te_M_1.wav",
+      "blobId": "9b8796a9cc77710265a623305e5ad3c4251628a1",
+      "size": 917324,
+      "lfs": {
+        "sha256": "327c73a145533f1cb874736e9194048a22a43a10e74c7b9b8c354306068c54b0",
+        "size": 917324,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/Telugu/Sravya_te_F_1.codes.npy",
+      "blobId": "a9118e45d06cf6355789322625a6fa95c825e689",
+      "size": 6928,
+      "lfs": {
+        "sha256": "e938016bb413c48bb5deb0bf80515f646bd5b7374f5bfb4d616a8ba3e254f373",
+        "size": 6928,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "web/voices/Telugu/Sravya_te_F_1.embedding.npy",
+      "blobId": "3d97b979df67c697d241511505cc6a580957f17e",
+      "size": 896,
+      "lfs": {
+        "sha256": "a62e330ccfe900dbc4caac3e57d661adf284da8c967072dbe91bab154df79c0f",
+        "size": 896,
+        "pointerSize": 128
+      }
+    },
+    {
+      "rfilename": "web/voices/Telugu/Sravya_te_F_1.wav",
+      "blobId": "d6dca208add9b9c3a1b6b8e00a6b815380f8a1fa",
+      "size": 999644,
+      "lfs": {
+        "sha256": "931ba97b7fd35bd808d32e4bf082c07da1fe7a813e469336d6eeeac83e7a42a8",
+        "size": 999644,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "web/voices/voices.json",
+      "blobId": "cbe2b75ca0bde8ea1dc7d16ef482f12c1cec379f",
+      "size": 5760
+    },
+    {
+      "rfilename": "web/zac-full_mr/manifest.json",
+      "blobId": "3d7f63a873de1c2c3d0ea364c1e16f1f267ea7cd",
+      "size": 153716
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-000.bin",
+      "blobId": "91a09c1ece278e3cd352119395981188778af4f0",
+      "size": 6291456,
+      "lfs": {
+        "sha256": "10bd894273348c1591287cf452d247d1378a41dade7d343b3daa760d9ed20aae",
+        "size": 6291456,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-001.bin",
+      "blobId": "93a0f91532961e92afa0d008a932ed79c48c17a5",
+      "size": 75497472,
+      "lfs": {
+        "sha256": "0fc3557b110124dc8d9f71900b85c39e758a000b6405134b33a7cc17ac8a03fc",
+        "size": 75497472,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-002.bin",
+      "blobId": "53f2f96f7d10a42e4427ee784c1fadb79c69e84e",
+      "size": 62882816,
+      "lfs": {
+        "sha256": "edb0d58fac946fdba6cd94463f453b0ef4de8d4a42befa5b7f4d2ce8e6034bad",
+        "size": 62882816,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-003.bin",
+      "blobId": "4c66f3d8ebeef34b46945f85fa115349e0cd2833",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "902e64799746805817e81fc26eeadd115941bded1c51524a2cb4a50fe8aaa17b",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-004.bin",
+      "blobId": "7d4b04a395f1ce67a042b38962d08dec74d1cb4a",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "e16af90e03e55cdd2b9b6ec76c0c7ade144565d40896a5f33df44d0d007b63a6",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-005.bin",
+      "blobId": "6140764c2b56be0bc1907e85fee38f85ad3511df",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "93e5d679fe6acc6603c1cca7b4a7d73163ad734b5de0e2e55d1b8b733ef96034",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-006.bin",
+      "blobId": "d84aaed1d07ca209ac4502d6594b9b4703701f3c",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "58b221db84dba73941edfc38952073c1eb70318efb26fbc3c3439c76c6edb250",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-007.bin",
+      "blobId": "40d5224f206948ecfe0b1aee364329617a61f12a",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "107d202711bb1baaf8cccca1a194213c4d415e6a141c86a5871c1e8e49ac7e07",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-008.bin",
+      "blobId": "45dfe254561d1377cb4cc52eaa302a8c0e7f952b",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "3551daa0d6f187e5f38094aa9e766559e2e5434d00b67ea152f29f793559201f",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-009.bin",
+      "blobId": "448fb36a5cac6954a6c80d8bb8f02be696e2b713",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "cbc2ead7bec46b75ee53526a36e37f6965228a387409edbc03cf0755ab0789e6",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-010.bin",
+      "blobId": "feb79b2b3045fe65eccb25ff485c1a5c3812333a",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "baa365bca0a586479662d96e4f2a790ccc75feee69e2270cfcbe8c999f2dc9bc",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-011.bin",
+      "blobId": "ab55661acc9fc5946789e00cbdbdae5cf1e06e05",
+      "size": 66447360,
+      "lfs": {
+        "sha256": "8091f3dcdec0093c4b5884e3fd4ee4193718bd69c750aec6b62350eb1907a6c0",
+        "size": 66447360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-012.bin",
+      "blobId": "1b65efc9637c9251b434967f49e57f330ef86fe0",
+      "size": 66990080,
+      "lfs": {
+        "sha256": "7b776a66caf3b70a321780eea1525cad3cbb709e379a505db3ac94207db42729",
+        "size": 66990080,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-013.bin",
+      "blobId": "6dd50c84b2b3f80b6c87afa798cb3d826520c8b8",
+      "size": 66508800,
+      "lfs": {
+        "sha256": "d5ba8df103638e69e382158bb3d2b5fb7e129eb131839c85bffefc269f19f34d",
+        "size": 66508800,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-014.bin",
+      "blobId": "32ad9c0ec5567e444060f406aa428cf45f64cd41",
+      "size": 65516544,
+      "lfs": {
+        "sha256": "b00d95a8be99968aef370c648c1a718a7a9348f33fe976a7a81165789b7c4ff6",
+        "size": 65516544,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-015.bin",
+      "blobId": "2e28cfa67cdafaff1c87f828f21f4ba58fbd5a6f",
+      "size": 64843776,
+      "lfs": {
+        "sha256": "8f43baa48a60274029ae3952e67692fa340a928874b57c45dc5ad9809b68f638",
+        "size": 64843776,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-016.bin",
+      "blobId": "e958ff73f2aeb01fc56ae3228209caa79764edec",
+      "size": 66502656,
+      "lfs": {
+        "sha256": "0d47a573af199ed39e4d7c71303e44df2e10c207a5c0c833fc12649301eebae7",
+        "size": 66502656,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-017.bin",
+      "blobId": "a9fa86ade8d934524cae17c03d1054daa3567e05",
+      "size": 66843648,
+      "lfs": {
+        "sha256": "045710c3d0096d02b512ef4cfbe08d746bf8a35146cf60475df231805be0b342",
+        "size": 66843648,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-018.bin",
+      "blobId": "1c82051967128622dae84f1d45b7842308984e13",
+      "size": 66634752,
+      "lfs": {
+        "sha256": "2be87bd72b055ec57f079f242e940a2d8e37c7001521788b0bff2bac841316be",
+        "size": 66634752,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac-full_mr/shard-019.bin",
+      "blobId": "ad41c02f15f3377f205e433c451830db78ea33cf",
+      "size": 22716152,
+      "lfs": {
+        "sha256": "63d8b4b168e049ea5d757b36d65495005f9b3f1edaf1600015049cbee81babac",
+        "size": 22716152,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac/manifest.json",
+      "blobId": "86a6148a9a6ef1f94e091d1ea4a54c6f8e6dcef3",
+      "size": 36774
+    },
+    {
+      "rfilename": "web/zac/shard-000.bin",
+      "blobId": "91a09c1ece278e3cd352119395981188778af4f0",
+      "size": 6291456,
+      "lfs": {
+        "sha256": "10bd894273348c1591287cf452d247d1378a41dade7d343b3daa760d9ed20aae",
+        "size": 6291456,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "web/zac/shard-001.bin",
+      "blobId": "93a0f91532961e92afa0d008a932ed79c48c17a5",
+      "size": 75497472,
+      "lfs": {
+        "sha256": "0fc3557b110124dc8d9f71900b85c39e758a000b6405134b33a7cc17ac8a03fc",
+        "size": 75497472,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac/shard-002.bin",
+      "blobId": "cecbf9441d638fd1f14866f0fd76d143eabd02dc",
+      "size": 66758656,
+      "lfs": {
+        "sha256": "5c54ccdde348b10fcf36029d55d54d021344b81abbcfcdc5197cba19f97013e4",
+        "size": 66758656,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac/shard-003.bin",
+      "blobId": "31c52ba165bec65d36af92617d217f848245e70d",
+      "size": 67106816,
+      "lfs": {
+        "sha256": "234f64c8b089ff2b69a7fb4f2a0b3bc6167b657ea9b54298513c5fb5666c45cf",
+        "size": 67106816,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "web/zac/shard-004.bin",
+      "blobId": "615d40651df30ba1c4a1edbdd11c4843d8f6a76f",
+      "size": 29884152,
+      "lfs": {
+        "sha256": "c15a760b8a8164e9922fb59fd798c4295e2a31d308e3853db3d3b63ac6f1fe2e",
+        "size": 29884152,
+        "pointerSize": 133
+      }
+    }
+  ],
+  "spaces": [
+    "hf-audio/open_tts_leaderboard",
+    "mrfakename/zonos3-mini",
+    "fffiloni/ZONOS3-Mini",
+    "mrfakename/zonos3-mini-webgpu"
+  ],
+  "createdAt": "2026-11-09T05:03:57.000Z",
+  "usedStorage": 30566943944
+}

@@ -86761,6 +86761,184 @@
       "publishedContextTokens": null
     },
     {
+      "id": "hf-873fa7e979719a5447636bfe",
+      "repository": "dots-studio/dots.tts.edit",
+      "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+      "variantKey": "tts:dots-tts-edit-v1",
+      "name": "dots.tts.edit · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "added_tokens.json",
+          "bytes": 831,
+          "sha256": null,
+          "gitBlobSha1": "2ae62523b7cf19c9b3e5e6693314bbd5b0a6a430",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "chat_template.jinja",
+          "bytes": 2427,
+          "sha256": null,
+          "gitBlobSha1": "28028c056af412405debd878cdda0171e35fa5d1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "config.json",
+          "bytes": 2196,
+          "sha256": null,
+          "gitBlobSha1": "3312a4d3682b550b28a1775fb5eb859372f00959",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "latent_stats.pt",
+          "bytes": 2893,
+          "sha256": "047cddab7ae613a43f7147ef0a7dead409f5a3875c2e40ab413fe2e4107d76e0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "llm_config.json",
+          "bytes": 2727,
+          "sha256": null,
+          "gitBlobSha1": "1254ff42643b0d5c0982cea429546a242b2d651d",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "merges.txt",
+          "bytes": 1671853,
+          "sha256": null,
+          "gitBlobSha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "model.safetensors",
+          "bytes": 4396292364,
+          "sha256": "d5f08d64459bbd2f6bde1000fde7aa620736a2b762114c819d1e725820768966",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "speaker_encoder.safetensors",
+          "bytes": 29150484,
+          "sha256": "1cf3861c9dee79e4db34bd0b8a4155e68bed27a7c6274e168bb6ee4fed191c85",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "special_tokens_map.json",
+          "bytes": 516,
+          "sha256": null,
+          "gitBlobSha1": "a409eee4b08832c992778315b115942ed0568412",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "tokenizer.json",
+          "bytes": 11423263,
+          "sha256": "c16521f66774c7a4774e5303b7c8ec5c99830c0be5aef6c6edde3ca2a5e05dd0",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "tokenizer_config.json",
+          "bytes": 5886,
+          "sha256": null,
+          "gitBlobSha1": "d908a5e51cdd4eff233a44d6f040e6d4153ce484",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "dots-studio/dots.tts.edit",
+          "revision": "bef1e97b4d942c62843b92c30a68961d1902b6ec",
+          "filename": "vocoder.safetensors",
+          "bytes": 723585584,
+          "sha256": "c0e45c08f480df67ac4c354b465355fcc7e2f6c8765263b6dfeddd1f4671c93d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 5164917857,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/dots-studio/dots.tts.edit",
+      "status": "not-installed",
+      "familyId": "publisher-dots-tts-edit",
+      "familyLabel": "dots.tts.edit",
+      "originalRepository": "dots-studio/dots.tts.edit",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "builtInDescription": "English and Mandarin speech that can also edit a recording: replace, insert or delete words, change the emotion, pitch, speed or pauses of a part of it with edit tags. Without tags it speaks the text, cloning the voice of a recording when you add one. Best on an NVIDIA RTX 30-series or newer GPU with 8 GB or more; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "other (the dots.tts project releases its checkpoints under Apache-2.0)",
+      "catalogOrder": 0,
+      "ttsRuntime": "dots-tts-edit-v1",
+      "ttsComponentBytes": 802981,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
       "id": "hf-0983ef279a405884e4bdbd4f",
       "repository": "hkust-aaron/EdgeRock-4B-GGUF",
       "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
@@ -151182,6 +151360,404 @@
       "catalogOrder": 0,
       "ttsRuntime": "voxcpm2-v1",
       "ttsComponentBytes": 0,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-fb2896e0aa90d2a70233940c",
+      "repository": "Zyphra/ZONOS3-Mini",
+      "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+      "variantKey": "tts:zonos3-mini-v1",
+      "name": "ZONOS3-Mini · BF16",
+      "quantization": "BF16",
+      "format": "pytorch",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "autoencoder/generator.pt",
+          "bytes": 7960647220,
+          "sha256": "75a587a3eda9ca3d345f0c305756a7ff8619b01685c261b08ae243c69c2caf9a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "autoencoder/heads/keep2_plain/config_full_unfreezeall_mr_drop30_4x10.json",
+          "bytes": 10304,
+          "sha256": null,
+          "gitBlobSha1": "bbb84d0ef66e1c37e0a0c0d2905e3bcaec410b08",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "autoencoder/heads/keep2_plain/step_0050000.pt",
+          "bytes": 518498361,
+          "sha256": "7432e335e717417961267f2242547ce389a796cdc296a8b8d5289658e3c28936",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "lm/zonos3_mini/model.pth",
+          "bytes": 1772391535,
+          "sha256": "3b4ac0a6e3002bd575ad9a0761ae7524806a908f553042171dead8f3a2146caa",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "lm/zonos3_mini/params.json",
+          "bytes": 2500,
+          "sha256": null,
+          "gitBlobSha1": "e04fe9ee0e4d52b20c9f26c35d4b4dd02c75196b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "lm/zonos3_mini/tokenizer/superbpe8192.json",
+          "bytes": 559287,
+          "sha256": null,
+          "gitBlobSha1": "831cbcdc98e45a5109fa25baefb3298efd958ec8",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "speaker_encoders/ownmect_s2/ckpt_0037.pth",
+          "bytes": 50277003,
+          "sha256": "3cef65631f3161cbd8eacc6ea40e59a237c79656d85c7232dcbe0c8d07cae88f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Cillian_en-Irish_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "f3125fae2f679fb5c8128d308ddd02986fd7d914975d17cc6dadf9eb130b1061",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Imogen_en-British_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "683424b91faeade48c8a92e05e1c3679366abbba443ef62eccba8dc40de48e9e",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Jett_en-energetic_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "624b749d220dac7fdcda479b1964cb8f7de58c838c1357f2f0161dac06e34f48",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Morgana_en-witch_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "a817387697c43138639aa1e52a9e42d9f3a629655e0faea5ac8565eb8e57c091",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Rupert_en-British_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "0c68e699376dbafdc1ab0fadc133f48e7df9cb33b3a7b80b05f42c5c0aad8fa7",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Sakura_en-anime_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "daf3e82d2e6f2ce2fe90c73473a312a721295ae7f85763f99c87ee2f861063a9",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Savannah_en-American_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "dd81587e66f96fb62da47ef13d5d867de464ca386a83f01b4403cdd19629ca6c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Thaddeus_en-announcervoice_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "fc8e21356730988aa20da70123991404345e0bdbfe3afe31e6371d8d93095461",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Willow_en-asrm_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "6ebb84309f21f1dcbe6371e2355dc98f8ee3d0aee5850c305d06a73fe0a7c222",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/English/Wyatt_en-American_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "b39d377b653ebaca6bbd4ecd13c382fe16d81f0cfae27217d9b626e5589a0511",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/French/Gaspard_fr_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "6e19a9a545af6a263c00b997368d8396ff8abc761b53dce2a6d4df735f0766e9",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/German/Liesel_de_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "2d44e40f8c1f43fcabaabf301e14bfc48325bf4596cb04e076d662d8b2724c5d",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/German/Wolfgang_de_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "3a0e305b2789f79b843d96628b275b5d8f3f877f89c80e87fe57bf6078901467",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Hindi/Ananya_hi_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "f7acf756273d86131de701d51b25a7e0b3323d724b7e98a0c890fcf176f85a14",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Hindi/Arjun_hi_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "9cb0eb4cc81b79acadedb173e1fbbc0203bf71ea9ae66e56bd76393386f25815",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Italian/Ginevra_it_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "950ecf44f57fd053effd83c65f7f35059df0dcd1bb99dbc197b6649507171621",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Italian/Lorenzo_it_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "a355bb33b907130985b74eae3fa05e4aa19d7fe7233f26c0416afad0726c2367",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Korean/Minjun_ko_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "ab3d9c60c3f36080fd7e9eebd20c8ece42059236dd83f19980e5e4dbca94fc4e",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Korean/Seoyeon_ko_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "dddb6aa68c3febe83ca656c959f4d78246c72e011cde72c3745d1a46a37d8345",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Mandarin Chinese/Haoran_zh-energetic_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "b056f91bcbf4ffda432459f8c6a80b37cdc98cd82fd296e29cf2584325809c6c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Mandarin Chinese/Meilin_zh-energetic_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "8430a2852291d874f327666d05bd15ee854a009cc54b9d3cdba9005d6bc7f59b",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Portuguese/Leonor_pt_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "c4074805d713ac20444253f1b98f814b7f27c43b6ab29bb2f0feeaaae8f7e4b2",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Portuguese/Thiago_pt_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "fd1eee487091ef60636fe08cbafc15133c34a3f697629e1057e749c5b9893dc0",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Spanish/Rodrigo_es_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "0305b7ab40d5d4a1df07ed7aa1c164f64ede1ac4b6250fa56383b4c3ae03e1e1",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Spanish/Ximena_es_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "b9cc1284c52003705619b37f2c25c59e170d2c70650af39e5692b2fe91782bd6",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Telugu/Chaitanya_te_M_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "ca818012cf5656d12eb3bccdfad4086831a6a892f8e7bf2277ca11bf921e5eb7",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/Telugu/Sravya_te_F_1.embedding.npy",
+          "bytes": 896,
+          "sha256": "a62e330ccfe900dbc4caac3e57d661adf284da8c967072dbe91bab154df79c0f",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Zyphra/ZONOS3-Mini",
+          "revision": "24f39592cf5521d675d96db41fc379af3ad369be",
+          "filename": "web/voices/voices.json",
+          "bytes": 5760,
+          "sha256": null,
+          "gitBlobSha1": "cbe2b75ca0bde8ea1dc7d16ef482f12c1cec379f",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 10302416162,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Zyphra/ZONOS3-Mini",
+      "status": "not-installed",
+      "familyId": "publisher-zonos3-mini",
+      "familyLabel": "ZONOS3-Mini",
+      "originalRepository": "Zyphra/ZONOS3-Mini",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "builtInDescription": "Multilingual speech with 27 preset voices, moods and speaking styles such as a newsreader or a late-night radio host, and voice cloning from a short recording alone. Speaks English, French, German, Spanish, Italian, Portuguese, Japanese, Mandarin and Korean. Best on an NVIDIA RTX 30-series or newer GPU with 6 GB or more; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "ttsRuntime": "zonos3-mini-v1",
+      "ttsComponentBytes": 41479827,
       "outputsText": false,
       "supportsTextGeneration": false,
       "operatingModes": []

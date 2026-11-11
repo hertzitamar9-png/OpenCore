@@ -1,10 +1,12 @@
-// Voice studio for managed text-to-speech models (Kitten TTS 2, VoxCPM2, Breeze-TTS-2).
+// Voice studio for managed text-to-speech models (Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini, dots.tts.edit).
 // The bridge validates every request again; the studio only shapes the controls
 // each model actually supports.
 export function createManagedTts(request, refresh, catalog) {
   const REFERENCE_RATE = 24000;
   const PREFERENCES = 'opencore-tts-studio-v1';
   const ACTIVE = ['queued', 'preparing', 'running'];
+  // dots.tts.edit reads these tags as edits of a reference recording (the bridge checks the same pattern).
+  const EDIT_TAG = /<\s*\/?\s*(?:sub|ins|del|emo|pitch|rate|pause|enhance|bg|spk_transfer)\b/i;
   let statusCache = null;
 
   const readPreferences = () => {
@@ -174,6 +176,9 @@ export function createManagedTts(request, refresh, catalog) {
     if (capabilities.presets && saved.preset && capabilities.presets.includes(saved.preset)) settings.preset = saved.preset;
     if (capabilities.cfg && saved.cfg != null) settings.cfg = saved.cfg;
     if (capabilities.steps && saved.steps != null) settings.steps = saved.steps;
+    if (saved.language && (capabilities.languages || []).some(item => item.id === saved.language)) settings.language = saved.language;
+    // A call has no recording to edit, so edit markup in a reply is dropped and its words are spoken.
+    if (capabilities.editTags) text = text.replace(new RegExp(EDIT_TAG.source + '[^>]*>', 'gi'), '');
     const parts = chunks(text, Math.min(capabilities.maxText, 400));
     const ids = [];
     const stop = () => ids.forEach(id => void request('/tts/cancel', {id}).catch(() => {}));
@@ -215,7 +220,8 @@ export function createManagedTts(request, refresh, catalog) {
       if (!styled && typeof document !== 'undefined') {
         const node = document.createElement('style'); node.textContent = style; document.head.appendChild(node); styled = true;
       }
-      const genderOf = voice => /_female\b|female$/i.test(voice.voice_id || '') ? 'female' : /_male\b|male$/i.test(voice.voice_id || '') ? 'male' : '';
+      const genderOf = voice => voice.gender === 'female' || voice.gender === 'male' ? voice.gender
+        : /_female\b|female$/i.test(voice.voice_id || '') ? 'female' : /_male\b|male$/i.test(voice.voice_id || '') ? 'male' : '';
 
       function Job({job, onChanged, autoload}) {
         const [audio, setAudio] = React.useState(null), [error, setError] = React.useState(''), [working, setWorking] = React.useState(false);
@@ -229,7 +235,8 @@ export function createManagedTts(request, refresh, catalog) {
           setWorking(true); setError('');
           try { await request(route, {id: job.id}); await onChanged(); } catch (value) { setError(String(value.message || value)); } finally { setWorking(false); }
         }
-        const details = [settings.voice && 'Voice ' + settings.voice, settings.preset, settings.instruction && '“' + settings.instruction + '”',
+        const details = [settings.voice && 'Voice ' + settings.voice, settings.preset, settings.language && 'Language ' + settings.language,
+          settings.instruction && '“' + settings.instruction + '”',
           settings.referencePath && 'Cloned from a reference', settings.cfg != null && 'CFG ' + settings.cfg, settings.steps != null && settings.steps + ' steps',
           'Seed ' + settings.seed].filter(Boolean).join(' · ');
         return h('li', {className: 'tts-job'},
@@ -258,6 +265,7 @@ export function createManagedTts(request, refresh, catalog) {
         const [seed, setSeed] = React.useState(saved.seed ?? 1234), [randomSeed, setRandomSeed] = React.useState(saved.randomSeed ?? true);
         const [temperature, setTemperature] = React.useState(saved.temperature ?? null), [topP, setTopP] = React.useState(saved.topP ?? null);
         const [normalize, setNormalize] = React.useState(saved.normalize ?? true), [submitting, setSubmitting] = React.useState(false);
+        const [language, setLanguage] = React.useState(saved.language || '');
         const [recording, setRecording] = React.useState(null), [level, setLevel] = React.useState({seconds: 0, rms: 0}), [transcribing, setTranscribing] = React.useState(false);
         const editor = React.useRef(null), recorder = React.useRef(null), alive = React.useRef(true);
         const model = state?.models?.[entry.id], caps = model?.capabilities, voices = model?.voices || [];
@@ -326,8 +334,11 @@ export function createManagedTts(request, refresh, catalog) {
           catch (value) { if (alive.current) setError(String(value.message || value)); }
           finally { if (alive.current) setTranscribing(false); }
         }
-        const transcriptRequired = caps?.reference === 'transcript-required';
-        const blocked = !text.trim() ? 'Enter the words to speak.' : reference && transcriptRequired && !referenceText.trim()
+        const transcriptRequired = caps?.reference === 'transcript-required', audioOnly = caps?.reference === 'audio-only';
+        const editing = !!caps?.editTags && EDIT_TAG.test(text);
+        const languages = caps?.languages || [], languageKnown = !language || languages.some(item => item.id === language);
+        const blocked = !text.trim() ? 'Enter the words to speak.' : editing && !reference
+          ? 'Add the recording to edit: edit tags change a reference recording.' : reference && transcriptRequired && !referenceText.trim()
           ? 'Type the exact words spoken in the reference recording (or use Fill automatically).' : '';
         async function generate() {
           setSubmitting(true); setError('');
@@ -337,13 +348,14 @@ export function createManagedTts(request, refresh, catalog) {
           if (caps.voices && voice && !reference) settings.voice = voice;
           if (caps.presets && preset) settings.preset = preset;
           if (caps.instruction && instruction.trim()) settings.instruction = instruction.trim();
-          if (reference) { settings.referenceAudio = reference.audio; if (referenceText.trim()) settings.referenceText = referenceText.trim(); }
+          if (reference) { settings.referenceAudio = reference.audio; if (!audioOnly && !editing && referenceText.trim()) settings.referenceText = referenceText.trim(); }
+          if (languages.length && language && languageKnown) settings.language = language;
           if (caps.cfg && cfg != null) settings.cfg = Number(cfg);
           if (caps.steps && steps != null) settings.steps = Number(steps);
           if (caps.sampling && temperature != null) settings.temperature = Number(temperature);
           if (caps.sampling && topP != null) settings.topP = Number(topP);
           if (caps.normalize) settings.normalize = !!normalize;
-          savePreferences(entry.id, {voice, preset, instruction, cfg, steps, seed: useSeed, randomSeed, temperature, topP, normalize});
+          savePreferences(entry.id, {voice, preset, instruction, cfg, steps, seed: useSeed, randomSeed, temperature, topP, normalize, language});
           try {
             await request('/tts/jobs', {request: {modelId: entry.id, text, settings}});
             await loadJobs();
@@ -380,22 +392,30 @@ export function createManagedTts(request, refresh, catalog) {
             h('small', {className: 'tts-count'}, text.length + ' / ' + (caps?.maxText || '…'))),
           groups.length ? h('div', {className: 'tts-tags', role: 'group', 'aria-label': 'Expressions'},
             groups.map(group => h('div', {key: group.name, className: 'tts-tag-group'}, h('span', null, group.name),
-              group.tags.map(tag => h('button', {key: tag.label, type: 'button', disabled: locked, title: tag.wrap ? 'Select words, then click to emphasize them' : 'Insert ' + tag.insert.trim(),
+              group.tags.map(tag => h('button', {key: tag.label, type: 'button', disabled: locked,
+                title: tag.wrap ? 'Select words, then click to apply “' + tag.label + '” to them' : 'Insert ' + tag.insert.trim(),
                 onClick: () => insert(tag)}, tag.label))))) : null,
           h('div', {className: 'tts-row'},
             caps?.voices ? h('label', null, 'Voice',
               h('select', {value: voice, disabled: locked || !!reference, onChange: e => setVoice(e.target.value)},
-                voices.map(item => h('option', {key: item.id, value: item.id}, item.id + (genderOf(item) ? ' · ' + genderOf(item) : '')))),
+                voices.map(item => h('option', {key: item.id, value: item.id}, [item.id, genderOf(item), item.style,
+                  languages.find(value => value.id === item.language)?.label].filter(Boolean).join(' · ')))),
               reference ? h('small', null, 'The reference recording replaces the built-in voice.') : null) : null,
             caps?.presets ? h('label', null, 'Delivery',
               h('select', {value: preset, disabled: locked, onChange: e => setPreset(e.target.value)},
-                caps.presets.map(item => h('option', {key: item, value: item}, item[0].toUpperCase() + item.slice(1))))) : null),
+                caps.presets.map(item => h('option', {key: item, value: item}, item[0].toUpperCase() + item.slice(1))))) : null,
+            languages.length ? h('label', null, 'Language',
+              h('select', {value: languageKnown ? language : '', disabled: locked, onChange: e => setLanguage(e.target.value)},
+                h('option', {value: ''}, caps.voices ? 'Automatic (the voice\'s language)' : 'Automatic'),
+                languages.map(item => h('option', {key: item.id, value: item.id}, item.label)))) : null),
           caps?.instruction ? h('label', null, caps.instruction.label + ' (optional)',
             h('input', {type: 'text', value: instruction, maxLength: 500, disabled: locked, placeholder: caps.instruction.placeholder, onChange: e => setInstruction(e.target.value)})) : null,
           caps?.reference ? h('fieldset', {className: 'tts-reference', disabled: locked},
-            h('legend', null, 'Reference voice for cloning (optional)'),
+            h('legend', null, caps.editTags ? 'Recording to clone or edit (optional)' : 'Reference voice for cloning (optional)'),
             h('small', null, 'Record or upload 5–15 seconds of one person speaking clearly. ' + (transcriptRequired
-              ? 'This model needs the exact words spoken in the recording.' : 'Adding the exact words gives the closest match.')),
+              ? 'This model needs the exact words spoken in the recording.' : audioOnly ? 'This model clones from the recording alone.'
+              : caps.editTags ? 'To edit it, type its exact words above with edit tags; to clone it, just type new words.'
+              : 'Adding the exact words gives the closest match.')),
             h('div', {className: 'tts-reference-actions'},
               h('button', {type: 'button', onClick: () => void (recording ? stopTake() : startTake()), 'aria-pressed': !!recording},
                 recording ? 'Stop recording (' + level.seconds.toFixed(1) + ' s)' : reference ? 'Record again' : 'Record from microphone'),
@@ -406,7 +426,7 @@ export function createManagedTts(request, refresh, catalog) {
               h('i', {style: {width: Math.min(100, level.rms * 600) + '%'}})) : null,
             reference ? h('div', null, h('small', null, reference.label + ' · ' + reference.durationS.toFixed(1) + ' s'),
               h('audio', {controls: true, src: reference.url})) : null,
-            reference ? h('label', null, 'Words spoken in the reference' + (transcriptRequired ? ' (required)' : ' (optional)'),
+            reference && !audioOnly && !editing ? h('label', null, 'Words spoken in the reference' + (transcriptRequired ? ' (required)' : ' (optional)'),
               h('textarea', {rows: 2, value: referenceText, maxLength: 2000, onChange: e => setReferenceText(e.target.value)}),
               h('div', {className: 'tts-reference-actions'},
                 h('button', {type: 'button', disabled: transcribing, onClick: () => void autoTranscript()}, transcribing ? 'Transcribing…' : 'Fill automatically'),

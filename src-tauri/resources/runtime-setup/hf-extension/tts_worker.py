@@ -6,17 +6,35 @@ worker holds at most one model; the manager restarts it to switch models or to
 interrupt a generation. It never downloads: every path it receives was verified
 by the manager, and HF_HUB_OFFLINE is set by its parent.
 """
+import base64
 import json
 import math
 import os
 from pathlib import Path
 import random
+import re
 import sys
 import time
 import traceback
+import types
 
 PROTOCOL = 1
-FAMILIES = ('kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1')
+FAMILIES = ('kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1', 'zonos3-mini-v1', 'dots-tts-edit-v1')
+ZONOS3_REPOSITORY = 'Zyphra/ZONOS3-Mini'
+ZONOS3_BUNDLE = 'assets/steering/studio_bundle_mect60k_x10.json'
+ZONOS3_PRESET_NAMES = {'BBC newsreader': 'British newsreader'}
+DOTS_EDIT_TAG = re.compile(r'<\s*/?\s*(?:sub|ins|del|emo|pitch|rate|pause|enhance|bg|spk_transfer)\b', re.IGNORECASE)
+
+
+def zonos3_voice(item):
+    """A ZONOS3 release voice ('Cillian en Irish M 1') as its name, language code and gender."""
+    parts = str(item.get('label') or '').split()
+    if len(parts) < 4 or parts[-2] not in ('M', 'F'):
+        return None
+    language = {'en': 'en_gb' if 'British' in parts[2:-2] else 'en_us', 'fr': 'fr_fr', 'de': 'de', 'es': 'es', 'it': 'it',
+                'pt': 'pt_br', 'ko': 'ko', 'zh': 'cmn', 'ja': 'ja'}.get(parts[1], 'en_us')
+    return {'id': parts[0], 'language': language, 'gender': 'female' if parts[-2] == 'F' else 'male',
+            'style': ' '.join(parts[2:-2])}
 
 
 def _seed(value):
@@ -69,6 +87,92 @@ def choose_device(hardware):
     raise RuntimeError(label + ' needs ' + (hardware.get('summary') or 'a supported NVIDIA GPU') + '. ' + reason + '.')
 
 
+def _add_path(path):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+
+def _module(name, **attributes):
+    module = types.ModuleType(name)
+    module.__dict__.update(attributes)
+    sys.modules[name] = module
+    return module
+
+
+def _force_weights_only():
+    """Load every checkpoint in this worker with PyTorch's restricted unpickler, even where upstream code asks for the
+    unrestricted one. Tensors, numbers and plain containers load the same; pickled code can never run."""
+    import torch
+    if getattr(torch.load, 'opencore_weights_only', False):
+        return
+    original = torch.load
+
+    def load(*args, **kwargs):
+        kwargs['weights_only'] = True
+        return original(*args, **kwargs)
+    load.opencore_weights_only = True
+    torch.load = load
+
+
+def _install_dac_layers():
+    """ZONOS3 uses only the layer and quantizer modules of descript-audio-codec. Import them directly, so the package's
+    training stack (audiotools and its many dependencies) is never needed."""
+    import importlib.util
+    import torch
+    spec = importlib.util.find_spec('dac')
+    if spec is None or not spec.submodule_search_locations:
+        raise RuntimeError('descript-audio-codec is missing from the speech environment; repair the speech runtime')
+    root = Path(next(iter(spec.submodule_search_locations)))
+    _module('dac', __path__=[str(root)])
+    _module('dac.nn', __path__=[str(root / 'nn')])
+    _module('dac.model', __path__=[])
+    _module('dac.model.base', CodecMixin=type('CodecMixin', (), {}))
+    _module('audiotools', __path__=[])
+    _module('audiotools.ml', BaseModel=type('BaseModel', (torch.nn.Module,), {'INTERN': [], 'EXTERN': []}))
+
+
+def _install_dots_text_tools():
+    """dots.tts imports the WeTextProcessing normalizers and the lingua language detector at module level. OpenCore always
+    passes normalize_text=False and either no language tag or an explicit one, so neither runs; these stand-ins keep the
+    imports working and fail clearly if a code path ever reaches them."""
+    def unavailable(*_, **__):
+        raise RuntimeError('Automatic text normalization and language detection are not part of the OpenCore speech '
+                           'runtime; choose the language instead')
+    normalizer = type('Normalizer', (), {'__init__': unavailable})
+    _module('tn', __path__=[])
+    for language in ('chinese', 'english'):
+        _module('tn.' + language, __path__=[])
+        _module('tn.' + language + '.normalizer', Normalizer=normalizer)
+    _module('lingua', Language=type('Language', (), {'all': staticmethod(unavailable)}),
+            LanguageDetectorBuilder=type('LanguageDetectorBuilder', (), {'from_languages': staticmethod(unavailable)}))
+
+
+def _zonos3_offline(model_dir):
+    """Map the release's hf://Zyphra/ZONOS3-Mini/... locations to the verified local snapshot and refuse any other."""
+    from zonos3.utils import release
+
+    def local(path):
+        if path is None or not release.is_hf(str(path)):
+            return path if path is None else os.path.expanduser(str(path))
+        repository, inside = release.split(str(path))
+        if repository != ZONOS3_REPOSITORY:
+            raise RuntimeError('OpenCore runs ZONOS3 offline; ' + str(path) + ' is not a managed file')
+        return str(model_dir / inside) if inside else str(model_dir)
+    release.resolve_file = release.resolve_dir_or_local = local
+
+
+def _zonos3_assets(base):
+    class Assets(base):
+        def decoder(self, codec, device, decoder=None):
+            # The manager verified generator.pt at install time; upstream re-hashes all 8 GB of it on every load.
+            from zonos3.tokenizer import matched_codec
+            key = (codec, matched_codec.decoder_id(codec, decoder), str(device))
+            if key not in self._decoders:
+                self._decoders[key] = matched_codec.load_model(codec, device, decoder=key[1])
+            return self._decoders[key]
+    return Assets
+
+
 class Engine:
     def __init__(self, family, model_dir, components, hardware=None):
         self.family, self.model_dir, self.components = family, Path(model_dir), components
@@ -106,8 +210,121 @@ class Engine:
             self.tokenizer, self.model, self.codec = tokenizer, model, codec
             self.runtime = FastBreezeStreamingRuntime(model, codec, config, tokenizer=tokenizer)
             self.sample_rate = int(self.runtime.sample_rate)
+        elif family == 'zonos3-mini-v1':
+            self._load_zonos3(Path(components['zonos3Source']))
+        elif family == 'dots-tts-edit-v1':
+            import torch
+            _add_path(Path(components['dotsSource']) / 'src')
+            _install_dots_text_tools()
+            _force_weights_only()
+            threads, available = torch.get_num_threads(), torch.cuda.is_available
+            if self.device == 'cpu':
+                # dots.tts picks CUDA whenever it is visible; keep it on the CPU when OpenCore chose the CPU (too little
+                # GPU memory, an unsupported GPU), and keep every CPU core it would otherwise drop to one thread.
+                torch.cuda.is_available = lambda: False
+            try:
+                from dots_tts.edit_runtime import DotsTtsEditRuntime
+                self.model = DotsTtsEditRuntime.from_pretrained(
+                    str(self.model_dir), precision='bfloat16' if self.device == 'cuda' else 'float32')
+            finally:
+                torch.cuda.is_available = available
+                torch.set_num_threads(threads)
+            self.sample_rate = int(self.model.sample_rate)
         else:
             raise ValueError('Unsupported speech family')
+
+    def _load_zonos3(self, source):
+        import torch
+        _add_path(source / 'model' / 'src')
+        _install_dac_layers()
+        _force_weights_only()
+        _zonos3_offline(self.model_dir)
+        from zonos3.reference.lm import Zonos3LM
+        from zonos3.reference.synth import ReferenceAssets, synthesize
+        import zonos3.tts.audio as zonos3_audio
+
+        def wav_only(data):
+            # The manager only passes validated mono 16-bit PCM WAV, so no ffmpeg program is needed.
+            if data[:4] != b'RIFF' or data[8:12] != b'WAVE':
+                raise ValueError('Use a mono 16-bit PCM WAV reference recording')
+            return data
+
+        zonos3_audio._transcode_audio_bytes_to_wav = wav_only
+        self.zonos3_synthesize = synthesize
+        dtype = torch.bfloat16 if self.device == 'cuda' else torch.float32
+        self.model = Zonos3LM.load(str(self.model_dir / 'lm' / 'zonos3_mini'), device=self.device, dtype=dtype)
+        self.assets = _zonos3_assets(ReferenceAssets).load(steer_bundle=str(source / ZONOS3_BUNDLE))
+        self.model = self.assets.grow(self.model)
+        self.assets.decoder(self.model.config.audio_codec, torch.device(self.device))
+        ui = json.loads((source / ZONOS3_BUNDLE).read_text(encoding='utf-8'))['ui']
+        self.controls = {item['id']: item['map'] for item in ui['controls']}
+        self.controls.update({'accent:' + item['id']: item['map'] for item in ui['accents']})
+        self.styles = {'Neutral': {}}
+        self.styles.update({item['label']: {item['control']: item['dose']} for item in ui['moods']})
+        self.styles.update({ZONOS3_PRESET_NAMES.get(name, name): values for name, values in ui['presets'].items()})
+        self.presets = list(self.styles)
+        folder = (self.model_dir / 'web' / 'voices').resolve()
+        self.voice_files = {}
+        for item in json.loads((folder / 'voices.json').read_text(encoding='utf-8')):
+            voice = zonos3_voice(item)
+            path = (folder / str(item.get('embedding') or '')).resolve()
+            if voice and voice['id'] not in self.voice_files and folder in path.parents and path.suffix == '.npy' \
+                    and path.is_file():
+                self.voice_files[voice['id']] = (path, voice['language'])
+        self.voices = list(self.voice_files)
+        self.sample_rate = 44100
+
+    def _zonos3_controls(self, values):
+        """Studio slider values ({'accent:british': 1.5, 'authority': 3}) as steering-direction doses."""
+        doses = {}
+        for control, value in values.items():
+            mapping, value = self.controls.get(control), float(value)
+            if mapping is None or not value:
+                continue
+            side = mapping if control.startswith('accent:') else mapping.get('+' if value > 0 else '-') or {}
+            for direction, weight in side.items():
+                doses[direction] = doses.get(direction, 0.0) + float(weight) * abs(value)
+        return {direction: dose for direction, dose in doses.items() if dose}
+
+    def _zonos3(self, text, settings, reference, seed):
+        import torch
+        body = {'text': text, 'seed': seed, 'speaker_mode': 'embedding', 'stream': False, 'stream_decode': 'whole',
+                'text_normalization': settings.get('normalize', True) is not False}
+        language = settings.get('language') or None
+        if reference:
+            body.update(speaker_audio_base64=base64.b64encode(Path(reference).read_bytes()).decode('ascii'),
+                        speaker_audio_name='reference.wav')
+        else:
+            voice = settings.get('voice') or (self.voices[0] if self.voices else None)
+            if voice not in self.voice_files:
+                raise ValueError('Choose one of the ZONOS3 voices or add a reference recording')
+            path, voice_language = self.voice_files[voice]
+            body.update(speaker_embedding_base64=base64.b64encode(path.read_bytes()).decode('ascii'),
+                        speaker_embedding_name=path.name)
+            language = language or voice_language
+        body['language'] = language or 'en_us'
+        controls = self._zonos3_controls(self.styles.get(settings.get('preset') or 'Neutral') or {})
+        if controls:
+            body['controls'] = controls
+        for name, key in (('temperature', 'temperature'), ('topP', 'top_p'), ('topK', 'topk'), ('minP', 'min_p')):
+            if settings.get(name) is not None:
+                body[key] = settings[name]
+        if settings.get('maxNewTokens') is not None:
+            body['max_tokens'] = int(settings['maxNewTokens'])
+        with torch.inference_mode():
+            return self.zonos3_synthesize(self.model, body, assets=self.assets, device=self.device).pcm
+
+    def _dots(self, text, settings, reference, reference_text):
+        options = {'num_steps': int(settings.get('steps', 10)), 'guidance_scale': float(settings.get('cfg', 1.2))}
+        if DOTS_EDIT_TAG.search(text):
+            if not reference:
+                raise ValueError('Add the recording to edit; edit tags change a reference recording')
+            result = self.model.generate_edit(source_audio_path=reference, instruction=text, **options)
+        else:
+            result = self.model.generate(text=text, prompt_audio_path=reference, prompt_text=reference_text,
+                                         language=settings.get('language') or None, normalize_text=False, **options)
+        audio = result['audio']
+        return audio.detach().float().cpu().numpy() if hasattr(audio, 'detach') else audio
 
     def synthesize(self, request):
         import numpy as np
@@ -140,6 +357,10 @@ class Engine:
                 if reference_text:
                     options.update(prompt_wav_path=reference, prompt_text=reference_text)
             audio = self.model.generate(text=('(' + instruction + ')' if instruction else '') + text, **options)
+        elif self.family == 'zonos3-mini-v1':
+            audio = self._zonos3(text, settings, reference, seed)
+        elif self.family == 'dots-tts-edit-v1':
+            audio = self._dots(text, settings, reference, reference_text)
         else:
             from breeze_infer.runtime import set_all_seeds
             from breeze_infer.templates import get_template, prepare_inputs, select_template_name
