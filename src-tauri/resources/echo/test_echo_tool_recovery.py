@@ -212,6 +212,23 @@ class ToolRecoveryTests(unittest.TestCase):
                                    ('open 微信', 'en'), ('Chromeを閉じて', 'ja'), ('How do I start a business?', 'en')):
             with self.subTest(question=question):
                 self.assertEqual(launch_language(question), language)
+        self.assertEqual(len(_LAUNCH_TEXT), 24, 'launch-text.json ships the 23 translations next to the worker')
+        resource_map = Path(__file__).resolve().parents[3] / 'distribution' / 'resource-map.json'
+        if resource_map.exists():
+            mapped = json.loads(resource_map.read_text(encoding='utf-8'))
+            for packaged in ('echo/launch-text.json', 'resources/echo/launch-text.json'):
+                self.assertEqual(mapped.get(packaged), 'src-tauri/resources/echo/launch-text.json')
+        import echo_server
+        saved = dict(_LAUNCH_TEXT)
+        try:
+            _LAUNCH_TEXT.clear()
+            _LAUNCH_TEXT['en'] = saved['en']
+            with tempfile.TemporaryDirectory() as temporary:
+                echo_server._load_launch_text(Path(temporary) / 'launch-text.json')
+            self.assertEqual(launch_text('opened', 'es', 'Chrome'), 'Chrome is open on your PC. I verified its window.')
+        finally:
+            _LAUNCH_TEXT.clear()
+            _LAUNCH_TEXT.update(saved)
         for language, table in _LAUNCH_TEXT.items():
             with self.subTest(language=language):
                 for key in ('opened', 'not_found', 'unverified', 'justification', 'explain_run', 'no_tool'):
