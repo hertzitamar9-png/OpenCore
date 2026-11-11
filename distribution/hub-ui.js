@@ -314,7 +314,7 @@ async function $hubInvoke(command,args,run) {
     }
     return $hubRequest('/native/cancel',{id:args.modelId});
   }
-  if(command==='stop_runtime'&&$hubDescriptor){await $hubRequest('/stop').catch(()=>{});return run();}
+  if(command==='stop_runtime'&&$hubDescriptor){await $hubRequest('/stop',{});return run();}
   if(command==='send_chat_message'&&($hubDescriptor||String(original||'').startsWith('api:'))){
     if(!$hubState.loaded)await $hubRefresh().catch(()=>{});
     const request=args.request||{},entry=$hubState.catalog.find(e=>e.profileId===(globalThis.__opencoreHubSelectedProfile||resolved));
@@ -323,17 +323,15 @@ async function $hubInvoke(command,args,run) {
   }
   if(command==='select_profile'||command==='start_profile'){
     const selected=args.profile||args.request?.profile;
-    if($hubDescriptor&&!$hubState.catalog.some(e=>e.profileId===selected))await $hubRequest('/stop').catch(()=>{});
-    globalThis.__opencoreHubSelectedProfile=selected;
+    if($hubDescriptor&&!$hubState.catalog.some(e=>e.profileId===selected))await $hubRequest('/stop',{});
     if(command==='start_profile'){
       const entry=$hubState.catalog.find(value=>value.profileId===selected);
       if(entry)await $hubLoad(entry);
     }
-    if(resolved!==original){
-      const result=await run();
-      window.dispatchEvent(new CustomEvent('opencore-profile-resolved',{detail:resolved}));
-      return result;
-    }
+    const result=await run();
+    globalThis.__opencoreHubSelectedProfile=selected;
+    if(resolved!==original)window.dispatchEvent(new CustomEvent('opencore-profile-resolved',{detail:resolved}));
+    return result;
   }
   return run();
 }
@@ -630,7 +628,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
     const native=entry.installReceipt?.nativeProfileId;
     if(!native){onNativeRemove?.(model);return;}
     setBusy(true);
-    try{await $hubRequest('/stop');onNativeRemove?.({...model,id:native});}
+    try{await $hubRequest('/stop',{});onNativeRemove?.({...model,id:native});}
     catch(error){setError(String(error));}
     finally{setBusy(false);}
   }

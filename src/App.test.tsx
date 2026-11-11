@@ -1143,7 +1143,7 @@ describe("OpenCore", () => {
     fireEvent.click(await screen.findByRole("button", { name: /1M extended · ECHO.*1,000,000-token YaRN window.*ECHO archive.*trained context 262,144/ }));
 
     const footer = document.querySelector(".statusbar");
-    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
+    expect(footer).toContainElement(await screen.findByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
     fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     fireEvent.click(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ }));

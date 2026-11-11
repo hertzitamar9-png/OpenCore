@@ -1,6 +1,6 @@
 import{expect,it,vi,afterEach}from'vitest';
 import{render,screen,waitFor,cleanup,fireEvent}from'@testing-library/react';
-import{chatPostprocessing,ChatMemoryStatus,removeLegacyMemoryRelevancePolicy,MEMORY_RELEVANCE_POLICY}from'./chat-postprocessing.js';
+import{chatPostprocessing,canInterruptMemory,ChatMemoryStatus,removeLegacyMemoryRelevancePolicy,MEMORY_RELEVANCE_POLICY}from'./chat-postprocessing.js';
 const user={id:1,kind:'message',role:'user',timestamp:'2026-10-28T11:57:00Z',content:'I played professional ⚽ a year ago'};
 const capture={id:2,title:'Automatic memory',timestamp:'2026-10-28T11:57:05Z',metadata:{status:'checking',userEntryId:1}};
 afterEach(()=>{cleanup();delete(globalThis as any).__opencoreMemoryService;delete(window as any).__TAURI_INTERNALS__;});
@@ -19,6 +19,15 @@ it('separates post-response memory checking from text generation and ignores old
  expect(chatPostprocessing([user,capture])).toBe(true);
  expect(chatPostprocessing([user,{...capture,metadata:{status:'failed'}}])).toBe(false);
  expect(chatPostprocessing([capture,{...user,timestamp:'2026-10-28T11:58:00Z'}])).toBe(false);
+});
+it('a late memory receipt from the previous turn cannot make the new response look finished',()=>{
+ expect(chatPostprocessing([user,{...user,id:3,timestamp:'2026-10-28T11:57:03Z'},capture])).toBe(false);
+});
+it('only the completed chats own memory capture may be interrupted by a model change',()=>{
+ expect(canInterruptMemory({activeConversationIds:['chat']},'chat','chat',[user,capture])).toBe(true);
+ expect(canInterruptMemory({activeConversationIds:['other']},'chat','chat',[user,capture])).toBe(false);
+ expect(canInterruptMemory({activeConversationIds:['chat']},'chat','other',[user,capture])).toBe(false);
+ expect(canInterruptMemory({activeConversationIds:['chat']},'chat','chat',[user])).toBe(false);
 });
 it('recovers failed capture only on request, revalidates exact evidence, and requires confirmed persistence',async()=>{
  const args={action:'record',content:user.content,source:'chat:chat:user-entry:1'},refresh=vi.fn(),native=vi.fn(async()=>({persisted:true}));

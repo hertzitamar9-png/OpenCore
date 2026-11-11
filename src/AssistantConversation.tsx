@@ -571,7 +571,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   const approvalShort = APPROVAL_MODES.find((mode) => mode.value === approvalMode)?.short;
   const approvalIndex = APPROVAL_MODES.findIndex((mode) => mode.value === approvalMode);
   const shownApprovalIndex = approvalPreviewIndex ?? approvalIndex;
-  const profileLocked = runtimeRunning || runtimeSnapshot.status === "starting" || generationActive;
+  const profileLocked = runtimeSnapshot.status === "starting" || generationActive;
   useEffect(() => { try { window.localStorage.removeItem("opencore.fast-mode.v1"); } catch { /* Legacy preference cleanup is best-effort. */ } }, []);
 
   const artifactActions: ArtifactActions = {

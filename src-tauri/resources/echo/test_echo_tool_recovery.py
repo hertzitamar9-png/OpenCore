@@ -16,6 +16,40 @@ from evoagent.echo_context import LiveTranscript
 
 
 class ToolRecoveryTests(unittest.TestCase):
+    def test_standalone_launch_uses_declared_terminal_without_gui_control(self):
+        tools = [{'function': {'name': 'exec_command'}},
+                 {'function': {'name': 'ocns_13_mcp__opencore_system_use'}}]
+        message = chrome_launch_step('Open Google Chrome on my PC.', tools, [])
+        self.assertEqual(message['tool_calls'][0]['function']['name'], 'exec_command')
+
+    def test_chrome_launch_satisfies_installed_tools_required_explanation(self):
+        tools = []
+        for name, actions in [('system_use', ['find_apps', 'launch_app', 'run_command']),
+                              ('desktop_use', ['list'])]:
+            tools.append({'type': 'function', 'function': {
+                'name': 'ocns_13_mcp__opencore_' + name,
+                'parameters': {'type': 'object', 'additionalProperties': False,
+                    'properties': {'action': {'type': 'string', 'enum': actions},
+                        'query': {'type': 'string'}, 'appId': {'type': 'string'},
+                        'explanation': {'type': 'string'}, 'purpose': {'type': 'string'}},
+                    'required': ['action', 'explanation']}}})
+        history = []
+        replies = [{'apps': [{'Name': 'Google Chrome', 'AppID': 'fixture-chrome'}]},
+                   {'appId': 'fixture-chrome', 'launched': True},
+                   {'windows': [{'executablePath': r'C:\Program Files\Google\Chrome\Application\chrome.exe'}]}]
+        from echo_server import tool_call_error
+        for action, reply in zip(['find_apps', 'launch_app', 'list'], replies):
+            message = chrome_launch_step('Open Google Chrome on my PC.', tools, history)
+            self.assertIsNone(tool_call_error(message, tools), 'Installed action tools require an explanation')
+            call = message['tool_calls'][0]
+            args = json.loads(call['function']['arguments'])
+            self.assertEqual(args['action'], action)
+            self.assertGreater(len(args['explanation']), 30)
+            self.assertIn('Chrome', args['purpose'])
+            history.extend([message, {'role': 'tool', 'tool_call_id': call['id'],
+                                     'content': 'Wall time: 0.015 seconds\nOutput:\n' + json.dumps(reply)}])
+        self.assertIn('verified its window', chrome_launch_step('Open Chrome', tools, history)['content'])
+
     def test_private_engine_aliases_keep_tool_budget_and_native_dispatch(self):
         schema = {'type': 'object', 'properties': {'action': {'type': 'string'}}, 'required': ['action']}
         names = ['ocns_13_mcp__opencore_dev', 'ocns_15_mcp__cua_driver_get_window_state']

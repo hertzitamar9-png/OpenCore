@@ -83,7 +83,7 @@ import { SETTINGS_SAVE_ERROR_EVENT, type SettingsSaveError } from './useSettings
 import { AgentQuestions } from './AgentQuestions';
 import { usePlatformConfiguration, executePlatformAction, type PlatformConfig } from './agent-platform';
 import { useAppEffects } from './app-effects.js';
-import { removeLegacyMemoryRelevancePolicy } from './chat-postprocessing.js';
+import { removeLegacyMemoryRelevancePolicy, canInterruptMemory } from './chat-postprocessing.js';
 import './app-effects.css';
 import { retainUnchangedTimeline } from './visible-entries';
 import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
@@ -1539,7 +1539,7 @@ export default function App({ initialView = "overview" }: { initialView?: View }
   const act = async (operation: () => Promise<unknown>): Promise<boolean> => { setBusy(true); setNotice(undefined); try { await operation(); await refresh(); if (selectedConversation?.startsWith("import:")) setImportRevision(value => value + 1); return true; } catch (error) { setNotice(String(error)); return false; } finally { setBusy(false); } };
   const runtimeTransitionReason = updatingApp ? 'Wait for the app update to finish.' : runtimeAction === 'switching' ? 'Changing the model…' : runtimeAction || snapshot?.runtime.status === 'starting' ? 'Wait for the runtime operation to finish.' : undefined;
   const modelSwitchBlocked = runtimeTransitionReason || (studioActive ? 'Wait for the active studio task to finish before changing models.' :
-    snapshot?.activeConversationIds?.length || inferenceOwner ? 'Wait for the active chat to finish before changing models.' : busy ? 'Wait for the current operation to finish.' : undefined);
+    (snapshot?.activeConversationIds?.length || inferenceOwner) && !canInterruptMemory(snapshot,selectedConversation,inferenceOwner,visibleTimeline) ? 'Wait for the active chat to finish before changing models.' : busy ? 'Wait for the current operation to finish.' : undefined);
   const switchRuntimeProfile = async (profile: RuntimeProfile) => {
     if (profile === 'stopped' || switchingProfile.current) return;
     if (modelSwitchBlocked) { setNotice(modelSwitchBlocked); return; }
@@ -1706,7 +1706,7 @@ export default function App({ initialView = "overview" }: { initialView?: View }
         runtimeSnapshot={snapshot.runtime}
         telemetry={snapshot.telemetry}
         selectedProfile={selectedProfile}
-        onSelectProfile={setSelectedProfile}
+        onSelectProfile={profile => void switchRuntimeProfile(profile)}
         liveTokenSpeed={recentDecoderSpeed(snapshot.logs)}
         promptProgress={recentPromptProgress(snapshot.logs)}
         backendActive={snapshot.activeConversationIds?.includes(selectedConversation || "") || false}

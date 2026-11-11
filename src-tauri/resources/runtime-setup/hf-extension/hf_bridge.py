@@ -1472,7 +1472,11 @@ class BridgeHandler(BaseHTTPRequestHandler):
             unload = getattr(state.runtime, 'unload', None)
             if unload is None:
                 raise ValueError('This model has no managed runtime to unload.')
-            self._send(200, unload(entry['id']))
+            try:
+                result = unload(entry['id'])
+            except RuntimeError as error:
+                raise Conflict(str(error)) from error
+            self._send(200, result)
         elif route == '/specialist/computer':
             with state.lock:
                 if state.progress and state.progress.get('status') in ACTIVE:

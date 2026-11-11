@@ -33,9 +33,14 @@ export function removeLegacyMemoryRelevancePolicy(invoke=window.__TAURI_INTERNAL
 
 function latestCapture(entries){
   const human=entries.filter(row=>row.role==='user'&&row.kind==='message').at(-1);
-  return entries.filter(row=>row.title==='Automatic memory'&&(!human||Date.parse(row.timestamp)>=Date.parse(human.timestamp))).at(-1);
+  return entries.filter(row=>row.title==='Automatic memory'&&(!human||
+    (row.metadata?.userEntryId==null||row.metadata.userEntryId===human.id)&&Date.parse(row.timestamp)>=Date.parse(human.timestamp))).at(-1);
 }
 export function chatPostprocessing(entries){return latestCapture(entries)?.metadata?.status==='checking';}
+export function canInterruptMemory(snapshot,conversation,owner,entries){
+  return !!conversation&&chatPostprocessing(entries)&&(!owner||owner===conversation)&&
+    (snapshot?.activeConversationIds||[]).every(id=>id===conversation);
+}
 
 export function chatSendFailure(reason){
   const detail=String(reason);
@@ -68,8 +73,9 @@ export function ChatMemoryStatus({conversationId,entries,runtime,profile=runtime
     }catch(reason){setError(String(reason).replace(/^Error:\s*/,''));}
     finally{locked.current=false;setBusy(false);}
   }
-  if(busy)return h('div',{className:'chat-postprocessing',role:'status'},'Reply finished · retrying memory capture locally…');
-  if(capture?.metadata?.status==='checking'&&current?.status!=='stopped')return h('div',{className:'chat-postprocessing',role:'status'},'Reply finished · saving memory locally…');
+  if(busy||capture?.metadata?.status==='checking'&&current?.status!=='stopped')return h('details',{className:'chat-postprocessing'},
+    h('summary',{role:'status'},busy?'Retrying memory capture…':'Saving memory…'),
+    h('small',null,'Your reply is finished. You can unload or change the model; unfinished memory extraction will be deferred.'));
   if(!reviewable||!service||current?.status!=='running')return null;
   return h('details',{className:'chat-postprocessing'},h('summary',null,'Memory details'),
     h('button',{type:'button',disabled:active,onClick:()=>void retry()},'Retry saving memory'),

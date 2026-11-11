@@ -23,19 +23,18 @@ from model_modes import mode_context, supports_text_generation, NATIVE_TARGET, E
 
 
 def automatic_memory_request(payload):
-    # The installed native client sends this fixed two-message request after
-    # the reply. Keep it separate from ECHO's chat effort and working context.
+    # Native API profiles may prepend their effort instruction to the fixed
+    # extractor request. It is still auxiliary inference, never another chat.
     messages = payload.get('messages')
-    if payload.get('stream') or payload.get('tools') or not isinstance(messages, list) or len(messages) != 2:
+    if payload.get('stream') or payload.get('tools') or not isinstance(messages, list) or not 2 <= len(messages) <= 4:
         return False
     if any(not isinstance(message, dict) or not isinstance(message.get('content'), str) for message in messages):
         return False
-    system, source = messages
-    instructions = system['content'].strip()
-    if not (system.get('role') in ('system', 'developer')
-            and instructions.startswith('Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only.')
-            and instructions.endswith('Do not emit reasoning, markdown, tools or commentary.')
-            and source.get('role') == 'user'):
+    source = messages[-1]
+    if source.get('role') != 'user' or any(m.get('role') not in ('system', 'developer') for m in messages[:-1]):
+        return False
+    if not any(m['content'].strip().startswith('Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only.')
+               and m['content'].strip().endswith('Do not emit reasoning, markdown, tools or commentary.') for m in messages[:-1]):
         return False
     try:
         data = json.loads(source['content'].strip().removeprefix('HUMAN_SOURCE data:').strip())
@@ -363,6 +362,8 @@ class RuntimeManager:
 
     def unload(self, model_id):
         with self._state_lock:
+            if self._active and self._active['id'] != model_id:
+                raise ValueError('The loaded model changed. Reopen the model picker before unloading.')
             if self._preparation.locked() or (self._generation.locked() or self._context) and not self._automatic_memory:
                 raise RuntimeError('Finish or stop the active model request before unloading.')
             if self._active and self._active['id'] == model_id:
@@ -537,9 +538,11 @@ class RuntimeManager:
         self._children.remove(child)
 
     def prepare(self, entry):
-        if not self._preparation.acquire(blocking=False):
-            raise RuntimeError('Another model runtime is being prepared')
         with self._state_lock:
+            if self._generation.locked():
+                raise RuntimeError('Wait for the current local response to finish')
+            if not self._preparation.acquire(blocking=False):
+                raise RuntimeError('Another model runtime is being prepared')
             self._loading = (entry['id'], 'Loading model…')
         try:
             return self._prepare(entry)
@@ -789,7 +792,7 @@ class RuntimeManager:
             active = self._active
             if automatic and (not active or active['id'] != entry['id'] or any(child.poll() is not None for child in self._children)):
                 raise RuntimeError('Memory capture was skipped because the local model is unloaded.')
-            if not active or active['id'] != entry['id'] or not self._generation.acquire(blocking=False):
+            if not active or active['id'] != entry['id'] or self._preparation.locked() or not self._generation.acquire(blocking=False):
                 raise RuntimeError('The local model is already generating or was unloaded. Retry when it is ready.')
             self._automatic_memory = automatic
             selected = self._context if self._context and self._context['modelId'] == entry['id'] else None

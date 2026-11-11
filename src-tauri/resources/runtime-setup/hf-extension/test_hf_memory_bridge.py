@@ -21,6 +21,45 @@ def automatic_capture():
 
 
 class AutomaticMemoryRuntimeTests(unittest.TestCase):
+    def test_a_rejected_model_load_does_not_destroy_the_current_generating_worker(self):
+        with tempfile.TemporaryDirectory() as folder:
+            manager = RuntimeManager(folder, folder)
+            manager._active = {'id': 'lfm'}
+            manager._generation.acquire()
+            try:
+                with self.assertRaisesRegex(RuntimeError, 'response to finish'):
+                    manager.prepare({'id': 'dory'})
+                self.assertEqual(manager._active, {'id': 'lfm'})
+                self.assertFalse(manager._preparation.locked())
+            finally:
+                manager._generation.release()
+
+    def test_unload_cannot_report_success_for_a_different_loaded_model(self):
+        with tempfile.TemporaryDirectory() as folder:
+            manager = RuntimeManager(folder, folder)
+            manager._active = {'id': 'lfm'}
+            with self.assertRaisesRegex(ValueError, 'loaded model changed'):
+                manager.unload('dory')
+            self.assertEqual(manager._active['id'], 'lfm')
+
+    def test_effort_instruction_does_not_turn_memory_capture_into_an_ordinary_chat(self):
+        payload = automatic_capture()
+        payload['messages'].insert(0, {'role': 'system', 'content': 'Answer directly, without optional deliberation or redundant analysis. Complete the requested work and keep required checks.'})
+        self.assertTrue(automatic_memory_request(payload))
+        with tempfile.TemporaryDirectory() as folder:
+            manager = RuntimeManager(folder, folder)
+            manager._active = {'id': payload['model'], 'mode': 'echo'}
+            manager.set_context(payload['model'], 'fixture-chat', 'fixture-request')
+            def capture(active, request, conversation):
+                self.assertTrue(manager._automatic_memory)
+                self.assertEqual(conversation, 'fixture-chat')
+                manager.unload(payload['model'])
+                return b'{"choices":[{"message":{"content":"{\\"memories\\":[]}"}}]}', 'application/json'
+            with patch.object(manager, '_capture_memory', capture):
+                manager.chat({'id': payload['model']}, payload)
+            self.assertIsNone(manager._active)
+            self.assertFalse(manager._generation.locked())
+
     def test_native_capture_does_not_start_an_unloaded_model(self):
         payload = automatic_capture()
         self.assertTrue(automatic_memory_request(payload))
@@ -111,6 +150,15 @@ class MemoryBridgeTests(unittest.TestCase):
 
     def descriptor(self):
         return {"status": "running", "backendPort": 19001, "echoPort": 19003, "authorization": "Bearer caller-secret"}
+
+    def test_busy_unload_returns_its_actionable_conflict_instead_of_generic_bridge_failure(self):
+        self.state.entry = lambda *_args, **_kwargs: {'id': 'fixture'}
+        def unload(_model):
+            raise RuntimeError('Finish or stop the active model request before unloading.')
+        self.state.runtime = types.SimpleNamespace(unload=unload)
+        status, body = self.request('/runtime/unload', {'id': 'fixture'})
+        self.assertEqual(status, 409)
+        self.assertIn('Finish or stop', body['error'])
 
     def test_authenticated_routes_keep_one_helper_and_never_forward_ui_authorization(self):
         status, _ = self.request("/api/memory/recover", {"conversationId": "chat", "userEntryId": 7,

@@ -61,6 +61,7 @@ index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement
 index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
 index+='\nconst $speechControlsStyle=document.createElement("style");$speechControlsStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/speech-controls.css'),'utf8'))+';document.head.appendChild($speechControlsStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
+app=require('./model-selection-patches.cjs')(app,{editFunction,replaceOnce});
 app=replaceOnce(app,'className:`client-dot client-${a.client.toLowerCase().replaceAll(" ","-")}`',
   'className:`client-dot client-${a.client.toLowerCase().replaceAll(" ","-")}`,style:/^(active|running|complete|completed|stop)$/.test(a.status)?{background:"var(--green)"}:void 0');
 app=replaceOnce(app,'i.jsx(l8,{conversations:l.conversations,',

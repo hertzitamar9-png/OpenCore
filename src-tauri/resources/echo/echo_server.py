@@ -232,9 +232,16 @@ CHROME_LAUNCH_COMMAND = r'''$ErrorActionPreference = 'Stop'
 $chromeCandidates = @(
     (Get-ItemProperty -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe' -ErrorAction SilentlyContinue).'(default)'
     (Get-ItemProperty -LiteralPath 'HKLM:\Software\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe' -ErrorAction SilentlyContinue).'(default)'
-    (Join-Path $env:LOCALAPPDATA 'Google\Chrome\Application\chrome.exe')
-    (Join-Path $env:ProgramFiles 'Google\Chrome\Application\chrome.exe')
 )
+foreach ($chromeDirectory in @(
+    [Environment]::GetFolderPath('LocalApplicationData')
+    [Environment]::GetFolderPath('ProgramFiles')
+    [Environment]::GetFolderPath('ProgramFilesX86')
+)) {
+    if (-not [string]::IsNullOrWhiteSpace($chromeDirectory)) {
+        $chromeCandidates += Join-Path $chromeDirectory 'Google\Chrome\Application\chrome.exe'
+    }
+}
 $chromeExe = $chromeCandidates | Where-Object { $_ -is [string] -and (Test-Path -LiteralPath $_ -PathType Leaf) } | Select-Object -First 1
 if (-not $chromeExe) { throw 'Google Chrome was not found. No launch was confirmed.' }
 Start-Process -FilePath $chromeExe -ArgumentList @('--new-window', 'about:blank')
@@ -354,6 +361,18 @@ def chrome_launch_step(question, tools, history, user_history=()):
     desktop = tool_name('desktop_use')
 
     def call(name, **arguments):
+        properties = next((entry.get('function', {}).get('parameters', {}).get('properties', {})
+                           for entry in tools or [] if entry.get('function', {}).get('name') == name), {})
+        explanations = {
+            'find_apps': ('You asked me to open Chrome. I am finding its installed Windows application ID.', 'Find Google Chrome'),
+            'launch_app': ('Windows returned Chrome in its installed app list. I am launching that exact application.', 'Open Google Chrome'),
+            'list': ('Windows accepted the Chrome launch. I am checking the open windows to verify it is visible.', 'Verify Chrome window'),
+        }
+        explanation, purpose = explanations[arguments['action']]
+        if 'explanation' in properties:
+            arguments['explanation'] = explanation
+        if 'purpose' in properties:
+            arguments['purpose'] = purpose
         return {'role': 'assistant', 'content': None, 'tool_calls': [{
             'id': 'call_' + uuid.uuid4().hex, 'type': 'function', 'index': 0,
             'function': {'name': name, 'arguments': json.dumps(arguments)}}]}
@@ -361,10 +380,12 @@ def chrome_launch_step(question, tools, history, user_history=()):
     def reply(text):
         return {'role': 'assistant', 'content': text}
 
+    # A standalone app launch needs no screen capture or input injection.
+    # Use the declared terminal under its normal approval policy when available.
+    terminal = next((declared[key] for key in ('exec_command', 'functions__exec_command') if key in declared), None)
+    if terminal:
+        return terminal_chrome_step(terminal, history)
     if not system:
-        terminal = next((key for key in ('exec_command', 'functions__exec_command') if key in declared), None)
-        if terminal:
-            return terminal_chrome_step(terminal, history)
         return reply('Use the Computer use skill and enable computer access in Settings to open Chrome on your PC.')
 
     requests = {}
@@ -384,7 +405,10 @@ def chrome_launch_step(question, tools, history, user_history=()):
             continue
         action = requests[message['tool_call_id']]
         try:
-            value = json.loads(message.get('content') or '{}')
+            raw = message.get('content') or '{}'
+            if isinstance(raw, str):
+                raw = re.sub(r'^Wall time: \d+(?:\.\d+)? seconds\r?\nOutput:\r?\n', '', raw, count=1)
+            value = json.loads(raw)
         except (TypeError, ValueError):
             value = None
         if isinstance(value, dict) and not value.get('isError'):
@@ -463,6 +487,27 @@ def is_legacy_harness_auxiliary_turn(message):
     return (isinstance(source, dict) and set(source) == {'HUMAN_SOURCE', 'deleted_keys', 'existing', 'has_project'}
             and isinstance(source['HUMAN_SOURCE'], str) and isinstance(source['deleted_keys'], list)
             and isinstance(source['existing'], list) and isinstance(source['has_project'], bool))
+
+
+def automatic_memory_messages(payload):
+    """Recognize the fixed native extractor, including its effort preamble."""
+    messages = payload.get('messages')
+    if payload.get('stream') or payload.get('tools') or not isinstance(messages, list) or not 2 <= len(messages) <= 4:
+        return None
+    if any(not isinstance(m, dict) or not isinstance(m.get('content'), str) for m in messages):
+        return None
+    if messages[-1].get('role') != 'user' or any(m.get('role') not in ('system', 'developer') for m in messages[:-1]):
+        return None
+    instructions = next((m for m in messages[:-1] if m['content'].strip().startswith(
+        'Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only.')
+        and m['content'].strip().endswith('Do not emit reasoning, markdown, tools or commentary.')), None)
+    if not instructions:
+        return None
+    try:
+        data = json.loads(messages[-1]['content'].strip().removeprefix('HUMAN_SOURCE data:').strip())
+    except (ValueError, RecursionError):
+        return None
+    return [instructions, messages[-1]] if isinstance(data, dict) and isinstance(data.get('HUMAN_SOURCE'), str) else None
 
 
 def harness_checkpoint_marker(message):
@@ -2111,6 +2156,9 @@ class Handler(BaseHTTPRequestHandler):
         conversation = _conversation_id(payload, self.headers)
         payload.pop('_echo_upstream_deadline', None)
         payload.pop('_echo_buffer_preview', None)
+        memory_messages = automatic_memory_messages(payload)
+        if memory_messages:
+            return self._automatic_memory_capture(payload, memory_messages, conversation)
         payload = apply_generation_settings(self.state.archives.directory.parent / 'generation-settings.json', conversation, payload)
         messages = payload.get("messages") or []
         question = _last_user_message(messages)
@@ -2148,6 +2196,43 @@ class Handler(BaseHTTPRequestHandler):
         with self.state._backend_auxiliary_lock:
             with self.state._backend_lock:
                 return self._legacy_chat(payload, question, conversation, settings, app_owns_timeline)
+
+    def _automatic_memory_capture(self, payload, messages, conversation):
+        # No live transcript, previews, ECHO recall, effort override, or review
+        # loop belongs to this post-reply JSON task. Native code validates and
+        # persists its sourced records separately.
+        schema = {'type': 'object', 'required': ['memories'], 'additionalProperties': False, 'properties': {
+            'memories': {'type': 'array', 'maxItems': 5, 'items': {'type': 'object',
+                'required': ['key', 'kind', 'scope', 'quote'], 'additionalProperties': False,
+                'properties': {'key': {'type': 'string'}, 'kind': {'type': 'string', 'enum': ['fact', 'lesson']},
+                    'scope': {'type': 'string', 'enum': ['global', 'project', 'conversation']}, 'quote': {'type': 'string'}}}}}}
+        body = {'model': payload.get('model'), 'messages': messages, 'stream': False, 'max_tokens': 1024,
+                'temperature': 0, 'reasoning_effort': 'none', 'reasoning_budget_tokens': -1, 'reasoning_min_tokens': 0,
+                'chat_template_kwargs': {'enable_thinking': False}, 'cache_prompt': False,
+                'response_format': {'type': 'json_object', 'schema': schema},
+                '_echo_upstream_deadline': time.monotonic() + 15}
+        with self.state._backend_auxiliary_lock:
+            try:
+                with self.state._backend_lock:
+                    with self._upstream('/v1/chat/completions', body, stream=False) as response:
+                        raw = response.read(128 * 1024 + 1)
+                    if len(raw) > 128 * 1024:
+                        raise ValueError('The local memory response was too large.')
+                    result = json.loads(raw)
+                    choice = result['choices'][0]
+                    message = choice.get('message') or {}
+                    if (choice.get('finish_reason') != 'stop' or message.get('tool_calls')
+                            or message.get('reasoning_content') or message.get('reasoning')
+                            or not isinstance(message.get('content'), str)):
+                        raise ValueError('The local model did not complete the memory extraction.')
+                    records = json.loads(message['content'])
+                    if not isinstance(records, dict) or not isinstance(records.get('memories'), list):
+                        raise ValueError('The local model did not return memory records.')
+                return self._send_json(200, result)
+            except (ValueError, KeyError, IndexError, TypeError, urllib.error.URLError) as error:
+                return self._send_json(502, {'error': {'message': str(error)}})
+            finally:
+                self.state.invalidate_backend_session(conversation)
 
     def _legacy_chat(self, payload, question, conversation, settings, app_owns_timeline):
         messages = payload.get("messages") or []

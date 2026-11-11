@@ -136,7 +136,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-model-view-cache.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --test test-mobile-host.cjs test-hub-reconnect.cjs
+          node --test test-mobile-host.cjs test-hub-reconnect.cjs test-model-runtime-transitions.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-connector-consent.cjs test-model-admission.cjs test-model-modes.cjs test-group-worker.cjs ../src-tauri/resources/agent/group-tools.test.mjs ../src-tauri/resources/agent/group-runners.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

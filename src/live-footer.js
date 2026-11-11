@@ -91,7 +91,7 @@ function LiveModelActivity({conversationId, active, entries=[], fallback}) {
       reasoning:reasoning&&!isSaved(reasoning,true)?reasoning:null};
   }).filter(record=>record.text||record.reasoning);
   const blocks=visible.map(record=>h('div',{className:'assistant-response live-model-preview',key:record.id},
-      record.reasoning?h('details',{className:'assistant-disclosure kind-thinking reasoning-disclosure',open:true},
+      record.reasoning?h('details',{className:'assistant-disclosure kind-thinking reasoning-disclosure',open:active&&record.id===preview?.id},
         h('summary',null,h('span',{'aria-hidden':true},'◇'),h('strong',null,active&&record.id===preview?.id?'Reasoning':'Reasoned'),
           h('span',null,'Streamed model reasoning')),
         h('div',{className:'reasoning-output-body'},h('p',{className:'reasoning-text',style:{whiteSpace:'pre-wrap'}},record.reasoning))):null,
@@ -101,8 +101,7 @@ function LiveModelActivity({conversationId, active, entries=[], fallback}) {
     h('progress',{'aria-label':'Reading prompt and context',value:progress.processed,max:progress.total}),
     `${progress.processed.toLocaleString()} / ${progress.total.toLocaleString()} tokens · ${Math.floor(100*progress.processed/progress.total)}%`):null;
   return h(React.Fragment,null,
-    active?blocks:blocks.length>0&&h('details',{className:'assistant-disclosure kind-thinking'},
-      h('summary',null,h('span',{'aria-hidden':true},'◇'),h('strong',null,'Uncommitted model output')),...blocks),
+    ...blocks,
     active?(label?h('div',{className:'generation-state',role:'status'},h('span',{className:'generation-pulse'}),label):fallback):null,
     active&&promptStatus);
 }
