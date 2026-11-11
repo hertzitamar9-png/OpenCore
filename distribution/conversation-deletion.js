@@ -69,15 +69,16 @@ async function $executeChatDeletion(plan,progress=()=>{}){
   finally{$chatDeleting=false;if(deleted){globalThis.dispatchEvent?.(new CustomEvent('opencore-connector-history-changed'));globalThis.dispatchEvent?.(new CustomEvent('opencore-chats-deleted'));}}
 }
 function $ChatDeletionControl({source='all',onDeleted}){
-  const h=K.createElement,[open,setOpen]=K.useState(false),[selected,select]=K.useState('all'),[plan,setPlan]=K.useState(null),[reading,setReading]=K.useState(false),[working,setWorking]=K.useState(false),[message,setMessage]=K.useState(''),[count,setCount]=K.useState(0),dialog=K.useRef(null);
+  const h=K.createElement,[open,setOpen]=K.useState(false),[selected,select]=K.useState('all'),[plan,setPlan]=K.useState(null),[reading,setReading]=K.useState(false),[working,setWorking]=K.useState(false),[message,setMessage]=K.useState(''),[confirmation,setConfirmation]=K.useState(''),[count,setCount]=K.useState(0),dialog=K.useRef(null);
+  const phrase=selected==='all'?'DELETE ALL CHATS':'DELETE '+(plan?.items.length||0)+' CHATS';
   K.useEffect(()=>{const element=dialog.current;if(open){element.showModal?element.showModal():element.setAttribute('open','');}else element.close?.();},[open]);
   K.useEffect(()=>{
-    if(!open)return;let current=true;setPlan(null);setReading(true);setMessage('');
+    if(!open)return;let current=true;setPlan(null);setReading(true);setMessage('');setConfirmation('');
     $chatDeletionPlan(selected).then(value=>{if(current)setPlan(value);}).catch(error=>{if(current)setMessage(String(error.message||error));}).finally(()=>{if(current)setReading(false);});
     return()=>{current=false;};
   },[open,selected]);
   async function remove(){
-    if(!plan||reading||working)return;setWorking(true);setCount(0);setMessage('');
+    if(!plan||reading||working||confirmation!==phrase)return;setWorking(true);setCount(0);setMessage('');
     try{const result=await $executeChatDeletion(plan,value=>setCount(value.deleted));setMessage('Deleted '+$chatCount(result.deleted)+(result.deletedProjects?' and '+$chatProjectCount(result.deletedProjects):'')+' from OpenCore and ECHO.');setPlan(null);onDeleted?.();}
     catch(error){setMessage(String(error.message||error));setPlan(null);if(error.deletedCount)onDeleted?.();}
     finally{setWorking(false);}
@@ -90,9 +91,10 @@ function $ChatDeletionControl({source='all',onDeleted}){
       h('label',null,'Chats to delete',h('select',{'aria-label':'Chats to delete',value:selected,disabled:working,onChange:event=>select(event.target.value)},...Object.entries($chatSources).map(([key,label])=>h('option',{key,value:key},label)))),
       h('p',null,'Delete saved chats, their images, ECHO history and their empty project groups from OpenCore. Original transcripts and project files stay in place.'),
       reading?h('p',{role:'status'},'Reading all saved chats…'):plan?h('p',{role:'status'},plan.items.length+' chats and up to '+plan.projects.length+' project groups selected. This includes every page, regardless of the current search.'):null,
+      plan&&!working?h('label',null,'Type '+phrase+' to confirm',h('input',{type:'text','aria-label':'Deletion confirmation',autoComplete:'off',spellCheck:false,value:confirmation,disabled:reading,onChange:event=>setConfirmation(event.target.value),style:{width:'100%',padding:'10px',boxSizing:'border-box'}})):null,
       working?h(K.Fragment,null,h('progress',{max:plan.items.length||1,value:count,'aria-label':'Deleting conversations'}),h('p',{role:'status'},'Deleting '+count+' of '+plan.items.length+' chats…')):null,
       message?h('p',{role:'status'},message):null,
-      h('footer',null,h('button',{type:'button',disabled:working,onClick:()=>setOpen(false)},plan?'Cancel':'Done'),plan?h('button',{type:'button',className:'danger',disabled:reading||working||!plan.items.length,onClick:()=>void remove()},working?'Deleting…':'Delete '+$chatCount(plan.items.length)):null)));
+      h('footer',null,h('button',{type:'button',disabled:working,onClick:()=>setOpen(false)},plan?'Cancel':'Done'),plan?h('button',{type:'button',className:'danger',disabled:reading||working||!plan.items.length||confirmation!==phrase,onClick:()=>void remove()},working?'Deleting…':'Delete '+$chatCount(plan.items.length)):null)));
 }
 globalThis.__opencoreChatDeletion={plan:$chatDeletionPlan,execute:$executeChatDeletion,Control:$ChatDeletionControl,clear:async source=>{
   const plan=await $chatDeletionPlan(source),result=await $executeChatDeletion(plan);
