@@ -1,7 +1,7 @@
 // Keep the desktop rail in one column while retaining every studio.
 export function createNavigationItems(React, GroupEntry) {
   const h = React.createElement;
-  const studioIds = new Set(['learning', 'music', 'assets', 'media']);
+  const studioIds = new Set(['learning', 'music', 'assets', 'media', 'audio']);
   return function NavigationItems({ items, active, onChange }) {
     const [open, setOpen] = React.useState(false);
     const anchor = React.useRef(null);

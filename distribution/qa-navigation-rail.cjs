@@ -48,7 +48,7 @@ code+=String.raw`
    await page.evaluate(()=>window.addEventListener('opencore-open-groups',()=>window.groupOpened=true,{once:true}));
    await page.getByRole('button',{name:'Open Chat Core',exact:true}).click();if(!await page.evaluate(()=>window.groupOpened))throw Error('Chat Core entry failed');
    if(await page.getByRole('dialog',{name:'Chat Core',exact:true}).count())throw Error('Chat Core must not open a modal');
-   for(const [label,id] of [['Learning Studio','learning'],['Music Studio','music'],['Game Dev Studio','assets'],['Media Studio','media']]){
+   for(const [label,id] of [['Learning Studio','learning'],['Music Studio','music'],['Game Dev Studio','assets'],['Media Studio','media'],['Audio Studio','audio']]){
     await page.getByRole('button',{name:'Studios',exact:true}).click();
     await page.getByRole('menu',{name:'Studios'}).getByRole('menuitem',{name:label,exact:true}).click();
     if(await page.evaluate(()=>window.selected)!==id)throw Error(label+' was not opened from Studios');

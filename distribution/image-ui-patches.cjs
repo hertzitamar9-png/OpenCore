@@ -66,8 +66,6 @@ module.exports=function applyImageUi(app,{editFunction,replaceOnce}){
   app+='\nglobalThis.__opencorePromptService=body=>$hubRequest("/prompts/improve",body);\n';
   app+='\nglobalThis.__opencoreImageHub={list:async()=>(await $hubRequest("/images/jobs")).jobs||[],generate:request=>$hubRequest("/images/generate",{request}),preview:(id,path)=>$hubRequest("/images/preview",{id,path}),cancel:id=>$hubRequest("/images/cancel",{id}),prepareUpscaler:()=>$hubRequest("/images/upscaler/prepare",{})};\n';
   app+='\n'+fs.readFileSync(path.join(__dirname,'image-conversation-ui.js'),'utf8')+'\n';
-  const css=fs.readFileSync(path.join(__dirname,'../src/ImageGenerationPanel.css'),'utf8');
-  app+='\nconst $imagePanelStyle=document.createElement("style");$imagePanelStyle.textContent='+JSON.stringify(css)+';document.head.appendChild($imagePanelStyle);\n';
   return app;
 };
 module.exports.featureInstallerSource=function(){

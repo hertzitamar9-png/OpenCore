@@ -211,6 +211,7 @@ body.oc-chats-open .conversation-list .conversation-scroll{padding-bottom:16px!i
     {label:'Music Studio',section:'Music Studio'},
     {label:'Game Dev Studio',section:'Game Dev Studio'},
     {label:'Media Studio',section:'Media Studio'},
+    {label:'Audio Studio',section:'Audio Studio'},
     {label:'Connectors',section:'Connectors'},
     {label:'Settings',section:'Settings'},
     {label:'Troubleshooting',section:'Troubleshooting'},

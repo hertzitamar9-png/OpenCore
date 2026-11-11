@@ -1,0 +1,295 @@
+/* Shared look for every studio (Learning, Music, Game Dev, Media, Audio).
+   Colors come from the platform theme tokens, so light, dark and accent choices all follow the user's settings. */
+:is(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio){
+  --st-page:var(--theme-canvas,var(--bg,#0b0d11));
+  --st-card:var(--theme-panel,var(--surface,#111419));
+  --st-field:var(--theme-raised,var(--surface-2,#171a20));
+  --st-edge:var(--theme-border,var(--line,#343a43));
+  --st-soft:var(--theme-border-soft,var(--line-soft,#282d35));
+  --st-ink:var(--theme-ink,var(--text,#edf0f3));
+  --st-muted:var(--theme-muted,var(--muted,#9ba3ad));
+  --st-accent:var(--platform-accent,#4389d0);
+  --st-on-accent:var(--platform-accent-text,#fff);
+  --st-accent-soft:color-mix(in srgb,var(--st-accent) 15%,transparent);
+  --st-accent-line:color-mix(in srgb,var(--st-accent) 60%,var(--st-edge));
+  --st-ok:var(--theme-success-ink,var(--green,#35d38a));
+  --st-ok-bg:var(--theme-success-surface,color-mix(in srgb,var(--st-ok) 9%,var(--st-card)));
+  --st-ok-line:var(--theme-success-border,color-mix(in srgb,var(--st-ok) 45%,var(--st-edge)));
+  --st-warn:var(--theme-warning-ink,var(--amber,#f5ad32));
+  --st-warn-bg:var(--theme-warning-surface,color-mix(in srgb,var(--st-warn) 9%,var(--st-card)));
+  --st-warn-line:var(--theme-warning-border,color-mix(in srgb,var(--st-warn) 45%,var(--st-edge)));
+  --st-bad:var(--theme-error-ink,var(--red,#ff646d));
+  --st-bad-bg:var(--theme-error-surface,color-mix(in srgb,var(--st-bad) 8%,var(--st-card)));
+  --st-bad-line:var(--theme-error-border,color-mix(in srgb,var(--st-bad) 45%,var(--st-edge)));
+  --st-shadow:0 1px 2px var(--theme-shadow-soft,#0000001f),0 6px 18px var(--theme-shadow-soft,#00000014);
+  --st-font:calc(14px * var(--ui-scale,1));
+  --st-small:calc(12.5px * var(--ui-scale,1));
+  color:var(--st-ink);
+  font-size:var(--st-font);
+  box-sizing:border-box;
+}
+:is(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio) *{box-sizing:border-box}
+
+/* ---------- page frame ---------- */
+.section-main>.audio-studio{height:100%;min-width:0;min-height:0}
+.section-main :is(.game-dev-studio,.media-studio,.audio-studio){
+  display:grid;grid-template-columns:minmax(0,1180px);justify-content:center;align-content:start;grid-auto-rows:max-content;gap:20px;
+  overflow:auto;padding:28px clamp(16px,3vw,44px) 48px;background:var(--st-page)}
+.section-main .music-studio:not(.music-studio-embedded){padding:28px clamp(16px,3vw,44px) 32px;gap:18px;background:var(--st-page)}
+.section-main .learning-studio{padding:24px clamp(16px,3vw,44px) 20px;gap:16px;background:var(--st-page)}
+.game-dev-studio>*,.media-studio>*,.audio-studio>*{min-width:0;margin:0}
+
+/* ---------- headers ---------- */
+:is(.game-dev-studio,.media-studio,.music-studio)>header,.learning-heading,.studio-header{display:flex;align-items:flex-start;gap:14px}
+:is(.game-dev-studio,.media-studio,.music-studio)>header h1,.learning-heading h1,.studio-header h1{
+  margin:0;font-size:calc(24px * var(--ui-scale,1));line-height:1.2;font-weight:650;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+:is(.game-dev-studio,.media-studio,.music-studio)>header p,.learning-heading p,.studio-header p{
+  margin:6px 0 0;max-width:72ch;color:var(--st-muted);font-size:var(--st-font);line-height:1.55}
+:is(.game-dev-studio,.media-studio)>header{flex-direction:column;gap:0}
+.music-studio>header{justify-content:space-between}
+.music-studio>header>div:last-child{gap:8px}
+.studio-header-icon{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;color:var(--st-accent);background:var(--st-accent-soft);border:1px solid var(--st-accent-line)}
+
+/* ---------- buttons (soft defaults that specific components can still override) ---------- */
+:where(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio) button{
+  min-height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--st-edge);background:var(--st-field);color:var(--st-ink);font-weight:500;line-height:1.25}
+:where(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio) button:hover:not(:disabled){background:color-mix(in srgb,var(--st-ink) 7%,var(--st-field));border-color:var(--st-accent-line)}
+:where(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio) button:focus-visible{outline:2px solid var(--st-accent);outline-offset:2px}
+:where(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio) :is(button.primary,.media-generate,.studio-submit-action,.image-generate-button),
+.music-studio-start>button{
+  min-height:40px;padding:0 18px;border-color:var(--st-accent);background:var(--st-accent);color:var(--st-on-accent);font-weight:600}
+:where(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio) :is(button.primary,.media-generate,.studio-submit-action,.image-generate-button):hover:not(:disabled),
+.music-studio-start>button:hover:not(:disabled){background:color-mix(in srgb,var(--st-accent) 86%,var(--st-ink));border-color:var(--st-accent);color:var(--st-on-accent)}
+
+/* ---------- segmented tabs ---------- */
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(.learning-tabs,.model-category-tabs,.studio-tabs,.image-mode-tabs){
+  display:flex;flex-wrap:wrap;gap:4px;width:fit-content;max-width:100%;margin:0;padding:4px;border:1px solid var(--st-edge);border-radius:11px;background:var(--st-card)}
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(.learning-tabs,.model-category-tabs,.studio-tabs,.image-mode-tabs)>button{
+  flex:none;min-height:32px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--st-muted);font-weight:500;box-shadow:none}
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(.learning-tabs,.model-category-tabs,.studio-tabs,.image-mode-tabs)>button:hover:not(:disabled){background:var(--st-field);border-color:transparent;color:var(--st-ink)}
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(.learning-tabs,.model-category-tabs,.studio-tabs,.image-mode-tabs)>button:is([aria-selected=true],[aria-pressed=true]){
+  background:var(--st-accent-soft);border-color:var(--st-accent-line);color:var(--st-ink);font-weight:600}
+.learning-studio .learning-mode{gap:4px;padding:4px;border:1px solid var(--st-edge);border-radius:11px;background:var(--st-field);width:fit-content;max-width:100%}
+.learning-studio .learning-mode>button{min-height:32px;border-color:transparent;background:transparent;color:var(--st-muted)}
+.learning-studio .learning-mode>button[aria-pressed=true]{background:var(--st-accent-soft);border-color:var(--st-accent-line);color:var(--st-ink);box-shadow:none}
+
+/* ---------- cards ---------- */
+:is(.learning-goal-card,.learning-card,.learning-assistant-chat,.media-form,.media-history,.studio-form,.studio-jobs,.audio-card,.audio-panel,.audio-models),
+:is(.game-dev-studio,.media-studio) .image-generation-panel,
+.game-dev-studio>details{
+  border:1px solid var(--st-edge);border-radius:14px;background:var(--st-card);box-shadow:var(--st-shadow);color:var(--st-ink)}
+.section-main :is(.media-form,.media-history,.studio-form,.studio-jobs,.learning-goal-card,.learning-card){padding:22px}
+:is(.game-dev-studio,.media-studio) .image-generation-panel{padding:22px;gap:14px}
+:is(.media-form,.media-history,.studio-form,.studio-jobs,.learning-card,.audio-card) :is(h2,h3),:is(.game-dev-studio,.media-studio) .image-generation-panel h3{
+  margin:0;font-size:calc(16px * var(--ui-scale,1));font-weight:600;line-height:1.3}
+:is(.media-form,.media-history,.studio-form,.studio-jobs)>p,:is(.game-dev-studio,.media-studio) .image-generation-panel>p{margin:0;color:var(--st-muted);line-height:1.55}
+.section-main .studio-form{margin:0;gap:16px 18px}
+.media-history>header,.studio-jobs>header{align-items:center}
+.media-history>header button,.studio-jobs>header button{min-height:32px;padding:0 10px}
+.media-job,.studio-job{border-top-color:var(--st-soft)}
+.game-dev-studio>details{padding:0;box-shadow:none}
+.game-dev-studio>details>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:14px 18px;font-weight:600;border-radius:14px}
+.game-dev-studio>details>summary::-webkit-details-marker{display:none}
+.game-dev-studio>details>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--st-muted);border-bottom:2px solid var(--st-muted);transform:rotate(-45deg);transition:transform .15s}
+.game-dev-studio>details[open]>summary::before{transform:rotate(45deg)}
+.game-dev-studio>details>summary:hover{background:var(--st-field)}
+.game-dev-studio>details[open]>summary{border-bottom:1px solid var(--st-soft);border-radius:14px 14px 0 0}
+.game-dev-studio>details>:not(summary){margin:16px;box-shadow:none}
+.game-dev-studio>details>.studio-form{border-color:var(--st-soft)}
+
+/* ---------- fields ---------- */
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(textarea,select:not(.themed-select),input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color])){
+  min-height:38px;padding:9px 12px;border:1px solid var(--st-edge);border-radius:9px;background:var(--st-field);color:var(--st-ink);font:inherit;line-height:1.45;transition:border-color .14s,box-shadow .14s}
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) select.themed-select{border:1px solid var(--st-edge);border-radius:9px;background:var(--st-field);color:var(--st-ink);min-height:38px}
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(textarea,select,input):focus{outline:none;border-color:var(--st-accent);box-shadow:0 0 0 3px var(--st-accent-soft)}
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) textarea{min-height:110px;resize:vertical}
+:is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(textarea,input)::placeholder{color:color-mix(in srgb,var(--st-muted) 80%,transparent)}
+:is(.media-form,.studio-form,.audio-studio,.learning-goal-card,.learning-card) label,:is(.game-dev-studio,.media-studio) .image-generation-panel label{
+  gap:6px;font-size:var(--st-small);font-weight:500;color:var(--st-muted)}
+:is(.media-form,.studio-form,.audio-studio,.learning-goal-card,.learning-card) label :is(input,select,textarea),:is(.game-dev-studio,.media-studio) .image-generation-panel label :is(input,select,textarea){font-size:var(--st-font)}
+:is(.media-form,.studio-form) :is(fieldset,.studio-options){border:1px solid var(--st-soft);border-radius:12px;padding:16px;margin:0}
+:is(.media-form,.studio-form) legend{padding:0 6px;font-weight:600;font-size:var(--st-small);color:var(--st-ink)}
+:is(.media-form,.studio-form) details{border-top:1px solid var(--st-soft);padding-top:12px}
+:is(.media-form,.studio-form,.learning-studio) summary{cursor:pointer;color:var(--st-ink);font-weight:500}
+.media-generate,.studio-submit-action{justify-self:start;padding:0 22px}
+:is(.media-form,.studio-form) :is(.media-queue-note,.studio-queue-note){color:var(--st-muted)}
+.studio-presets{border-color:var(--st-soft);border-radius:12px;background:var(--st-field)}
+
+/* ---------- model setup box in Media and Game Dev ---------- */
+.studio-model-setup{padding:16px 18px;border-color:var(--st-warn-line);border-radius:12px;background:var(--st-warn-bg);gap:10px}
+.studio-model-setup>span{display:none}
+.studio-model-setup-heading>strong{display:flex;align-items:center;gap:8px;font-size:var(--st-font)}
+.studio-model-setup-heading>strong::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--st-warn)}
+.studio-model-setup p{color:var(--st-ink)}
+.studio-model-setup-actions>a{color:var(--st-accent);text-decoration:none;font-size:var(--st-small)}
+.studio-model-setup-actions>a:hover{text-decoration:underline}
+.studio-model-setup .runtime-setup-controls{padding:10px 12px;border-color:var(--st-soft);border-radius:9px;background:var(--st-card)}
+.studio-model-setup .runtime-setup-controls small{font-size:var(--st-small)}
+
+/* ---------- messages ---------- */
+:is(.learning-studio,.music-studio,.game-dev-studio,.media-studio,.audio-studio) :is([role=alert],.learning-error,.studio-callout.is-error){
+  display:block;margin:0;padding:10px 14px;border:1px solid var(--st-bad-line);border-radius:10px;background:var(--st-bad-bg);color:var(--st-bad);font-size:var(--st-small);line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.learning-studio .learning-assistant-chat>.learning-assistant-error{display:flex;align-items:center;gap:10px;flex-wrap:wrap;white-space:normal;margin:10px;border:1px solid var(--st-bad-line);border-radius:10px;background:var(--st-bad-bg);color:var(--st-bad);font-size:var(--st-small)}
+.learning-studio .learning-assistant-error>span{flex:1;min-width:0}
+.learning-studio .learning-assistant-error>button{min-height:32px}
+.learning-studio .learning-assistant-chat>p{margin:0;padding:12px 16px;color:var(--st-muted)}
+.music-studio .model-library-note{padding:10px 14px;border:1px solid var(--st-soft);border-radius:10px;background:var(--st-card);font-size:var(--st-small);line-height:1.5}
+.studio-callout{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid var(--st-edge);border-radius:12px;line-height:1.5}
+.studio-callout.is-warning{border-color:var(--st-warn-line);background:var(--st-warn-bg)}
+.studio-callout.is-warning>svg{flex:none;color:var(--st-warn);margin-top:1px}
+.studio-callout strong{display:block}
+.studio-callout p{margin:4px 0 0}
+.studio-callout button{margin-top:12px}
+
+/* ---------- Learning Studio ---------- */
+.learning-heading{justify-content:space-between}
+.learning-heading>div:first-child{align-items:flex-start;flex-wrap:nowrap}
+.learning-summary>span{border-color:var(--st-edge);background:var(--st-card)}
+.learning-summary a{color:var(--st-accent)}
+.learning-assistant-chat{overflow:hidden}
+.learning-studio pre{background:var(--st-field);border-color:var(--st-soft)}
+.learning-status{border-color:var(--st-accent-line);background:var(--st-accent-soft)}
+
+/* ---------- Music Studio ---------- */
+.music-studio-start{margin:8px auto 0;width:min(100%,560px);flex:0 0 auto;padding:44px 28px;border:1px solid var(--st-edge);border-radius:16px;background:var(--st-card);box-shadow:var(--st-shadow)}
+.music-studio-start>svg{color:var(--st-accent);padding:10px;width:62px;height:62px;border-radius:16px;background:var(--st-accent-soft)}
+.music-studio-start h2{margin:0;font-size:calc(18px * var(--ui-scale,1))}
+.music-studio-start p{color:var(--st-muted)}
+.music-studio>button{align-self:flex-start}
+
+/* ---------- two columns on wide windows: work on the left, results on the right ---------- */
+@media (min-width:1180px){
+  .section-main .media-studio{grid-template-columns:minmax(0,800px) minmax(300px,390px)}
+  .media-studio>:is(header,.model-category-tabs){grid-column:1/-1}
+  .media-studio>.media-history{grid-column:2;grid-row:3;position:sticky;top:0;align-self:start;max-height:calc(100vh - 160px);overflow:auto}
+  .media-studio>:not(header):not(.model-category-tabs):not(.media-history){grid-column:1;grid-row:3}
+  .section-main .game-dev-studio{grid-template-columns:minmax(0,800px) minmax(300px,390px);grid-template-rows:auto auto auto auto 1fr}
+  .game-dev-studio>:is(header,.model-category-tabs){grid-column:1/-1}
+  .game-dev-studio>:not(header):not(.model-category-tabs):not(.studio-jobs){grid-column:1}
+  .game-dev-studio>.studio-jobs{grid-column:2;grid-row:3/6;align-self:start;position:sticky;top:0;max-height:calc(100vh - 160px);overflow:auto}
+}
+
+/* ---------- Audio Studio ---------- */
+.studio-chip{display:inline-flex;align-items:center;gap:6px;flex:none;padding:2px 9px;min-height:22px;border:1px solid var(--st-edge);border-radius:999px;background:var(--st-field);color:var(--st-muted);font-size:calc(11.5px * var(--ui-scale,1));font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.studio-chip.is-ready{color:var(--st-ok);background:var(--st-ok-bg);border-color:var(--st-ok-line)}
+.studio-chip.is-ready::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.studio-chip:is(.is-installing,.is-queued,.is-paused){color:var(--st-ink);background:var(--st-accent-soft);border-color:var(--st-accent-line)}
+.studio-chip.is-setup{color:var(--st-warn);background:var(--st-warn-bg);border-color:var(--st-warn-line)}
+.studio-chip:is(.is-blocked,.is-failed){color:var(--st-bad);background:var(--st-bad-bg);border-color:var(--st-bad-line)}
+.audio-studio>.studio-tabs{justify-self:start}
+.audio-studio-panel{min-width:0}
+.audio-studio-panel:focus-visible{outline:2px solid var(--st-accent);outline-offset:4px;border-radius:12px}
+.audio-layout{display:grid;grid-template-columns:minmax(220px,270px) minmax(0,1fr);gap:18px;align-items:start}
+.audio-models{padding:8px;position:sticky;top:0}
+.audio-models h2{margin:6px 10px 8px;font-size:calc(11.5px * var(--ui-scale,1));font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--st-muted)}
+.audio-models ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.audio-studio .audio-models button{width:100%;min-height:46px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border-color:transparent;background:transparent;text-align:left}
+.audio-studio .audio-models button:hover:not(:disabled){background:var(--st-field);border-color:transparent}
+.audio-studio .audio-models button[aria-current=true]{background:var(--st-accent-soft);border-color:var(--st-accent-line)}
+.audio-model-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.audio-panel{display:grid;gap:18px;align-content:start;padding:24px}
+.audio-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.audio-panel-head h2{margin:0;font-size:calc(19px * var(--ui-scale,1));font-weight:650;line-height:1.25}
+.audio-panel-head p{margin:5px 0 0;color:var(--st-muted);line-height:1.55}
+.audio-facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 20px;margin:0;padding:14px 16px;border-radius:11px;background:var(--st-field);font-size:var(--st-small);line-height:1.5}
+.audio-facts dt{color:var(--st-muted)}
+.audio-facts dd{margin:0;overflow-wrap:anywhere}
+.studio-step{display:grid;gap:12px}
+.studio-step>p{margin:0;line-height:1.55}
+.studio-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.studio-hint{margin:0;color:var(--st-muted);font-size:var(--st-small);line-height:1.55}
+.studio-progress-block{display:grid;gap:10px}
+.studio-progress-label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.studio-progress-label span{color:var(--st-muted);font-size:var(--st-small);font-variant-numeric:tabular-nums}
+.studio-progress,.studio-meter{position:relative;height:8px;border-radius:999px;background:var(--st-field);border:1px solid var(--st-soft);overflow:hidden}
+.studio-progress>i,.studio-meter>i{display:block;height:100%;border-radius:inherit;background:var(--st-accent);transition:width .4s ease}
+.studio-progress.is-indeterminate>i{width:35%;animation:studio-slide 1.4s ease-in-out infinite}
+.studio-meter{width:min(320px,100%);height:6px}
+.studio-meter>i{transition:width .15s linear}
+@keyframes studio-slide{from{transform:translateX(-110%)}to{transform:translateX(300%)}}
+.studio-empty{display:grid;justify-items:center;gap:10px;padding:52px 24px;text-align:center;border:1px dashed var(--st-edge);border-radius:14px;background:var(--st-card)}
+.studio-empty h2{margin:0;font-size:calc(17px * var(--ui-scale,1));font-weight:600}
+.studio-empty>p{margin:0;max-width:56ch;color:var(--st-muted);line-height:1.55}
+.studio-empty>.studio-actions{justify-content:center}
+.studio-spinner{width:24px;height:24px;border-radius:50%;border:2.5px solid var(--st-edge);border-top-color:var(--st-accent);animation:studio-spin .8s linear infinite}
+@keyframes studio-spin{to{transform:rotate(360deg)}}
+.studio-install-list{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px;width:min(100%,480px)}
+.studio-install-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px 10px 14px;border:1px solid var(--st-edge);border-radius:11px;background:var(--st-field);text-align:left}
+.studio-install-list li>span{display:grid;gap:2px;min-width:0}
+.studio-install-list small{color:var(--st-muted)}
+.audio-transcribe,.audio-more{display:grid;gap:16px}
+.audio-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.audio-studio .audio-toolbar label{display:flex;align-items:center;gap:10px}
+.audio-toolbar label{min-width:0;max-width:100%}
+.audio-toolbar select{width:auto;min-width:220px;max-width:100%}
+.audio-toolbar small{color:var(--st-muted);font-size:var(--st-small)}
+.audio-card{padding:22px}
+.audio-capture{display:grid;justify-items:center;gap:14px;padding:44px 24px;text-align:center;border-style:dashed;border-width:1.5px;box-shadow:none;transition:border-color .15s,background .15s}
+.audio-capture.is-dragging{border-color:var(--st-accent);background:var(--st-accent-soft)}
+.audio-capture-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.audio-studio .audio-capture-actions button{min-height:46px;padding:0 20px;border-radius:999px}
+.audio-studio .audio-capture-actions .audio-record{padding:0 26px;font-size:calc(15px * var(--ui-scale,1))}
+.audio-recording,.audio-busy{display:grid;justify-items:center;gap:12px}
+.audio-recording>strong{font-size:calc(20px * var(--ui-scale,1));font-variant-numeric:tabular-nums}
+.audio-busy small{color:var(--st-muted);max-width:48ch;line-height:1.5}
+.audio-rec-dot{width:14px;height:14px;border-radius:50%;background:var(--st-bad);box-shadow:0 0 0 0 var(--st-bad-bg);animation:studio-pulse 1.2s ease-in-out infinite}
+@keyframes studio-pulse{50%{opacity:.35}}
+.audio-result{display:grid;gap:12px}
+.audio-result>header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.audio-result>header small{color:var(--st-muted);font-size:var(--st-small)}
+.audio-studio .audio-result textarea{width:100%;min-height:180px;line-height:1.6}
+.audio-history h3{margin:0 0 8px;font-size:calc(11.5px * var(--ui-scale,1));font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--st-muted)}
+.audio-history ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.audio-studio .audio-history button{width:100%;min-height:0;display:grid;justify-items:start;gap:2px;padding:9px 12px;border-color:transparent;background:transparent;text-align:left}
+.audio-studio .audio-history button[aria-current=true]{background:var(--st-accent-soft);border-color:var(--st-accent-line)}
+.audio-history button>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--st-muted);font-size:var(--st-small);font-weight:400}
+.audio-more>.model-category-tabs{justify-self:start}
+/* The voice studio sits inside the model card here, so it drops its own frame and title. */
+.audio-studio .tts-studio{margin:0;padding:0;border:0;gap:16px}
+.audio-studio .tts-studio>div:first-child>h4{display:none}
+.audio-studio .tts-studio label{font-size:var(--st-small);color:var(--st-muted);font-weight:500}
+.audio-studio .tts-studio :is(textarea,select,input:not([type=checkbox]):not([type=range]):not([type=file])){border-radius:9px;border-color:var(--st-edge);background:var(--st-field);color:var(--st-ink);padding:9px 12px;font-size:var(--st-font)}
+.audio-studio .tts-studio textarea{min-height:130px;line-height:1.55}
+.audio-studio .tts-tag-group button{min-height:28px;padding:0 11px;border-radius:999px;font-size:var(--st-small)}
+.audio-studio .tts-reference{border-color:var(--st-edge);border-radius:11px;padding:14px}
+:is(.media-studio,.game-dev-studio,.audio-studio,.music-studio,.learning-studio) input[type=file]{max-width:100%;color:var(--st-muted);font:inherit;font-size:var(--st-small)}
+:is(.media-studio,.game-dev-studio,.audio-studio,.music-studio,.learning-studio) input[type=file]::file-selector-button{margin-right:10px;min-height:32px;padding:0 12px;border:1px solid var(--st-edge);border-radius:8px;background:var(--st-field);color:var(--st-ink);font:inherit;font-weight:600;cursor:pointer}
+:is(.media-studio,.game-dev-studio,.audio-studio,.music-studio,.learning-studio) input[type=file]::file-selector-button:hover{border-color:var(--st-accent-line);background:var(--st-accent-soft)}
+.audio-studio .tts-studio details{border-top-color:var(--st-soft)}
+.audio-studio .tts-job{border-color:var(--st-soft);border-radius:11px;background:var(--st-field)}
+.audio-studio .tts-meter{background:var(--st-field)}
+.audio-studio .tts-meter i{background:var(--st-accent)}
+.audio-studio .tts-notice{border-left-color:var(--st-warn);background:var(--st-warn-bg);border-radius:8px}
+
+/* ---------- narrow windows ---------- */
+@media (max-width:900px){
+  .audio-layout{grid-template-columns:minmax(0,1fr)}
+  .audio-models{position:static;padding:6px}
+  .audio-models h2{display:none}
+  .audio-models ul{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+  .audio-models li{flex:none}
+  .audio-studio .audio-models button{width:auto;max-width:240px}
+}
+@media (max-width:640px){
+  .section-main :is(.game-dev-studio,.media-studio,.audio-studio){padding:18px 14px 32px;gap:16px}
+  .section-main .music-studio:not(.music-studio-embedded){padding:18px 14px 24px}
+  .section-main .learning-studio{padding:14px 12px}
+  :is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(.learning-tabs,.model-category-tabs,.studio-tabs,.image-mode-tabs){flex-wrap:nowrap;overflow-x:auto;width:100%;scrollbar-width:none}
+  .section-main :is(.media-form,.media-history,.studio-form,.studio-jobs,.learning-goal-card,.learning-card,.audio-card,.audio-panel),
+  :is(.game-dev-studio,.media-studio) .image-generation-panel{padding:16px}
+  :is(.game-dev-studio,.media-studio,.music-studio)>header h1,.learning-heading h1,.studio-header h1{font-size:calc(20px * var(--ui-scale,1))}
+  .studio-header-icon{width:38px;height:38px}
+  .audio-panel-head{flex-direction:column;gap:8px}
+  .audio-facts{grid-template-columns:minmax(0,1fr);gap:2px}
+  .audio-facts dd{margin-bottom:8px}
+  .audio-toolbar label{flex:1 1 100%}
+  .audio-toolbar select{flex:1;min-width:0}
+  .audio-capture{padding:28px 16px}
+  :is(.learning-studio,.game-dev-studio,.media-studio,.audio-studio) :is(textarea,select,input){font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  .studio-progress.is-indeterminate>i{animation:none;width:100%;opacity:.45}
+  .studio-spinner{animation-duration:2.4s}
+  .audio-rec-dot{animation:none}
+  .studio-progress>i,.studio-meter>i,.audio-capture{transition:none}
+}

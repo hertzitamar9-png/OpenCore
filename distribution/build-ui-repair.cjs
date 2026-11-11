@@ -207,7 +207,7 @@ app=editFunction(app,'w8',text=>replaceOnce(text,
 app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
 // Keep independent shell assets in the companion bundle to fit the native App slot.
-const shellStyles=['menu-scroll.css','section-highlights.css','conversation-indicators.css','response-receipt.css']
+const shellStyles=['menu-scroll.css','section-highlights.css','conversation-indicators.css','response-receipt.css','ImageGenerationPanel.css','studio-ui.css']
   .map(name=>fs.readFileSync(path.join(root,'../src',name),'utf8')).join('\n');
 const shellFeatures='\n'+fs.readFileSync(path.join(root,'../src/menu-scroll.js'),'utf8').replace('export function ','function ')+
   '\nexport function installShellFeatures(){installMenuScrollGuard();const style=document.createElement("style");style.textContent='+JSON.stringify(shellStyles)+';document.head.appendChild(style);}\n';
@@ -221,12 +221,13 @@ app += '\nimport{createManualUpdatePolicy}from"./model-catalog-B8SfuDgQ.js";cons
 app += '\nimport{createPhononSpeech}from"./model-catalog-B8SfuDgQ.js";const $phononSpeech=createPhononSpeech($hubRequest,()=>$hubRefresh(true)),$PhononSpeechControls=$phononSpeech.createControls(p);\n';
 app += '\nimport{createManagedTts}from"./model-catalog-B8SfuDgQ.js";const $managedTts=createManagedTts($hubRequest,()=>$hubRefresh(true),()=>$hubState.catalog),$ManagedTtsControls=$managedTts.createControls(p);\n';
 app += '\nimport{createAppUpdatePreferences}from"./model-catalog-B8SfuDgQ.js";const{UpdatePreferences:$UpdatePreferences,markUpdateAttempt:$markUpdateAttempt,useUpdateSchedule:$useUpdateSchedule}=createAppUpdatePreferences(p);\n';
+app=require('./audio-studio-patches.cjs')(app,{editFunction,replaceOnce});
 app=require('./receipt-ui-patches.cjs')(app,{editFunction,replaceOnce});
 
 (async () => {
   const report = [];
   const speechCode='\n'+fs.readFileSync(path.join(root,'../src/phonon-speech.js'),'utf8');
-  const ttsCode='\n'+fs.readFileSync(path.join(root,'../src/managed-tts.js'),'utf8');
+  const ttsCode='\n'+fs.readFileSync(path.join(root,'../src/managed-tts.js'),'utf8')+require('./audio-studio-patches.cjs').catalogSource();
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
   const preferencesCode='\nconst $createAppUpdatePreferences=(()=>{'+fs.readFileSync(path.join(root,'../src/app-update-preferences.js'),'utf8').replace('export function ','function ')+';return createAppUpdatePreferences})();export{$createAppUpdatePreferences as createAppUpdatePreferences};\n';
