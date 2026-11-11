@@ -110,3 +110,8 @@
   outline: none !important;
   box-shadow: none !important;
 }
+
+/* Close uses the same hover highlight as minimize and maximize. */
+.window-titlebar .window-controls .window-close:hover {
+  background: var(--theme-highlight, #ffffff18) !important;
+}

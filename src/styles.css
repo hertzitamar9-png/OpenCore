@@ -767,7 +767,6 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 .window-controls button { flex:0 0 47px; width:47px; min-width:47px; height:35px; min-height:35px; padding:0; border:0; border-radius:0; background:transparent; color:var(--theme-ink,#cbd2df); }
 .window-controls button svg { display:block; width:14px; height:14px; flex:none; }
 .window-controls button:hover { background:var(--theme-highlight,#ffffff18) !important; border:0 !important; }
-.window-controls .window-close:hover { background:var(--theme-error-surface,#bd3348) !important; color:var(--theme-ink,white); }
 .window-controls button:focus-visible { outline:2px solid var(--theme-accent-border,#94c1ff); outline-offset:-3px; }
 .app-window-frame > .app-shell,.app-window-frame > .conversation-focus-shell { height:100%; }
 
