@@ -152,10 +152,16 @@ const server = http.createServer((request,response)=>{
   await dialog.getByRole('button',{name:'Delete 209 chats',exact:true}).waitFor();
   record('phone deletion dialog stays inside the viewport',await dialog.evaluate(element=>{const box=element.getBoundingClientRect();return box.left>=0&&box.right<=innerWidth&&box.top>=0&&box.bottom<=innerHeight;}));
   await dialog.getByLabel('Chats to delete').selectOption('codex');
+  record('source deletion stays disabled until the confirmation phrase is typed',await dialog.getByRole('button',{name:'Delete 1 chat',exact:true}).isDisabled());
+  await dialog.getByLabel('Deletion confirmation').fill('delete 1 chat');
+  record('a lowercase confirmation phrase does not enable deletion',await dialog.getByRole('button',{name:'Delete 1 chat',exact:true}).isDisabled());
+  await dialog.getByLabel('Deletion confirmation').fill('DELETE 1 CHAT');
   await dialog.getByRole('button',{name:'Delete 1 chat',exact:true}).click();
   await dialog.getByText('Deleted 1 chat from OpenCore and ECHO.',{exact:true}).waitFor();
   record('source deletion removes UUID Codex SDK chats while keeping Claude and OpenCore',await page.evaluate(()=>!fixture.native.some(row=>row.id==='uuid-codex')&&fixture.native.some(row=>row.id==='uuid-claude')&&fixture.native.some(row=>row.id==='uuid-local')));
   await dialog.getByLabel('Chats to delete').selectOption('all');
+  await dialog.getByRole('button',{name:'Delete 208 chats',exact:true}).waitFor();
+  await dialog.getByLabel('Deletion confirmation').fill('DELETE ALL CHATS');
   await dialog.getByRole('button',{name:'Delete 208 chats',exact:true}).click();
   await dialog.getByText('Deleted 208 chats from OpenCore and ECHO.',{exact:true}).waitFor();
   record('all-chat deletion covers every imported page and every source',await page.evaluate(()=>fixture.native.length===0&&Object.values(fixture.imported).every(rows=>rows.length===0)));

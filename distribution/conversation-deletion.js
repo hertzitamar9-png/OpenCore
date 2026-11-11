@@ -70,7 +70,7 @@ async function $executeChatDeletion(plan,progress=()=>{}){
 }
 function $ChatDeletionControl({source='all',onDeleted}){
   const h=K.createElement,[open,setOpen]=K.useState(false),[selected,select]=K.useState('all'),[plan,setPlan]=K.useState(null),[reading,setReading]=K.useState(false),[working,setWorking]=K.useState(false),[message,setMessage]=K.useState(''),[confirmation,setConfirmation]=K.useState(''),[count,setCount]=K.useState(0),dialog=K.useRef(null);
-  const phrase=selected==='all'?'DELETE ALL CHATS':'DELETE '+(plan?.items.length||0)+' CHATS';
+  const phrase=selected==='all'?'DELETE ALL CHATS':'DELETE '+(plan?.items.length||0)+((plan?.items.length||0)===1?' CHAT':' CHATS');
   K.useEffect(()=>{const element=dialog.current;if(open){element.showModal?element.showModal():element.setAttribute('open','');}else element.close?.();},[open]);
   K.useEffect(()=>{
     if(!open)return;let current=true;setPlan(null);setReading(true);setMessage('');setConfirmation('');
