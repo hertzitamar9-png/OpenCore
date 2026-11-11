@@ -135668,6 +135668,806 @@
       "operatingModes": []
     },
     {
+      "id": "hf-e81473db39abcc026034486f",
+      "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+      "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+      "variantKey": "tts:qwen3-tts-0.6b-base-v1",
+      "name": "Qwen3 TTS · 0.6B Base · Original published checkpoints",
+      "quantization": "Original published checkpoints",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "config.json",
+          "bytes": 4494,
+          "sha256": null,
+          "gitBlobSha1": "4e923f500f5c3eeb78d44072e7049b28817c2e04",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "generation_config.json",
+          "bytes": 245,
+          "sha256": null,
+          "gitBlobSha1": "1872b16d4535564abf2db5d6debe6cddd82b7f2e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "merges.txt",
+          "bytes": 1671839,
+          "sha256": null,
+          "gitBlobSha1": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "model.safetensors",
+          "bytes": 1829344272,
+          "sha256": "180b3b10eb1c9f1b4db7806d5475bae3071c0243c299d49926bab1da3b6946f6",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "preprocessor_config.json",
+          "bytes": 127,
+          "sha256": null,
+          "gitBlobSha1": "0525dd953bb9241912f7147666f0d535165d5d4f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "speech_tokenizer/config.json",
+          "bytes": 2336,
+          "sha256": null,
+          "gitBlobSha1": "06cc8dc4c5ec8a1929086b71b98c313020d9268b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "speech_tokenizer/configuration.json",
+          "bytes": 76,
+          "sha256": null,
+          "gitBlobSha1": "ab58e2eaf53cd14a1a2a7527d9261ceea93a24cd",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "speech_tokenizer/model.safetensors",
+          "bytes": 682293092,
+          "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "speech_tokenizer/preprocessor_config.json",
+          "bytes": 234,
+          "sha256": null,
+          "gitBlobSha1": "ba40914f4f49ab98a8ca545d4892ef7291a39592",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "tokenizer_config.json",
+          "bytes": 7344,
+          "sha256": null,
+          "gitBlobSha1": "6ff9fd60cc623bb54bbd603cbd418c97a11528d7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+          "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 2516100892,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+      "status": "not-installed",
+      "familyId": "publisher-qwen3-tts-0-6b-base",
+      "familyLabel": "Qwen3 TTS · 0.6B Base",
+      "originalRepository": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+      "builtIn": true,
+      "nativeModelIds": [
+        "voice-cloning-qwen3-base-0-6b"
+      ],
+      "builtInDescription": "Clones a voice from a short reference recording in English, Chinese, Japanese, Korean, German, French, Russian, Portuguese, Spanish and Italian. Adding the transcript of the recording gives the closest match; without it only the voice timbre is copied. Runs on an NVIDIA GPU with 4 GB or more of memory; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "ttsRuntime": "qwen3-tts-0.6b-base-v1",
+      "ttsComponentBytes": 0,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-d3cf04870c3408a4fb6329bd",
+      "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+      "variantKey": "tts:qwen3-tts-0.6b-customvoice-v1",
+      "name": "Qwen3 TTS · 0.6B CustomVoice · Original published checkpoints",
+      "quantization": "Original published checkpoints",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "config.json",
+          "bytes": 4908,
+          "sha256": null,
+          "gitBlobSha1": "5e8d5fc100536984e3a89bd87ef08e59e322b29b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "generation_config.json",
+          "bytes": 245,
+          "sha256": null,
+          "gitBlobSha1": "1872b16d4535564abf2db5d6debe6cddd82b7f2e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "merges.txt",
+          "bytes": 1671839,
+          "sha256": null,
+          "gitBlobSha1": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "model.safetensors",
+          "bytes": 1811626576,
+          "sha256": "bc3c7e785eb961179c25450d1acff03f839e0002f2f3a5aeb67b5735c0fa2adb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "preprocessor_config.json",
+          "bytes": 127,
+          "sha256": null,
+          "gitBlobSha1": "0525dd953bb9241912f7147666f0d535165d5d4f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "speech_tokenizer/config.json",
+          "bytes": 2336,
+          "sha256": null,
+          "gitBlobSha1": "06cc8dc4c5ec8a1929086b71b98c313020d9268b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "speech_tokenizer/configuration.json",
+          "bytes": 76,
+          "sha256": null,
+          "gitBlobSha1": "ab58e2eaf53cd14a1a2a7527d9261ceea93a24cd",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "speech_tokenizer/model.safetensors",
+          "bytes": 682293092,
+          "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "speech_tokenizer/preprocessor_config.json",
+          "bytes": 234,
+          "sha256": null,
+          "gitBlobSha1": "ba40914f4f49ab98a8ca545d4892ef7291a39592",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "tokenizer_config.json",
+          "bytes": 7344,
+          "sha256": null,
+          "gitBlobSha1": "6ff9fd60cc623bb54bbd603cbd418c97a11528d7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 2498383610,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "status": "not-installed",
+      "familyId": "publisher-qwen3-tts-0-6b-customvoice",
+      "familyLabel": "Qwen3 TTS · 0.6B CustomVoice",
+      "originalRepository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "builtIn": true,
+      "nativeModelIds": [
+        "tts-qwen3-customvoice-0-6b"
+      ],
+      "builtInDescription": "Speaks with 9 built-in voices in English, Chinese, Japanese, Korean, German, French, Russian, Portuguese, Spanish and Italian. Each voice is native to one language and can read the others. Runs on an NVIDIA GPU with 4 GB or more of memory; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "ttsRuntime": "qwen3-tts-0.6b-customvoice-v1",
+      "ttsComponentBytes": 0,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-9ac81337b9e3d16f3b88fe9c",
+      "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+      "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+      "variantKey": "tts:qwen3-tts-1.7b-base-v1",
+      "name": "Qwen3 TTS · 1.7B Base · Original published checkpoints",
+      "quantization": "Original published checkpoints",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "config.json",
+          "bytes": 4494,
+          "sha256": null,
+          "gitBlobSha1": "81b57e8e790c07e8fa7f82d8bdfd7574d485c396",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "generation_config.json",
+          "bytes": 245,
+          "sha256": null,
+          "gitBlobSha1": "1872b16d4535564abf2db5d6debe6cddd82b7f2e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "merges.txt",
+          "bytes": 1671839,
+          "sha256": null,
+          "gitBlobSha1": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "model.safetensors",
+          "bytes": 3857413744,
+          "sha256": "38fc7fc51c5e776e840414b6fd443962e9411b9654888fd7913e4da643cb857c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "preprocessor_config.json",
+          "bytes": 127,
+          "sha256": null,
+          "gitBlobSha1": "0525dd953bb9241912f7147666f0d535165d5d4f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "speech_tokenizer/config.json",
+          "bytes": 2336,
+          "sha256": null,
+          "gitBlobSha1": "06cc8dc4c5ec8a1929086b71b98c313020d9268b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "speech_tokenizer/configuration.json",
+          "bytes": 76,
+          "sha256": null,
+          "gitBlobSha1": "ab58e2eaf53cd14a1a2a7527d9261ceea93a24cd",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "speech_tokenizer/model.safetensors",
+          "bytes": 682293092,
+          "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "speech_tokenizer/preprocessor_config.json",
+          "bytes": 234,
+          "sha256": null,
+          "gitBlobSha1": "ba40914f4f49ab98a8ca545d4892ef7291a39592",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "tokenizer_config.json",
+          "bytes": 7344,
+          "sha256": null,
+          "gitBlobSha1": "6ff9fd60cc623bb54bbd603cbd418c97a11528d7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+          "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 4544170364,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+      "status": "not-installed",
+      "familyId": "publisher-qwen3-tts-1-7b-base",
+      "familyLabel": "Qwen3 TTS · 1.7B Base",
+      "originalRepository": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+      "builtIn": true,
+      "nativeModelIds": [
+        "voice-cloning-qwen3-base-1-7b"
+      ],
+      "builtInDescription": "Clones a voice from a short reference recording in English, Chinese, Japanese, Korean, German, French, Russian, Portuguese, Spanish and Italian. Adding the transcript of the recording gives the closest match; without it only the voice timbre is copied. Best on an NVIDIA GPU with 6 GB or more of memory; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "ttsRuntime": "qwen3-tts-1.7b-base-v1",
+      "ttsComponentBytes": 0,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-78c1cf6773e25cc97a8388f6",
+      "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+      "variantKey": "tts:qwen3-tts-1.7b-customvoice-v1",
+      "name": "Qwen3 TTS · 1.7B CustomVoice · Original published checkpoints",
+      "quantization": "Original published checkpoints",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "config.json",
+          "bytes": 4908,
+          "sha256": null,
+          "gitBlobSha1": "95d74b20b7485f5dfa09d05988d6c606ec226811",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "generation_config.json",
+          "bytes": 245,
+          "sha256": null,
+          "gitBlobSha1": "1872b16d4535564abf2db5d6debe6cddd82b7f2e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "merges.txt",
+          "bytes": 1671839,
+          "sha256": null,
+          "gitBlobSha1": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "model.safetensors",
+          "bytes": 3833402552,
+          "sha256": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "preprocessor_config.json",
+          "bytes": 127,
+          "sha256": null,
+          "gitBlobSha1": "0525dd953bb9241912f7147666f0d535165d5d4f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "speech_tokenizer/config.json",
+          "bytes": 2336,
+          "sha256": null,
+          "gitBlobSha1": "06cc8dc4c5ec8a1929086b71b98c313020d9268b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "speech_tokenizer/configuration.json",
+          "bytes": 76,
+          "sha256": null,
+          "gitBlobSha1": "ab58e2eaf53cd14a1a2a7527d9261ceea93a24cd",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "speech_tokenizer/model.safetensors",
+          "bytes": 682293092,
+          "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "speech_tokenizer/preprocessor_config.json",
+          "bytes": 234,
+          "sha256": null,
+          "gitBlobSha1": "ba40914f4f49ab98a8ca545d4892ef7291a39592",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "tokenizer_config.json",
+          "bytes": 7344,
+          "sha256": null,
+          "gitBlobSha1": "6ff9fd60cc623bb54bbd603cbd418c97a11528d7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 4520159586,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "status": "not-installed",
+      "familyId": "publisher-qwen3-tts-1-7b-customvoice",
+      "familyLabel": "Qwen3 TTS · 1.7B CustomVoice",
+      "originalRepository": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "builtIn": true,
+      "nativeModelIds": [
+        "tts-qwen3-customvoice-1-7b"
+      ],
+      "builtInDescription": "Speaks with 9 built-in voices in English, Chinese, Japanese, Korean, German, French, Russian, Portuguese, Spanish and Italian. Each voice is native to one language and can read the others. A speaking-style instruction such as \"very happy, speaking quickly\" changes how it sounds. Best on an NVIDIA GPU with 6 GB or more of memory; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "ttsRuntime": "qwen3-tts-1.7b-customvoice-v1",
+      "ttsComponentBytes": 0,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
+      "id": "hf-8f72bc9352cac8ce8ad0b61e",
+      "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+      "variantKey": "tts:qwen3-tts-1.7b-voicedesign-v1",
+      "name": "Qwen3 TTS · 1.7B VoiceDesign · Original published checkpoints",
+      "quantization": "Original published checkpoints",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "config.json",
+          "bytes": 4421,
+          "sha256": null,
+          "gitBlobSha1": "2c2c027c574a85c0d5a5d48e3cfed1a8a051ff9d",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "generation_config.json",
+          "bytes": 245,
+          "sha256": null,
+          "gitBlobSha1": "1872b16d4535564abf2db5d6debe6cddd82b7f2e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "merges.txt",
+          "bytes": 1671839,
+          "sha256": null,
+          "gitBlobSha1": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "model.safetensors",
+          "bytes": 3833402552,
+          "sha256": "391e8db219f292c515297cdceeb43e4eae67cdde35fa57e79a6a8a532fca0522",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "preprocessor_config.json",
+          "bytes": 127,
+          "sha256": null,
+          "gitBlobSha1": "0525dd953bb9241912f7147666f0d535165d5d4f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "speech_tokenizer/config.json",
+          "bytes": 2336,
+          "sha256": null,
+          "gitBlobSha1": "06cc8dc4c5ec8a1929086b71b98c313020d9268b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "speech_tokenizer/configuration.json",
+          "bytes": 76,
+          "sha256": null,
+          "gitBlobSha1": "ab58e2eaf53cd14a1a2a7527d9261ceea93a24cd",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "speech_tokenizer/model.safetensors",
+          "bytes": 682293092,
+          "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "speech_tokenizer/preprocessor_config.json",
+          "bytes": 234,
+          "sha256": null,
+          "gitBlobSha1": "ba40914f4f49ab98a8ca545d4892ef7291a39592",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "tokenizer_config.json",
+          "bytes": 7344,
+          "sha256": null,
+          "gitBlobSha1": "6ff9fd60cc623bb54bbd603cbd418c97a11528d7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+          "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 4520159099,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "status": "not-installed",
+      "familyId": "publisher-qwen3-tts-1-7b-voicedesign",
+      "familyLabel": "Qwen3 TTS · 1.7B VoiceDesign",
+      "originalRepository": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "builtIn": true,
+      "nativeModelIds": [
+        "tts-qwen3-voicedesign-1-7b"
+      ],
+      "builtInDescription": "Designs a new voice from a written description, such as \"a calm middle-aged man with a deep, warm voice\", and speaks English, Chinese, Japanese, Korean, German, French, Russian, Portuguese, Spanish and Italian. Best on an NVIDIA GPU with 6 GB or more of memory; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "ttsRuntime": "qwen3-tts-1.7b-voicedesign-v1",
+      "ttsComponentBytes": 0,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
       "id": "hf-0a6d05f30e9318c71b0893c9",
       "repository": "ccore/Qwen3.5-4B-3D-Coder",
       "revision": "1bf0f958cb4bac8e04b98280dd9fb3f0e942c015",
@@ -151762,5 +152562,1233 @@
       "supportsTextGeneration": false,
       "operatingModes": []
     }
-  ]
+  ],
+  "speechSupport": {
+    "tts-qwen3-customvoice-1-7b": {
+      "state": "managed",
+      "use": [
+        "hf-78c1cf6773e25cc97a8388f6"
+      ]
+    },
+    "tts-qwen3-customvoice-0-6b": {
+      "state": "managed",
+      "use": [
+        "hf-d3cf04870c3408a4fb6329bd"
+      ]
+    },
+    "tts-qwen3-voicedesign-1-7b": {
+      "state": "managed",
+      "use": [
+        "hf-8f72bc9352cac8ce8ad0b61e"
+      ]
+    },
+    "voice-cloning-qwen3-base-1-7b": {
+      "state": "managed",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ]
+    },
+    "voice-cloning-qwen3-base-0-6b": {
+      "state": "managed",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ]
+    },
+    "speech-qwen3-asr-1-7b": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "whisper-large-v3-turbo": {
+      "state": "native",
+      "use": [
+        "whisper-large-v3-turbo"
+      ]
+    },
+    "whisper-large-v3": {
+      "state": "native",
+      "use": [
+        "whisper-large-v3"
+      ]
+    },
+    "phonon-2": {
+      "state": "native",
+      "use": [
+        "phonon-2"
+      ]
+    },
+    "tts-vibevoice-1-5b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "VibeVoice needs Microsoft's VibeVoice code, which isn't part of the libraries OpenCore's speech engine installs, so it has no tested engine yet."
+    },
+    "tts-vibevoice-realtime-0-5b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "VibeVoice needs Microsoft's VibeVoice code, which isn't part of the libraries OpenCore's speech engine installs, so it has no tested engine yet."
+    },
+    "tts-f5-tts": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "F5-TTS and E2-TTS are licensed for non-commercial use only (CC BY-NC 4.0) and need the f5-tts engine, which OpenCore doesn't include."
+    },
+    "tts-e2-tts": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "F5-TTS and E2-TTS are licensed for non-commercial use only (CC BY-NC 4.0) and need the f5-tts engine, which OpenCore doesn't include."
+    },
+    "tts-kokoro-82m": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Kokoro needs the kokoro engine and the eSpeak NG pronunciation program, which OpenCore doesn't install."
+    },
+    "tts-csm-1b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-orpheus-3b-0-1-ft": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-chatterbox": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-turbo": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-xtts-v2": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "XTTS v2 needs the Coqui TTS engine, whose libraries conflict with OpenCore's speech engine, and the Coqui Public Model License doesn't allow commercial use."
+    },
+    "voice-cloning-f5-tts": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "F5-TTS and E2-TTS are licensed for non-commercial use only (CC BY-NC 4.0) and need the f5-tts engine, which OpenCore doesn't include."
+    },
+    "voice-cloning-e2-tts": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "F5-TTS and E2-TTS are licensed for non-commercial use only (CC BY-NC 4.0) and need the f5-tts engine, which OpenCore doesn't include."
+    },
+    "voice-cloning-xtts-v2": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "XTTS v2 needs the Coqui TTS engine, whose libraries conflict with OpenCore's speech engine, and the Coqui Public Model License doesn't allow commercial use."
+    },
+    "voice-cloning-chatterbox": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-turbo": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-openaudio-s1-mini": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Fish Audio only releases OpenAudio S1 Mini to people who accept its access agreement, it is licensed for non-commercial use only, and it needs Fish Audio's own engine, which OpenCore doesn't include."
+    },
+    "voice-cloning-fish-speech-1-5": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Fish Speech 1.5 is licensed for non-commercial use only and needs Fish Audio's own engine, which OpenCore doesn't include."
+    },
+    "voice-cloning-voxcpm-0-5b": {
+      "state": "unavailable",
+      "use": [
+        "hf-4a816c4808145e2e5837f9bd"
+      ],
+      "reason": "VoxCPM 0.5B is not packaged for OpenCore. VoxCPM2, its successor from the same team, is, and it also clones voices."
+    },
+    "voice-cloning-cosyvoice2-0-5b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "voice-cloning-cosyvoice-300m": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "whisper-small": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-medium": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "moss-voicegenerator": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "MOSS runs custom code from its model repository, which OpenCore never executes, and there is no installable engine for it."
+    },
+    "moss-tts-local15": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "MOSS runs custom code from its model repository, which OpenCore never executes, and there is no installable engine for it."
+    },
+    "bark-small": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Bark is not packaged for OpenCore yet: it has no tested download package or speech worker, so it can't be installed."
+    },
+    "speecht5-tts": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "SpeechT5 is not packaged for OpenCore yet: it also needs a separate HiFi-GAN vocoder and speaker voice files, and none of these has a tested package."
+    },
+    "whisper-tiny": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "tts-qwen3-customvoice-1-7b-published-f32-942406c4": {
+      "state": "unavailable",
+      "use": [
+        "hf-78c1cf6773e25cc97a8388f6"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B CustomVoice, so use that instead. These F32 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-customvoice-1-7b-published-q8-0-ffde9e41": {
+      "state": "unavailable",
+      "use": [
+        "hf-78c1cf6773e25cc97a8388f6"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B CustomVoice, so use that instead. These Q8_0 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-customvoice-0-6b-published-bf16-e98f417f": {
+      "state": "unavailable",
+      "use": [
+        "hf-d3cf04870c3408a4fb6329bd"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B CustomVoice, so use that instead. These BF16 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-customvoice-0-6b-published-f32-daf14d23": {
+      "state": "unavailable",
+      "use": [
+        "hf-d3cf04870c3408a4fb6329bd"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B CustomVoice, so use that instead. These F32 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-customvoice-0-6b-published-q8-0-55bc4153": {
+      "state": "unavailable",
+      "use": [
+        "hf-d3cf04870c3408a4fb6329bd"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B CustomVoice, so use that instead. These Q8_0 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-voicedesign-1-7b-published-f32-8734c604": {
+      "state": "unavailable",
+      "use": [
+        "hf-8f72bc9352cac8ce8ad0b61e"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B VoiceDesign, so use that instead. These F32 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-voicedesign-1-7b-published-q8-0-cb226a80": {
+      "state": "unavailable",
+      "use": [
+        "hf-8f72bc9352cac8ce8ad0b61e"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B VoiceDesign, so use that instead. These Q8_0 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-voicedesign-1-7b-published-q4-k-m-62f9ce87": {
+      "state": "unavailable",
+      "use": [
+        "hf-8f72bc9352cac8ce8ad0b61e"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B VoiceDesign, so use that instead. These Q4_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "tts-qwen3-voicedesign-1-7b-published-f16-b648b2d2": {
+      "state": "unavailable",
+      "use": [
+        "hf-8f72bc9352cac8ce8ad0b61e"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B VoiceDesign, so use that instead. These F16 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-iq1-s-d5c17317": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These IQ1_S GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-bf16-223f65de": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These BF16 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-q8-0-184d9121": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These Q8_0 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-q6-k-c1442ff4": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These Q6_K GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-q5-k-m-fe93af2c": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These Q5_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-q4-k-m-c25b10b8": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These Q4_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-q3-k-m-aec537a3": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These Q3_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-iq1-m-4915527c": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These IQ1_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-1-7b-published-f16-5bda1e9c": {
+      "state": "unavailable",
+      "use": [
+        "hf-9ac81337b9e3d16f3b88fe9c"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 1.7B Base, so use that instead. These F16 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-iq1-s-88fa5e88": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These IQ1_S GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-bf16-86a30b52": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These BF16 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-f32-0d7f2a56": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These F32 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-q8-0-6f0b2d21": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These Q8_0 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-q6-k-ddb0f469": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These Q6_K GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-q5-k-m-e0d19c13": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These Q5_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-q4-k-m-6bde10f1": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These Q4_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-iq1-m-002648a4": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These IQ1_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "voice-cloning-qwen3-base-0-6b-published-f16-608b1d9f": {
+      "state": "unavailable",
+      "use": [
+        "hf-e81473db39abcc026034486f"
+      ],
+      "reason": "OpenCore already runs Qwen3 TTS · 0.6B Base, so use that instead. These F16 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "speech-qwen3-asr-1-7b-published-iq1-s-3544fc7e": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-bf16-80bf109e": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-q8-0-b281f55c": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-q6-k-301bacfb": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-q5-k-m-f7457623": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-q4-k-m-c981dba1": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-q3-k-m-bb468e42": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-iq1-m-458e82d4": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-1-7b-published-f16-dffb355e": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-iq1-s-fc393680": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-bf16-ab31a81d": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-q8-0-421e380d": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-q6-k-07812e70": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-q5-k-m-2accbd2a": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-q4-k-m-5eec3b82": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-q3-k-m-1752394c": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-iq1-m-f5ee7e55": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "speech-qwen3-asr-0-6b-published-f16-2dd53473": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Qwen3 ASR needs the qwen-asr engine, which requires different library versions than OpenCore's speech engine, so the two can't be installed together yet. Use Phonon-2 or Whisper large-v3 turbo for dictation."
+    },
+    "whisper-large-v3-turbo-published-q8-0-ab622a8a": {
+      "state": "unavailable",
+      "use": [
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore already runs Whisper large-v3 turbo, so use that instead. These Q8_0 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "whisper-large-v3-turbo-published-q6-k-2b765d42": {
+      "state": "unavailable",
+      "use": [
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore already runs Whisper large-v3 turbo, so use that instead. These Q6_K GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "whisper-large-v3-turbo-published-q5-k-m-739bc9ae": {
+      "state": "unavailable",
+      "use": [
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore already runs Whisper large-v3 turbo, so use that instead. These Q5_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "whisper-large-v3-turbo-published-q4-k-m-04f01166": {
+      "state": "unavailable",
+      "use": [
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore already runs Whisper large-v3 turbo, so use that instead. These Q4_K_M GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "phonon-2-published-q8-0-e5bb3484": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2"
+      ],
+      "reason": "OpenCore already runs Phonon-2, so use that instead. These Q8_0 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "phonon-2-published-f16-3c2a7e93": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2"
+      ],
+      "reason": "OpenCore already runs Phonon-2, so use that instead. These F16 GGUF files need a GGUF speech engine that OpenCore doesn't include."
+    },
+    "phonon-2-published-int8-onnx-eda1e3fe": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2"
+      ],
+      "reason": "OpenCore already runs Phonon-2, so use that instead. These INT8 ONNX files need an ONNX speech engine that OpenCore doesn't include."
+    },
+    "tts-vibevoice-1-5b-published-q8-0-fce2f1ab": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "VibeVoice needs Microsoft's VibeVoice code, which isn't part of the libraries OpenCore's speech engine installs, so it has no tested engine yet."
+    },
+    "tts-vibevoice-1-5b-published-f16-4e20d654": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "VibeVoice needs Microsoft's VibeVoice code, which isn't part of the libraries OpenCore's speech engine installs, so it has no tested engine yet."
+    },
+    "tts-vibevoice-realtime-0-5b-published-q8-0-136c1dfc": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "VibeVoice needs Microsoft's VibeVoice code, which isn't part of the libraries OpenCore's speech engine installs, so it has no tested engine yet."
+    },
+    "tts-vibevoice-realtime-0-5b-published-f16-5ef74699": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "VibeVoice needs Microsoft's VibeVoice code, which isn't part of the libraries OpenCore's speech engine installs, so it has no tested engine yet."
+    },
+    "tts-f5-tts-published-f16-6bd6d4dc": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "F5-TTS and E2-TTS are licensed for non-commercial use only (CC BY-NC 4.0) and need the f5-tts engine, which OpenCore doesn't include."
+    },
+    "tts-kokoro-82m-published-q8-0-d212e3df": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Kokoro needs the kokoro engine and the eSpeak NG pronunciation program, which OpenCore doesn't install."
+    },
+    "tts-kokoro-82m-published-f16-d2074a89": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Kokoro needs the kokoro engine and the eSpeak NG pronunciation program, which OpenCore doesn't install."
+    },
+    "tts-csm-1b-published-bf16-dc8a68a2": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-csm-1b-published-f32-d1d47bd3": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-csm-1b-published-q8-0-8ffa0a39": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-csm-1b-published-q6-k-ef3c1564": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-csm-1b-published-q5-k-m-eaf45443": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-csm-1b-published-q4-k-m-e0a2e957": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-csm-1b-published-q3-k-m-f9e3ad63": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-csm-1b-published-f16-f08a0736": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Sesame only releases CSM 1B to people who accept its access agreement on Hugging Face, and OpenCore has no tested engine for it."
+    },
+    "tts-orpheus-3b-0-1-ft-published-iq1-s-5fb61ea8": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-q8-0-83685952": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-q6-k-a790f39a": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-q5-k-m-6c3f9867": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-q4-k-m-32c5f2cc": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-q3-k-m-3bb3806f": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-q2-k-2828797b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-iq1-m-c1b075c3": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-orpheus-3b-0-1-ft-published-f16-ed0b12e1": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Canopy Labs only releases Orpheus to people who accept its access agreement on Hugging Face, and it needs the SNAC audio decoder, which OpenCore's speech engine doesn't include."
+    },
+    "tts-chatterbox-published-bf16-1f941d0b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-f32-d6550f16": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-q8-0-63995045": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-q6-k-e6753b98": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-q5-k-m-d80c972d": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-q4-k-m-fbf33d99": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-q3-k-m-a60fced1": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-f16-b1e88f86": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-published-f16-onnx-6cb28e76": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-turbo-published-q8-0-8eb58a17": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-turbo-published-f16-817f0444": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "tts-chatterbox-turbo-published-f16-onnx-9d5c2160": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-f5-tts-published-f16-6bd6d4dc": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "F5-TTS and E2-TTS are licensed for non-commercial use only (CC BY-NC 4.0) and need the f5-tts engine, which OpenCore doesn't include."
+    },
+    "voice-cloning-chatterbox-published-bf16-1f941d0b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-f32-d6550f16": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-q8-0-63995045": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-q6-k-e6753b98": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-q5-k-m-d80c972d": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-q4-k-m-fbf33d99": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-q3-k-m-a60fced1": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-f16-b1e88f86": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-published-f16-onnx-6cb28e76": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-turbo-published-q8-0-8eb58a17": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-turbo-published-f16-817f0444": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-chatterbox-turbo-published-f16-onnx-9d5c2160": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Chatterbox needs Resemble AI's chatterbox engine, which pins older library versions that conflict with OpenCore's speech engine, so the two can't be installed together."
+    },
+    "voice-cloning-voxcpm-0-5b-published-q8-0-d0800dc8": {
+      "state": "unavailable",
+      "use": [
+        "hf-4a816c4808145e2e5837f9bd"
+      ],
+      "reason": "VoxCPM 0.5B is not packaged for OpenCore. VoxCPM2, its successor from the same team, is, and it also clones voices."
+    },
+    "voice-cloning-voxcpm-0-5b-published-f16-93958802": {
+      "state": "unavailable",
+      "use": [
+        "hf-4a816c4808145e2e5837f9bd"
+      ],
+      "reason": "VoxCPM 0.5B is not packaged for OpenCore. VoxCPM2, its successor from the same team, is, and it also clones voices."
+    },
+    "voice-cloning-cosyvoice2-0-5b-published-f32-onnx-fa262114": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "voice-cloning-cosyvoice2-0-5b-published-f16-b29e7b6d": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "voice-cloning-cosyvoice2-0-5b-published-f16-onnx-25f6a70a": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "voice-cloning-cosyvoice-300m-published-f32-onnx-82aa9ce8": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "voice-cloning-cosyvoice-300m-published-f16-onnx-3017940c": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "voice-cloning-cosyvoice-300m-published-int8-onnx-06efeb2c": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "voice-cloning-cosyvoice-300m-published-int4-onnx-daf19192": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "CosyVoice needs Alibaba's CosyVoice code, which isn't published as an installable package, so OpenCore can't run it."
+    },
+    "whisper-small-published-f32-d683a36e": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-small-published-q8-0-8d11e60f": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-small-published-q6-k-91ec8227": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-small-published-q5-k-m-997d66b0": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-small-published-q4-k-m-19739df5": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-small-published-f16-564390da": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-medium-published-f32-df33b497": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-medium-published-q8-0-1d60d3c5": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-medium-published-q6-k-7e5a9e59": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-medium-published-q5-k-m-9a68ca89": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-medium-published-q4-k-m-f729a23f": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-medium-published-f16-82ffd029": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "moss-tts-local15-published-q8-0-61d53e04": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "MOSS runs custom code from its model repository, which OpenCore never executes, and there is no installable engine for it."
+    },
+    "moss-tts-local15-published-f16-0c0bc1b2": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "MOSS runs custom code from its model repository, which OpenCore never executes, and there is no installable engine for it."
+    },
+    "bark-small-published-q8-0-e5c5e93b": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Bark is not packaged for OpenCore yet: it has no tested download package or speech worker, so it can't be installed."
+    },
+    "bark-small-published-f16-7cc58995": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Bark is not packaged for OpenCore yet: it has no tested download package or speech worker, so it can't be installed."
+    },
+    "speecht5-tts-published-f16-200ed4ad": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "SpeechT5 is not packaged for OpenCore yet: it also needs a separate HiFi-GAN vocoder and speaker voice files, and none of these has a tested package."
+    },
+    "whisper-tiny-published-f32-c8eaaa8b": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-tiny-published-q8-0-220526c0": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-tiny-published-q6-k-1fabfb18": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-tiny-published-q5-k-m-24242653": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-tiny-published-q4-k-m-b0cd1417": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-tiny-published-f16-c2d119b8": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base-published-f32-7a7d8541": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base-published-q8-0-6548956d": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base-published-q6-k-df2884e0": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base-published-q5-k-m-72b79f62": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base-published-q4-k-m-9ff6b30e": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base-published-f16-2da84639": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "whisper-base-published-int8-onnx-4ea006f8": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "OpenCore dictates with the faster-whisper builds of Whisper large-v3 and large-v3 turbo; this smaller Whisper checkpoint has no tested package. Use Whisper large-v3 turbo or Phonon-2 for dictation."
+    },
+    "hf-fishaudio-drama-3": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "drama-3 has 36 billion parameters, far more than a consumer graphics card can hold, it needs Fish Audio's own engine, and its research license doesn't allow commercial use."
+    },
+    "hf-pyannote-speaker-diarization-community-1": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "This finds who spoke when (speaker diarization); it does not transcribe speech. pyannote only releases it to people who accept its access agreement on Hugging Face, and it needs the pyannote.audio engine, which OpenCore doesn't include."
+    },
+    "hf-cactus-compute-whistle": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Whistle needs Cactus Compute's own on-device engine, which OpenCore doesn't include."
+    },
+    "hf-canberkkkkkk-ema-lightning": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "EMA Lightning is published without an installable engine, so OpenCore has no tested way to run it."
+    },
+    "hf-pyannote-speaker-diarization-3-1": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "This finds who spoke when (speaker diarization); it does not transcribe speech. pyannote only releases it to people who accept its access agreement on Hugging Face, and it needs the pyannote.audio engine, which OpenCore doesn't include."
+    },
+    "hf-kittenml-kitten-tts-2": {
+      "state": "managed",
+      "use": [
+        "hf-365ed3374618fe26fd4be914"
+      ]
+    },
+    "hf-qnguyen3-quan-transcribe-1-0": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "QUAN-Transcribe is only released to people who accept its access agreement on Hugging Face, and it needs its own engine, which OpenCore doesn't include."
+    },
+    "hf-k2-fsa-omnivoice": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "OmniVoice needs k2-fsa's omnivoice engine, which is not packaged for OpenCore yet."
+    },
+    "hf-breezeblue-breeze-tts-2": {
+      "state": "managed",
+      "use": [
+        "hf-1fdd21d715cfa8cd240be40c"
+      ]
+    },
+    "hf-openai-whisper-large-v3": {
+      "state": "unavailable",
+      "use": [
+        "whisper-large-v3"
+      ],
+      "reason": "This is the original PyTorch release of Whisper large-v3. OpenCore runs the same model as Whisper large-v3 in dictation."
+    },
+    "hf-nvidia-personaplex-7b-v1": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "PersonaPlex is a speech-to-speech conversation model, not dictation. NVIDIA only releases it to people who accept its license, and it needs the Moshi engine, which OpenCore doesn't include."
+    },
+    "hf-neuphonic-neudecide": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "NeuDecide chooses tool calls from speech; it doesn't transcribe or speak. Neuphonic only releases it to people who accept its access agreement on Hugging Face."
+    },
+    "hf-fishaudio-s2-pro": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "S2 Pro needs Fish Audio's own engine, which OpenCore doesn't include, and its research license doesn't allow commercial use."
+    },
+    "hf-moondream-parakeet-redux": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2"
+      ],
+      "reason": "Parakeet Redux stores its weights in a ternary format that needs moondream's own engine, which OpenCore doesn't include. Phonon-2, also built on Parakeet, runs in OpenCore."
+    },
+    "hf-mistralai-voxtral-mini-4b-realtime-arabic": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Voxtral Realtime needs the vLLM serving engine, which OpenCore doesn't include."
+    },
+    "hf-audio-cpp-audio-cpp-gguf": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "This is a collection of GGUF files for the audio.cpp engine, which OpenCore doesn't include."
+    },
+    "hf-nvidia-nemotron-3-5-asr-streaming-0-6b": {
+      "state": "unavailable",
+      "use": [
+        "phonon-2",
+        "whisper-large-v3-turbo"
+      ],
+      "reason": "Nemotron ASR needs NVIDIA's NeMo engine, which OpenCore doesn't include."
+    },
+    "hf-sahilmahendrakar-paradee-8m-v1-0": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Paradee is published as ONNX files for its own player, which OpenCore doesn't include."
+    },
+    "hf-cloud0day3-antalia-mini": {
+      "state": "unavailable",
+      "use": [],
+      "reason": "Antalia Mini needs its own antalia-mini engine, which OpenCore doesn't include."
+    }
+  }
 }

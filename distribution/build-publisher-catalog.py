@@ -133,7 +133,8 @@ def build():
     publisher_echo_policy(entries,HERE/'hf-research',echo_context_tokens)
     apply_operating_modes(entries,snapshot_metadata(HERE/'hf-research'))
     entries.sort(key=lambda e: (e['familyId'], e.get('catalogOrder', 0), e['format'] != 'gguf', e['bytes'], e['id']))
-    return {'schema': 1, 'entries': entries}
+    from speech_support import speech_support
+    return {'schema': 1, 'entries': entries, 'speechSupport': speech_support(catalog, entries)}
 
 
 if __name__ == '__main__':

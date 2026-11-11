@@ -1,8 +1,12 @@
-"""Pinned managed text-to-speech packages: Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini and dots.tts.edit.
+"""Pinned managed text-to-speech packages: Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini, dots.tts.edit and Qwen3-TTS.
 
 Each package pins exactly the files its managed runtime loads. Revisions and
 runtime identities come from hf_tts.FAMILIES so the catalog and the runtime can
 never disagree about which checkpoint was reviewed.
+
+The Qwen3-TTS packages take over the built-in Qwen3 TTS cards (nativeModelIds) with
+the same "Original published checkpoints" precision, so installing one of those
+cards installs the managed runtime instead of a native engine.
 """
 import fnmatch
 import json
@@ -57,6 +61,40 @@ PACKAGES = (
                      '30-series or newer GPU with 8 GB or more; other computers run it much more slowly on the CPU.')},
 )
 
+QWEN3_TTS_LANGUAGES = 'English, Chinese, Japanese, Korean, German, French, Russian, Portuguese, Spanish and Italian'
+QWEN3_TTS_SPEED = {
+    '0.6B': ('Runs on an NVIDIA GPU with 4 GB or more of memory; other computers run it much more slowly on the CPU.'),
+    '1.7B': ('Best on an NVIDIA GPU with 6 GB or more of memory; other computers run it much more slowly on the CPU.'),
+}
+QWEN3_TTS_KINDS = {
+    'base': ('Base', 'voice-cloning-qwen3-base-{}',
+             'Clones a voice from a short reference recording in ' + QWEN3_TTS_LANGUAGES + '. Adding the transcript of '
+             'the recording gives the closest match; without it only the voice timbre is copied.'),
+    'customvoice': ('CustomVoice', 'tts-qwen3-customvoice-{}',
+                    'Speaks with 9 built-in voices in ' + QWEN3_TTS_LANGUAGES + '. Each voice is native to one language '
+                    'and can read the others.'),
+    'voicedesign': ('VoiceDesign', 'tts-qwen3-voicedesign-{}',
+                    'Designs a new voice from a written description, such as "a calm middle-aged man with a deep, warm '
+                    'voice", and speaks ' + QWEN3_TTS_LANGUAGES + '.'),
+}
+
+
+def _qwen3_package(size, kind):
+    label, native, description = QWEN3_TTS_KINDS[kind]
+    if kind == 'customvoice' and size == '1.7B':
+        description += ' A speaking-style instruction such as "very happy, speaking quickly" changes how it sounds.'
+    slug = size.lower().replace('.', '-')
+    return {'runtime': 'qwen3-tts-{}-{}-v1'.format(size.lower(), kind), 'familyId': 'publisher-qwen3-tts-{}-{}'.format(slug, kind),
+            'quantization': 'Original published checkpoints', 'include': ('*',), 'exclude': ('.gitattributes', 'README.md'),
+            'license': 'apache-2.0', 'nativeModelIds': [native.format(slug)],
+            # The reviewed 1.7B-Base revision carries no pipeline tag on the Hub; its files match the other Base checkpoint.
+            'pipelineTags': ('text-to-speech', None) if (size, kind) == ('1.7B', 'base') else ('text-to-speech',),
+            'description': description + ' ' + QWEN3_TTS_SPEED[size]}
+
+
+PACKAGES += tuple(_qwen3_package(size, kind) for size, kind in
+                  (('0.6B', 'base'), ('1.7B', 'base'), ('0.6B', 'customvoice'), ('1.7B', 'customvoice'), ('1.7B', 'voicedesign')))
+
 
 def _read(snapshots, repository):
     value = json.loads((snapshots / (repository.replace('/', '--') + '.api.json')).read_text(encoding='utf-8'))
@@ -78,7 +116,7 @@ def append_tts(entries, snapshots):
         family = FAMILIES[package['runtime']]
         repository, revision = family['repository'], family['revision']
         metadata = _read(snapshots, repository)
-        if metadata['sha'] != revision or metadata.get('pipeline_tag') != 'text-to-speech':
+        if metadata['sha'] != revision or metadata.get('pipeline_tag') not in package.get('pipelineTags', ('text-to-speech',)):
             raise ValueError('The TTS snapshot is not the reviewed checkpoint: ' + repository)
         pins = []
         for item in metadata['siblings']:
@@ -110,7 +148,7 @@ def append_tts(entries, snapshots):
                                    'A real synthesized clip must pass a signal check before Ready.')},
             'private': False, 'gated': bool(metadata.get('gated')), 'sourceUrl': 'https://huggingface.co/' + repository,
             'status': 'not-installed', 'familyId': package['familyId'], 'familyLabel': family['label'],
-            'originalRepository': repository, 'builtIn': True, 'nativeModelIds': [],
+            'originalRepository': repository, 'builtIn': True, 'nativeModelIds': list(package.get('nativeModelIds', ())),
             'builtInDescription': package['description'], 'contextTokens': 8192, 'license': package['license'],
             'catalogOrder': 0, 'ttsRuntime': package['runtime'], 'ttsComponentBytes': extra,
             'outputsText': False, 'supportsTextGeneration': False, 'operatingModes': [],

@@ -1,4 +1,4 @@
-"""Managed local text-to-speech for Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini and dots.tts.edit.
+"""Managed local text-to-speech for Kitten TTS 2, VoxCPM2, Breeze-TTS-2, ZONOS3-Mini, dots.tts.edit and Qwen3-TTS.
 
 The manager owns one isolated Python environment installed from a hashed lock,
 the pinned third-party components those models need at run time, and one
@@ -13,6 +13,7 @@ import copy
 import hashlib
 import io
 import json
+import math
 import os
 from pathlib import Path
 import queue
@@ -81,6 +82,65 @@ DOTS_EDIT_TAG = re.compile(r'<\s*/?\s*(?:sub|ins|del|emo|pitch|rate|pause|enhanc
 
 KITTEN_EMOTIONS = ['angry', 'contemplative', 'excited', 'joyful', 'mundane', 'nervous', 'sad', 'stern', 'surprised', 'tender']
 KITTEN_EVENTS = ['gasp', 'giggle', 'growl', 'gulp', 'laugh', 'pause', 'scoff', 'sigh', 'sob', 'um']
+
+# Qwen3-TTS 12 Hz: the ten languages of codec_language_id (the dialects belong to the Dylan and Eric voices) and the
+# nine CustomVoice speakers of talker_config.spk_id, described as in the publisher's model card.
+QWEN3_TTS_LANGUAGES = [{'id': name.lower(), 'label': name} for name in
+                       ('English', 'Chinese', 'Japanese', 'Korean', 'German', 'French', 'Russian', 'Portuguese', 'Spanish', 'Italian')]
+QWEN3_TTS_VOICES = [
+    {'id': 'Ryan', 'gender': 'male', 'language': 'english', 'style': 'dynamic, with strong rhythmic drive'},
+    {'id': 'Aiden', 'gender': 'male', 'language': 'english', 'style': 'sunny American, clear midrange'},
+    {'id': 'Vivian', 'gender': 'female', 'language': 'chinese', 'style': 'bright, slightly edgy, young'},
+    {'id': 'Serena', 'gender': 'female', 'language': 'chinese', 'style': 'warm, gentle, young'},
+    {'id': 'Uncle_Fu', 'gender': 'male', 'language': 'chinese', 'style': 'seasoned, low and mellow'},
+    {'id': 'Dylan', 'gender': 'male', 'language': 'chinese', 'style': 'youthful, Beijing dialect'},
+    {'id': 'Eric', 'gender': 'male', 'language': 'chinese', 'style': 'lively, Sichuan dialect, slightly husky'},
+    {'id': 'Ono_Anna', 'gender': 'female', 'language': 'japanese', 'style': 'playful, light and nimble'},
+    {'id': 'Sohee', 'gender': 'female', 'language': 'korean', 'style': 'warm, rich emotion'},
+]
+QWEN3_TTS_SAMPLING = ('temperature', 'topP', 'topK', 'maxNewTokens')
+
+
+def _qwen3_tts(size, kind, revision):
+    """One Qwen3-TTS 12 Hz checkpoint: Base clones a recording, CustomVoice speaks as a built-in voice (the 1.7B one
+    also follows a speaking-style instruction), VoiceDesign creates a voice from a description."""
+    large = size == '1.7B'
+    label = 'Qwen3 TTS · ' + size + ' ' + {'base': 'Base', 'custom': 'CustomVoice', 'design': 'VoiceDesign'}[kind]
+    family = {
+        'label': label, 'repository': 'Qwen/Qwen3-TTS-12Hz-' + size + '-' + {'base': 'Base', 'custom': 'CustomVoice',
+                                                                             'design': 'VoiceDesign'}[kind],
+        'revision': revision, 'components': (), 'maxText': 1500, 'reference': None, 'referenceRequired': False,
+        'instruction': None, 'voices': False, 'presets': None, 'cfg': None, 'steps': None,
+        'sampling': True, 'samplingControls': QWEN3_TTS_SAMPLING, 'normalize': False,
+        'languages': copy.deepcopy(QWEN3_TTS_LANGUAGES), 'tags': [],
+        # Measured peaks with the bundled runtime: about 4.3 GiB for 1.7B and 2.5 GiB for 0.6B, so 6 GB and 4 GB cards fit.
+        'hardware': {'gpuGiB': 5 if large else 3, 'bf16': True, 'cpu': True,
+                     'summary': ('an NVIDIA RTX 30-series or newer GPU with ' + ('5' if large else '3') + ' GB of free '
+                                 'memory; other computers use the CPU, which is much slower')},
+        'verification': {'text': 'OpenCore speech check. The local voice is ready.', 'settings': {'seed': 7}},
+    }
+    if kind == 'base':
+        family.update(reference='transcript-optional', referenceRequired=True, notes=(
+            'Clones the voice of a reference recording of 3 seconds or more. Adding the exact words spoken in it gives '
+            'the closest match; without them only the voice timbre is copied. Speaks English, Chinese, Japanese, Korean, '
+            'German, French, Russian, Portuguese, Spanish and Italian. Only clone voices with the speaker\'s consent.'))
+    elif kind == 'custom':
+        family.update(voices=True, voiceList=copy.deepcopy(QWEN3_TTS_VOICES),
+                      verification={'text': 'OpenCore speech check. The local voice is ready.',
+                                    'settings': {'seed': 7, 'voice': 'Ryan', 'language': 'english'}},
+                      notes=('Nine built-in voices; each can speak all ten languages, and sounds best in its own. '
+                             + ('Describe how to speak, for example "very happy" or "whisper slowly", to steer the delivery.'
+                                if large else 'The 0.6B model does not follow speaking-style instructions; the 1.7B one does.')))
+        if large:
+            family['instruction'] = {'label': 'Speaking style', 'placeholder': 'Very happy, speaking quickly'}
+    else:
+        family.update(instruction={'label': 'Voice description',
+                                   'placeholder': 'A calm middle-aged man with a deep, warm voice, speaking slowly'},
+                      verification={'text': 'OpenCore speech check. The local voice is ready.',
+                                    'settings': {'seed': 7, 'instruction': 'A clear, friendly adult voice speaking calmly.'}},
+                      notes=('Describe the voice to create: age, gender, timbre, emotion and pace. Without a description '
+                             'the model picks a voice. Speaks the same ten languages as the other Qwen3 TTS models.'))
+    return family
 
 FAMILIES = {
     'kitten-tts-2-v1': {
@@ -185,6 +245,12 @@ FAMILIES = {
                                  'CPU, which is much slower')},
         'verification': {'text': 'OpenCore speech check. The local voice is ready.', 'settings': {'seed': 7}},
     },
+    # The five Qwen3-TTS checkpoints OpenCore's built-in catalog lists, pinned to the same reviewed revisions.
+    'qwen3-tts-0.6b-base-v1': _qwen3_tts('0.6B', 'base', '5d83992436eae1d760afd27aff78a71d676296fc'),
+    'qwen3-tts-1.7b-base-v1': _qwen3_tts('1.7B', 'base', 'fd4b254389122332181a7c3db7f27e918eec64e3'),
+    'qwen3-tts-0.6b-customvoice-v1': _qwen3_tts('0.6B', 'custom', '85e237c12c027371202489a0ec509ded67b5e4b5'),
+    'qwen3-tts-1.7b-customvoice-v1': _qwen3_tts('1.7B', 'custom', '0c0e3051f131929182e2c023b9537f8b1c68adfe'),
+    'qwen3-tts-1.7b-voicedesign-v1': _qwen3_tts('1.7B', 'design', '5ecdb67327fd37bb2e042aab12ff7391903235d3'),
 }
 
 SETTINGS = {'voice', 'preset', 'instruction', 'referenceAudio', 'referenceText', 'cfg', 'steps', 'seed',
@@ -199,8 +265,8 @@ def supports(entry):
 def capabilities(entry):
     family = FAMILIES[entry['ttsRuntime']]
     return {key: copy.deepcopy(family.get(key)) for key in
-            ('label', 'maxText', 'reference', 'instruction', 'voices', 'presets', 'cfg', 'steps', 'sampling', 'normalize', 'tags', 'notes',
-             'hardware', 'languages', 'editTags')}
+            ('label', 'maxText', 'reference', 'referenceRequired', 'instruction', 'voices', 'presets', 'cfg', 'steps', 'sampling',
+             'samplingControls', 'normalize', 'tags', 'notes', 'hardware', 'languages', 'editTags')}
 
 
 def nvidia_gpu():
@@ -283,6 +349,35 @@ def decode_reference(value):
     return data
 
 
+def verification_reference(seconds=3, rate=16000):
+    """A synthetic voiced reference (a 120 Hz glottal source shaped by changing vowel formants) for checking a model
+    that only speaks in a cloned voice. It ships no one's recorded voice; it only proves the clone path produces audio."""
+    vowels = ((730, 1090, 2440), (270, 2290, 3010), (300, 870, 2240), (530, 1840, 2480), (570, 840, 2410))
+    samples, peak = [], 0.0
+    for index in range(seconds * rate):
+        time_s = index / rate
+        syllable = time_s * 4
+        formants = vowels[int(syllable) % len(vowels)]
+        pitch = 120 * (1 + 0.08 * math.sin(2 * math.pi * 0.7 * time_s))
+        value = 0.0
+        for harmonic in range(1, 30):
+            frequency = pitch * harmonic
+            if frequency >= rate / 2:
+                break
+            gain = sum(1 / (1 + ((frequency - centre) / 90) ** 2) for centre in formants) / harmonic
+            value += gain * math.sin(2 * math.pi * frequency * time_s)
+        value *= math.sin(math.pi * (syllable % 1)) ** 2
+        samples.append(value)
+        peak = max(peak, abs(value))
+    data = io.BytesIO()
+    with wave.open(data, 'wb') as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(rate)
+        audio.writeframes(b''.join(int(value / peak * 0.5 * 32767).to_bytes(2, 'little', signed=True) for value in samples))
+    return base64.b64encode(data.getvalue()).decode('ascii')
+
+
 def _number(settings, name, low, high, integer=False):
     value = settings.get(name)
     if value is None:
@@ -313,6 +408,8 @@ def validate_request(entry, request):
         raise ValueError('The reference transcript must be up to 2000 characters')
     transcript = (transcript or '').strip()
     if reference:
+        if not family['reference']:
+            raise ValueError(f'{family["label"]} does not clone voices; remove the reference recording')
         decode_reference(reference)
         if family['reference'] == 'transcript-required' and not transcript:
             raise ValueError(f'{family["label"]} needs the exact words spoken in the reference recording')
@@ -321,6 +418,8 @@ def validate_request(entry, request):
         clean['referenceText'] = transcript
     elif transcript:
         raise ValueError('Add a reference recording for this transcript')
+    elif family.get('referenceRequired'):
+        raise ValueError(f'{family["label"]} clones a voice; add a reference recording of the voice to use')
     if family.get('editTags') and DOTS_EDIT_TAG.search(text) and not reference:
         raise ValueError('Add the recording to edit; edit tags change a reference recording')
     language = settings.get('language')
@@ -331,7 +430,9 @@ def validate_request(entry, request):
     instruction = settings.get('instruction')
     if instruction:
         if not family['instruction']:
-            raise ValueError(f'{family["label"]} does not take a voice instruction; use the expression tags instead')
+            hint = ('use the expression tags instead' if family.get('tags') else
+                    'choose one of its voices instead' if family.get('voices') else 'remove the instruction')
+            raise ValueError(f'{family["label"]} does not take a voice instruction; {hint}')
         if not isinstance(instruction, str) or len(instruction) > 500:
             raise ValueError('The voice instruction must be up to 500 characters')
         clean['instruction'] = instruction.strip()
@@ -354,7 +455,7 @@ def validate_request(entry, request):
     for name, low, high, integer in (('temperature', 0.05, 2.0, False), ('topP', 0.05, 1.0, False),
                                      ('topK', 1, 1000, True), ('minP', 0.0, 1.0, False), ('maxNewTokens', 50, 4000, True)):
         if settings.get(name) is not None:
-            if not family['sampling']:
+            if not family['sampling'] or name not in family.get('samplingControls', (name,)):
                 raise ValueError(f'{family["label"]} does not use {name}')
             clean[name] = _number(settings, name, low, high, integer)
     if 'normalize' in settings:
@@ -626,7 +727,10 @@ class TtsManager:
     def voices(self, entry):
         if not supports(entry) or not FAMILIES[entry['ttsRuntime']]['voices'] or entry.get('status') != 'installed':
             return []
-        index = FAMILIES[entry['ttsRuntime']].get('voiceIndex') or 'voices/voices.json'
+        if FAMILIES[entry['ttsRuntime']].get('voiceList'):
+            # Fixed by the pinned checkpoint; the worker checks them against the loaded model.
+            return copy.deepcopy(FAMILIES[entry['ttsRuntime']]['voiceList'])
+        index =FAMILIES[entry['ttsRuntime']].get('voiceIndex') or 'voices/voices.json'
         try:
             data = json.loads((self.model_directory(entry) / index).read_text(encoding='utf-8'))
         except (OSError, ValueError):
@@ -927,8 +1031,11 @@ class TtsManager:
     def prepare(self, entry, report, pause):
         family = FAMILIES[entry['ttsRuntime']]
         report({'stage': 'verifying-inference', 'detail': 'Installing the speech runtime and generating a verification clip'})
+        settings = dict(family['verification']['settings'])
+        if family.get('referenceRequired'):
+            settings['referenceAudio'] = verification_reference()
         job = self.submit(entry, {'modelId': entry['id'], 'text': family['verification']['text'],
-                                  'settings': dict(family['verification']['settings'])}, internal=True)
+                                  'settings': settings}, internal=True)
         last = None
         while True:
             current = self.job(job['id'])

@@ -31,6 +31,10 @@ from hf_download import validate_entry  # noqa: E402
 from tts_catalog import PACKAGES, append_tts  # noqa: E402
 
 SNAPSHOTS = DISTRIBUTION / 'hf-research/requested-models'
+# Managed Qwen3-TTS runtimes and the built-in cards each one takes over.
+QWEN3 = {'qwen3-tts-0.6b-base-v1': 'voice-cloning-qwen3-base-0-6b', 'qwen3-tts-1.7b-base-v1': 'voice-cloning-qwen3-base-1-7b',
+         'qwen3-tts-0.6b-customvoice-v1': 'tts-qwen3-customvoice-0-6b', 'qwen3-tts-1.7b-customvoice-v1': 'tts-qwen3-customvoice-1-7b',
+         'qwen3-tts-1.7b-voicedesign-v1': 'tts-qwen3-voicedesign-1-7b'}
 
 
 def wav(seconds=2.0, rate=24000, channels=1, width=2):
@@ -65,7 +69,8 @@ class CatalogTests(unittest.TestCase):
     def test_pinned_packages_match_the_reviewed_runtime_revisions(self):
         values = entries()
         self.assertEqual(set(values), set(hf_tts.FAMILIES))
-        self.assertEqual(set(values), {'kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1', 'zonos3-mini-v1', 'dots-tts-edit-v1'})
+        self.assertEqual(set(values), {'kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1', 'zonos3-mini-v1', 'dots-tts-edit-v1'}
+                         | set(QWEN3))
         for runtime, entry in values.items():
             family = hf_tts.FAMILIES[runtime]
             self.assertEqual(entry['repository'], family['repository'])
@@ -271,6 +276,124 @@ class RequestValidationTests(unittest.TestCase):
                     'A' * ((hf_tts.MAX_REFERENCE_BYTES + 2) // 3 * 4 + 4)):
             with self.assertRaises(ValueError):
                 hf_tts.decode_reference(bad)
+
+
+class Qwen3TtsTests(unittest.TestCase):
+    """The built-in Qwen3 TTS cards install and run through the managed speech runtime."""
+
+    def setUp(self):
+        self.values = entries()
+
+    def check(self, runtime, text='Hello there.', **settings):
+        entry = self.values[runtime]
+        return hf_tts.validate_request(entry, {'modelId': entry['id'], 'text': text, 'settings': settings})
+
+    def test_packages_take_over_the_built_in_cards_at_the_same_precision(self):
+        catalog = json.loads((REPO / 'src-tauri/resources/model-catalog.json').read_text(encoding='utf-8'))
+        native = {model['id']: model for model in catalog['models']}
+        for runtime, identity in QWEN3.items():
+            entry = self.values[runtime]
+            with self.subTest(runtime=runtime):
+                self.assertEqual(entry['nativeModelIds'], [identity])
+                self.assertEqual(entry['quantization'], native[identity]['precision'])
+                self.assertEqual(entry['repository'], hf_tts.FAMILIES[runtime]['repository'])
+                # The studio lists managed speech cards by category, so the Base cloning cards stay text-to-speech cards.
+                self.assertEqual(entry['category'], 'tts')
+                names = {pin['filename'] for pin in entry['files']}
+                self.assertTrue({'model.safetensors', 'config.json', 'vocab.json', 'merges.txt',
+                                 'speech_tokenizer/model.safetensors', 'speech_tokenizer/config.json'} <= names)
+                self.assertNotIn('README.md', names)
+                self.assertEqual(entry['ttsComponentBytes'], 0)
+        others = [entry for runtime, entry in self.values.items() if runtime not in QWEN3]
+        self.assertTrue(all(entry['nativeModelIds'] == [] for entry in others))
+
+    def test_base_needs_a_reference_and_takes_an_optional_transcript(self):
+        for runtime in ('qwen3-tts-0.6b-base-v1', 'qwen3-tts-1.7b-base-v1'):
+            with self.assertRaisesRegex(ValueError, 'clones a voice; add a reference recording'):
+                self.check(runtime)
+            self.assertEqual(self.check(runtime, referenceAudio=wav())['settings']['referenceText'], '')
+            self.assertEqual(self.check(runtime, referenceAudio=wav(), referenceText='Words.')['settings']['referenceText'], 'Words.')
+            for settings in ({'voice': 'Ryan'}, {'instruction': 'Warm'}):
+                with self.assertRaises(ValueError, msg=settings):
+                    self.check(runtime, referenceAudio=wav(), **settings)
+
+    def test_custom_voice_and_voice_design_do_not_clone(self):
+        for runtime in ('qwen3-tts-0.6b-customvoice-v1', 'qwen3-tts-1.7b-customvoice-v1', 'qwen3-tts-1.7b-voicedesign-v1'):
+            with self.assertRaisesRegex(ValueError, 'does not clone voices'):
+                self.check(runtime, referenceAudio=wav())
+        self.assertEqual(self.check('qwen3-tts-0.6b-customvoice-v1', voice='Sohee', language='korean')['settings'],
+                         {'seed': 1234, 'voice': 'Sohee', 'language': 'korean'})
+        # Only the 1.7B CustomVoice model follows a speaking-style instruction.
+        with self.assertRaisesRegex(ValueError, 'does not take a voice instruction; choose one of its voices instead'):
+            self.check('qwen3-tts-0.6b-customvoice-v1', instruction='Very happy')
+        self.assertEqual(self.check('qwen3-tts-1.7b-customvoice-v1', voice='Ryan', instruction='Very happy')['settings']['instruction'],
+                         'Very happy')
+        self.assertEqual(self.check('qwen3-tts-1.7b-voicedesign-v1', instruction='A calm deep voice')['settings']['instruction'],
+                         'A calm deep voice')
+        with self.assertRaises(ValueError):
+            self.check('qwen3-tts-1.7b-voicedesign-v1', voice='Ryan')
+
+    def test_sampling_languages_and_text_limits(self):
+        for runtime in QWEN3:
+            extra = {'referenceAudio': wav()} if 'base' in runtime else {}
+            value = self.check(runtime, temperature=0.8, topP=0.9, topK=40, maxNewTokens=1200, language='german', **extra)['settings']
+            self.assertEqual((value['temperature'], value['topP'], value['topK'], value['maxNewTokens'], value['language']),
+                             (0.8, 0.9, 40, 1200, 'german'))
+            for settings in ({'minP': 0.05}, {'cfg': 2.0}, {'steps': 10}, {'preset': 'Calm'}, {'normalize': True},
+                             {'language': 'en'}, {'language': 'hebrew'}):
+                with self.assertRaises(ValueError, msg=(runtime, settings)):
+                    self.check(runtime, **settings, **extra)
+            self.assertEqual(len(self.check(runtime, 'a' * 1500, **extra)['text']), 1500)
+            with self.assertRaises(ValueError):
+                self.check(runtime, 'a' * 1501, **extra)
+
+    def test_every_family_verification_request_is_valid(self):
+        for runtime, entry in self.values.items():
+            family = hf_tts.FAMILIES[runtime]
+            settings = dict(family['verification']['settings'])
+            if family.get('referenceRequired'):
+                settings['referenceAudio'] = hf_tts.verification_reference()
+            with self.subTest(runtime=runtime):
+                hf_tts.validate_request(entry, {'modelId': entry['id'], 'text': family['verification']['text'],
+                                                'settings': settings})
+
+    def test_the_synthetic_verification_reference_is_a_voiced_wav(self):
+        data = hf_tts.decode_reference(hf_tts.verification_reference())
+        with wave.open(io.BytesIO(data)) as audio:
+            self.assertEqual((audio.getnchannels(), audio.getsampwidth(), audio.getframerate()), (1, 2, 16000))
+            self.assertEqual(audio.getnframes(), 48000)
+            frames = audio.readframes(audio.getnframes())
+        samples = [int.from_bytes(frames[index:index + 2], 'little', signed=True) for index in range(0, len(frames), 2)]
+        self.assertGreater(max(abs(value) for value in samples), 15000)
+        # Syllables rise and fall, so it is not one steady tone.
+        quiet = sum(1 for value in samples[::160] if abs(value) < 300)
+        self.assertGreater(quiet, 10)
+
+    def test_status_reports_the_qwen_voices_and_controls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            manager = hf_tts.TtsManager(Path(directory), REPO / 'src-tauri/resources')
+            try:
+                values = {key: installed(value, directory) for key, value in self.values.items() if key in QWEN3}
+                status = manager.status(list(values.values()))
+                custom = status['models'][values['qwen3-tts-1.7b-customvoice-v1']['id']]
+                self.assertEqual([voice['id'] for voice in custom['voices']],
+                                 ['Ryan', 'Aiden', 'Vivian', 'Serena', 'Uncle_Fu', 'Dylan', 'Eric', 'Ono_Anna', 'Sohee'])
+                self.assertEqual(custom['capabilities']['instruction']['label'], 'Speaking style')
+                self.assertEqual(list(custom['capabilities']['samplingControls']), ['temperature', 'topP', 'topK', 'maxNewTokens'])
+                self.assertEqual(len(custom['capabilities']['languages']), 10)
+                self.assertIsNone(status['models'][values['qwen3-tts-0.6b-customvoice-v1']['id']]['capabilities']['instruction'])
+                base = status['models'][values['qwen3-tts-1.7b-base-v1']['id']]
+                self.assertEqual((base['capabilities']['reference'], base['capabilities']['referenceRequired']),
+                                 ('transcript-optional', True))
+                self.assertEqual(base['voices'], [])
+                design = status['models'][values['qwen3-tts-1.7b-voicedesign-v1']['id']]
+                self.assertEqual(design['capabilities']['instruction']['label'], 'Voice description')
+                self.assertIsNone(design['capabilities']['reference'])
+                with self.assertRaises(ValueError):
+                    entry = values['qwen3-tts-1.7b-customvoice-v1']
+                    manager.submit(entry, {'modelId': entry['id'], 'text': 'Hi', 'settings': {'voice': 'Nobody'}})
+            finally:
+                manager.close()
 
 
 def fake_execute(manager, job, entry):
@@ -510,6 +633,16 @@ class BridgeRouteTests(unittest.TestCase):
     def test_routes_need_the_secret(self):
         self.assertEqual(self.request('GET', '/api/tts/status', secret=None)[0], 401)
         self.assertEqual(self.request('POST', '/api/tts/jobs', self.body(), secret='wrong')[0], 401)
+        self.assertEqual(self.request('GET', '/api/speech/support', secret=None)[0], 401)
+
+    def test_speech_support_says_which_models_run_and_why_others_cannot(self):
+        status, value = self.request('GET', '/api/speech/support')
+        self.assertEqual(status, 200)
+        models = value['models']
+        self.assertEqual(models['tts-qwen3-customvoice-1-7b'], {'state': 'managed', 'use': ['hf-78c1cf6773e25cc97a8388f6']})
+        self.assertEqual(models['phonon-2'], {'state': 'native', 'use': ['phonon-2']})
+        self.assertEqual(models['tts-chatterbox']['state'], 'unavailable')
+        self.assertIn('chatterbox engine', models['tts-chatterbox']['reason'])
 
     def test_catalog_cards_carry_the_hardware_estimate(self):
         self.state.tts.gpu = None

@@ -125,7 +125,7 @@ class BridgeState:
                 self.runtime = RuntimeManager(self.root, self.resources)
             except ImportError:
                 self.runtime = RuntimeUnavailable()
-        self._native_bindings = None
+        self._native_bindings, self._speech_support = None, None
         self._register_queue_shared_files()
         self.download_queue = DownloadQueue(managed_path(self.root, 'runtime-setup', 'hub-bridge', 'download-queue.json'),
                                             self._queue_resolve, self._queue_execute, discard=self._queue_discard,
@@ -137,6 +137,13 @@ class BridgeState:
             data = _read_json(source) if source.is_file() else {'models': [], 'artifacts': []}
             self._native_bindings = ({m['id']: m for m in data['models']}, {a['id']: a for a in data['artifacts']})
         return self._native_bindings
+
+    def speech_support(self):
+        """Whether each built-in speech model runs, and why not (built by distribution/speech_support.py)."""
+        if self._speech_support is None:
+            source = self.resources / 'runtime-setup/hf-extension/publisher-models.json'
+            self._speech_support = _read_json(source, MAX_CATALOG_BYTES).get('speechSupport', {}) if source.is_file() else {}
+        return self._speech_support
 
     def _register_queue_shared_files(self):
         from hf_catalog import safe_filename
@@ -1336,6 +1343,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.computer.status())
             elif route == '/speech/status':
                 self._send(200, {'status': state.speech.status()})
+            elif route == '/speech/support':
+                self._send(200, {'models': state.speech_support()})
             elif route == '/tts/status':
                 self._send(200, {'status': state.tts.status(state.tts_entries())})
             elif route == '/tts/jobs':

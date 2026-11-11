@@ -19,7 +19,9 @@ import traceback
 import types
 
 PROTOCOL = 1
-FAMILIES = ('kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1', 'zonos3-mini-v1', 'dots-tts-edit-v1')
+QWEN3_TTS = ('qwen3-tts-0.6b-base-v1', 'qwen3-tts-1.7b-base-v1', 'qwen3-tts-0.6b-customvoice-v1',
+             'qwen3-tts-1.7b-customvoice-v1', 'qwen3-tts-1.7b-voicedesign-v1')
+FAMILIES = ('kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1', 'zonos3-mini-v1', 'dots-tts-edit-v1') + QWEN3_TTS
 ZONOS3_REPOSITORY = 'Zyphra/ZONOS3-Mini'
 ZONOS3_BUNDLE = 'assets/steering/studio_bundle_mect60k_x10.json'
 ZONOS3_PRESET_NAMES = {'BBC newsreader': 'British newsreader'}
@@ -239,8 +241,49 @@ class Engine:
                 torch.cuda.is_available = available
                 torch.set_num_threads(threads)
             self.sample_rate = int(self.model.sample_rate)
+        elif family in QWEN3_TTS:
+            self._load_qwen3()
         else:
             raise ValueError('Unsupported speech family')
+
+    def _load_qwen3(self):
+        import torch
+        from qwen_tts import Qwen3TTSModel
+        # Loaded from the verified local folder only; qwen-tts downloads the speech tokenizer when given a repository id.
+        self.model = Qwen3TTSModel.from_pretrained(
+            str(self.model_dir), device_map='cuda:0' if self.device == 'cuda' else 'cpu',
+            dtype=torch.bfloat16 if self.device == 'cuda' else torch.float32, local_files_only=True)
+        self.qwen3_kind = str(self.model.model.tts_model_type)
+        expected = 'base' if 'base' in self.family else 'voice_design' if 'voicedesign' in self.family else 'custom_voice'
+        if self.qwen3_kind != expected:
+            raise ValueError('The Qwen3 TTS checkpoint is a ' + self.qwen3_kind + ' model, not ' + expected)
+        self.voices = sorted(str(name) for name in (self.model.get_supported_speakers() or []))
+        self.sample_rate = int(self.model.model.speech_tokenizer.get_output_sample_rate())
+
+    def _qwen3(self, text, settings, reference, reference_text, instruction):
+        import soundfile
+        options = {'language': settings.get('language') or 'auto',
+                   'max_new_tokens': int(settings.get('maxNewTokens', 2048))}
+        for name, key in (('temperature', 'temperature'), ('topP', 'top_p'), ('topK', 'top_k')):
+            if settings.get(name) is not None:
+                options[key] = settings[name]
+        if self.qwen3_kind == 'base':
+            if not reference:
+                raise ValueError('Add a reference recording of the voice to clone')
+            audio, rate = soundfile.read(reference, dtype='float32', always_2d=False)
+            # With the transcript the model continues the recording (closest match); without it only the voice
+            # timbre (speaker embedding) is used.
+            wavs, rate = self.model.generate_voice_clone(text=text, ref_audio=(audio, int(rate)), ref_text=reference_text,
+                                                         x_vector_only_mode=not reference_text, **options)
+        elif self.qwen3_kind == 'voice_design':
+            wavs, rate = self.model.generate_voice_design(text=text, instruct=instruction or '', **options)
+        else:
+            voice = settings.get('voice') or 'Ryan'
+            if voice.lower() not in {name.lower() for name in self.voices}:
+                raise ValueError('Choose one of the Qwen3 TTS voices')
+            wavs, rate = self.model.generate_custom_voice(text=text, speaker=voice, instruct=instruction, **options)
+        self.sample_rate = int(rate)
+        return wavs[0]
 
     def _load_zonos3(self, source):
         import torch
@@ -370,6 +413,9 @@ class Engine:
             audio = self._zonos3(text, settings, reference, seed)
         elif self.family == 'dots-tts-edit-v1':
             audio = self._dots(text, settings, reference, reference_text)
+        elif self.family in QWEN3_TTS:
+            with torch.inference_mode():
+                audio = self._qwen3(text, settings, reference, reference_text, instruction)
         else:
             from breeze_infer.runtime import set_all_seeds
             from breeze_infer.templates import get_template, prepare_inputs, select_template_name

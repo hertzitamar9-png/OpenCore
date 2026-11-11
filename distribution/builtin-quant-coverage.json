@@ -72,46 +72,56 @@
       "id": "tts-qwen3-customvoice-1-7b",
       "label": "Qwen3 TTS \u00b7 1.7B CustomVoice",
       "category": "tts",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
+      "source": "bundled packages",
+      "repositories": [
+        "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+      ]
     },
     {
       "id": "tts-qwen3-customvoice-0-6b",
       "label": "Qwen3 TTS \u00b7 0.6B CustomVoice",
       "category": "tts",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
+      "source": "bundled packages",
+      "repositories": [
+        "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
+      ]
     },
     {
       "id": "tts-qwen3-voicedesign-1-7b",
       "label": "Qwen3 TTS \u00b7 1.7B VoiceDesign",
       "category": "tts",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
+      "source": "bundled packages",
+      "repositories": [
+        "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"
+      ]
     },
     {
       "id": "voice-cloning-qwen3-base-1-7b",
       "label": "Qwen3 TTS \u00b7 1.7B Base",
       "category": "voice-cloning",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
+      "source": "bundled packages",
+      "repositories": [
+        "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
+      ]
     },
     {
       "id": "voice-cloning-qwen3-base-0-6b",
       "label": "Qwen3 TTS \u00b7 0.6B Base",
       "category": "voice-cloning",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
-      "source": "native catalog",
-      "repositories": []
+      "source": "bundled packages",
+      "repositories": [
+        "Qwen/Qwen3-TTS-12Hz-0.6B-Base"
+      ]
     },
     {
       "id": "ocr-glm-ocr",
