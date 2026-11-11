@@ -61,11 +61,9 @@ index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement
 index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
 index+='\nconst $speechControlsStyle=document.createElement("style");$speechControlsStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/speech-controls.css'),'utf8'))+';document.head.appendChild($speechControlsStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
+index=require('./conversation-indicator-patches.cjs').patchIndex(index,{editFunction,replaceOnce});
 app=require('./model-selection-patches.cjs')(app,{editFunction,replaceOnce});
-app=replaceOnce(app,'className:`client-dot client-${a.client.toLowerCase().replaceAll(" ","-")}`',
-  'className:`client-dot client-${a.client.toLowerCase().replaceAll(" ","-")}`,style:/^(active|running|complete|completed|stop)$/.test(a.status)?{background:"var(--green)"}:void 0');
-app=replaceOnce(app,'i.jsx(l8,{conversations:l.conversations,',
-  'i.jsx(l8,{conversations:l.conversations.map(a=>l.activeConversationIds?.includes(a.id)?{...a,status:"running"}:a),');
+app=require('./conversation-indicator-patches.cjs')(app,{editFunction,replaceOnce});
 app = replaceOnce(app, 'When enabled, the Codex agent runtime can read', 'When enabled, OpenCore Agent can read');
 app=replaceOnce(app,'const Xf=()=>{try{const t=window.localStorage.getItem("opencore.model-profile");if(t&&g2(t))return t}catch{}return"doucode"}',
   'const Xf=()=>{const e=globalThis.__OPENCORE_PHONE__===true;try{const t=window.localStorage.getItem("opencore.model-profile");if(e)return t||"stopped";if(t&&g2(t))return t}catch{}return "stopped"}');
@@ -209,7 +207,7 @@ app=editFunction(app,'w8',text=>replaceOnce(text,
 app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
 // Keep independent shell assets in the companion bundle to fit the native App slot.
-const shellStyles=['menu-scroll.css','section-highlights.css']
+const shellStyles=['menu-scroll.css','section-highlights.css','conversation-indicators.css','response-receipt.css']
   .map(name=>fs.readFileSync(path.join(root,'../src',name),'utf8')).join('\n');
 const shellFeatures='\n'+fs.readFileSync(path.join(root,'../src/menu-scroll.js'),'utf8').replace('export function ','function ')+
   '\nexport function installShellFeatures(){installMenuScrollGuard();const style=document.createElement("style");style.textContent='+JSON.stringify(shellStyles)+';document.head.appendChild(style);}\n';
@@ -221,18 +219,23 @@ if(coordinatorBoundary<0)throw Error('Missing install coordinator entry');
 app += '\nimport{createInstallCoordinator}from"./model-catalog-B8SfuDgQ.js";\n'+coordinatorSource.slice(coordinatorBoundary);
 app += '\nimport{createManualUpdatePolicy}from"./model-catalog-B8SfuDgQ.js";const $manualUpdatePolicy=createManualUpdatePolicy('+JSON.stringify(releaseVersion)+');\n';
 app += '\nimport{createPhononSpeech}from"./model-catalog-B8SfuDgQ.js";const $phononSpeech=createPhononSpeech($hubRequest,()=>$hubRefresh(true)),$PhononSpeechControls=$phononSpeech.createControls(p);\n';
+app += '\nimport{createManagedTts}from"./model-catalog-B8SfuDgQ.js";const $managedTts=createManagedTts($hubRequest,()=>$hubRefresh(true),()=>$hubState.catalog),$ManagedTtsControls=$managedTts.createControls(p);\n';
 app += '\nimport{createAppUpdatePreferences}from"./model-catalog-B8SfuDgQ.js";const{UpdatePreferences:$UpdatePreferences,markUpdateAttempt:$markUpdateAttempt,useUpdateSchedule:$useUpdateSchedule}=createAppUpdatePreferences(p);\n';
+app=require('./receipt-ui-patches.cjs')(app,{editFunction,replaceOnce});
 
 (async () => {
   const report = [];
   const speechCode='\n'+fs.readFileSync(path.join(root,'../src/phonon-speech.js'),'utf8');
+  const ttsCode='\n'+fs.readFileSync(path.join(root,'../src/managed-tts.js'),'utf8');
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
   const preferencesCode='\nconst $createAppUpdatePreferences=(()=>{'+fs.readFileSync(path.join(root,'../src/app-update-preferences.js'),'utf8').replace('export function ','function ')+';return createAppUpdatePreferences})();export{$createAppUpdatePreferences as createAppUpdatePreferences};\n';
   const updateProgressCode='\nexport function createUpdateProgress(h){return function(){return h("div",{className:"app-update-overlay",role:"status","aria-live":"polite"},h("div",{className:"app-update-card"},h("h2",null,"Updating OpenCore"),h("p",null,"Preparing and downloading the update…"),h("progress",{"aria-label":"Update download in progress"}),h("small",null,"Keep your PC on. An installation window will show the next step, then OpenCore will reopen.")))}}\n';
   const updatePolicyCode='\nexport const createManualUpdatePolicy=('+createManualUpdatePolicy.toString()+');\n';
+  const conversationIndicatorCode='\n'+fs.readFileSync(path.join(root,'../src/conversation-indicators.js'),'utf8');
+  const responseReceiptCode='\n'+fs.readFileSync(path.join(root,'../src/response-receipt.js'),'utf8');
   const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+workbench.featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode+'\n'+require('./hub-patches.cjs').featureInstallerSource();
-  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures+preferencesCode+speechCode+updateProgressCode+updatePolicyCode]]) {
+  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures+preferencesCode+speechCode+ttsCode+updateProgressCode+updatePolicyCode+conversationIndicatorCode+responseReceiptCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,
       compress: { passes: name === 'App-kNA9sRUP.js' ? 3 : 1, unused: false },

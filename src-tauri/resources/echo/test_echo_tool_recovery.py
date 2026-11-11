@@ -7,10 +7,12 @@ import json
 from pathlib import Path
 import tempfile
 import threading
+import types
 import unittest
 import urllib.request
 
-from echo_server import ArchiveSet, EchoState, Handler, HARNESS_CHECKPOINT, chrome_launch_step, compact_builtin_tool_docs
+from echo_server import (ArchiveSet, EchoState, Handler, HARNESS_CHECKPOINT, app_launch_spec, app_launch_step,
+                         chrome_launch_step, compact_builtin_tool_docs, unverified_desktop_claim)
 from evoagent.echo_adapters import adapter_for
 from evoagent.echo_context import LiveTranscript
 
@@ -24,7 +26,7 @@ class ToolRecoveryTests(unittest.TestCase):
 
     def test_chrome_launch_satisfies_installed_tools_required_explanation(self):
         tools = []
-        for name, actions in [('system_use', ['find_apps', 'launch_app', 'run_command']),
+        for name, actions in [('system_use', ['find_apps', 'launch_app']),
                               ('desktop_use', ['list'])]:
             tools.append({'type': 'function', 'function': {
                 'name': 'ocns_13_mcp__opencore_' + name,
@@ -76,7 +78,9 @@ class ToolRecoveryTests(unittest.TestCase):
                 self.assertEqual(call['function']['name'], 'exec_command')
                 arguments = json.loads(call['function']['arguments'])
                 self.assertIn('Start-Process', arguments['cmd'])
-                self.assertIn('MainWindowHandle', arguments['cmd'])
+                self.assertIn('OPENCORE_APP_RESULT', arguments['cmd'])
+                for flag in ('--new-window', 'about:blank', '--profile-directory', '--user-data-dir'):
+                    self.assertNotIn(flag, arguments['cmd'], 'Browser flags switch the signed-in profile')
                 self.assertFalse(arguments['login'], 'Launching an app must not run shell profile hooks')
         for text in ('Thanks', 'Do not open Chrome', 'Explain how to open Chrome', '"open Chrome"'):
             self.assertIsNone(chrome_launch_step(memory + text, tools, []))
@@ -86,19 +90,251 @@ class ToolRecoveryTests(unittest.TestCase):
         action = chrome_launch_step('Open Chrome', tools, [])
         self.assertIn('tool_calls', action)
         call = action['tool_calls'][0]
-        success = {'launched': True, 'verified': True, 'pid': 123, 'windowId': 456,
+        spec = app_launch_spec('Open Chrome')
+        success = {'launched': True, 'verified': True, 'id': spec['id'], 'pid': 123, 'windowId': 456,
+                   'alreadyRunning': False, 'method': 'start_menu',
                    'executablePath': r'C:\Program Files\Google\Chrome\Application\chrome.exe'}
         history = [action, {'role': 'tool', 'tool_call_id': call['id'],
-                           'content': 'Process exited with code 0\nOutput:\nOPENCORE_CHROME_RESULT=' + json.dumps(success)}]
+                           'content': 'Process exited with code 0\nOutput:\nOPENCORE_APP_RESULT=' + json.dumps(success)}]
         self.assertIn('verified its window', chrome_launch_step('Open Chrome', tools, history)['content'])
         history[-1]['tool_call_id'] = 'unrelated'
         self.assertNotIn('verified its window', chrome_launch_step('Open Chrome', tools, history)['content'])
         history[-1]['tool_call_id'] = call['id']
-        for result in ({'launched': True}, {**success, 'verified': False}, {**success, 'windowId': 0}):
-            history[-1]['content'] = 'OPENCORE_CHROME_RESULT=' + json.dumps(result)
+        for result in ({'launched': True}, {**success, 'verified': False}, {**success, 'windowId': 0},
+                       {**success, 'id': 'another-app'}):
+            history[-1]['content'] = 'OPENCORE_APP_RESULT=' + json.dumps(result)
             self.assertNotIn('verified its window', chrome_launch_step('Open Chrome', tools, history)['content'])
-        history[-1]['content'] = 'Process exited with code 1\nOPENCORE_CHROME_RESULT=' + json.dumps(success)
+        history[-1]['content'] = 'Process exited with code 1\nOPENCORE_APP_RESULT=' + json.dumps(success)
         self.assertNotIn('verified its window', chrome_launch_step('Open Chrome', tools, history)['content'])
+
+    def test_open_chrome_focuses_the_signed_in_window_instead_of_a_new_profile_window(self):
+        tools = [{'function': {'name': 'exec_command'}}]
+        action = app_launch_step('Open Chrome', tools, [])
+        call = action['tool_calls'][0]
+        command = json.loads(call['function']['arguments'])['cmd']
+        self.assertIn("Finish 'focus' $true", command, 'An open Chrome window must be reused, not replaced')
+        self.assertIn('shell:AppsFolder', command, 'A new launch must match a Start menu click')
+        receipt = {'launched': True, 'verified': True, 'id': app_launch_spec('Open Chrome')['id'], 'pid': 9,
+                   'windowId': 77, 'alreadyRunning': True, 'focused': True, 'method': 'focus'}
+        history = [action, {'role': 'tool', 'tool_call_id': call['id'],
+                            'content': 'Process exited with code 0\nOutput:\nOPENCORE_APP_RESULT=' + json.dumps(receipt)}]
+        self.assertIn('brought its window to the front', app_launch_step('Open Chrome', tools, history)['content'])
+        history[-1]['content'] = 'OPENCORE_APP_RESULT=' + json.dumps({**receipt, 'focused': False})
+        self.assertIn('kept another window in front', app_launch_step('Open Chrome', tools, history)['content'])
+
+    def test_any_installed_app_gets_a_real_launch_including_edge(self):
+        tools = [{'function': {'name': 'exec_command'}}]
+        for question, app in (('Now open Microsoft Edge.', 'Microsoft Edge'), ('open edge', 'Microsoft Edge'),
+                              ('Can you open the calculator app?', 'Calculator'), ('launch notepad for me', 'Notepad'),
+                              ('open file explorer', 'File Explorer'), ('Open Settings', 'Settings'),
+                              ('תפתח לי את כרום', 'Google Chrome'), ('please start Visual Studio Code', 'Visual Studio Code')):
+            with self.subTest(question=question):
+                spec = app_launch_spec(question)
+                self.assertIsNotNone(spec)
+                self.assertEqual(spec['app'], app)
+                action = app_launch_step(question, tools, [])
+                self.assertEqual(action['tool_calls'][0]['function']['name'], 'exec_command')
+                command = json.loads(action['tool_calls'][0]['function']['arguments'])['cmd']
+                self.assertIn(spec['id'], command)
+                self.assertLess(len(command), 16000, 'The native run_command limit is 16000 characters')
+                for host in ('rundll32', 'wscript', 'cscript', 'msiexec', 'dllhost'):
+                    # Windows Defender refuses to start PowerShell when window APIs
+                    # appear beside a list of script-host names.
+                    self.assertNotIn(host, command.casefold())
+        edge = app_launch_spec('Open Microsoft Edge')
+        self.assertEqual(edge['exe'], 'msedge.exe')
+        self.assertIn('MSEdge', edge['appIds'])
+        for text in ('open chrome and search cats', 'open a new tab', 'open the file README.md',
+                     'Explain how to open Edge', 'open the door', 'start the build'):
+            with self.subTest(text=text):
+                self.assertIsNone(app_launch_step(text, tools, []))
+
+    def test_open_requests_in_other_languages_reach_the_same_launcher(self):
+        import unittest.mock
+        import echo_server
+        # A Spanish Windows Start menu: built-in apps carry localized names that
+        # appear nowhere in the code, plus an app OpenCore has never heard of.
+        start = [{'Name': 'Grabadora de sonido', 'AppID': 'Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe!App'},
+                 {'Name': 'Audacity', 'AppID': r'{6D809377-6AF0-444B-8957-A3773F02200E}\Audacity\Audacity.exe'},
+                 {'Name': "Baldur's Gate 3", 'AppID': 'steam://rungameid/1086940'}]
+        tools = [{'function': {'name': 'exec_command'}}]
+        with unittest.mock.patch.object(echo_server, 'installed_start_apps', lambda: start):
+            for question, app in (
+                    ('abre Chrome', 'Google Chrome'), ('¿Puedes abrir Microsoft Edge, por favor?', 'Microsoft Edge'),
+                    ('abra o Spotify agora', 'Spotify'), ('ouvre Microsoft Edge', 'Microsoft Edge'),
+                    ("Ouvre l'explorateur de fichiers", 'File Explorer'), ('öffne mir bitte Spotify', 'Spotify'),
+                    ('Kannst du Chrome öffnen?', 'Google Chrome'), ('apri Chrome', 'Google Chrome'),
+                    ('otwórz Chrome', 'Google Chrome'), ('Открой, пожалуйста, калькулятор', 'Calculator'),
+                    ('άνοιξε το Chrome', 'Google Chrome'), ('افتح لي متصفح كروم', 'Google Chrome'),
+                    ('افتح الحاسبة', 'Calculator'), ('תפתח לי את כרום', 'Google Chrome'),
+                    ('אתה יכול לפתוח את המחשבון?', 'Calculator'), ('请帮我打开谷歌浏览器', 'Google Chrome'),
+                    ('打开Chrome', 'Google Chrome'), ('Chromeを起動してください', 'Google Chrome'),
+                    ('크롬을 실행해 줘', 'Google Chrome'), ("Chrome'u aç", 'Google Chrome'),
+                    ('Hesap makinesini aç', 'Calculator'), ('क्रोम को खोलें', 'Google Chrome'),
+                    ('buka Chrome', 'Google Chrome'), ('mở Chrome giúp tôi', 'Google Chrome'),
+                    ('เปิด Chrome หน่อย', 'Google Chrome'),
+                    ('abre la grabadora de sonido', 'Grabadora de sonido'), ('abre audacity', 'Audacity'),
+                    ("open Baldur's Gate 3", "Baldur's Gate 3")):
+                with self.subTest(question=question):
+                    spec = app_launch_spec(question)
+                    self.assertIsNotNone(spec)
+                    self.assertEqual(spec['app'], app)
+                    action = app_launch_step(question, tools, [])
+                    command = json.loads(action['tool_calls'][0]['function']['arguments'])['cmd']
+                    self.assertIn(spec['id'], command)
+                    self.assertLess(len(command), 16000)
+            self.assertEqual(app_launch_spec('abre la grabadora de sonido')['appIds'],
+                             ['Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe!App'])
+            for text in ('abre una pestaña nueva', 'ouvre un nouvel onglet', 'öffne die Datei README.md',
+                         'abre Chrome y busca gatos', 'inicia un negocio', 'abre Pandora', '¿Cómo abro Chrome?'):
+                with self.subTest(text=text):
+                    self.assertIsNone(app_launch_step(text, tools, []))
+
+    def test_missing_app_reports_that_nothing_was_opened(self):
+        tools = [{'function': {'name': 'exec_command'}}]
+        action = app_launch_step('Open Microsoft Edge', tools, [])
+        call = action['tool_calls'][0]
+        receipt = {'launched': False, 'verified': False, 'id': app_launch_spec('Open Microsoft Edge')['id'],
+                   'reason': 'not_found'}
+        history = [action, {'role': 'tool', 'tool_call_id': call['id'],
+                            'content': 'Process exited with code 1\nOutput:\nOPENCORE_APP_RESULT=' + json.dumps(receipt)}]
+        reply = app_launch_step('Open Microsoft Edge', tools, history)['content']
+        self.assertIn('couldn’t find Microsoft Edge', reply)
+        self.assertNotIn('verified its window', reply)
+
+    def test_launcher_answers_in_the_language_of_the_request(self):
+        from echo_server import _LAUNCH_TEXT, launch_language, launch_text
+        for question, language in (('open chrome', 'en'), ('abre Chrome', 'es'), ('abra o Spotify', 'pt'),
+                                   ('ouvre Edge', 'fr'), ('Kannst du Chrome öffnen?', 'de'), ('відкрий Chrome', 'uk'),
+                                   ('открой хром', 'ru'), ('打开Chrome', 'zh'), ('打開Chrome', 'zh-Hant'),
+                                   ('Chromeを開いて', 'ja'), ('크롬 열어줘', 'ko'), ('افتح كروم', 'ar'),
+                                   ('תפתח לי את כרום', 'he'), ("Chrome'u aç", 'tr'), ('क्रोम खोलो', 'hi'),
+                                   ('open 微信', 'en'), ('Chromeを閉じて', 'ja'), ('How do I start a business?', 'en')):
+            with self.subTest(question=question):
+                self.assertEqual(launch_language(question), language)
+        for language, table in _LAUNCH_TEXT.items():
+            with self.subTest(language=language):
+                for key in ('opened', 'not_found', 'unverified', 'justification', 'explain_run', 'no_tool'):
+                    self.assertIn(key, table)
+                self.assertIn('Settings', table['needs_access'], 'The OpenCore interface labels are English')
+        tools = [{'function': {'name': 'exec_command'}}]
+        for question, opened, missing in (
+                ('abre Microsoft Edge', 'Microsoft Edge está abierto en tu PC.', 'No encontré Microsoft Edge'),
+                ('Microsoft Edgeを開いて', 'Microsoft Edge はPCで開いています。', 'Microsoft Edge が見つからなかった'),
+                ('افتح مايكروسوفت إيدج', 'تطبيق Microsoft Edge مفتوح على جهازك.', 'لم أجد تطبيق Microsoft Edge'),
+                ('תפתח לי את אדג׳', 'Microsoft Edge פתוח במחשב שלך.', 'לא מצאתי את Microsoft Edge')):
+            with self.subTest(question=question):
+                action = app_launch_step(question, tools, [])
+                call = action['tool_calls'][0]
+                spec = app_launch_spec(question)
+                self.assertEqual(spec['app'], 'Microsoft Edge')
+                receipt = {'launched': True, 'verified': True, 'id': spec['id'], 'pid': 5, 'windowId': 6,
+                           'alreadyRunning': False, 'method': 'start_menu'}
+                history = [action, {'role': 'tool', 'tool_call_id': call['id'],
+                                    'content': 'OPENCORE_APP_RESULT=' + json.dumps(receipt)}]
+                self.assertTrue(app_launch_step(question, tools, history)['content'].startswith(opened))
+                history[-1]['content'] = 'OPENCORE_APP_RESULT=' + json.dumps(
+                    {'launched': False, 'verified': False, 'id': spec['id'], 'reason': 'not_found'})
+                self.assertIn(missing, app_launch_step(question, tools, history)['content'])
+        schema = {'type': 'object', 'properties': {name: {'type': 'string'} for name in (
+            'cmd', 'sandbox_permissions', 'justification')}}
+        approval = [{'type': 'function', 'function': {'name': 'exec_command', 'parameters': schema}}]
+        arguments = json.loads(app_launch_step('abre Edge', approval, [], escalate=True)['tool_calls'][0]['function']['arguments'])
+        self.assertEqual(arguments['justification'], launch_text('justification', 'es', 'Microsoft Edge'))
+        self.assertTrue(arguments['justification'].startswith('¿Quieres que OpenCore abra Microsoft Edge'))
+        native = [{'type': 'function', 'function': {'name': 'mcp__opencore__system_use', 'parameters': {
+            'type': 'object', 'properties': {'action': {'type': 'string', 'enum': ['run_command']},
+                                             'command': {'type': 'string'}, 'explanation': {'type': 'string'},
+                                             'purpose': {'type': 'string'}}}}}]
+        arguments = json.loads(app_launch_step('Chromeを開いて', native, [])['tool_calls'][0]['function']['arguments'])
+        self.assertEqual(arguments['purpose'], 'Google Chrome を開く')
+        self.assertIn('Google Chrome を開くよう頼まれました', arguments['explanation'])
+        self.assertEqual(launch_text('no_tool', launch_language('Chromeを開いて')),
+                         'そのためのツールは実行していないので、PCでは何も開いておらず、確認もしていません。')
+        self.assertEqual(launch_text('no_tool', launch_language('Close Microsoft Edge')),
+                         'I didn’t run any tool for that, so nothing was opened or verified on your PC.')
+
+    def test_sandboxed_terminal_requests_approval_to_launch_in_the_users_session(self):
+        schema = {'type': 'object', 'properties': {name: {'type': 'string'} for name in (
+            'cmd', 'shell', 'sandbox_permissions', 'justification')}}
+        schema['properties'].update(login={'type': 'boolean'}, yield_time_ms={'type': 'integer'},
+                                    max_output_tokens={'type': 'integer'})
+        tools = [{'type': 'function', 'function': {'name': 'exec_command', 'parameters': schema}}]
+        arguments = json.loads(app_launch_step('Open Edge', tools, [], escalate=True)['tool_calls'][0]['function']['arguments'])
+        self.assertEqual(arguments['sandbox_permissions'], 'require_escalated')
+        self.assertIn('Microsoft Edge', arguments['justification'])
+        arguments = json.loads(app_launch_step('Open Edge', tools, [], escalate=False)['tool_calls'][0]['function']['arguments'])
+        self.assertNotIn('sandbox_permissions', arguments)
+        bare = [{'function': {'name': 'exec_command'}}]
+        arguments = json.loads(app_launch_step('Open Edge', bare, [], escalate=True)['tool_calls'][0]['function']['arguments'])
+        self.assertNotIn('sandbox_permissions', arguments, 'Only declared arguments may be sent')
+
+    def test_native_run_command_launches_and_verifies_any_app(self):
+        from echo_server import tool_call_error
+        tools = [{'type': 'function', 'function': {'name': 'mcp__opencore__system_use', 'parameters': {
+            'type': 'object', 'additionalProperties': False, 'required': ['action', 'explanation'],
+            'properties': {'action': {'type': 'string', 'enum': ['find_apps', 'launch_app', 'run_command']},
+                           'command': {'type': 'string'}, 'explanation': {'type': 'string'},
+                           'purpose': {'type': 'string'}}}}}]
+        action = app_launch_step('Open Microsoft Edge', tools, [])
+        self.assertIsNone(tool_call_error(action, tools))
+        call = action['tool_calls'][0]
+        arguments = json.loads(call['function']['arguments'])
+        self.assertEqual(arguments['action'], 'run_command')
+        self.assertIn('OPENCORE_APP_RESULT', arguments['command'])
+        receipt = {'launched': True, 'verified': True, 'id': app_launch_spec('Open Microsoft Edge')['id'],
+                   'pid': 31, 'windowId': 99, 'alreadyRunning': False, 'method': 'start_menu'}
+        output = json.dumps({'exitCode': 0, 'output': 'OPENCORE_APP_RESULT=' + json.dumps(receipt) + '\n'})
+        history = [action, {'role': 'tool', 'tool_call_id': call['id'], 'content': 'Wall time: 3.2 seconds\nOutput:\n' + output}]
+        self.assertEqual(app_launch_step('Open Microsoft Edge', tools, history)['content'],
+                         'Microsoft Edge is open on your PC. I verified its window.')
+
+    def test_desktop_success_claims_need_a_tool_result_in_this_turn(self):
+        live = types.SimpleNamespace(TURN='turn', compacted_tool_ids=[], entries=[
+            {'kind': 'turn', 'message': {'role': 'user', 'content': 'Close Microsoft Edge'}}])
+        claim = 'You’re open Microsoft Edge. I verified its window.'
+        self.assertTrue(unverified_desktop_claim('Close Microsoft Edge', claim, live))
+        self.assertTrue(unverified_desktop_claim('Close Microsoft Edge', 'I have closed Microsoft Edge.', live))
+        self.assertFalse(unverified_desktop_claim('How do I start a business?', 'I started by writing a plan.', live))
+        self.assertFalse(unverified_desktop_claim('Close Microsoft Edge', 'I can’t close it without a tool.', live))
+        for question, claim in (('abre Chrome', 'He abierto Chrome.'), ('Chromeを開いて', 'Chromeを開きました。'),
+                                ('открой хром', 'Я открыл Chrome.'), ('ouvre Edge', "J'ai ouvert Microsoft Edge."),
+                                ('크롬 열어줘', '크롬을 열었습니다.'), ('תפתח לי את כרום', 'פתחתי את כרום.')):
+            with self.subTest(question=question):
+                self.assertTrue(unverified_desktop_claim(question, claim, live))
+        self.assertFalse(unverified_desktop_claim('¿Cómo inicio un negocio?', 'Inicié con un plan.', live))
+        live.entries.append({'kind': 'message', 'message': {'role': 'tool', 'tool_call_id': 'x', 'content': 'ok'}})
+        self.assertFalse(unverified_desktop_claim('Close Microsoft Edge', claim, live))
+
+    def test_model_success_claim_without_a_tool_is_retried_then_replaced(self):
+        with ExitStack() as stack:
+            root = Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            archives = ArchiveSet(root, idle_seconds=60)
+            stack.callback(archives.close)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            stack.callback(state.memory_controller.close)
+            state._ctx_size = 32768
+            state.count_tokens = lambda text: max(1, len(str(text)) // 4)
+            state._memory_adapter = adapter_for({'architecture': 'qwen', 'revision': 'fixture'}, state.count_tokens)
+            handler = Handler.__new__(Handler)
+            handler.state, handler.headers = state, {}
+            handler._send_json = lambda code, value: (code, value)
+            bodies = []
+
+            def generate(body, _phase):
+                bodies.append(copy.deepcopy(body))
+                return {'choices': [{'message': {'role': 'assistant', 'content': 'I have closed Microsoft Edge. I verified its window.'},
+                                     'finish_reason': 'stop'}]}
+            handler._generate_live = generate
+            code, result = handler._controlled_context_serial({'messages': [
+                {'role': 'user', 'content': 'Close Microsoft Edge.'}],
+                'tools': [{'function': {'name': 'exec_command'}}]}, 'unverified-claim', archive_input=False)
+            self.assertEqual(code, 200)
+            self.assertEqual(len(bodies), 2)
+            self.assertIn('no tool ran in this turn', json.dumps(bodies[1]['messages'], ensure_ascii=False))
+            content = result['choices'][0]['message']['content']
+            self.assertNotIn('verified its window', content)
+            self.assertIn('nothing was opened or verified', content)
 
     def test_chrome_followup_uses_only_prior_user_intent_not_recalled_commands(self):
         tools = [{'function': {'name': 'exec_command'}}]

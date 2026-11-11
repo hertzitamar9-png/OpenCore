@@ -11,6 +11,46 @@ from hf_runtime import RuntimeManager, checked_model_files, conversation_key, ru
 
 
 class RuntimeSafetyTests(unittest.TestCase):
+    def test_low_ram_alone_does_not_terminate_an_owned_worker(self):
+        import os, sys
+        runtime = RuntimeManager(self.root, self.resources)
+        self.addCleanup(runtime.stop)
+        with patch('hf_runtime._available_memory', return_value=256 * 1024 ** 2):
+            child = runtime._spawn([sys.executable, '-c', 'import time; time.sleep(1.2)'], dict(os.environ), self.root/'worker.log', cwd=self.root)
+            self.assertEqual(child.wait(timeout=5), 0, 'Low RAM by itself must not kill a working model process')
+
+    def test_a_temporary_ram_dip_does_not_kill_a_ready_gpu_worker(self):
+        runtime = RuntimeManager(self.root, self.resources)
+        child = types.SimpleNamespace(poll=lambda: None)
+        response = io.BytesIO(b'{"status":"ok"}')
+        response.status = 200
+        with patch('hf_runtime._available_memory', return_value=2 * 1024 ** 3), \
+             patch.object(runtime, '_request', return_value=response):
+            try:
+                runtime._wait_health(child, 'http://127.0.0.1:1234', 'fixture-key', self.root/'runtime.log')
+            except RuntimeError as error:
+                self.fail('A temporary RAM dip stopped a ready GPU worker: ' + str(error))
+        self.assertFalse(runtime._cancel.is_set())
+
+    def test_low_ram_alone_does_not_reject_a_ready_worker(self):
+        runtime = RuntimeManager(self.root, self.resources)
+        child = types.SimpleNamespace(poll=lambda: None)
+        response = io.BytesIO(b'{"status":"ok"}')
+        response.status = 200
+        with patch('hf_runtime._available_memory', return_value=256 * 1024 ** 2), \
+             patch.object(runtime, '_request', return_value=response):
+            runtime._wait_health(child, 'http://127.0.0.1:1234', 'fixture-key', self.root/'runtime.log')
+        self.assertFalse(runtime._cancel.is_set())
+
+    def test_real_memory_allocation_failure_reports_the_worker_exit_and_cause(self):
+        runtime = RuntimeManager(self.root, self.resources)
+        child = types.SimpleNamespace(poll=lambda: 1, returncode=1)
+        log = self.root/'runtime.log'
+        log.write_text('Model allocation failed: not enough memory', encoding='utf-8')
+        with patch('hf_runtime._available_memory', return_value=0):
+            with self.assertRaisesRegex(RuntimeError, 'exited with code 1.*not enough memory'):
+                runtime._wait_health(child, 'http://127.0.0.1:1234', 'fixture-key', log)
+
     def test_owned_worker_can_start_with_isolated_python_imports(self):
         import subprocess,sys,hf_runtime
         result=subprocess.run([sys.executable,'-I',hf_runtime.__file__,'--help'],capture_output=True,text=True,timeout=10)

@@ -329,6 +329,17 @@ def _available_memory():
     return data.availablePhysical if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(data)) else None
 
 
+class ModelLoadError(RuntimeError):
+    """A failed local load needs a user retry, not an HTTP server-error retry."""
+    def __init__(self, message):
+        detail = str(message).strip() or 'The local model could not load.'
+        # The last log lines contain the actual allocation/loader failure.
+        # Preserve them when the API/UI limits the size of an error message.
+        if len(detail) > 1000:
+            detail = detail[:160] + '\n...\n' + detail[-835:]
+        super().__init__(detail)
+
+
 def gpu_offloaded_layers(log_path):
     """Read llama.cpp's actual layer placement after the server is ready."""
     try:
@@ -428,7 +439,6 @@ class RuntimeManager:
         self._context = None
         self._active = None
         self._loading = None
-        self._memory_watchers = []
         self._state_lock = threading.RLock()
         self._generation = threading.Lock()
         self._automatic_memory = False
@@ -480,21 +490,6 @@ class RuntimeManager:
         child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=environment,
             creationflags=flags, cwd=str(cwd or self.root))
         self._children.append(child)
-        if cwd is not None:
-            def protect_available_memory():
-                while child.poll() is None and not self._cancel.wait(1):
-                    available = _available_memory()
-                    if available is not None and available < 3 * 1024 ** 3:
-                        self._stop_reason = 'Available host memory became too low. The managed runtime was stopped; choose a smaller quantization.'
-                        self._cancel.set()
-                        try:
-                            child.terminate()
-                        except OSError:
-                            pass
-                        return
-            watcher = threading.Thread(target=protect_available_memory, daemon=True)
-            watcher.start()
-            self._memory_watchers.append(watcher)
         return child
 
     def _wait_health(self, child, url, key, log_path, deadline=300):
@@ -502,9 +497,6 @@ class RuntimeManager:
         while time.monotonic() < end:
             if self._cancel.is_set():
                 raise RuntimeError(self._stop_reason or 'Runtime preparation paused; downloaded files were retained.')
-            available = _available_memory()
-            if available is not None and available < 3 * 1024 ** 3:
-                raise RuntimeError('Available host memory became too low. The managed runtime was stopped; choose a smaller quantization.')
             if child.poll() is not None:
                 with Path(log_path).open('rb') as log:
                     log.seek(max(0, log.seek(0, 2) - 5000))
@@ -546,6 +538,9 @@ class RuntimeManager:
             self._loading = (entry['id'], 'Loading model…')
         try:
             return self._prepare(entry)
+        except MemoryError:
+            self.stop()
+            raise ModelLoadError('Not enough RAM to load this model. Free memory and try again; downloaded files were kept.') from None
         except Exception:
             self.stop()
             raise
@@ -583,10 +578,6 @@ class RuntimeManager:
         plan.setdefault('requestedContextTokens',NATIVE_TARGET if plan['operatingMode']=='native' else ECHO_TARGET)
         self._report_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
         files = checked_model_files(entry, self.root, self._cancel)
-        available = _available_memory()
-        weight_bytes = sum(path.stat().st_size for path in files)
-        if plan['format'] == 'gguf' and plan.get('runtimeBackend') == 'cpu' and available and weight_bytes + 3 * 1024 ** 3 > available:
-            raise RuntimeError(f'This model uses a CPU-only runtime and needs about {(weight_bytes + 3 * 1024 ** 3) / 1e9:.1f} GB of free RAM including working space; GPU memory is not used by that runtime. The downloaded model is kept. Free RAM or choose a smaller quantization, then prepare it again.')
         run_dir = self.root / 'runtime-setup/hub-runs' / (entry['id'] + '-' + uuid.uuid4().hex[:12])
         run_dir.mkdir(parents=True)
         log_path = run_dir / 'runtime.log'
@@ -791,7 +782,12 @@ class RuntimeManager:
         automatic = automatic_memory_request(payload)
         active = self._active
         if not automatic and (not active or active['id'] != entry['id'] or active.get('mode','echo')!=entry.get('operatingMode','echo') or any(child.poll() is not None for child in self._children)):
-            self.prepare(entry)
+            try:
+                self.prepare(entry)
+            except MemoryError:
+                raise ModelLoadError('Not enough RAM to load this model. Free memory and try again; downloaded files were kept.') from None
+            except (OSError, RuntimeError, ValueError) as error:
+                raise ModelLoadError(str(error)) from None
         with self._state_lock:
             active = self._active
             if automatic and (not active or active['id'] != entry['id'] or any(child.poll() is not None for child in self._children)):
@@ -865,9 +861,6 @@ class RuntimeManager:
             except OSError:
                 pass
         self._children.clear()
-        for watcher in self._memory_watchers:
-            watcher.join(timeout=1)
-        self._memory_watchers.clear()
         for log in self._logs:
             log.close()
         self._logs.clear()

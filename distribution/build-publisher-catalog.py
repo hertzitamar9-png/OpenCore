@@ -124,6 +124,8 @@ def build():
     entries = append_presets(catalog, entries, HERE / 'hf-research/bundled-quantizations.json', HERE / 'hf-research/bundled-quants')
     from requested_catalog import append_requested
     entries = append_requested(entries, HERE / 'hf-research/requested-models.json', HERE / 'hf-research/requested-models')
+    from tts_catalog import append_tts
+    entries = append_tts(entries, HERE / 'hf-research/requested-models')
     for entry in entries:
         entry['builtIn'] = True
     from echo_catalog import publisher_echo_policy

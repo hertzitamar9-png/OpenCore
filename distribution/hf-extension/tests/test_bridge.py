@@ -44,6 +44,47 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_model_startup_failure_returns_its_reason_without_a_retryable_server_error(self):
+        from hf_runtime import RuntimeManager
+        entry = self.seed()
+        self.request('POST', '/api/install', {'id': entry['id']})
+        self.wait_job()
+        runtime = RuntimeManager(self.root, self.root)
+        self.state.runtime = runtime
+        for error, reason in [(RuntimeError('Available host memory became too low. The model files were kept.'), 'host memory'), (MemoryError(), 'Not enough RAM'),
+                              (RuntimeError('The managed runtime exited with code 1: ' + 'loading tensor\n' * 200 + 'fatal: model allocation failed: not enough memory'), 'allocation failed: not enough memory')]:
+            with self.subTest(error=type(error).__name__), patch.object(runtime, '_prepare', side_effect=error):
+                status, _, result = self.request('POST', '/v1/chat/completions', {
+                    'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Open Chrome'}], 'stream': True})
+            self.assertEqual(status, 400, result)
+            self.assertIn(reason, result['error']['message'])
+            self.assertLessEqual(len(result['error']['message']), 1000)
+            self.assertEqual(result['error']['code'], 'model_load_failed')
+            self.assertIsNone(runtime.loading_stage(entry['id']))
+
+    def test_finished_model_job_cannot_be_rewritten_by_a_later_chat_load(self):
+        entry = self.seed()
+        self.request('POST', '/api/install', {'id': entry['id']})
+        self.wait_job()
+        with patch.object(self.runtime, 'prepare', side_effect=RuntimeError('The managed runtime exited with code 1: ' + 'loading tensor\n' * 200 + 'Not enough memory to load this model')):
+            self.request('POST', '/api/prepare', {'id': entry['id']})
+            completed = self.wait_job()
+        self.assertEqual(completed['status'], 'failed')
+        self.assertIn('Not enough memory', completed['error'])
+        self.runtime.on_progress(stage='loading-model', detail='Loading again')
+        current = self.request('GET', '/api/status')[2]['progress']
+        self.assertEqual(current, completed)
+
+    def test_prepare_reports_a_real_operating_system_allocation_error(self):
+        entry = self.seed()
+        self.request('POST', '/api/install', {'id': entry['id']})
+        self.wait_job()
+        with patch.object(self.runtime, 'prepare', side_effect=OSError(1455, 'The paging file is too small to complete this operation')):
+            self.request('POST', '/api/prepare', {'id': entry['id']})
+            completed = self.wait_job()
+        self.assertEqual(completed['status'], 'failed')
+        self.assertIn('paging file is too small', completed['error'])
+
     def test_speech_idle_mode_http_contract_preserves_both_client_versions(self):
         self.assertEqual(self.request('POST', '/api/speech/idle-mode', {'mode': 'cold'})[0], 200)
         self.assertEqual(self.state.speech.settings['idleMode'], 'cold')

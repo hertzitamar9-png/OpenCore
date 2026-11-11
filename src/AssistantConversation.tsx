@@ -1,4 +1,6 @@
-import { createContext, memo, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createContext, createElement, memo, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createResponseReceipt } from './response-receipt.js';
+import './response-receipt.css';
 import {
   ActionBarPrimitive,
   AssistantRuntimeProvider,
@@ -355,19 +357,7 @@ function ToolActivity({ kind, title, raw, resultRaw }: { kind: string; title?: s
   </details>;
 }
 
-export function EchoReceipt({ entries }: { entries: TimelineEntry[] }) {
-  const artifacts = entries.map((entry) => entry.metadata.artifact && typeof entry.metadata.artifact === "object" ? entry.metadata.artifact as Record<string, unknown> : null);
-  const allSaved = artifacts.length > 0 && artifacts.every((artifact) => artifact?.status === "complete");
-  const words = artifacts.reduce((sum, artifact) => sum + (typeof artifact?.words === "number" ? artifact.words : 0), 0);
-  const summary = entries.length > 1 ? `${entries.length} updates combined` : words ? `${words} words archived` : "Memory receipt available";
-  const receiptText = entries.map((entry, index) => {
-    const title = entry.title.trim() || `ECHO update ${index + 1}`;
-    const content = displayText(entry.content).trim() || "No receipt text saved";
-    const metadata = Object.keys(entry.metadata).length ? `Receipt metadata\n${JSON.stringify(entry.metadata, null, 2)}` : "";
-    return [entries.length > 1 ? `${index + 1}. ${title}` : "", content, metadata].filter(Boolean).join("\n\n");
-  }).join("\n\n────────────────────────\n\n");
-  return <details className="echo-storage-card"><summary><BrainCircuit size={15} /><strong>{allSaved ? "Saved to ECHO" : "ECHO memory"}</strong><span>{summary}</span></summary><pre>{receiptText}</pre></details>;
-}
+export const EchoReceipt = createResponseReceipt({createElement});
 
 function ResponseMarkdown({ content }: { content: string }) {
   return <div className="aui-md"><ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={messageUrlTransform} components={{

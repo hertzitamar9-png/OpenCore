@@ -11,6 +11,18 @@ beforeEach(() => {vi.restoreAllMocks();const values=new Map<string,string>();Obj
 afterEach(()=>{if(storageDescriptor)Object.defineProperty(window,'localStorage',storageDescriptor);});
 async function expandFiles(){fireEvent.click(await screen.findByRole('button',{name:'Show all file changes'}));}
 
+it('keeps Windows cache and Snip Sketch internals and capture diagnostics out of the chat', async () => {
+  vi.spyOn(files, 'workspaceFiles').mockResolvedValue({ ...result, coverage: ['An internal capture limit was reached'], files: [
+    record,
+    { ...record, id: 'cache', path: 'C:/ProgramData/Microsoft/Windows/Caches/cversions.2.db' },
+    { ...record, id: 'snip', path: 'C:/Users/test/AppData/Local/Packages/Microsoft.ScreenSketch_8wekyb3d8bbwe/TempState/clip.png' },
+  ] });
+  render(<FileChangesReceipt conversationId="chat" active={false} onOpen={vi.fn()} />);
+  await expandFiles();
+  expect(await screen.findByRole('button', { name: /src\/main.ts/ })).toBeVisible();
+  expect(screen.queryByText(/cversions|ScreenSketch|Capture coverage|internal capture limit/)).toBeNull();
+});
+
 it('shows real counts for the latest task and opens its actual file record', async () => {
   vi.spyOn(files, 'workspaceFiles').mockResolvedValue(result);
   const onOpen = vi.fn();
@@ -46,7 +58,7 @@ it('keeps failed partial files and reports binary output without fake line count
   await screen.findByRole('button', { name: /cover.png/ });
   expect(screen.getByText(/partial changes/i)).toBeVisible();
   expect(screen.getByText('Binary output')).toBeVisible();
-  expect(screen.getByText(/Skipped large file/)).toBeInTheDocument();
+  expect(screen.queryByText(/Skipped large file/)).not.toBeInTheDocument();
   expect(screen.queryByText('+0')).not.toBeInTheDocument();
 });
 
@@ -57,7 +69,7 @@ it('does not restore changes from a prior task when the latest task changed no f
   expect(view.container).toBeEmptyDOMElement();
 });
 
-it('keeps capture diagnostics hidden until file changes are expanded and resets them for another chat',async()=>{
+it('keeps capture diagnostics out of the chat even when file changes are expanded',async()=>{
   const coverage=['Capture byte limit reached in an internal runtime folder'];
   const fetch=vi.spyOn(files,'workspaceFiles').mockResolvedValue({...result,coverage});
   const props={active:false,onOpen:vi.fn()};
@@ -65,9 +77,8 @@ it('keeps capture diagnostics hidden until file changes are expanded and resets 
   await screen.findByRole('button',{name:'Show all file changes'});
   expect(screen.queryByText(coverage[0])).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button',{name:'Show all file changes'}));
-  const diagnostics=screen.getByText('Capture coverage · 1 note').closest('details');
-  expect(diagnostics).not.toHaveAttribute('open');
-  fireEvent.click(screen.getByText('Capture coverage · 1 note'));
+  expect(screen.queryByText(/Capture coverage/)).not.toBeInTheDocument();
+  expect(screen.queryByText(coverage[0])).not.toBeInTheDocument();
   fetch.mockResolvedValue({...result,turnId:null,files:[],coverage});
   view.rerender(<FileChangesReceipt {...props} conversationId="new-chat"/>);
   await waitFor(()=>expect(fetch).toHaveBeenCalledWith({action:'changes',conversationId:'new-chat'}));

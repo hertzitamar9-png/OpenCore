@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FileCode2, Files } from 'lucide-react';
 import { subscribeWorkspaceFiles, workspaceFiles, type FileChangesResult, type FileRecord } from './workspaces';
 import './workspaces.css';
+import { isInternalFileChange } from './response-receipt.js';
 
 export function FileLineCounts({ added, removed, labelled = false }: { added: number | null; removed: number | null; labelled?: boolean }) {
   return <span className="file-line-counts">
@@ -47,15 +48,15 @@ export function FileChangesReceipt({ conversationId, active, onOpen }: { convers
   }, [conversationId, active]);
   if (active || previous.current.conversationId !== conversationId) return null;
   if (error) return <p className="workspace-inline-error" role="alert">File history: {error}</p>;
-  if (!receipt?.turnId || !receipt.files.length) return null;
+  const files = receipt?.files.filter(file => !isInternalFileChange(file)) || [];
+  if (!receipt?.turnId || !files.length) return null;
   const partial = ['failed', 'cancelled', 'interrupted', 'error'].includes(receipt.status || '');
-  const hasLines = receipt.files.some(file => file.added !== null || file.removed !== null);
+  const hasLines = files.some(file => file.added !== null || file.removed !== null);
   return <section className="file-changes-receipt" aria-label="Task file changes">
-    <header><span><Files size={15} />{partial ? 'Partial changes' : 'File changes'} <small>{receipt.files.length}</small></span>{hasLines && <FileLineCounts added={receipt.added} removed={receipt.removed} labelled />}<button className="file-changes-toggle" type="button" aria-expanded={expanded} aria-label={expanded?'Collapse file changes':'Show all file changes'} onClick={toggle}>{expanded?'Collapse ▴':'Show all ▾'}</button></header>
-    {expanded&&<div className="file-change-list">{receipt.files.map(file => <button key={file.id} onClick={() => onOpen(file)} title={file.source}>
+    <header><span><Files size={15} />{partial ? 'Partial changes' : 'File changes'} <small>{files.length}</small></span>{hasLines && <FileLineCounts added={files.reduce((sum,file)=>sum+(file.added||0),0)} removed={files.reduce((sum,file)=>sum+(file.removed||0),0)} labelled />}<button className="file-changes-toggle" type="button" aria-expanded={expanded} aria-label={expanded?'Collapse file changes':'Show all file changes'} onClick={toggle}>{expanded?'Collapse ▴':'Show all ▾'}</button></header>
+    {expanded&&<div className="file-change-list">{files.map(file => <button key={file.id} onClick={() => onOpen(file)} title={file.source}>
       <FileCode2 size={15} /><span className="file-change-path">{file.path}</span><small>{file.change}</small>
       {file.added === null && file.removed === null ? <span className="file-binary-label">{/^(text\/|application\/(json|javascript|xml))/.test(file.mime) ? 'Line count unavailable' : 'Binary output'}</span> : <FileLineCounts added={file.added} removed={file.removed} />}
     </button>)}</div>}
-    {expanded && <CaptureCoverage key={`${conversationId}:${receipt.turnId}`} coverage={receipt.coverage} />}
   </section>;
 }

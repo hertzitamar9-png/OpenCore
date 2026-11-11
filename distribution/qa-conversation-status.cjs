@@ -21,17 +21,18 @@ code+=String.raw`
    if(width<768)await page.locator('.section-header .section-heading button').click();
    const dot=status=>page.locator('.conversation-list .conversation-row').filter({hasText:'Chat status '+status}).locator('.client-dot');
    const color=async status=>dot(status).evaluate(element=>getComputedStyle(element).backgroundColor);
-   const green=await color('completed');
+   const green=await color('error'),yellow=await color('completed');
    assert.notEqual(green,'rgba(0, 0, 0, 0)');
-   for(const status of ['active','running','stop','error'])assert.equal(await color(status),green,'Active and completed chats must be green: '+status);
-   for(const status of ['interrupted','draft'])assert.notEqual(await color(status),green,'Unfinished chats must not be marked successful');
+   assert.notEqual(yellow,green);
+   assert.equal(await color('stop'),yellow,'Unread completed chats must be yellow');
+   for(const status of ['active','running','interrupted','draft'])assert.notEqual(await color(status),green,'Only current active work may be green');
    await page.evaluate(()=>{fixture.snapshot.activeConversationIds=[];});
    await page.waitForFunction(green=>{const row=[...document.querySelectorAll('.conversation-list .conversation-row')].find(element=>element.textContent.includes('Chat status error'));return row&&getComputedStyle(row.querySelector('.client-dot')).backgroundColor!==green;},green);
    await page.evaluate(()=>{fixture.snapshot.conversations.find(item=>item.id==='status-4').status='completed';});
-   await page.waitForFunction(green=>{const row=[...document.querySelectorAll('.conversation-list .conversation-row')].find(element=>element.textContent.includes('Chat status error'));return row&&getComputedStyle(row.querySelector('.client-dot')).backgroundColor===green;},green);
+   await page.waitForFunction(yellow=>{const row=[...document.querySelectorAll('.conversation-list .conversation-row')].find(element=>element.textContent.includes('Chat status error'));return row&&getComputedStyle(row.querySelector('.client-dot')).backgroundColor===yellow;},yellow);
    assert.deepEqual(errors,[]);
    await page.screenshot({path:path.join(folder,'conversation-status-'+width+'.png')});
-   proof.push({width,green,activeAndFinished:true,errorNotSuccessful:true,liveTransitions:true,errors});await page.close();
+   proof.push({width,green,yellow,activeOnly:true,unreadCompletion:true,liveTransitions:true,errors});await page.close();
   }
   fs.writeFileSync(path.join(folder,'conversation-status-render.json'),JSON.stringify({passed:true,proof},null,2));console.log(JSON.stringify({passed:true,proof}));
  }catch(error){console.error(error);if(page)await page.screenshot({path:path.join(folder,'conversation-status-error.png')});process.exitCode=1;}

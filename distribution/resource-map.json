@@ -1,5 +1,8 @@
 {
   "runtime-setup/hf-extension/hf_speech.py": "src-tauri/resources/runtime-setup/hf-extension/hf_speech.py",
+  "runtime-setup/hf-extension/hf_tts.py": "src-tauri/resources/runtime-setup/hf-extension/hf_tts.py",
+  "runtime-setup/hf-extension/tts_worker.py": "src-tauri/resources/runtime-setup/hf-extension/tts_worker.py",
+  "runtime-setup/hf-extension/tts-speech-lock.txt": "src-tauri/resources/runtime-setup/hf-extension/tts-speech-lock.txt",
   "agent-platform/TENCENT-MEMORY-LICENSE.txt": "src-tauri/resources/agent-platform/TENCENT-MEMORY-LICENSE.txt",
   "agent/browser-check.mjs": "src-tauri/resources/agent/browser-check.mjs",
   "agent/group-tools.mjs": "src-tauri/resources/agent/group-tools.mjs",

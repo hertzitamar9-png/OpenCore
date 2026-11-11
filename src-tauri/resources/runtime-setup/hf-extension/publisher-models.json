@@ -80225,6 +80225,184 @@
       "publishedContextTokens": 262144
     },
     {
+      "id": "hf-1fdd21d715cfa8cd240be40c",
+      "repository": "BreezeBlue/Breeze-TTS-2",
+      "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+      "variantKey": "tts:breeze-tts-2-v1",
+      "name": "Breeze-TTS-2 · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "LICENSE",
+          "bytes": 18719,
+          "sha256": null,
+          "gitBlobSha1": "91765f274e37e08a9fced19a6167ca9d0e52f799",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "audio_tokenizer/config.json",
+          "bytes": 2336,
+          "sha256": null,
+          "gitBlobSha1": "06cc8dc4c5ec8a1929086b71b98c313020d9268b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "audio_tokenizer/configuration.json",
+          "bytes": 76,
+          "sha256": null,
+          "gitBlobSha1": "ab58e2eaf53cd14a1a2a7527d9261ceea93a24cd",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "audio_tokenizer/model.safetensors",
+          "bytes": 682293092,
+          "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "audio_tokenizer/preprocessor_config.json",
+          "bytes": 234,
+          "sha256": null,
+          "gitBlobSha1": "ba40914f4f49ab98a8ca545d4892ef7291a39592",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "config.json",
+          "bytes": 10161,
+          "sha256": null,
+          "gitBlobSha1": "4b44ed4d6189c57b780cd73915579de059b3ba18",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "generation_config.json",
+          "bytes": 251,
+          "sha256": null,
+          "gitBlobSha1": "da03eee098c41e30790890d4c998325ddc1bd0b9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "model-00001-of-00002.safetensors",
+          "bytes": 4961989890,
+          "sha256": "abf813781256e10cbe81f2dbb415f897556225d4dfa0282d67aa8ea164e114a9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "model-00002-of-00002.safetensors",
+          "bytes": 2004567152,
+          "sha256": "36aa73b1a11361e1774db90d9c63c63303b294c022de112aa51904d940edcef1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "model.safetensors.index.json",
+          "bytes": 109004,
+          "sha256": null,
+          "gitBlobSha1": "b4467c038557531368ea999361e726fe61668ecf",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "special_tokens_map.json",
+          "bytes": 886,
+          "sha256": null,
+          "gitBlobSha1": "1556c52ad39a242591f2dd6ed0401bd3582ba005",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "tokenizer.json",
+          "bytes": 33386945,
+          "sha256": "d3ec9ac3eb2392389b9f5112e85d8b43316494addb587ba7b7a9d61eac23af96",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4",
+          "filename": "tokenizer_config.json",
+          "bytes": 1157960,
+          "sha256": null,
+          "gitBlobSha1": "466af463b97cdd1e912320df115ce3bdd54d1a85",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 7683536706,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/BreezeBlue/Breeze-TTS-2",
+      "status": "not-installed",
+      "familyId": "publisher-breeze-tts-2",
+      "familyLabel": "Breeze-TTS-2",
+      "originalRepository": "BreezeBlue/Breeze-TTS-2",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "builtInDescription": "Taiwanese Mandarin and English speech with voice direction (for example \"speak cheerfully\"), vocal events such as (laugh) or [笑] and voice cloning from a recording with its transcript. Non-commercial license. Needs an NVIDIA RTX 30-series or newer GPU with 12 GB or more of memory; it cannot run on the CPU.",
+      "contextTokens": 8192,
+      "license": "BreezeBlue Research and Non-Commercial License",
+      "catalogOrder": 0,
+      "ttsRuntime": "breeze-tts-2-v1",
+      "ttsComponentBytes": 219923,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
+    },
+    {
       "id": "hf-34667a0778a9b3efbce8c14d",
       "repository": "mradermacher/Carbon-X-GGUF",
       "revision": "cfee06b7ad9106a85a1629976d2a179ae2e10c3d",
@@ -112523,6 +112701,1134 @@
         }
       ],
       "publishedContextTokens": 262144
+    },
+    {
+      "id": "hf-365ed3374618fe26fd4be914",
+      "repository": "KittenML/kitten-tts-2",
+      "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+      "variantKey": "tts:kitten-tts-2-v1",
+      "name": "Kitten TTS 2 · Ternary 1.58-bit",
+      "quantization": "Ternary 1.58-bit",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "LICENSE.md",
+          "bytes": 12478,
+          "sha256": null,
+          "gitBlobSha1": "936a075c83eb4c3ef110c22ae66629f93c9d7b85",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "config.json",
+          "bytes": 2196,
+          "sha256": null,
+          "gitBlobSha1": "f097d76a915373f9323cf899842aff593c59fa7f",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/added_tokens.json",
+          "bytes": 157239,
+          "sha256": null,
+          "gitBlobSha1": "6f8190293e73db87f49e1b22075a394b83649664",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/config.json",
+          "bytes": 1359,
+          "sha256": null,
+          "gitBlobSha1": "5260e728ab23bdd35a8b0887fcc63ce0fa266c6d",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/generation_config.json",
+          "bytes": 214,
+          "sha256": null,
+          "gitBlobSha1": "9e289a1aca21d66f216b0912f192963e60ff573e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/merges.txt",
+          "bytes": 1671853,
+          "sha256": null,
+          "gitBlobSha1": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/model-ternary.safetensors",
+          "bytes": 954467780,
+          "sha256": "8dd6cc318c16cbb177dd44d92521955d3abaa84a8910aae9ffb312c5ae920054",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/special_tokens_map.json",
+          "bytes": 450,
+          "sha256": null,
+          "gitBlobSha1": "17e42897ef5c81628a3fcfb7b43a115a9089ea35",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/tokenizer.json",
+          "bytes": 12649770,
+          "sha256": "99644fcf19a9aff57b247b4e56fffe878c65d9c230d21a46caf9acf8f54d31d7",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/tokenizer_config.json",
+          "bytes": 1166768,
+          "sha256": null,
+          "gitBlobSha1": "939c4e6e7db743a6b790a8f18e3be4c4d4d73ea6",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "lm/vocab.json",
+          "bytes": 2776833,
+          "sha256": null,
+          "gitBlobSha1": "4783fe10ac3adce15ac8f358ef5462739852c569",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "speaker/LICENSE",
+          "bytes": 1061,
+          "sha256": null,
+          "gitBlobSha1": "e5e0c2daded4524693e062d3e4fd016bbfb9a308",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "speaker/model.safetensors",
+          "bytes": 17418240,
+          "sha256": "c435292860671aa96e94bd19fcea055241c8ef05548e1e441a659b2bfd79fad5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/03_radio_dj_smooth_male.npz",
+          "bytes": 3692,
+          "sha256": "da3772dbee7b41748d142fffada9cf64237018f5cc4993c2094a39214f7a51e9",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/03_radio_dj_smooth_male.wav",
+          "bytes": 531116,
+          "sha256": "b697a2a9e0bd35fcf7e9d6a5fa11b2f9373be3ebd763cc46db441fe67ec41b9c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/06_elderly_professor_wise_male.npz",
+          "bytes": 3688,
+          "sha256": "069ca100db5ccd472422dd29df6bf7328208db8bc744bd46d3c90961ab27dcc4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/06_elderly_professor_wise_male.wav",
+          "bytes": 529964,
+          "sha256": "e38e5ca2c40e0d4d5e7b59d00334dc447f4809e09718f49b642ea706f740071d",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/11_stern_military_officer_female.npz",
+          "bytes": 3692,
+          "sha256": "9eea57c36ad15efb154fa5bdcd15504e943a14fee90bb86085386b33a996d183",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/11_stern_military_officer_female.wav",
+          "bytes": 531116,
+          "sha256": "ccb58b54dd3ad454fa5e85be9773659373681e124b0eb30b9d46633568918620",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/17_dramatic_stage_actor_male.npz",
+          "bytes": 3692,
+          "sha256": "fc1e441a8b6b940a328c6207b415d1e89b94ba64cc119531b00d93231d3055a2",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/17_dramatic_stage_actor_male.wav",
+          "bytes": 531116,
+          "sha256": "21eaf5823db802197df93107d586d6aeaedd5dd2b536c51ffb5b2f37c6a09689",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/18_warm_storyteller_cozy_female.npz",
+          "bytes": 3692,
+          "sha256": "4e660e6e8d4e31af50a3e241b410b84027271c3b91516f23c968f9e51067405a",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/18_warm_storyteller_cozy_female.wav",
+          "bytes": 531116,
+          "sha256": "32dc6c7067b8abaee14a1c6710dbd65765d9d7ea64eb5e33ce6be4372986f0ca",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/21_warm_grandfather_male.npz",
+          "bytes": 3688,
+          "sha256": "e9392a3ccb2e0b2c1c60abaa52bf95dc275724b5c8d6b579568be4f8ebee4439",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/21_warm_grandfather_male.wav",
+          "bytes": 529964,
+          "sha256": "1ca52bc6f1ab55ec4c3d492321753ee76b342402e77420e780722390c0cc8428",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/22_elderly_grandmother_soft_female.npz",
+          "bytes": 3692,
+          "sha256": "8e492a34d2d1329d524e3255929049eaeb62ba9d2605ce9e6147e004c8044dcc",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/22_elderly_grandmother_soft_female.wav",
+          "bytes": 531116,
+          "sha256": "3e1856dfe08e5e599e1f5e0639c7afc8ebd0fc1972fa53700d4b7eb0b11ffdbb",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/24_gentle_librarian_male.npz",
+          "bytes": 3692,
+          "sha256": "1a14d4925350564b594190adb4611127a10f5a7194f4bd63cd0b659c9571494d",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/24_gentle_librarian_male.wav",
+          "bytes": 531116,
+          "sha256": "1de81cc87e7ff5af2ba7792729a02936ae3eb3d0543a2231bf3c5882a5ab9a39",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/29_soothing_nurse_female.npz",
+          "bytes": 3688,
+          "sha256": "a929b252a2ee515bf86c1902bedf82cc497f3daf4d23359c257157d320a00f0f",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/29_soothing_nurse_female.wav",
+          "bytes": 529964,
+          "sha256": "a640d4678a16f7785720ca4d5fa6401e4b7f259a9cd173ff838ce4202731c627",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/42_distinguished_elderly_diplomat_male.npz",
+          "bytes": 3688,
+          "sha256": "8ec517dc22c04a2281fd08f03b7e5883bd69ef2d9513f8875470e4fd77c0c786",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/42_distinguished_elderly_diplomat_male.wav",
+          "bytes": 529964,
+          "sha256": "c1b8bfcaffb0ce30eb1543179f286d7e6e959d86a0318849bf215ea1f9b0f84d",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/43_hushed_museum_guide_female.npz",
+          "bytes": 3692,
+          "sha256": "9e7bc2dea4cc2995c6422b57f4a5dcbf3a94f222598ebcb33c7c4d2300361009",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/43_hushed_museum_guide_female.wav",
+          "bytes": 531116,
+          "sha256": "451fc5dad347c4645b7581f4efc9bc3d2a7014e327a2db42d8bc6a3d84071c21",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/46_grizzled_war_veteran_gravelly_male.npz",
+          "bytes": 3688,
+          "sha256": "6ed50bea1b19b13a9ee6ec638d7c294f51cdb4bb7c9135c00c409e9b071e4fd0",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/46_grizzled_war_veteran_gravelly_male.wav",
+          "bytes": 529964,
+          "sha256": "978307fa34aa85b9160ad66852d5f240c46089a9cda864529e7e52a6dc2f771d",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/48_gentle_yoga_instructor_female.npz",
+          "bytes": 3692,
+          "sha256": "ed0d5ea2473addece1e26458985e3a028c29eb4332f7c9bcf6eae4082e531262",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/48_gentle_yoga_instructor_female.wav",
+          "bytes": 531116,
+          "sha256": "e07840cf43dbce4c0b0bcafa758a96a5850ee05faae22f2fe00971b2167950a3",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/54_dreamy_poet_soft_male.npz",
+          "bytes": 3692,
+          "sha256": "fbc8ec0653f35dd3df3f0d795dfa5616fb234e56f1ae93d020340a956eaf983b",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/54_dreamy_poet_soft_male.wav",
+          "bytes": 531116,
+          "sha256": "23680e1368cc7d126b2822c0a31c966ebe9c26327fc3d68e633b0c1390b48f40",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/55_somber_historian_female.npz",
+          "bytes": 3692,
+          "sha256": "69e546eceb6add67418b948e381dc36d4054be99d7fd651b7c1f988e6b428690",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/55_somber_historian_female.wav",
+          "bytes": 531116,
+          "sha256": "dcc9f4d7c82d7dc1ee26300581c539469df498bf7dae9922f2b707a3cf98755e",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/63_rumbling_blues_musician_male.npz",
+          "bytes": 3692,
+          "sha256": "bb149fe55bc2d6df4d49048f330d6d11b78c5d12e26b16294c89efcdd5d32e36",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/63_rumbling_blues_musician_male.wav",
+          "bytes": 531116,
+          "sha256": "dbefe6af9c76f7350b1c1f2851114b78c2094c49761ed6b20ed17968291f5df4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/73_hushed_museum_guide_male.npz",
+          "bytes": 3692,
+          "sha256": "9f407ed77f0908ff86384ca23d524353a6c8f7587cbeeb6d340415c59a80572a",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/73_hushed_museum_guide_male.wav",
+          "bytes": 531116,
+          "sha256": "4164c58d5df6df371bb16f1cd1ba9cd35e10ba7231505a8e8b4036f9f3182d7a",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/76_weathered_radio_journalist_female.npz",
+          "bytes": 3692,
+          "sha256": "d67671fe7df438716d010f3be5a05eb15c8ec16de6ad477b981cc3fb6d7814a5",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/76_weathered_radio_journalist_female.wav",
+          "bytes": 531116,
+          "sha256": "22a8612400f759036ac0361a65a3c382173d26400dbdbcd1ba77e64a0776df38",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/79_hushed_conspirator_female.npz",
+          "bytes": 3692,
+          "sha256": "4c32b6ce2ee89d7d93d04ed26585aa5817442475e692c7147b913bd5d95ecdc0",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/79_hushed_conspirator_female.wav",
+          "bytes": 531116,
+          "sha256": "ccaab0b6cc37bf11b84ed3675b395ec691334f812ed960824f3e8c594886ea6c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/80_regal_narrator_female.npz",
+          "bytes": 3692,
+          "sha256": "155bc7fd3dc76db618075b7e35bd6d1a6d019d68d384ad2b73b2c34143099ae8",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/80_regal_narrator_female.wav",
+          "bytes": 531116,
+          "sha256": "bdc5f332bcd91121c7c3ce94a45b72450a450c1052002673d1cc9f395aedcac9",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/ar_arabic.npz",
+          "bytes": 3532,
+          "sha256": "fc5a44c283f1dd63ffbc18118fc90b027789dadc478dfdc18950d07d1679de2e",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/ar_arabic.wav",
+          "bytes": 455118,
+          "sha256": "9d83311f7573e22af511f68a8794bda9e000fb3c43f2bcba5bde5b0ec2966447",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/controlled_fury_older_male.npz",
+          "bytes": 3816,
+          "sha256": "d50f3f98696c3c21a919ab38408b6d468620d89bf2e13b467dac1cf4bd59b3ca",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/controlled_fury_older_male.wav",
+          "bytes": 591054,
+          "sha256": "6988ac18519726eb60796cb719c5a1135e5bc34bd4b2249a6f6f753940546ad2",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/controlled_fury_young_female.npz",
+          "bytes": 3532,
+          "sha256": "418fec8cf41104c8448cb3cfd81ad79afddfbfced5620acb1120fc1f10824f26",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/controlled_fury_young_female.wav",
+          "bytes": 454542,
+          "sha256": "c82929687b0ebf0ba80facce4dc31ba5ac3d937da628be17e39885a1eb42ecbc",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/de_german.npz",
+          "bytes": 3532,
+          "sha256": "b2b05b8e755c945fb0eff5dec5d06dfc9fb2682e9faad9bd33e04634f9ab37d4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/de_german.wav",
+          "bytes": 455118,
+          "sha256": "07540ffc64986777e50c1d9ff123978c77363ee9f20f07a628fa2a36d90b2093",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/es_spanish.npz",
+          "bytes": 3548,
+          "sha256": "08a25005490964a370f5c97b9fee6146f0ef985f2ebd7b5b08616dce9ce08e0b",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/es_spanish.wav",
+          "bytes": 462030,
+          "sha256": "d5636cdc48612db21700a411ecbd3d24dd11370906c5e914cabd202451d7d06c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/exhausted_mechanic_male.npz",
+          "bytes": 3956,
+          "sha256": "226b4909a4c4af843f52d9459e56a77ac751439c82e6b1515254eb56452fa401",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/exhausted_mechanic_male.wav",
+          "bytes": 658446,
+          "sha256": "6c0703c6c03cf2f60d66aaf7162f2c766e13716f87bf17954079dcd84e117d3c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/fr_french.npz",
+          "bytes": 3548,
+          "sha256": "fa959f45986afb783a47a6fff50225e19dc6e12083c6e6abcda45c07363e4e2f",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/fr_french.wav",
+          "bytes": 462030,
+          "sha256": "746ced265aebbfb375767531e9edaf488f5f7e9831d45fe0c7fec779b6d5512c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/grieving_young_male.npz",
+          "bytes": 3884,
+          "sha256": "6b9f22cfad98065da758f27664e21a155e0d3c5a3ceabba07ca63fd13df592bf",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/grieving_young_male.wav",
+          "bytes": 623886,
+          "sha256": "7ea5d618b55c1a9cd9e0a5b52be794c067d811c23fd002664decd28926e3a03d",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/hi_hindi.npz",
+          "bytes": 3580,
+          "sha256": "e3502d046a83c2cbc92030164c0ceb88e62ccdb05cd2306087a24520cfdd517a",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/hi_hindi.wav",
+          "bytes": 478158,
+          "sha256": "b88c83ba7ad130dab669db7bc2f06bd2e0a6dd21457904f92ed01d88eceecb73",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/hushed_young_female.npz",
+          "bytes": 4380,
+          "sha256": "3845397b49fd80530667cad7700b5707da93d4fb177885fdfc5fbe26a5d50cf8",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/hushed_young_female.wav",
+          "bytes": 862350,
+          "sha256": "30d6b27692b2bf45192e3ccb45406c6d4e6fb040144632779e40d87a1b4dfe44",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/it_italian.npz",
+          "bytes": 3532,
+          "sha256": "86900c89eb5ba64ececa089f392e2fe2dd533150e126d54a0e4dfefffc9cbe87",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/it_italian.wav",
+          "bytes": 455118,
+          "sha256": "87e8de95015d79e513ae7782b195915050cb1d9e83100672539de52e8f993fb4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/joyful_irish_female.npz",
+          "bytes": 3392,
+          "sha256": "f74e652200aed14f7c94378ac2b12804d5d2f25e9db09ec021f2a6a9644962c0",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/joyful_irish_female.wav",
+          "bytes": 387150,
+          "sha256": "c33d69ea04633aec81004f1eaa593fd5e2efca35ebe4f6133a915b0e5859347e",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_2_female.npz",
+          "bytes": 3808,
+          "sha256": "aa9db4baf49fe0a159724f79d112d78b95047db3d797b6ba4d17c68119003eec",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_2_female.wav",
+          "bytes": 587036,
+          "sha256": "cd87018a8c2046a01b4b60f46981d1695a11ac5430733d1a45fc3e071e819e98",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_2_male.npz",
+          "bytes": 3696,
+          "sha256": "8e7df50efef79cc9679fdd59c8094a9932ecf53ceef077b632836445b9adbf52",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_2_male.wav",
+          "bytes": 532844,
+          "sha256": "e950331d5788b42a69695f031ae96ec041ccbae1a1354374104d3d4c039661f1",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_3_female.npz",
+          "bytes": 3592,
+          "sha256": "1644d038c5de111ad0d1098f91918eb88064998f25c5674903cfcb660580a62c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_3_female.wav",
+          "bytes": 483068,
+          "sha256": "de9f4b750650219f97ce39fcec0f060d540e756ec2d37ad55b64be45d311d3f8",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_3_male.npz",
+          "bytes": 3580,
+          "sha256": "ecb8089534b84bbed17cdb888dfeac879f354a6ad8a6041b9528c8f915345570",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_3_male.wav",
+          "bytes": 477452,
+          "sha256": "659b6b7000c74f2a2132bc1d7aca72cdd767ad3eab3865c5af1ea8e4d1e086c1",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_4_female.npz",
+          "bytes": 3596,
+          "sha256": "5cfaa87ec6a0059e461e83c61e0ba88636afb4eb17160cf9fb0d5ed19efbfc10",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_4_female.wav",
+          "bytes": 486092,
+          "sha256": "1ff68b1309fabe3c464a6228e848cf793a38b1e7797bda67faedfc595a36bae6",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_4_male.npz",
+          "bytes": 3768,
+          "sha256": "d77cc1848293a8aae0057a156aa39c034b62876b7cc619c36162891eba2e26ac",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_4_male.wav",
+          "bytes": 568220,
+          "sha256": "872a1179583b8ea9ec040acbb66a7dfbb16de0574d263f0b73b1e31b0257e059",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_5_female.npz",
+          "bytes": 3692,
+          "sha256": "10fe2937b11a37cfaeb36fa6c7884a737dbe50b42c3bfd9907ba62135ca8165c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_5_female.wav",
+          "bytes": 531836,
+          "sha256": "200750b1506328c02296c7345600f0a10b82046c82ecaf3c855887d54869fd91",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_5_male.npz",
+          "bytes": 3736,
+          "sha256": "1d48cb37eef54048e04531f021e1ce562c88dc59d7ad9a0ce31824c0b570ca16",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/kitten_v08_voice_5_male.wav",
+          "bytes": 551804,
+          "sha256": "e40db26e40a1cd974165f16df815a4c1ad644c637113ae6472850089ff5e3a3c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/playful_professional_female.npz",
+          "bytes": 3672,
+          "sha256": "007cd13c7164ee816f09f20802700494b103cdbfe59df6f7ea5eac9cb2e40505",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/playful_professional_female.wav",
+          "bytes": 521934,
+          "sha256": "ab8272440760aab0d0f8f69a30354b79e1804dcd0480a8471ec5ae044ddce89b",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/playful_smooth_young_male.npz",
+          "bytes": 3604,
+          "sha256": "c380f944a6407a7c92e78181e0779e19c14e1c3083b0731de5df01ab9b539239",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/playful_smooth_young_male.wav",
+          "bytes": 489102,
+          "sha256": "c19d73a91fa132a9b502bc4ffbb0ed331045907a18c3bdd781fda003099ee68b",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/pt_portuguese.npz",
+          "bytes": 3532,
+          "sha256": "eacf9c72238e63eb9f64c5dcde465de8fc16a605a6df069ba3b3e10c428338ec",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/pt_portuguese.wav",
+          "bytes": 455118,
+          "sha256": "63f1b9e513b2bf3b1df9419d68a150347ea768176205449b20cffb0d740ac4f1",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/ru_russian.npz",
+          "bytes": 3532,
+          "sha256": "1303a75952015e0accfca8c6f76233610cdcd0d1943244662dfe6b77878cef2d",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/ru_russian.wav",
+          "bytes": 455118,
+          "sha256": "a7ce899d85323ca4b51eec343cc2058ebcbf8eac838d65680019661add124d3c",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/southern_elderly_female.npz",
+          "bytes": 4240,
+          "sha256": "dde8bd24fd1c15d85e66fc026df7ba6fe1087fdbb58c06b7793059405342f981",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/southern_elderly_female.wav",
+          "bytes": 794958,
+          "sha256": "0bbc8a0b9350c07b59703ce88e917104c6ad1515ff40debbcf8ea94fde545dcc",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/tender_older_male.npz",
+          "bytes": 4168,
+          "sha256": "7ada88acc7928108f9365972eccd9f9a60235e3b88f0ace3597e370ef27c1ec4",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/tender_older_male.wav",
+          "bytes": 760398,
+          "sha256": "edee2cbf61af6f64d48047cdcf9c003f893fe4943fce1dc98e7841b406f6756b",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/voices.json",
+          "bytes": 18117,
+          "sha256": null,
+          "gitBlobSha1": "44569bb3f80f574eb004adcff5ff56329f34a525",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/zh_chinese.npz",
+          "bytes": 3580,
+          "sha256": "4a12244d60989f16f01e2373b7954655a4750edc145acb8c3672a8926039d3da",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KittenML/kitten-tts-2",
+          "revision": "f2eee74f4467855ad58fe16f1fb7b7df473263fd",
+          "filename": "voices/zh_chinese.wav",
+          "bytes": 478158,
+          "sha256": "15660b287cf56bcdcbb2f84c6f98bc03e8cf7751ac692277730c092709c1a53e",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 1015652904,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/KittenML/kitten-tts-2",
+      "status": "not-installed",
+      "familyId": "publisher-kitten-tts-2",
+      "familyLabel": "Kitten TTS 2",
+      "originalRepository": "KittenML/kitten-tts-2",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "builtInDescription": "Expressive speech with 47 built-in voices, emotion tags such as [excited] or [sad], vocal events such as <laugh> or <sigh>, (((emphasis))) and voice cloning from a short recording with its transcript. Runs on any computer, slowly on the CPU and much faster on an NVIDIA GPU; also downloads the pinned 1.06 GB Chatterbox Turbo vocoder.",
+      "contextTokens": 8192,
+      "license": "Stellon Labs Community License",
+      "catalogOrder": 0,
+      "ttsRuntime": "kitten-tts-2-v1",
+      "ttsComponentBytes": 1064875036,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
     },
     {
       "id": "hf-3df2a7d1ec3fc34d8afaa8ea",
@@ -149771,6 +151077,114 @@
         }
       ],
       "publishedContextTokens": null
+    },
+    {
+      "id": "hf-4a816c4808145e2e5837f9bd",
+      "repository": "openbmb/VoxCPM2",
+      "revision": "7936080b41163874f38610f46f438e2c0757f9fd",
+      "variantKey": "tts:voxcpm2-v1",
+      "name": "VoxCPM2 · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "tts",
+      "libraryCategory": "tts",
+      "inputModalities": [
+        "text",
+        "audio"
+      ],
+      "outputModalities": [
+        "audio"
+      ],
+      "files": [
+        {
+          "repository": "openbmb/VoxCPM2",
+          "revision": "7936080b41163874f38610f46f438e2c0757f9fd",
+          "filename": "audiovae.pth",
+          "bytes": 376951122,
+          "sha256": "94b5d51e107e0507d4acc976cfdadb64edd6fd06d1f751dadbf2fd1594274bf1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "openbmb/VoxCPM2",
+          "revision": "7936080b41163874f38610f46f438e2c0757f9fd",
+          "filename": "config.json",
+          "bytes": 4336,
+          "sha256": null,
+          "gitBlobSha1": "792f1c223ed607f9e508c0a0deb15dd9532483be",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openbmb/VoxCPM2",
+          "revision": "7936080b41163874f38610f46f438e2c0757f9fd",
+          "filename": "model.safetensors",
+          "bytes": 4580080592,
+          "sha256": "f7f964cfa9da23653baec6e6f7750719977ad944ed9f95fe52fe3a620506891d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "openbmb/VoxCPM2",
+          "revision": "7936080b41163874f38610f46f438e2c0757f9fd",
+          "filename": "special_tokens_map.json",
+          "bytes": 1632,
+          "sha256": null,
+          "gitBlobSha1": "8619dda6f3eb6d60d0a1bb274820054e46f41699",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openbmb/VoxCPM2",
+          "revision": "7936080b41163874f38610f46f438e2c0757f9fd",
+          "filename": "tokenizer.json",
+          "bytes": 3676772,
+          "sha256": null,
+          "gitBlobSha1": "41a5c2a8dba4058dd1ad73fb898abf5e4f64f0f9",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "openbmb/VoxCPM2",
+          "revision": "7936080b41163874f38610f46f438e2c0757f9fd",
+          "filename": "tokenizer_config.json",
+          "bytes": 5059,
+          "sha256": null,
+          "gitBlobSha1": "fecf4cdae73b57053cac2ad34c67febbe4e4f08b",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 4960719513,
+      "installable": true,
+      "reason": null,
+      "runtime": {
+        "adapter": "managed-tts",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated speech runtime and pinned components install automatically. A real synthesized clip must pass a signal check before Ready."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/openbmb/VoxCPM2",
+      "status": "not-installed",
+      "familyId": "publisher-voxcpm2",
+      "familyLabel": "VoxCPM2",
+      "originalRepository": "openbmb/VoxCPM2",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "builtInDescription": "Tokenizer-free 48 kHz speech in 30 languages. Design a voice from a description, steer the style, or clone a voice from a reference recording; adding its transcript gives the closest match. Best on an NVIDIA RTX 30-series or newer GPU with 8 GB or more; other computers run it much more slowly on the CPU.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0,
+      "ttsRuntime": "voxcpm2-v1",
+      "ttsComponentBytes": 0,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": []
     }
   ]
 }

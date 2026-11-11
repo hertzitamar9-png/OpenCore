@@ -215,46 +215,14 @@ HARNESS_INSTRUCTIONS = (
     'Recall saved facts silently when directly relevant. Keep temporary task details out of durable memory. '
     'Preserve the user’s wording and dates. Claim memory was saved only with a persistence receipt. '
     'Claim a desktop action happened only when a tool result verifies it. '
+    'To open a Windows app, run one PowerShell command with the terminal tool: '
+    'Start-Process explorer.exe \'shell:AppsFolder\\<AppID>\' using its AppID from Get-StartApps, '
+    'or a URI such as ms-settings: or microsoft-edge:<url>. If the app already has a window, bring that window '
+    'to the front instead of starting another. Never add browser flags such as --new-window, --profile-directory, '
+    '--user-data-dir or about:blank; they switch the user’s browser profile. '
     'Use app_control for supported app settings. For code changes, use the selected source workspace and verify the files you change. '
     'Do not write tool calls or handoff summaries as ordinary reply text.'
 )
-
-_CHROME_LAUNCH = re.compile(
-    r'(?:please\s+)?(?:do\s+it\s+now[,\s]+)?(?:(?:really|actually)\s+)?'
-    r'(?:open|launch|start)\s+(?:google\s+)?(?:chrome|chrme|chome|chorme)'
-    r'(?:\s+on\s+(?:my|this|the)\s+(?:pc|computer|desktop))?[.!]?', re.IGNORECASE)
-_CHROME_RETRY = re.compile(r'(?:please\s+)?(?:do|open|launch|start)\s+(?:it|that)(?:\s+now)?[.!]?', re.IGNORECASE)
-
-# A fixed launch command is dispatched through the agent's declared terminal
-# tool and normal approval policy. No shell profile or computer-input permission
-# is changed. The completion receipt comes from an OS-attested visible window.
-CHROME_LAUNCH_COMMAND = r'''$ErrorActionPreference = 'Stop'
-$chromeCandidates = @(
-    (Get-ItemProperty -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe' -ErrorAction SilentlyContinue).'(default)'
-    (Get-ItemProperty -LiteralPath 'HKLM:\Software\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe' -ErrorAction SilentlyContinue).'(default)'
-)
-foreach ($chromeDirectory in @(
-    [Environment]::GetFolderPath('LocalApplicationData')
-    [Environment]::GetFolderPath('ProgramFiles')
-    [Environment]::GetFolderPath('ProgramFilesX86')
-)) {
-    if (-not [string]::IsNullOrWhiteSpace($chromeDirectory)) {
-        $chromeCandidates += Join-Path $chromeDirectory 'Google\Chrome\Application\chrome.exe'
-    }
-}
-$chromeExe = $chromeCandidates | Where-Object { $_ -is [string] -and (Test-Path -LiteralPath $_ -PathType Leaf) } | Select-Object -First 1
-if (-not $chromeExe) { throw 'Google Chrome was not found. No launch was confirmed.' }
-Start-Process -FilePath $chromeExe -ArgumentList @('--new-window', 'about:blank')
-$chromeDeadline = [DateTime]::UtcNow.AddSeconds(10)
-do {
-    $chromeWindow = Get-Process -Name chrome -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 -and $_.Path -eq $chromeExe } | Select-Object -First 1
-    if ($chromeWindow) { break }
-    Start-Sleep -Milliseconds 200
-} while ([DateTime]::UtcNow -lt $chromeDeadline)
-if (-not $chromeWindow) { throw 'Chrome launch was requested, but no visible Chrome window was verified.' }
-$chromeReceipt = [pscustomobject]@{ launched = $true; verified = $true; pid = $chromeWindow.Id; windowId = $chromeWindow.MainWindowHandle.ToInt64(); executablePath = $chromeExe } | ConvertTo-Json -Compress
-Write-Output ('OPENCORE_CHROME_RESULT=' + $chromeReceipt)
-'''
 
 
 def action_user_text(value):
@@ -323,128 +291,1310 @@ def canonical_tool_name(name):
     return name
 
 
-def terminal_chrome_step(name, history):
-    """Issue one launch, then require its matching measured window receipt."""
-    requests = []
-    for message in history:
-        for call in message.get('tool_calls') or []:
-            function = call.get('function') or {}
-            try:
-                arguments = json.loads(function.get('arguments') or '{}')
-            except (TypeError, ValueError):
-                continue
-            if function.get('name') == name and isinstance(arguments, dict) and arguments.get('cmd') == CHROME_LAUNCH_COMMAND:
-                requests.append(call)
-    if not requests:
-        return {'role': 'assistant', 'content': None, 'tool_calls': [{
-            'id': 'call_' + uuid.uuid4().hex, 'type': 'function', 'index': 0,
-            'function': {'name': name, 'arguments': json.dumps({
-                'cmd': CHROME_LAUNCH_COMMAND, 'shell': 'powershell', 'login': False,
-                'yield_time_ms': 30000, 'max_output_tokens': 1000})}}]}
-    request = requests[-1]
-    result = next((message for message in reversed(history) if message.get('role') == 'tool'
-                   and message.get('tool_call_id') == request.get('id')), None)
-    if result is None:
-        return {'role': 'assistant', 'content': 'A Chrome launch was requested, but its tool result is missing. I can’t confirm it ran.'}
+_LAUNCH_RETRY = re.compile(
+    r'(?:please\s+)?(?:(?:do|open|launch|start)\s+(?:it|that)|try\s+(?:it\s+)?again)(?:\s+now)?(?:\s+please)?[.!]?',
+    re.IGNORECASE)
+_APP_LAUNCH = re.compile(
+    r'(?:(?:hey|ok|okay)[,\s]+)?(?:(?:can|could|would|will)\s+you\s+)?(?:please\s+)?(?:do\s+it\s+now[,\s]+)?'
+    r'(?:now[,\s]+)?(?:(?:really|actually|just|go\s+ahead\s+and)\s+)?(?:please\s+)?'
+    r'(?:open|launch|start|bring\s+up|pull\s+up|fire\s+up|load\s+up)\s+(?:up\s+)?(?:(?:the|my)\s+)?'
+    r'(?P<app>[^\n]{1,60}?)(?:\s+(?P<kind>app|application|program|browser))?'
+    r'(?:\s+(?:for\s+me|on\s+(?:my|this|the)\s+(?:pc|computer|desktop|laptop|machine)|now|please))*\s*[.!?]*',
+    re.IGNORECASE)
+# OpenCore is used worldwide. Requests to open an app in other languages:
+# verb-first languages name the app after the verb; Japanese, Korean, Turkish,
+# Hindi and German infinitives name it before. Installed app names themselves
+# come from each PC's own (localized) Start menu, never from this list. The
+# verb also tells which language to answer in.
+_OPEN_VERBS_BY_LANGUAGE = {
+    'es': ('abre', 'abra', 'abrir', 'ábreme', 'abreme', 'abrime', 'inicia', 'iniciar', 'inicie', 'ejecuta', 'ejecutar',
+           'lanza', 'arranca'),
+    'pt': ('executa', 'execute', 'executar', 'abre-me', 'abra-me'),
+    'fr': ('ouvre', 'ouvrez', 'ouvrir', 'ouvre-moi', 'lance', 'lancez', 'lancer', 'démarre', 'démarrez', 'démarrer'),
+    'de': ('öffne', 'oeffne', 'starte'),
+    'nl': ('open', 'start'),
+    'it': ('apri', 'aprimi', 'aprire', 'avvia', 'avviare', 'lancia'),
+    'pl': ('otwórz', 'otworz', 'uruchom', 'włącz', 'wlacz'),
+    'cs': ('otevři', 'otevri', 'spusť', 'spust'),
+    'ru': ('открой', 'откройте', 'открыть', 'запусти', 'запустите', 'запустить', 'включи'),
+    'uk': ('відкрий', 'відкрийте'),
+    'el': ('άνοιξε', 'ανοιξε'),
+    'ar': ('افتح', 'افتحي', 'شغل', 'شغّل', 'شغلي'),
+    'he': ('פתח', 'תפתח', 'פתחי', 'תפתחי', 'לפתוח', 'הפעל', 'תפעיל', 'הפעילי', 'תפעילי', 'להפעיל', 'הרץ', 'תריץ'),
+    'id': ('buka', 'bukakan', 'jalankan'),
+    'tl': ('buksan',),
+    'vi': ('mở', 'khởi động'),
+}
+# Scripts written without spaces: the app may follow the verb directly.
+_OPEN_VERBS_ATTACHED_BY_LANGUAGE = {
+    'zh': ('打开', '打開', '启动', '啟動', '开启', '開啟', '运行', '運行'),
+    'th': ('เปิด',),
+}
+_OPEN_VERBS_LAST_BY_LANGUAGE = {
+    'ja': ('を開いて', 'を開く', 'を起動して', 'を起動', '開いて', '起動して'),
+    'ko': ('열어줘', '열어 줘', '열어주세요', '열어 주세요', '열어', '실행해줘', '실행해 줘', '실행해주세요', '실행', '켜줘', '켜 줘', '켜'),
+}
+_OPEN_VERBS_LAST_SPACED_BY_LANGUAGE = {
+    'tr': ('aç', 'açar mısın', 'açabilir misin', 'başlat', 'çalıştır'),
+    'hi': ('खोलो', 'खोलें', 'खोल दो', 'चालू करो', 'शुरू करो'),
+    'de': ('öffnen', 'oeffnen', 'starten'),
+    'nl': ('openen',),
+}
+_OPEN_VERB_LANGUAGE = {verb: language for table in (
+    _OPEN_VERBS_BY_LANGUAGE, _OPEN_VERBS_ATTACHED_BY_LANGUAGE, _OPEN_VERBS_LAST_BY_LANGUAGE,
+    _OPEN_VERBS_LAST_SPACED_BY_LANGUAGE) for language, verbs in table.items() for verb in verbs}
 
-    def output(value):
-        if isinstance(value, str):
-            try:
-                parsed = json.loads(value)
-            except (TypeError, ValueError):
-                return value
-            return output(parsed) if isinstance(parsed, (dict, list)) else value
-        if isinstance(value, list):
-            return '\n'.join(output(part) for part in value)
-        if not isinstance(value, dict):
-            return ''
-        if (value.get('isError') or value.get('is_error') or value.get('error') or value.get('success') is False
-                or value.get('exit_code', 0) != 0 or value.get('exitCode', 0) != 0):
-            return ''
-        return '\n'.join(output(value[key]) for key in ('content', 'text', 'output', 'stdout') if key in value)
 
-    text = output(result.get('content'))
-    exits = re.findall(r'(?mi)(?:process exited with code|exit(?:_code| code))\s*[:=]?\s*(-?\d+)', text)
-    marker = re.search(r'(?m)^OPENCORE_CHROME_RESULT=(\{[^\r\n]*\})\s*$', text)
-    try:
-        receipt = json.loads(marker.group(1)) if marker else {}
-    except ValueError:
-        receipt = {}
-    if (not any(int(value) != 0 for value in exits)
-            and receipt.get('launched') is True and receipt.get('verified') is True
+def _longest_first(table):
+    return tuple(sorted({verb for verbs in table.values() for verb in verbs}, key=len, reverse=True))
+
+
+_OPEN_VERBS_FIRST = _longest_first(_OPEN_VERBS_BY_LANGUAGE)
+_OPEN_VERBS_ATTACHED = _longest_first(_OPEN_VERBS_ATTACHED_BY_LANGUAGE)
+_OPEN_VERBS_LAST = _longest_first(_OPEN_VERBS_LAST_BY_LANGUAGE)
+_OPEN_VERBS_LAST_SPACED = _longest_first(_OPEN_VERBS_LAST_SPACED_BY_LANGUAGE)
+_LAUNCH_LEAD = tuple(sorted({
+    'por favor', 'porfa', "s'il te plaît", "s'il vous plaît", 'stp', 'svp', 'bitte', 'per favore', 'proszę', 'prosze',
+    'пожалуйста', 'будь ласка', 'παρακαλώ', 'من فضلك', 'لو سمحت', 'رجاء', 'בבקשה', 'tolong', 'làm ơn', 'hãy',
+    'lütfen', 'कृपया', 'puedes', 'podrías', 'podrias', 'puede', 'podría', 'você pode', 'voce pode', 'pode', 'podes',
+    'peux-tu', 'tu peux', 'pouvez-vous', 'vous pouvez', 'kannst du', 'können sie', 'koennen sie', 'kun je', 'puoi',
+    'potresti', 'możesz', 'mozesz', 'можешь', 'можете', 'можеш', 'אתה יכול', 'את יכולה', 'תוכל', 'תוכלי', 'هل يمكنك',
+    'ممكن', 'bisakah kamu', 'bisa', 'bạn có thể', 'giúp tôi', 'mal', 'jetzt', 'ahora', 'agora', 'maintenant', 'ora',
+    'сейчас', 'עכשיו', 'الآن', 'sekarang',
+}, key=len, reverse=True))
+_LAUNCH_LEAD_ATTACHED = ('请', '請', '帮我', '幫我', '给我', '給我', '麻烦', 'ช่วย', 'กรุณา')
+_LAUNCH_OBJECT = frozenset('''me mir moi mi мне לי את لي el la le les los las lo il gli o a os as den die das de het een un una
+une um uma ein eine mio mia mon ma mein meine meinen meu minha το τον την ang'''.split())
+_LAUNCH_TAIL = tuple(sorted({
+    'por favor', "s'il te plaît", "s'il vous plaît", 'stp', 'svp', 'bitte', 'per favore', 'proszę', 'prosze',
+    'пожалуйста', 'будь ласка', 'παρακαλώ', 'من فضلك', 'لو سمحت', 'בבקשה', 'tolong', 'lütfen', 'कृपया',
+    'ahora', 'agora', 'maintenant', 'jetzt', 'mal', 'ora', 'adesso', 'teraz', 'сейчас', 'зараз', 'עכשיו', 'الآن', 'sekarang',
+    'ngay', 'bây giờ', 'şimdi', 'अभी', 'para mí', 'pour moi', 'für mich', 'per me', 'для меня', 'עבורי', 'من أجلي',
+    'en mi pc', 'en mi computadora', 'en mi ordenador', 'en el pc', 'no meu pc', 'no meu computador', 'no pc',
+    'sur mon pc', 'sur mon ordinateur', 'auf meinem pc', 'auf meinem computer', 'auf dem pc', 'sul mio pc',
+    'sul computer', 'na moim komputerze', 'на компьютере', 'на моём компьютере', 'на моем компьютере', 'במחשב',
+    'במחשב שלי', 'على الكمبيوتر', 'على جهازي', 'di komputer', 'di pc', 'trên máy tính', 'bilgisayarımda',
+    'giúp tôi', 'cho tôi', 'dùm tôi',
+}, key=len, reverse=True))
+# Scripts written without spaces: these may end the request directly.
+_LAUNCH_TAIL_ATTACHED = ('ください', '下さい', 'ちょうだい', '주세요', '吧', '一下', '呀', 'ให้หน่อย', 'หน่อย', 'ครับ', 'ค่ะ')
+
+
+def _strip_words(text, words, attached=(), lead=True):
+    """Remove polite, filler or location words at one end of a request."""
+    changed = True
+    while changed and text:
+        changed = False
+        folded = text.casefold()
+        for word in attached:
+            if folded.startswith(word) if lead else folded.endswith(word):
+                text = (text[len(word):] if lead else text[:-len(word)]).strip(' \t,،、，')
+                changed = True
+                break
+        else:
+            for word in words:
+                if lead and folded.startswith(word) and (len(folded) == len(word) or not folded[len(word)].isalnum()):
+                    text, changed = text[len(word):].strip(' \t,،、，'), True
+                    break
+                if not lead and folded.endswith(word) and (len(folded) == len(word) or not folded[-len(word) - 1].isalnum()):
+                    text, changed = text[:-len(word)].strip(' \t,،、，'), True
+                    break
+    return text
+
+
+def _launch_phrase(text):
+    """The app named by an 'open <app>' request in any supported language, an English kind word,
+    spellings to try after it (Turkish writes the object case onto native words: 'Hesap makinesini aç'),
+    and the language of the request."""
+    match = _APP_LAUNCH.fullmatch(text)
+    if match:
+        return match.group('app'), match.group('kind'), (), 'en'
+    original = text
+    text = re.sub(r'[\s.!?。！？؟¡¿]+$', '', re.sub(r'^[\s¡¿]+', '', text))
+    if not text or '\n' in text or len(text) > 120:
+        return None
+    text = _strip_words(_strip_words(text, _LAUNCH_LEAD, _LAUNCH_LEAD_ATTACHED), _LAUNCH_TAIL, _LAUNCH_TAIL_ATTACHED,
+                        lead=False)
+    folded = text.casefold()
+    phrase, alternates = None, ()
+    verb = next((verb for verb in _OPEN_VERBS_FIRST
+                 if folded.startswith(verb) and len(folded) > len(verb) and folded[len(verb)] in ' \t,،、，'), None)
+    if verb:
+        phrase = text[len(verb):]
+    if phrase is None:
+        verb = next((verb for verb in _OPEN_VERBS_ATTACHED if folded.startswith(verb)), None)
+        if verb:
+            phrase = text[len(verb):]
+    if phrase is None:
+        verb = next((verb for verb in _OPEN_VERBS_LAST if folded.endswith(verb) and len(folded) > len(verb)), None)
+        if not verb:
+            verb = next((verb for verb in _OPEN_VERBS_LAST_SPACED if folded.endswith(verb)
+                         and len(folded) > len(verb) and folded[-len(verb) - 1].isspace()), None)
+        if verb:
+            phrase = text[:-len(verb)].strip()
+            # Object particles: Japanese を, Korean 을/를, Hindi को, Turkish 'u/'ı/'yi.
+            phrase = re.sub(r"(?:\s*[をも]|(?<=\S)[을를]|\s+को|['’](?:y|n)?[uüıi])$", '', phrase)
+            if _OPEN_VERB_LANGUAGE[verb] == 'tr':
+                alternates = (re.sub(r'(?<=\w{3})[ny]?[ıiuü]$', '', phrase),)
+    if phrase is None:
+        return None
+    language = _OPEN_VERB_LANGUAGE[verb]
+    if language == 'es' and (re.search(r'(?<!\w)(?:o|os|as|um|uma|agora|você|voce|pode|podes|meu|minha|pra|pro|'
+                                       r'computador)(?!\w)', original.casefold()) or re.match(r'\S+\s+a\s', folded)):
+        language = 'pt'  # 'abre o Chrome', 'abra a calculadora', 'você pode abrir…'
+    elif language == 'ru' and re.search('[іїєґ]', original.casefold()):
+        language = 'uk'
+    elif language == 'zh' and _TRADITIONAL_HAN.search(original):
+        language = 'zh-Hant'
+    # 'öffne mir bitte Spotify', 'abre el Chrome', "ouvre l'Explorateur"
+    previous = None
+    while phrase != previous:
+        previous = phrase
+        phrase = _strip_words(phrase.strip(' \t,،、，'), _LAUNCH_LEAD, _LAUNCH_LEAD_ATTACHED + ('一下',))
+        first, _, rest = phrase.partition(' ')
+        if first.casefold() in _LAUNCH_OBJECT and rest:
+            phrase = rest
+        elif re.match(r"(?i)l['’]\w", phrase):
+            phrase = phrase[2:]
+    phrase = _strip_words(phrase, _LAUNCH_TAIL, _LAUNCH_TAIL_ATTACHED, lead=False)
+    return (phrase, None, alternates, language) if 0 < len(phrase) <= 60 else None
+
+
+# Characters only Traditional Chinese writes this way (Simplified: 开启动请帮给烦运这个们电脑关闭窗).
+_TRADITIONAL_HAN = re.compile('[開啟動請幫給煩運這個們電腦關閉視窗]')
+
+
+def _script_language(text):
+    """The language a request's own script shows, when it names no open verb ('סגור את כרום')."""
+    latin = len(re.findall(r'[A-Za-zÀ-ɏ]', text))
+    counts = (('ja', 3, r'[぀-ヿ]'), ('ko', 3, r'[가-힯ᄀ-ᇿ㄰-㆏]'),
+              ('zh', 3, r'[一-鿿]'), ('he', 1, r'[֐-׿]'), ('ar', 1, r'[؀-ۿ]'),
+              ('ru', 1, r'[Ѐ-ӿ]'), ('el', 1, r'[Ͱ-Ͽ]'), ('hi', 1, r'[ऀ-ॿ]'),
+              ('th', 1, r'[฀-๿]'))
+    for language, weight, pattern in counts:
+        count = len(re.findall(pattern, text))
+        if count and count * weight >= latin:
+            if language == 'ru' and re.search('[іїєґІЇЄҐ]', text):
+                return 'uk'
+            return 'zh-Hant' if language == 'zh' and _TRADITIONAL_HAN.search(text) else language
+    return 'en'
+
+
+def launch_language(question):
+    """The language to answer a desktop request in: its open verb's, else its script's, else English."""
+    text = action_user_text(question) or ''
+    found = _launch_phrase(text)
+    return found[3] if found else _script_language(text)
+
+
+# Words that make a phrase a document, page, task or compound request rather
+# than an installed application, in the languages above. Known app aliases are
+# matched before this.
+_NOT_AN_APP = frozenset('''a an and or then to with at in into from of for on by about it its that this these those there
+here new another tab tabs file folder folders link links url urls website websites site sites page pages document documents
+doc docs window project projects server servers repo repository pr issue ticket email emails message messages chat
+conversation thread door doors session test tests build script scripts function class task tasks list menu dialog popup
+y e et und en und oder ou o и или ו و dan và ve और
+pestaña pestañas nueva nuevo archivo archivos carpeta página ventana enlace correo puerta
+aba nova novo arquivo pasta janela
+onglet nouvel nouvelle nouveau fichier dossier fenêtre lien porte
+neuen neue neues datei ordner seite fenster tür
+scheda nuova cartella finestra pagina porta
+nieuw nieuwe bestand map venster
+kartę kartę nową plik folder stronę okno
+вкладку вкладка новую новая новый файл папку страницу окно дверь
+כרטיסייה לשונית חדשה חדש קובץ תיקייה דף חלון דלת
+تبويب علامة جديدة جديد ملف مجلد صفحة نافذة باب
+tab baru berkas halaman jendela
+thẻ mới tệp trang cửa
+sekme yeni dosya klasör sayfa pencere kapı
+टैब नया नई फ़ाइल फोल्डर पेज खिड़की'''.split())
+# Words for "browser", "app" or "window" that make a request a desktop action.
+_DESKTOP_TARGETS_INTL = frozenset('''navegador aplicación aplicacion programa ventana aplicativo janela navigateur application
+logiciel programme fenêtre browser programm anwendung fenster programma applicazione finestra przeglądarkę przeglądarka
+aplikację program okno браузер приложение программу программа окно דפדפן אפליקציה תוכנה חלון متصفح تطبيق برنامج نافذة
+peramban aplikasi jendela trình ứng dụng tarayıcı uygulama pencere ब्राउज़र ऐप प्रोग्राम'''.split())
+_APP_VENDORS = ('google', 'microsoft', 'mozilla', 'windows', 'ms', 'the',
+                # The same vendor words as other scripts write them.
+                'гугл', 'майкрософт', 'мозилла', 'גוגל', 'מיקרוסופט', 'جوجل', 'غوغل', 'مايكروسوفت', 'ميكروسوفت',
+                'γκουγκλ', 'माइक्रोसॉफ्ट', 'गूगल', '谷歌', '微软', '微軟', 'グーグル', 'マイクロソフト', '구글', '마이크로소프트',
+                'กูเกิล', 'ไมโครซอฟท์')
+_START_APP_JUNK = ('uninstall', 'documentation', 'website', 'release notes', 'support', 'readme', 'read me', 'help',
+                   'manual', 'license', 'changelog', "what's new")
+# Common Windows apps: their names and common spellings in several scripts,
+# the executable, the process that owns its window, Start menu AppIDs and a
+# fallback URI. Built-in apps are also found under their localized names in
+# each PC's own Start menu (Get-StartApps), and anything else is resolved from
+# that Start menu at request time, so no language or install is assumed.
+_APP_CATALOG = (
+    {'app': 'Google Chrome', 'names': ('chrome', 'google chrome', 'chrme', 'chome', 'chorme', 'crome', 'כרום', 'גוגל כרום',
+                                       'хром', 'гугл хром', 'кром', 'كروم', 'جوجل كروم', '谷歌浏览器', '谷歌瀏覽器', 'クローム',
+                                       'グーグルクローム', '크롬', '구글 크롬', 'क्रोम', 'गूगल क्रोम', 'κρομ'),
+     'exe': 'chrome.exe', 'process': ('chrome',), 'appIds': ('Chrome',), 'paths': (r'Google\Chrome\Application\chrome.exe',)},
+    {'app': 'Microsoft Edge', 'names': ('edge', 'microsoft edge', 'ms edge', 'msedge', 'אדג', 'מיקרוסופט אדג', 'эдж', 'едж',
+                                        'إيدج', 'ايدج', 'エッジ', '엣지', 'एज'),
+     'exe': 'msedge.exe', 'process': ('msedge',), 'appIds': ('MSEdge',), 'uri': 'microsoft-edge:',
+     'paths': (r'Microsoft\Edge\Application\msedge.exe',)},
+    {'app': 'Firefox', 'names': ('firefox', 'mozilla firefox', 'פיירפוקס', 'файрфокс', 'фаерфокс', 'فايرفوكس', '火狐',
+                                 'ファイアフォックス', '파이어폭스'),
+     'exe': 'firefox.exe', 'process': ('firefox',), 'paths': (r'Mozilla Firefox\firefox.exe',)},
+    {'app': 'Brave', 'names': ('brave', 'brave browser'), 'exe': 'brave.exe', 'process': ('brave',),
+     'paths': (r'BraveSoftware\Brave-Browser\Application\brave.exe',)},
+    {'app': 'Opera', 'names': ('opera', 'opera gx'), 'exe': 'opera.exe', 'process': ('opera',), 'paths': (r'Opera\opera.exe',)},
+    {'app': 'Notepad', 'names': ('notepad', 'פנקס רשימות', 'bloc de notas', 'bloco de notas', 'bloc-notes', 'blocco note', 'notatnik',
+                                 'блокнот', 'المفكرة', '记事本', '記事本', 'メモ帳', '메모장', 'not defteri', 'नोटपैड'), 'exe': 'notepad.exe', 'process': ('notepad',),
+     'appIds': ('Microsoft.WindowsNotepad_8wekyb3d8bbwe!App',)},
+    {'app': 'Calculator', 'names': ('calculator', 'calc', 'מחשבון', 'calculadora', 'calculatrice', 'rechner', 'taschenrechner',
+                                   'calcolatrice', 'kalkulator', 'калькулятор', 'الحاسبة', 'آلة حاسبة', '计算器', '計算機', '電卓',
+                                   '계산기', 'hesap makinesi', 'कैलकुलेटर'), 'process': ('calculatorapp', 'calculator'),
+     'appIds': ('Microsoft.WindowsCalculator_8wekyb3d8bbwe!App',), 'uri': 'calculator:'},
+    {'app': 'Paint', 'names': ('paint', 'mspaint', 'microsoft paint', 'צייר'), 'exe': 'mspaint.exe', 'process': ('mspaint',),
+     'appIds': ('Microsoft.Paint_8wekyb3d8bbwe!App',)},
+    {'app': 'File Explorer', 'names': ('file explorer', 'explorer', 'windows explorer', 'files', 'my files', 'this pc',
+     'my computer', 'סייר הקבצים', 'סייר קבצים', 'סייר', 'explorador de archivos', 'explorador de arquivos',
+     'explorateur de fichiers', 'explorateur', 'datei-explorer', 'esplora file', 'eksplorator plików', 'проводник',
+     'مستكشف الملفات', '文件资源管理器', '资源管理器', '檔案總管', 'エクスプローラー', '파일 탐색기', 'dosya gezgini'), 'exe': 'explorer.exe', 'appIds': ('Microsoft.Windows.Explorer',),
+     'shell': True, 'fresh': True},
+    {'app': 'Settings', 'names': ('settings', 'windows settings', 'pc settings', 'הגדרות', 'configuración', 'configurações',
+     'paramètres', 'einstellungen', 'impostazioni', 'ustawienia', 'параметры', 'настройки', 'الإعدادات', '设置', '設定',
+     '설정', 'ayarlar', 'सेटिंग्स'), 'process': ('systemsettings',),
+     'appIds': ('windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel',), 'uri': 'ms-settings:'},
+    {'app': 'Control Panel', 'names': ('control panel', 'לוח הבקרה', 'לוח בקרה'), 'exe': 'control.exe', 'shell': True, 'fresh': True},
+    {'app': 'Task Manager', 'names': ('task manager', 'taskmgr', 'מנהל המשימות', 'מנהל משימות', 'administrador de tareas',
+     'gerenciador de tarefas', 'gestionnaire des tâches', 'gestione attività', 'menedżer zadań', 'диспетчер задач',
+     'إدارة المهام', '任务管理器', '工作管理員', 'タスク マネージャー', '작업 관리자', 'görev yöneticisi'), 'exe': 'Taskmgr.exe',
+     'process': ('taskmgr',)},
+    {'app': 'Command Prompt', 'names': ('cmd', 'command prompt', 'שורת הפקודה'), 'exe': 'cmd.exe',
+     'process': ('cmd', 'conhost', 'windowsterminal', 'openconsole'), 'fresh': True},
+    {'app': 'PowerShell', 'names': ('powershell', 'windows powershell', 'פאוורשל'), 'exe': 'powershell.exe',
+     'process': ('powershell', 'conhost', 'windowsterminal', 'openconsole'), 'fresh': True},
+    {'app': 'Windows Terminal', 'names': ('terminal', 'windows terminal', 'wt', 'טרמינל'), 'exe': 'wt.exe',
+     'process': ('windowsterminal',), 'appIds': ('Microsoft.WindowsTerminal_8wekyb3d8bbwe!App',)},
+    {'app': 'Visual Studio Code', 'names': ('vs code', 'vscode', 'visual studio code'), 'exe': 'Code.exe', 'process': ('code',),
+     'paths': (r'Programs\Microsoft VS Code\Code.exe', r'Microsoft VS Code\Code.exe')},
+    {'app': 'Microsoft Word', 'names': ('word', 'microsoft word', 'ms word', 'וורד'), 'exe': 'WINWORD.EXE', 'process': ('winword',)},
+    {'app': 'Microsoft Excel', 'names': ('excel', 'microsoft excel', 'ms excel', 'אקסל'), 'exe': 'EXCEL.EXE', 'process': ('excel',)},
+    {'app': 'Microsoft PowerPoint', 'names': ('powerpoint', 'microsoft powerpoint', 'ppt', 'פאוורפוינט'), 'exe': 'POWERPNT.EXE',
+     'process': ('powerpnt',)},
+    {'app': 'Outlook', 'names': ('outlook', 'microsoft outlook', 'אאוטלוק'), 'exe': 'OUTLOOK.EXE', 'process': ('outlook', 'olk'),
+     'appIds': ('Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows',)},
+    {'app': 'Microsoft Teams', 'names': ('teams', 'microsoft teams', 'ms teams', 'טימס'), 'process': ('ms-teams', 'teams'),
+     'appIds': ('MSTeams_8wekyb3d8bbwe!MSTeams',)},
+    {'app': 'Microsoft Store', 'names': ('store', 'microsoft store', 'windows store', 'app store', 'חנות', 'החנות'),
+     'process': ('winstore.app',), 'appIds': ('Microsoft.WindowsStore_8wekyb3d8bbwe!App',), 'uri': 'ms-windows-store:'},
+    {'app': 'Spotify', 'names': ('spotify', 'ספוטיפיי', 'спотифай', 'سبوتيفاي', 'スポティファイ', '스포티파이'), 'exe': 'Spotify.exe', 'process': ('spotify',),
+     'appIds': ('SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify',), 'uri': 'spotify:', 'paths': (r'Spotify\Spotify.exe',)},
+    {'app': 'Discord', 'names': ('discord', 'דיסקורד', 'дискорд', 'ديسكورد', 'ディスコード', '디스코드'), 'process': ('discord',), 'appIds': ('com.squirrel.Discord.Discord',)},
+    {'app': 'Steam', 'names': ('steam', 'סטים'), 'exe': 'steam.exe', 'process': ('steam', 'steamwebhelper'), 'uri': 'steam:',
+     'paths': (r'Steam\steam.exe',)},
+    {'app': 'WhatsApp', 'names': ('whatsapp', 'whats app', 'וואטסאפ', 'ווטסאפ', 'וואצאפ', 'ватсап', 'вотсап', 'واتساب', 'واتس اب',
+     'ワッツアップ', '왓츠앱', 'व्हाट्सएप'), 'process': ('whatsapp', 'whatsapp.root'),
+     'appIds': ('5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App',), 'uri': 'whatsapp:'},
+    {'app': 'Telegram', 'names': ('telegram', 'טלגרם', 'телеграм', 'телеграмм', 'تيليجرام', 'تلغرام', '电报', 'テレグラム', '텔레그램'), 'exe': 'Telegram.exe', 'process': ('telegram',),
+     'paths': (r'Telegram Desktop\Telegram.exe',)},
+    {'app': 'Camera', 'names': ('camera', 'מצלמה'), 'process': ('windowscamera',),
+     'appIds': ('Microsoft.WindowsCamera_8wekyb3d8bbwe!App',), 'uri': 'microsoft.windows.camera:'},
+    {'app': 'Photos', 'names': ('photos', 'microsoft photos', 'תמונות'), 'process': ('photos', 'microsoft.photos'),
+     'appIds': ('Microsoft.Windows.Photos_8wekyb3d8bbwe!App',), 'uri': 'ms-photos:'},
+    {'app': 'Snipping Tool', 'names': ('snipping tool', 'snip', 'כלי החיתוך'), 'process': ('snippingtool',),
+     'appIds': ('Microsoft.ScreenSketch_8wekyb3d8bbwe!App',)},
+    {'app': 'Clock', 'names': ('clock', 'alarms', 'alarms and clock', 'שעון', 'שעון מעורר'), 'process': ('time',),
+     'appIds': ('Microsoft.WindowsAlarms_8wekyb3d8bbwe!App',), 'uri': 'ms-clock:'},
+    {'app': 'Media Player', 'names': ('media player', 'windows media player', 'נגן המדיה', 'נגן מדיה'),
+     'process': ('microsoft.media.player',), 'appIds': ('Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic',)},
+    {'app': 'Sticky Notes', 'names': ('sticky notes', 'פתקים', 'פתקיות'), 'process': ('microsoft.notes',),
+     'appIds': ('Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe!App',)},
+    {'app': 'Sound Recorder', 'names': ('sound recorder', 'voice recorder', 'רשמקול', 'מקליט קול'), 'process': ('soundrec',),
+     'appIds': ('Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe!App',)},
+    {'app': 'Weather', 'names': ('weather', 'מזג אוויר', 'מזג האוויר'), 'appIds': ('Microsoft.BingWeather_8wekyb3d8bbwe!App',),
+     'uri': 'msnweather:'},
+    {'app': 'Microsoft To Do', 'names': ('to do', 'todo', 'microsoft to do'), 'appIds': ('Microsoft.Todos_8wekyb3d8bbwe!App',)},
+    {'app': 'Phone Link', 'names': ('phone link', 'your phone', 'קישור לטלפון'), 'process': ('phoneexperiencehost',),
+     'appIds': ('Microsoft.YourPhone_8wekyb3d8bbwe!App',)},
+    {'app': 'VLC', 'names': ('vlc', 'vlc media player', 'vlc player'), 'exe': 'vlc.exe', 'process': ('vlc',),
+     'paths': (r'VideoLAN\VLC\vlc.exe',)},
+    {'app': 'Notepad++', 'names': ('notepad++', 'notepad plus plus', 'npp'), 'exe': 'notepad++.exe', 'process': ('notepad++',),
+     'paths': (r'Notepad++\notepad++.exe',)},
+    {'app': 'OBS Studio', 'names': ('obs', 'obs studio'), 'exe': 'obs64.exe', 'process': ('obs64',),
+     'paths': (r'obs-studio\bin\64bit\obs64.exe',)},
+    {'app': 'Zoom', 'names': ('zoom', 'זום'), 'process': ('zoom',), 'paths': (r'Zoom\bin\Zoom.exe',), 'exe': 'Zoom.exe'},
+)
+
+
+def _app_key(text):
+    """Compare app names without case, spacing or punctuation."""
+    text = str(text or '').casefold().replace('+', 'plus')
+    return ''.join(character for character in text if character.isalnum())
+
+
+_APP_ALIASES = {_app_key(name): entry for entry in _APP_CATALOG for name in entry['names'] + (entry['app'],)}
+_START_APPS = {'at': 0.0, 'apps': []}
+_START_APPS_LOCK = threading.Lock()
+
+
+def installed_start_apps():
+    """The current user's Windows Start menu apps as {'Name', 'AppID'} records."""
+    if os.name != 'nt':
+        return []
+    with _START_APPS_LOCK:
+        if _START_APPS['at'] and time.monotonic() - _START_APPS['at'] < 300:
+            return _START_APPS['apps']
+        import subprocess
+        apps = []
+        try:
+            completed = subprocess.run(
+                ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
+                 '[Console]::OutputEncoding=[Text.Encoding]::UTF8; '
+                 'Get-StartApps | Select-Object Name,AppID | ConvertTo-Json -Compress'],
+                capture_output=True, timeout=20, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            value = json.loads(completed.stdout.decode('utf-8', 'replace').strip() or '[]')
+            value = [value] if isinstance(value, dict) else value
+            apps = [{'Name': item['Name'], 'AppID': item['AppID']} for item in value if isinstance(item, dict)
+                    and isinstance(item.get('Name'), str) and isinstance(item.get('AppID'), str)
+                    and 0 < len(item['Name']) <= 200 and 0 < len(item['AppID']) <= 1000]
+        except (OSError, ValueError, subprocess.SubprocessError):
+            apps = []
+        _START_APPS.update(at=time.monotonic(), apps=apps)
+        return apps
+
+
+def _start_app_resolve(tries):
+    """This PC's Start menu entry named by a request phrase, in the PC's own language."""
+    tries = [attempt for attempt in tries if 0 < len(attempt.split()) <= 8]
+    for attempt in tries:
+        # An installed name typed exactly wins even with words such as 'de'
+        # ('Panel de control') or punctuation ("Baldur's Gate 3").
+        start = _start_app_match(attempt, exact=True)
+        if start:
+            return start
+    for attempt in tries:
+        words = attempt.casefold().split()
+        if (len(words) <= 5 and not set(words) & _NOT_AN_APP
+                and not re.search(r'[/\\:.,;"\'`@#$%()\[\]{}<>=~|*?]', attempt)):
+            start = _start_app_match(attempt)
+            if start:
+                return start
+    return None
+
+
+def _start_app_match(phrase, exact=False):
+    """Best installed Start menu entry for a name that is not a known alias."""
+    key = _app_key(phrase)
+    if len(key) < (2 if exact else 3):
+        return None
+    best = None
+    for app in installed_start_apps():
+        name = app['Name']
+        if any(word in name.casefold() for word in _START_APP_JUNK):
+            continue
+        label = _app_key(name)
+        words = [word for word in re.findall(r'\w+', name.casefold())]
+        while words and words[0] in _APP_VENDORS + ('adobe',):
+            words = words[1:]
+        bare = _app_key(' '.join(words))
+        if key in (label, bare):
+            score = 3
+        elif exact:
+            continue
+        elif len(key) >= 4 and (label.startswith(key) or bare.startswith(key)):
+            score = 2
+        elif len(key) >= 5 and key in label and len(key) >= 0.6 * len(label):
+            score = 1
+        else:
+            continue
+        candidate = (score, -len(label), app)
+        if best is None or candidate[:2] > best[:2]:
+            best = candidate
+    return best[2] if best else None
+
+
+def _catalog_entry(tries):
+    """The known app named by any of these phrases, ignoring vendor words and articles."""
+    for attempt in tries:
+        key = _app_key(attempt)
+        words = attempt.casefold().split()
+        while words and words[0] in _APP_VENDORS:
+            words = words[1:]
+        # Hebrew ה- and Arabic ال- are definite articles written onto the word.
+        for candidate in (key, _app_key(' '.join(words)), key[1:] if key.startswith('ה') else None,
+                          key[2:] if key.startswith('ال') else None):
+            if candidate and candidate in _APP_ALIASES:
+                return _APP_ALIASES[candidate]
+    return None
+
+
+def _launch_tries(phrase, kind=None):
+    """The phrase as written, then without leading articles or words for 'app'/'browser'."""
+    tries = [phrase]
+    if kind:
+        tries.append(phrase + ' ' + kind)
+    words = phrase.split()
+    while len(words) > 1 and words[0].casefold() in _LAUNCH_OBJECT:
+        words = words[1:]
+    tries.append(' '.join(words))
+    bare = [word for word in words if word.casefold() not in _DESKTOP_TARGETS_INTL | _DESKTOP_TARGETS]
+    if bare:
+        tries.append(' '.join(bare))
+    return list(dict.fromkeys(tries))
+
+
+def app_launch_spec(question):
+    """Resolve a standalone 'open <app>' request, in any supported language, to an installed app, or None."""
+    found = _launch_phrase(action_user_text(question))
+    if not found:
+        return None
+    phrase = found[0].strip(' \t,')
+    tries = _launch_tries(phrase, found[1]) + [attempt for attempt in found[2] if attempt != phrase]
+    entry = _catalog_entry(tries)
+    if entry:
+        names = {_app_key(name) for name in entry['names'] + (entry['app'],)} | {_app_key(phrase)}
+        spec = {'app': entry['app'], 'names': sorted(names), 'exe': entry.get('exe', ''),
+                'process': list(entry.get('process', ())), 'appIds': list(entry.get('appIds', ())),
+                'uri': entry.get('uri', ''), 'paths': list(entry.get('paths', ())),
+                'fresh': bool(entry.get('fresh')), 'shell': bool(entry.get('shell'))}
+    else:
+        start = _start_app_resolve(tries)
+        if not start:
+            return None
+        spec = {'app': start['Name'], 'names': sorted({_app_key(start['Name']), _app_key(phrase)}), 'exe': '',
+                'process': [], 'appIds': [start['AppID']], 'uri': '', 'paths': [], 'fresh': False, 'shell': False}
+    spec['id'] = hashlib.sha256(json.dumps(spec, sort_keys=True).encode('utf-8')).hexdigest()[:16]
+    return spec
+
+
+# One fixed launcher, parameterised only by the JSON spec above. It brings an
+# app's existing window forward instead of opening another (a forced new
+# browser window lands in whichever profile was used last), otherwise starts
+# the app exactly as a Start menu click does, then prints an OS-attested
+# receipt for the window it verified. No browser flags or profiles are passed.
+APP_LAUNCH_TEMPLATE = r'''$ErrorActionPreference = 'Stop'
+$spec = ConvertFrom-Json '__SPEC__'
+if (-not ('OpenCoreWindows' -as [type])) { Add-Type -TypeDefinition @'
+using System; using System.Collections.Generic; using System.Runtime.InteropServices; using System.Text;
+public class OpenCoreWindow { public long Handle; public uint Pid; public bool Shell; public string Title; }
+public static class OpenCoreWindows {
+    delegate bool EnumProc(IntPtr hwnd, IntPtr data);
+    [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc callback, IntPtr data);
+    [DllImport("user32.dll")] static extern bool EnumChildWindows(IntPtr parent, EnumProc callback, IntPtr data);
+    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr hwnd, uint command);
+    [DllImport("user32.dll")] static extern int GetWindowTextLength(IntPtr hwnd);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int size);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd, StringBuilder text, int size);
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+    [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out int value, int size);
+    [DllImport("user32.dll")] static extern bool IsIconic(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hwnd, int command);
+    [DllImport("user32.dll")] static extern bool BringWindowToTop(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern void SwitchToThisWindow(IntPtr hwnd, bool altTab);
+    [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern bool AttachThreadInput(uint attach, uint to, bool value);
+    [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
+    public static List<OpenCoreWindow> List() {
+        var found = new List<OpenCoreWindow>();
+        EnumWindows(delegate (IntPtr hwnd, IntPtr data) {
+            int length = GetWindowTextLength(hwnd), cloaked = 0;
+            if (!IsWindowVisible(hwnd) || GetWindow(hwnd, 4) != IntPtr.Zero || length == 0) return true;
+            if (DwmGetWindowAttribute(hwnd, 14, out cloaked, 4) == 0 && cloaked != 0) return true;
+            var kind = new StringBuilder(256); GetClassName(hwnd, kind, kind.Capacity);
+            string name = kind.ToString();
+            if (name == "Progman" || name == "WorkerW" || name == "Shell_TrayWnd" || name == "Shell_SecondaryTrayWnd") return true;
+            uint pid; GetWindowThreadProcessId(hwnd, out pid);
+            if (name == "ApplicationFrameWindow") {
+                uint frame = pid, app = 0;
+                EnumChildWindows(hwnd, delegate (IntPtr child, IntPtr unused) {
+                    uint owner; GetWindowThreadProcessId(child, out owner);
+                    if (owner != frame) { app = owner; return false; }
+                    return true;
+                }, IntPtr.Zero);
+                if (app != 0) pid = app;
+            }
+            var title = new StringBuilder(length + 1); GetWindowText(hwnd, title, title.Capacity);
+            found.Add(new OpenCoreWindow { Handle = hwnd.ToInt64(), Pid = pid, Shell = name == "CabinetWClass", Title = title.ToString() });
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+    public static bool Focus(long handle) {
+        IntPtr hwnd = new IntPtr(handle);
+        if (IsIconic(hwnd)) ShowWindow(hwnd, 9);
+        if (GetForegroundWindow() == hwnd) return true;
+        uint ignored;
+        uint current = GetCurrentThreadId();
+        uint foreground = GetWindowThreadProcessId(GetForegroundWindow(), out ignored);
+        bool attached = foreground != 0 && foreground != current && AttachThreadInput(current, foreground, true);
+        try { BringWindowToTop(hwnd); SetForegroundWindow(hwnd); }
+        finally { if (attached) AttachThreadInput(current, foreground, false); }
+        if (GetForegroundWindow() != hwnd) { SwitchToThisWindow(hwnd, true); System.Threading.Thread.Sleep(200); }
+        return GetForegroundWindow() == hwnd;
+    }
+}
+'@ }
+function Finish($method, $already, $window) {
+    $receipt = [ordered]@{ launched = $true; verified = $true; id = $spec.id; alreadyRunning = $already; method = $method
+        pid = $window.Pid; windowId = $window.Handle; executablePath = $window.Path; focused = [OpenCoreWindows]::Focus($window.Handle) }
+    Write-Output ('OPENCORE_APP_RESULT=' + (ConvertTo-Json -InputObject $receipt -Compress))
+    exit 0
+}
+function Fail($reason) {
+    $line = 'OPENCORE_APP_RESULT=' + (ConvertTo-Json -Compress -InputObject ([ordered]@{ launched = $false; verified = $false; id = $spec.id; reason = $reason }))
+    Write-Output $line
+    [Console]::Error.WriteLine($line)
+    exit 1
+}
+function Key([string]$text) { $text.ToLowerInvariant().Replace('+', 'plus') -replace '[^\p{L}\p{Nd}]', '' }
+$names = @($spec.names)
+$processNames = @($spec.process) + @($names | Where-Object { $_.Length -ge 4 })
+$targetPaths = @()
+$package = $null
+$exe = $null
+if ($spec.exe) {
+    $candidates = @(foreach ($hive in 'HKCU:\Software', 'HKLM:\Software', 'HKLM:\Software\WOW6432Node') {
+        (Get-ItemProperty -LiteralPath "$hive\Microsoft\Windows\CurrentVersion\App Paths\$($spec.exe)" -ErrorAction SilentlyContinue).'(default)'
+    })
+    foreach ($base in @($env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:LOCALAPPDATA, "$env:LOCALAPPDATA\Programs", $env:APPDATA)) {
+        if ($base) { foreach ($relative in @($spec.paths)) { $candidates += "$base\$relative" } }
+    }
+    $candidates += @("$([Environment]::SystemDirectory)\$($spec.exe)", "$env:WINDIR\$($spec.exe)", "$env:LOCALAPPDATA\Microsoft\WindowsApps\$($spec.exe)")
+    $exe = @($candidates | Where-Object { $_ } | ForEach-Object { ([string]$_).Trim('"') } | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf })[0]
+}
+$ids = @($spec.appIds | ForEach-Object { ([string]$_).ToLowerInvariant() })
+try { $apps = @(Get-StartApps) } catch { $apps = @() }
+$entry = @($apps | Where-Object { $ids -contains ([string]$_.AppID).ToLowerInvariant() })[0]
+if (-not $entry -and $spec.exe) { $entry = @($apps | Where-Object { ([string]$_.AppID).ToLowerInvariant().EndsWith('\' + ([string]$spec.exe).ToLowerInvariant()) })[0] }
+if (-not $entry) { $entry = @($apps | Where-Object { $names -contains (Key $_.Name) })[0] }
+if ($entry) {
+    try {
+        $link = [string](New-Object -ComObject Shell.Application).NameSpace('shell:AppsFolder').ParseName($entry.AppID).ExtendedProperty('System.Link.TargetParsingPath')
+        # Shortcuts into the Windows folder point at shared hosts, and Squirrel
+        # installers point at Update.exe; neither identifies the app's window.
+        $stem = [IO.Path]::GetFileNameWithoutExtension($link).ToLowerInvariant()
+        if ($link.ToLowerInvariant().EndsWith('.exe') -and $stem -ne 'update' -and
+            -not $link.StartsWith($env:WINDIR, [StringComparison]::OrdinalIgnoreCase)) {
+            $targetPaths += $link.ToLowerInvariant()
+            $processNames += $stem
+        }
+    } catch { }
+    if ($entry.AppID -match '^([^_!\\]+)_[a-z0-9]{13}!') { $package = $Matches[1].ToLowerInvariant() }
+}
+if ($exe) { $targetPaths += $exe.ToLowerInvariant(); $processNames += [IO.Path]::GetFileNameWithoutExtension($exe).ToLowerInvariant() }
+$cache = @{}
+function Describe($raw) {
+    $id = [int]$raw.Pid
+    if (-not $cache.ContainsKey($id)) {
+        $process = Get-Process -Id $id -ErrorAction SilentlyContinue
+        $path = $null; $started = $null
+        if ($process) { try { $path = $process.Path } catch { }; try { $started = $process.StartTime } catch { } }
+        $cache[$id] = @{ Name = $(if ($process) { $process.ProcessName.ToLowerInvariant() } else { '' }); Path = [string]$path; Started = $started }
+    }
+    $info = $cache[$id]
+    [pscustomobject]@{ Handle = [long]$raw.Handle; Pid = $id; Shell = [bool]$raw.Shell; Title = [string]$raw.Title
+        Name = $info.Name; Path = $info.Path; Started = $info.Started }
+}
+function IsTarget($window) {
+    if ($spec.shell) { return $window.Shell }
+    $path = $window.Path.ToLowerInvariant()
+    return [bool](($window.Name -and $processNames -contains $window.Name) -or ($path -and $targetPaths -contains $path) -or
+        ($package -and $path -like ('*\windowsapps\' + $package + '_*')))
+}
+$before = @([OpenCoreWindows]::List() | ForEach-Object { Describe $_ })
+$seen = @{}
+foreach ($window in $before) { $seen[$window.Handle] = $true }
+if (-not $spec.fresh) { $existing = @($before | Where-Object { IsTarget $_ }); if ($existing.Count) { Finish 'focus' $true $existing[0] } }
+$launchedAt = (Get-Date).AddSeconds(-2)
+try {
+    if ($entry -and $entry.AppID -match '^[a-z][a-z0-9+.-]*://') { Start-Process -FilePath $entry.AppID; $method = 'start_menu' }
+    elseif ($entry) { Start-Process -FilePath "$env:WINDIR\explorer.exe" -ArgumentList ('"shell:AppsFolder\' + $entry.AppID + '"'); $method = 'start_menu' }
+    elseif ($exe) { Start-Process -FilePath $exe -WorkingDirectory (Split-Path -Parent $exe); $method = 'executable' }
+    elseif ($spec.uri) { Start-Process -FilePath $spec.uri; $method = 'uri' }
+    else { Fail 'not_found' }
+} catch { Fail 'launch_failed' }
+$broad = -not ($processNames.Count -or $targetPaths.Count -or $package -or $spec.shell)
+$title = ([string]$spec.app).ToLowerInvariant()
+$deadline = [DateTime]::UtcNow.AddSeconds(20)
+do {
+    Start-Sleep -Milliseconds 300
+    foreach ($raw in [OpenCoreWindows]::List()) {
+        $new = -not $seen.ContainsKey([long]$raw.Handle)
+        if (-not $new -and $spec.fresh) { continue }
+        $window = Describe $raw
+        if (IsTarget $window) { Finish $method $false $window }
+        if ($new -and -not $spec.shell -and ($window.Title.ToLowerInvariant().Contains($title) -or
+            ($broad -and $window.Started -and $window.Started -ge $launchedAt -and @('explorer', 'applicationframehost', 'searchhost', 'startmenuexperiencehost', 'shellexperiencehost', 'textinputhost') -notcontains $window.Name))) { Finish $method $false $window }
+    }
+} while ([DateTime]::UtcNow -lt $deadline)
+Fail 'no_window'
+'''
+
+
+def app_launch_command(spec):
+    """The exact launcher text for one resolved app."""
+    encoded = json.dumps(spec, ensure_ascii=True, sort_keys=True, separators=(',', ':')).replace("'", "''")
+    return APP_LAUNCH_TEMPLATE.replace('__SPEC__', encoded)
+
+
+def _tool_output(value):
+    """Visible text of a tool result, and whether the tool reported failure."""
+    failed = False
+
+    def walk(node):
+        nonlocal failed
+        if isinstance(node, str):
+            text = re.sub(r'^Wall time: \d+(?:\.\d+)? seconds\r?\nOutput:\r?\n', '', node, count=1)
+            try:
+                parsed = json.loads(text)
+            except (TypeError, ValueError):
+                return node
+            return walk(parsed) if isinstance(parsed, (dict, list)) else node
+        if isinstance(node, list):
+            return '\n'.join(walk(part) for part in node)
+        if not isinstance(node, dict):
+            return ''
+        if (node.get('isError') or node.get('is_error') or node.get('error') or node.get('success') is False
+                or node.get('exit_code', 0) != 0 or node.get('exitCode', 0) != 0):
+            failed = True
+        return '\n'.join(walk(node[key]) for key in ('content', 'text', 'output', 'stdout', 'stderr', 'error')
+                         if key in node)
+
+    text = walk(value)
+    if any(int(code) != 0 for code in re.findall(r'(?mi)(?:process exited with code|exit(?:_code| code))\s*[:=]?\s*(-?\d+)', text)):
+        failed = True
+    return text, failed
+
+
+# Everything the launcher says to the user, in the language of the request that
+# asked for it. The OpenCore interface itself is English, so its labels
+# ("Computer use", "Settings") stay English inside every translation. Keys a
+# language leaves out fall back through _LAUNCH_TEXT_SAME, then to English.
+_LAUNCH_TEXT = {
+    'en': {
+        'opened': '{app} is open on your PC. I verified its window.',
+        'focused': '{app} was already open, so I brought its window to the front. I verified its window.',
+        'behind': '{app} is already open on your PC. I verified its window, but Windows kept another window in front.',
+        'not_found': 'I couldn’t find {app} installed on this PC, so nothing was opened.',
+        'not_listed': 'I couldn’t find {app} in the Windows app list. No launch was confirmed.',
+        'unverified': 'I asked Windows to open {app}, but I couldn’t verify a visible {app} window. No successful launch was confirmed.',
+        'accepted_unverified': 'Windows accepted the {app} launch, but I couldn’t verify a {app} window.',
+        'no_receipt': 'The {app} launcher didn’t return a verified result, so no successful launch was confirmed.',
+        'missing_launch': 'A {app} launch was requested, but its tool result is missing. I can’t confirm it ran.',
+        'missing_action': 'A {app} action was requested, but its tool result is missing. I can’t confirm it ran.',
+        'not_confirmed': 'Windows did not confirm that {app} was launched. Check the launch tool result above.',
+        'needs_access': 'Use the Computer use skill and enable computer access in Settings to open {app} on your PC.',
+        'justification': 'Do you want OpenCore to open {app} in your normal Windows session, with your own profile and sign-ins?',
+        'explain_run': 'You asked me to open {app}. I am running the Windows launcher that brings its open window forward or starts it like the Start menu, then verifies its window.',
+        'explain_find': 'You asked me to open {app}. I am finding its installed Windows application ID.',
+        'explain_launch': 'Windows returned {app} in its installed app list. I am launching that exact application.',
+        'explain_list': 'Windows accepted the {app} launch. I am checking the open windows to verify it is visible.',
+        'purpose_open': 'Open {app}',
+        'purpose_find': 'Find {app}',
+        'purpose_verify': 'Verify {app} window',
+        'no_tool': 'I didn’t run any tool for that, so nothing was opened or verified on your PC.',
+    },
+    'es': {
+        'opened': '{app} está abierto en tu PC. Verifiqué su ventana.',
+        'focused': '{app} ya estaba abierto, así que traje su ventana al frente. Verifiqué su ventana.',
+        'behind': '{app} ya está abierto en tu PC. Verifiqué su ventana, pero Windows mantuvo otra ventana delante.',
+        'not_found': 'No encontré {app} instalado en este PC, así que no se abrió nada.',
+        'unverified': 'Le pedí a Windows que abriera {app}, pero no pude verificar una ventana visible de {app}. No se confirmó que se abriera.',
+        'no_receipt': 'El lanzador de {app} no devolvió un resultado verificado, así que no se confirmó que se abriera.',
+        'missing_launch': 'Se pidió abrir {app}, pero falta el resultado de la herramienta. No puedo confirmar que se ejecutó.',
+        'not_confirmed': 'Windows no confirmó que {app} se abriera. Revisa el resultado de la herramienta de arriba.',
+        'needs_access': 'Usa la habilidad «Computer use» y activa el acceso al equipo en «Settings» para abrir {app} en tu PC.',
+        'justification': '¿Quieres que OpenCore abra {app} en tu sesión normal de Windows, con tu propio perfil y tus inicios de sesión?',
+        'explain_run': 'Me pediste abrir {app}. Estoy ejecutando el lanzador de Windows que trae su ventana abierta al frente o lo inicia como el menú Inicio, y luego verifica su ventana.',
+        'explain_find': 'Me pediste abrir {app}. Estoy buscando su ID de aplicación instalada en Windows.',
+        'explain_launch': 'Windows devolvió {app} en su lista de aplicaciones instaladas. Estoy abriendo exactamente esa aplicación.',
+        'explain_list': 'Windows aceptó abrir {app}. Estoy revisando las ventanas abiertas para verificar que se vea.',
+        'purpose_open': 'Abrir {app}',
+        'purpose_find': 'Buscar {app}',
+        'purpose_verify': 'Verificar la ventana de {app}',
+        'no_tool': 'No ejecuté ninguna herramienta para eso, así que no se abrió ni se verificó nada en tu PC.',
+    },
+    'pt': {
+        'opened': '{app} está aberto no seu PC. Verifiquei a janela.',
+        'focused': '{app} já estava aberto, então trouxe a janela para a frente. Verifiquei a janela.',
+        'behind': '{app} já está aberto no seu PC. Verifiquei a janela, mas o Windows manteve outra janela na frente.',
+        'not_found': 'Não encontrei {app} instalado neste PC, então nada foi aberto.',
+        'unverified': 'Pedi ao Windows para abrir {app}, mas não consegui verificar uma janela visível de {app}. Nenhuma abertura foi confirmada.',
+        'no_receipt': 'O iniciador de {app} não retornou um resultado verificado, então nenhuma abertura foi confirmada.',
+        'missing_launch': 'Foi pedido para abrir {app}, mas o resultado da ferramenta está faltando. Não posso confirmar que foi executado.',
+        'not_confirmed': 'O Windows não confirmou que {app} foi aberto. Veja o resultado da ferramenta acima.',
+        'needs_access': 'Use a habilidade "Computer use" e ative o acesso ao computador em "Settings" para abrir {app} no seu PC.',
+        'justification': 'Quer que o OpenCore abra {app} na sua sessão normal do Windows, com seu próprio perfil e logins?',
+        'explain_run': 'Você pediu para abrir {app}. Estou executando o iniciador do Windows, que traz a janela aberta para a frente ou o inicia como o menu Iniciar, e depois verifica a janela.',
+        'explain_find': 'Você pediu para abrir {app}. Estou procurando o ID do aplicativo instalado no Windows.',
+        'explain_launch': 'O Windows retornou {app} na lista de aplicativos instalados. Estou abrindo exatamente esse aplicativo.',
+        'explain_list': 'O Windows aceitou abrir {app}. Estou verificando as janelas abertas para confirmar que está visível.',
+        'purpose_open': 'Abrir {app}',
+        'purpose_find': 'Encontrar {app}',
+        'purpose_verify': 'Verificar a janela de {app}',
+        'no_tool': 'Não executei nenhuma ferramenta para isso, então nada foi aberto nem verificado no seu PC.',
+    },
+    'fr': {
+        'opened': '{app} est ouvert sur votre PC. J’ai vérifié sa fenêtre.',
+        'focused': '{app} était déjà ouvert, j’ai donc mis sa fenêtre au premier plan. J’ai vérifié sa fenêtre.',
+        'behind': '{app} est déjà ouvert sur votre PC. J’ai vérifié sa fenêtre, mais Windows a gardé une autre fenêtre au premier plan.',
+        'not_found': 'Je n’ai pas trouvé {app} installé sur ce PC, donc rien n’a été ouvert.',
+        'unverified': 'J’ai demandé à Windows d’ouvrir {app}, mais je n’ai pas pu vérifier de fenêtre {app} visible. Aucune ouverture n’a été confirmée.',
+        'no_receipt': 'Le lanceur de {app} n’a pas renvoyé de résultat vérifié, donc aucune ouverture n’a été confirmée.',
+        'missing_launch': 'L’ouverture de {app} a été demandée, mais le résultat de l’outil est manquant. Je ne peux pas confirmer qu’elle a eu lieu.',
+        'not_confirmed': 'Windows n’a pas confirmé l’ouverture de {app}. Consultez le résultat de l’outil ci-dessus.',
+        'needs_access': 'Utilisez la compétence « Computer use » et activez l’accès à l’ordinateur dans « Settings » pour ouvrir {app} sur votre PC.',
+        'justification': 'Voulez-vous qu’OpenCore ouvre {app} dans votre session Windows habituelle, avec votre propre profil et vos connexions ?',
+        'explain_run': 'Vous m’avez demandé d’ouvrir {app}. J’exécute le lanceur Windows qui met sa fenêtre ouverte au premier plan ou le démarre comme le menu Démarrer, puis vérifie sa fenêtre.',
+        'explain_find': 'Vous m’avez demandé d’ouvrir {app}. Je cherche son identifiant d’application Windows installée.',
+        'explain_launch': 'Windows a renvoyé {app} dans sa liste d’applications installées. Je lance exactement cette application.',
+        'explain_list': 'Windows a accepté l’ouverture de {app}. Je vérifie les fenêtres ouvertes pour confirmer qu’il est visible.',
+        'purpose_open': 'Ouvrir {app}',
+        'purpose_find': 'Trouver {app}',
+        'purpose_verify': 'Vérifier la fenêtre de {app}',
+        'no_tool': 'Je n’ai lancé aucun outil pour cela, donc rien n’a été ouvert ni vérifié sur votre PC.',
+    },
+    'de': {
+        'opened': '{app} ist auf deinem PC geöffnet. Ich habe das Fenster überprüft.',
+        'focused': '{app} war bereits geöffnet, deshalb habe ich das Fenster in den Vordergrund geholt. Ich habe das Fenster überprüft.',
+        'behind': '{app} ist bereits auf deinem PC geöffnet. Ich habe das Fenster überprüft, aber Windows hat ein anderes Fenster im Vordergrund gelassen.',
+        'not_found': 'Ich konnte {app} auf diesem PC nicht finden, daher wurde nichts geöffnet.',
+        'unverified': 'Ich habe Windows gebeten, {app} zu öffnen, konnte aber kein sichtbares Fenster von {app} überprüfen. Es wurde kein erfolgreicher Start bestätigt.',
+        'no_receipt': 'Der Starter für {app} hat kein überprüftes Ergebnis geliefert, daher wurde kein erfolgreicher Start bestätigt.',
+        'missing_launch': 'Der Start von {app} wurde angefordert, aber das Tool-Ergebnis fehlt. Ich kann nicht bestätigen, dass er ausgeführt wurde.',
+        'not_confirmed': 'Windows hat den Start von {app} nicht bestätigt. Sieh dir das Tool-Ergebnis oben an.',
+        'needs_access': 'Verwende den Skill „Computer use“ und aktiviere den Computerzugriff in „Settings“, um {app} auf deinem PC zu öffnen.',
+        'justification': 'Soll OpenCore {app} in deiner normalen Windows-Sitzung öffnen, mit deinem eigenen Profil und deinen Anmeldungen?',
+        'explain_run': 'Du hast mich gebeten, {app} zu öffnen. Ich führe den Windows-Starter aus, der das offene Fenster in den Vordergrund holt oder die App wie das Startmenü startet und dann das Fenster überprüft.',
+        'explain_find': 'Du hast mich gebeten, {app} zu öffnen. Ich suche die ID der installierten Windows-App.',
+        'explain_launch': 'Windows hat {app} in der Liste der installierten Apps gefunden. Ich starte genau diese App.',
+        'explain_list': 'Windows hat den Start von {app} angenommen. Ich prüfe die offenen Fenster, um zu bestätigen, dass die App sichtbar ist.',
+        'purpose_open': '{app} öffnen',
+        'purpose_find': '{app} suchen',
+        'purpose_verify': 'Fenster von {app} überprüfen',
+        'no_tool': 'Dafür habe ich kein Tool ausgeführt, daher wurde auf deinem PC nichts geöffnet oder überprüft.',
+    },
+    'nl': {
+        'opened': '{app} is geopend op je pc. Ik heb het venster gecontroleerd.',
+        'focused': '{app} was al geopend, dus ik heb het venster naar voren gehaald. Ik heb het venster gecontroleerd.',
+        'behind': '{app} is al geopend op je pc. Ik heb het venster gecontroleerd, maar Windows hield een ander venster op de voorgrond.',
+        'not_found': 'Ik kon {app} niet vinden op deze pc, dus er is niets geopend.',
+        'unverified': 'Ik heb Windows gevraagd {app} te openen, maar ik kon geen zichtbaar venster van {app} controleren. Er is geen geslaagde start bevestigd.',
+        'no_receipt': 'De starter van {app} gaf geen gecontroleerd resultaat terug, dus er is geen geslaagde start bevestigd.',
+        'missing_launch': 'Er is gevraagd om {app} te starten, maar het resultaat van de tool ontbreekt. Ik kan niet bevestigen dat het is uitgevoerd.',
+        'not_confirmed': 'Windows heeft niet bevestigd dat {app} is gestart. Bekijk het resultaat van de tool hierboven.',
+        'needs_access': 'Gebruik de vaardigheid ‘Computer use’ en zet computertoegang aan in ‘Settings’ om {app} op je pc te openen.',
+        'justification': 'Wil je dat OpenCore {app} opent in je normale Windows-sessie, met je eigen profiel en aanmeldingen?',
+        'explain_run': 'Je vroeg me {app} te openen. Ik voer de Windows-starter uit die het geopende venster naar voren haalt of de app start zoals het Startmenu, en daarna het venster controleert.',
+        'explain_find': 'Je vroeg me {app} te openen. Ik zoek de ID van de geïnstalleerde Windows-app.',
+        'explain_launch': 'Windows gaf {app} terug in de lijst met geïnstalleerde apps. Ik start precies die app.',
+        'explain_list': 'Windows heeft de start van {app} geaccepteerd. Ik controleer de geopende vensters om te bevestigen dat de app zichtbaar is.',
+        'purpose_open': '{app} openen',
+        'purpose_find': '{app} zoeken',
+        'purpose_verify': 'Venster van {app} controleren',
+        'no_tool': 'Daarvoor heb ik geen tool uitgevoerd, dus er is niets geopend of gecontroleerd op je pc.',
+    },
+    'it': {
+        'opened': '{app} è aperto sul tuo PC. Ho verificato la sua finestra.',
+        'focused': '{app} era già aperto, quindi ho portato la sua finestra in primo piano. Ho verificato la sua finestra.',
+        'behind': '{app} è già aperto sul tuo PC. Ho verificato la sua finestra, ma Windows ha tenuto un’altra finestra in primo piano.',
+        'not_found': 'Non ho trovato {app} installato su questo PC, quindi non è stato aperto nulla.',
+        'unverified': 'Ho chiesto a Windows di aprire {app}, ma non è stato possibile verificare una finestra visibile di {app}. Nessun avvio riuscito è stato confermato.',
+        'no_receipt': 'Il programma di avvio di {app} non ha restituito un risultato verificato, quindi nessun avvio riuscito è stato confermato.',
+        'missing_launch': 'È stato richiesto l’avvio di {app}, ma manca il risultato dello strumento. Non posso confermare che sia stato eseguito.',
+        'not_confirmed': 'Windows non ha confermato l’avvio di {app}. Controlla il risultato dello strumento qui sopra.',
+        'needs_access': 'Usa la skill «Computer use» e attiva l’accesso al computer in «Settings» per aprire {app} sul tuo PC.',
+        'justification': 'Vuoi che OpenCore apra {app} nella tua normale sessione di Windows, con il tuo profilo e i tuoi accessi?',
+        'explain_run': 'Mi hai chiesto di aprire {app}. Sto eseguendo il programma di avvio di Windows che porta in primo piano la sua finestra aperta o lo avvia come il menu Start, poi verifica la sua finestra.',
+        'explain_find': 'Mi hai chiesto di aprire {app}. Sto cercando l’ID della sua app installata in Windows.',
+        'explain_launch': 'Windows ha restituito {app} nell’elenco delle app installate. Sto avviando esattamente quell’app.',
+        'explain_list': 'Windows ha accettato l’avvio di {app}. Sto controllando le finestre aperte per verificare che sia visibile.',
+        'purpose_open': 'Apri {app}',
+        'purpose_find': 'Trova {app}',
+        'purpose_verify': 'Verifica la finestra di {app}',
+        'no_tool': 'Non ho eseguito nessuno strumento per questo, quindi sul tuo PC non è stato aperto né verificato nulla.',
+    },
+    'pl': {
+        'opened': 'Aplikacja {app} jest otwarta na Twoim komputerze. Jej okno zostało sprawdzone.',
+        'focused': 'Aplikacja {app} była już otwarta, więc jej okno zostało przeniesione na pierwszy plan. Jej okno zostało sprawdzone.',
+        'behind': 'Aplikacja {app} jest już otwarta na Twoim komputerze. Jej okno zostało sprawdzone, ale Windows pozostawił inne okno na pierwszym planie.',
+        'not_found': 'Nie znaleziono aplikacji {app} na tym komputerze, więc nic nie zostało otwarte.',
+        'unverified': 'Windows otrzymał polecenie otwarcia aplikacji {app}, ale nie udało się sprawdzić widocznego okna aplikacji {app}. Nie potwierdzono udanego uruchomienia.',
+        'no_receipt': 'Program uruchamiający aplikację {app} nie zwrócił sprawdzonego wyniku, więc nie potwierdzono udanego uruchomienia.',
+        'missing_launch': 'Zażądano uruchomienia aplikacji {app}, ale brakuje wyniku narzędzia. Nie można potwierdzić, że zostało wykonane.',
+        'not_confirmed': 'Windows nie potwierdził uruchomienia aplikacji {app}. Sprawdź wynik narzędzia powyżej.',
+        'needs_access': 'Użyj umiejętności „Computer use” i włącz dostęp do komputera w „Settings”, aby otworzyć aplikację {app} na swoim komputerze.',
+        'justification': 'Czy OpenCore ma otworzyć aplikację {app} w Twojej zwykłej sesji Windows, z Twoim własnym profilem i zalogowanymi kontami?',
+        'explain_run': 'Poproszono o otwarcie aplikacji {app}. Uruchamiam program Windows, który przenosi jej otwarte okno na pierwszy plan albo uruchamia ją jak menu Start, a potem sprawdza jej okno.',
+        'explain_find': 'Poproszono o otwarcie aplikacji {app}. Szukam identyfikatora zainstalowanej aplikacji Windows.',
+        'explain_launch': 'Windows zwrócił aplikację {app} na liście zainstalowanych aplikacji. Uruchamiam dokładnie tę aplikację.',
+        'explain_list': 'Windows przyjął uruchomienie aplikacji {app}. Sprawdzam otwarte okna, aby potwierdzić, że jest widoczna.',
+        'purpose_open': 'Otwórz aplikację {app}',
+        'purpose_find': 'Znajdź aplikację {app}',
+        'purpose_verify': 'Sprawdź okno aplikacji {app}',
+        'no_tool': 'Nie uruchomiono w tym celu żadnego narzędzia, więc nic nie zostało otwarte ani sprawdzone na Twoim komputerze.',
+    },
+    'cs': {
+        'opened': 'Aplikace {app} je na vašem počítači otevřená. Její okno bylo ověřeno.',
+        'focused': 'Aplikace {app} už byla otevřená, takže její okno bylo přeneseno do popředí. Její okno bylo ověřeno.',
+        'behind': 'Aplikace {app} je na vašem počítači už otevřená. Její okno bylo ověřeno, ale Windows ponechal v popředí jiné okno.',
+        'not_found': 'Aplikaci {app} se na tomto počítači nepodařilo najít, takže se nic neotevřelo.',
+        'unverified': 'Windows dostal pokyn otevřít aplikaci {app}, ale viditelné okno aplikace {app} se nepodařilo ověřit. Úspěšné spuštění nebylo potvrzeno.',
+        'no_receipt': 'Spouštěč aplikace {app} nevrátil ověřený výsledek, takže úspěšné spuštění nebylo potvrzeno.',
+        'missing_launch': 'Bylo požádáno o spuštění aplikace {app}, ale výsledek nástroje chybí. Nelze potvrdit, že proběhlo.',
+        'not_confirmed': 'Windows nepotvrdil spuštění aplikace {app}. Zkontrolujte výsledek nástroje výše.',
+        'needs_access': 'Použijte dovednost „Computer use“ a v „Settings“ zapněte přístup k počítači, abyste mohli otevřít aplikaci {app}.',
+        'justification': 'Má OpenCore otevřít aplikaci {app} ve vaší běžné relaci Windows, s vaším vlastním profilem a přihlášeními?',
+        'explain_run': 'Požádali jste o otevření aplikace {app}. Spouštím spouštěč Windows, který přenese její otevřené okno do popředí nebo ji spustí jako nabídka Start, a pak ověří její okno.',
+        'explain_find': 'Požádali jste o otevření aplikace {app}. Hledám ID nainstalované aplikace ve Windows.',
+        'explain_launch': 'Windows vrátil aplikaci {app} v seznamu nainstalovaných aplikací. Spouštím přesně tuto aplikaci.',
+        'explain_list': 'Windows přijal spuštění aplikace {app}. Kontroluji otevřená okna kvůli ověření, že je viditelná.',
+        'purpose_open': 'Otevřít aplikaci {app}',
+        'purpose_find': 'Najít aplikaci {app}',
+        'purpose_verify': 'Ověřit okno aplikace {app}',
+        'no_tool': 'Pro tento požadavek se nespustil žádný nástroj, takže se na vašem počítači nic neotevřelo ani neověřilo.',
+    },
+    'ru': {
+        'opened': 'Приложение {app} открыто на вашем компьютере. Его окно проверено.',
+        'focused': 'Приложение {app} уже было открыто, поэтому его окно выведено на передний план. Его окно проверено.',
+        'behind': 'Приложение {app} уже открыто на вашем компьютере. Его окно проверено, но Windows оставила на переднем плане другое окно.',
+        'not_found': 'Приложение {app} не найдено на этом компьютере, поэтому ничего не открыто.',
+        'unverified': 'Windows получила команду открыть приложение {app}, но видимое окно приложения {app} проверить не удалось. Успешный запуск не подтверждён.',
+        'no_receipt': 'Средство запуска приложения {app} не вернуло проверенный результат, поэтому успешный запуск не подтверждён.',
+        'missing_launch': 'Был запрошен запуск приложения {app}, но результат инструмента отсутствует. Нельзя подтвердить, что он выполнился.',
+        'not_confirmed': 'Windows не подтвердила запуск приложения {app}. Проверьте результат инструмента выше.',
+        'needs_access': 'Используйте навык «Computer use» и включите доступ к компьютеру в «Settings», чтобы открыть приложение {app} на вашем компьютере.',
+        'justification': 'Открыть приложение {app} через OpenCore в вашем обычном сеансе Windows, с вашим собственным профилем и входами в аккаунты?',
+        'explain_run': 'Вы попросили открыть приложение {app}. Запускаю средство запуска Windows: оно выводит открытое окно на передний план или запускает приложение как меню «Пуск», а затем проверяет его окно.',
+        'explain_find': 'Вы попросили открыть приложение {app}. Ищу ID установленного приложения Windows.',
+        'explain_launch': 'Windows нашла приложение {app} в списке установленных приложений. Запускаю именно это приложение.',
+        'explain_list': 'Windows приняла запуск приложения {app}. Проверяю открытые окна, чтобы убедиться, что оно видно.',
+        'purpose_open': 'Открыть приложение {app}',
+        'purpose_find': 'Найти приложение {app}',
+        'purpose_verify': 'Проверить окно приложения {app}',
+        'no_tool': 'Для этого не был запущен ни один инструмент, поэтому на вашем компьютере ничего не открыто и не проверено.',
+    },
+    'uk': {
+        'opened': 'Застосунок {app} відкрито на вашому комп’ютері. Його вікно перевірено.',
+        'focused': 'Застосунок {app} уже був відкритий, тому його вікно виведено на передній план. Його вікно перевірено.',
+        'behind': 'Застосунок {app} уже відкритий на вашому комп’ютері. Його вікно перевірено, але Windows залишила на передньому плані інше вікно.',
+        'not_found': 'Застосунок {app} не знайдено на цьому комп’ютері, тому нічого не відкрито.',
+        'unverified': 'Windows отримала команду відкрити застосунок {app}, але видиме вікно застосунку {app} перевірити не вдалося. Успішний запуск не підтверджено.',
+        'no_receipt': 'Засіб запуску застосунку {app} не повернув перевіреного результату, тому успішний запуск не підтверджено.',
+        'missing_launch': 'Було запитано запуск застосунку {app}, але результату інструмента немає. Не можна підтвердити, що його виконано.',
+        'not_confirmed': 'Windows не підтвердила запуск застосунку {app}. Перегляньте результат інструмента вище.',
+        'needs_access': 'Скористайтеся навичкою «Computer use» і ввімкніть доступ до комп’ютера в «Settings», щоб відкрити застосунок {app} на вашому комп’ютері.',
+        'justification': 'Відкрити застосунок {app} через OpenCore у вашому звичайному сеансі Windows, з вашим власним профілем і входами в облікові записи?',
+        'explain_run': 'Ви попросили відкрити застосунок {app}. Запускаю засіб запуску Windows: він виводить відкрите вікно на передній план або запускає застосунок як меню «Пуск», а потім перевіряє його вікно.',
+        'explain_find': 'Ви попросили відкрити застосунок {app}. Шукаю ID встановленого застосунку Windows.',
+        'explain_launch': 'Windows знайшла застосунок {app} у списку встановлених застосунків. Запускаю саме цей застосунок.',
+        'explain_list': 'Windows прийняла запуск застосунку {app}. Перевіряю відкриті вікна, щоб переконатися, що його видно.',
+        'purpose_open': 'Відкрити застосунок {app}',
+        'purpose_find': 'Знайти застосунок {app}',
+        'purpose_verify': 'Перевірити вікно застосунку {app}',
+        'no_tool': 'Для цього не було запущено жодного інструмента, тому на вашому комп’ютері нічого не відкрито й не перевірено.',
+    },
+    'el': {
+        'opened': 'Η εφαρμογή {app} είναι ανοιχτή στον υπολογιστή σας. Επαλήθευσα το παράθυρό της.',
+        'focused': 'Η εφαρμογή {app} ήταν ήδη ανοιχτή, οπότε έφερα το παράθυρό της μπροστά. Επαλήθευσα το παράθυρό της.',
+        'behind': 'Η εφαρμογή {app} είναι ήδη ανοιχτή στον υπολογιστή σας. Επαλήθευσα το παράθυρό της, αλλά τα Windows κράτησαν άλλο παράθυρο μπροστά.',
+        'not_found': 'Δεν βρήκα την εφαρμογή {app} εγκατεστημένη σε αυτόν τον υπολογιστή, οπότε δεν άνοιξε τίποτα.',
+        'unverified': 'Ζήτησα από τα Windows να ανοίξουν την εφαρμογή {app}, αλλά δεν μπόρεσα να επαληθεύσω ορατό παράθυρο της εφαρμογής {app}. Δεν επιβεβαιώθηκε επιτυχές άνοιγμα.',
+        'no_receipt': 'Το πρόγραμμα εκκίνησης της εφαρμογής {app} δεν επέστρεψε επαληθευμένο αποτέλεσμα, οπότε δεν επιβεβαιώθηκε επιτυχές άνοιγμα.',
+        'missing_launch': 'Ζητήθηκε η εκκίνηση της εφαρμογής {app}, αλλά λείπει το αποτέλεσμα του εργαλείου. Δεν μπορώ να επιβεβαιώσω ότι εκτελέστηκε.',
+        'not_confirmed': 'Τα Windows δεν επιβεβαίωσαν την εκκίνηση της εφαρμογής {app}. Δείτε το αποτέλεσμα του εργαλείου παραπάνω.',
+        'needs_access': 'Χρησιμοποιήστε τη δεξιότητα «Computer use» και ενεργοποιήστε την πρόσβαση στον υπολογιστή στις «Settings» για να ανοίξετε την εφαρμογή {app}.',
+        'justification': 'Θέλετε το OpenCore να ανοίξει την εφαρμογή {app} στην κανονική σας συνεδρία Windows, με το δικό σας προφίλ και τις συνδέσεις σας;',
+        'explain_run': 'Μου ζητήσατε να ανοίξω την εφαρμογή {app}. Εκτελώ το πρόγραμμα εκκίνησης των Windows, που φέρνει μπροστά το ανοιχτό της παράθυρο ή την ξεκινά όπως το μενού Έναρξη, και μετά επαληθεύει το παράθυρό της.',
+        'explain_find': 'Μου ζητήσατε να ανοίξω την εφαρμογή {app}. Αναζητώ το αναγνωριστικό της εγκατεστημένης εφαρμογής στα Windows.',
+        'explain_launch': 'Τα Windows επέστρεψαν την εφαρμογή {app} στη λίστα εγκατεστημένων εφαρμογών. Ξεκινώ ακριβώς αυτή την εφαρμογή.',
+        'explain_list': 'Τα Windows αποδέχτηκαν την εκκίνηση της εφαρμογής {app}. Ελέγχω τα ανοιχτά παράθυρα για να επαληθεύσω ότι είναι ορατή.',
+        'purpose_open': 'Άνοιγμα εφαρμογής {app}',
+        'purpose_find': 'Εύρεση εφαρμογής {app}',
+        'purpose_verify': 'Επαλήθευση παραθύρου εφαρμογής {app}',
+        'no_tool': 'Δεν εκτέλεσα κανένα εργαλείο για αυτό, οπότε τίποτα δεν άνοιξε ούτε επαληθεύτηκε στον υπολογιστή σας.',
+    },
+    'ar': {
+        'opened': 'تطبيق {app} مفتوح على جهازك. تحققت من نافذته.',
+        'focused': 'كان تطبيق {app} مفتوحًا بالفعل، لذا أحضرت نافذته إلى المقدمة. تحققت من نافذته.',
+        'behind': 'تطبيق {app} مفتوح بالفعل على جهازك. تحققت من نافذته، لكن Windows أبقى نافذة أخرى في المقدمة.',
+        'not_found': 'لم أجد تطبيق {app} مثبتًا على هذا الجهاز، لذلك لم يُفتح شيء.',
+        'unverified': 'طلبت من Windows فتح تطبيق {app}، لكن لم أتمكن من التحقق من نافذة ظاهرة لتطبيق {app}. لم يتأكد نجاح التشغيل.',
+        'no_receipt': 'لم تُرجع أداة تشغيل تطبيق {app} نتيجة متحققًا منها، لذلك لم يتأكد نجاح التشغيل.',
+        'missing_launch': 'طُلب تشغيل تطبيق {app}، لكن نتيجة الأداة مفقودة. لا يمكن تأكيد أنه نُفّذ.',
+        'not_confirmed': 'لم يؤكد Windows تشغيل تطبيق {app}. يمكن مراجعة نتيجة الأداة أعلاه.',
+        'needs_access': 'لفتح تطبيق {app} على جهازك، يلزم استخدام مهارة "Computer use" وتفعيل الوصول إلى الكمبيوتر في "Settings".',
+        'justification': 'السماح لـ OpenCore بفتح تطبيق {app} في جلسة Windows العادية، بملفك الشخصي وتسجيلات دخولك؟',
+        'explain_run': 'طلبت فتح تطبيق {app}. أشغّل مشغّل Windows الذي يجلب نافذته المفتوحة إلى المقدمة أو يشغّله كما من قائمة ابدأ، ثم يتحقق من نافذته.',
+        'explain_find': 'طلبت فتح تطبيق {app}. أبحث عن معرّف التطبيق المثبت في Windows.',
+        'explain_launch': 'أعاد Windows تطبيق {app} في قائمة التطبيقات المثبتة. أشغّل هذا التطبيق بالتحديد.',
+        'explain_list': 'قبل Windows تشغيل تطبيق {app}. أتحقق من النوافذ المفتوحة للتأكد من أنه ظاهر.',
+        'purpose_open': 'فتح تطبيق {app}',
+        'purpose_find': 'البحث عن تطبيق {app}',
+        'purpose_verify': 'التحقق من نافذة تطبيق {app}',
+        'no_tool': 'لم أشغّل أي أداة لذلك، لذا لم يُفتح أو يُتحقق من أي شيء على جهازك.',
+    },
+    'he': {
+        'opened': '{app} פתוח במחשב שלך. אימתתי את החלון שלו.',
+        'focused': '{app} כבר היה פתוח, אז הבאתי את החלון שלו לחזית. אימתתי את החלון שלו.',
+        'behind': '{app} כבר פתוח במחשב שלך. אימתתי את החלון שלו, אבל Windows השאיר חלון אחר בחזית.',
+        'not_found': 'לא מצאתי את {app} מותקן במחשב הזה, אז שום דבר לא נפתח.',
+        'unverified': 'ביקשתי מ-Windows לפתוח את {app}, אבל לא הצלחתי לאמת חלון גלוי של {app}. לא אושרה פתיחה מוצלחת.',
+        'no_receipt': 'המפעיל של {app} לא החזיר תוצאה מאומתת, אז לא אושרה פתיחה מוצלחת.',
+        'missing_launch': 'התבקשה הפעלה של {app}, אבל תוצאת הכלי חסרה, ולכן לא ניתן לאשר שהיא רצה.',
+        'not_confirmed': 'Windows לא אישר ש-{app} הופעל. אפשר לבדוק את תוצאת הכלי למעלה.',
+        'needs_access': 'כדי לפתוח את {app} במחשב, יש להשתמש במיומנות "Computer use" ולהפעיל גישה למחשב ב-"Settings".',
+        'justification': 'לאפשר ל-OpenCore לפתוח את {app} בסשן הרגיל שלך ב-Windows, עם הפרופיל וההתחברויות שלך?',
+        'explain_run': 'ביקשת לפתוח את {app}. מורץ עכשיו מפעיל Windows שמביא את החלון הפתוח שלו לחזית או מפעיל אותו כמו תפריט התחל, ואז מאמת את החלון שלו.',
+        'explain_find': 'ביקשת לפתוח את {app}. מתבצע חיפוש של מזהה האפליקציה המותקנת שלו ב-Windows.',
+        'explain_launch': 'Windows החזיר את {app} ברשימת האפליקציות המותקנות. מופעלת בדיוק האפליקציה הזו.',
+        'explain_list': 'Windows קיבל את ההפעלה של {app}. מתבצעת בדיקה של החלונות הפתוחים כדי לאמת שהוא גלוי.',
+        'purpose_open': 'פתיחת {app}',
+        'purpose_find': 'חיפוש {app}',
+        'purpose_verify': 'אימות החלון של {app}',
+        'no_tool': 'לא הרצתי שום כלי בשביל זה, אז שום דבר לא נפתח או אומת במחשב שלך.',
+    },
+    'id': {
+        'opened': '{app} sudah terbuka di PC Anda. Saya sudah memverifikasi jendelanya.',
+        'focused': '{app} sudah terbuka, jadi saya membawa jendelanya ke depan. Saya sudah memverifikasi jendelanya.',
+        'behind': '{app} sudah terbuka di PC Anda. Saya sudah memverifikasi jendelanya, tetapi Windows tetap menampilkan jendela lain di depan.',
+        'not_found': 'Saya tidak menemukan {app} terpasang di PC ini, jadi tidak ada yang dibuka.',
+        'unverified': 'Saya meminta Windows membuka {app}, tetapi saya tidak bisa memverifikasi jendela {app} yang terlihat. Tidak ada peluncuran berhasil yang dikonfirmasi.',
+        'no_receipt': 'Peluncur {app} tidak mengembalikan hasil yang terverifikasi, jadi tidak ada peluncuran berhasil yang dikonfirmasi.',
+        'missing_launch': 'Peluncuran {app} diminta, tetapi hasil alatnya tidak ada. Saya tidak bisa memastikan alat itu berjalan.',
+        'not_confirmed': 'Windows tidak mengonfirmasi bahwa {app} diluncurkan. Periksa hasil alat di atas.',
+        'needs_access': 'Gunakan skill "Computer use" dan aktifkan akses komputer di "Settings" untuk membuka {app} di PC Anda.',
+        'justification': 'Apakah Anda ingin OpenCore membuka {app} di sesi Windows biasa Anda, dengan profil dan login Anda sendiri?',
+        'explain_run': 'Anda meminta saya membuka {app}. Saya menjalankan peluncur Windows yang membawa jendelanya yang terbuka ke depan atau memulainya seperti menu Start, lalu memverifikasi jendelanya.',
+        'explain_find': 'Anda meminta saya membuka {app}. Saya mencari ID aplikasi Windows yang terpasang.',
+        'explain_launch': 'Windows menemukan {app} di daftar aplikasi terpasang. Saya meluncurkan aplikasi tersebut.',
+        'explain_list': 'Windows menerima peluncuran {app}. Saya memeriksa jendela yang terbuka untuk memastikan aplikasinya terlihat.',
+        'purpose_open': 'Buka {app}',
+        'purpose_find': 'Cari {app}',
+        'purpose_verify': 'Verifikasi jendela {app}',
+        'no_tool': 'Saya tidak menjalankan alat apa pun untuk itu, jadi tidak ada yang dibuka atau diverifikasi di PC Anda.',
+    },
+    'tl': {
+        'opened': 'Bukas na ang {app} sa PC mo. Na-verify ko ang window nito.',
+        'focused': 'Bukas na ang {app}, kaya inilabas ko sa harap ang window nito. Na-verify ko ang window nito.',
+        'behind': 'Bukas na ang {app} sa PC mo. Na-verify ko ang window nito, pero may ibang window na pinanatili ng Windows sa harap.',
+        'not_found': 'Hindi ko nakita ang {app} na naka-install sa PC na ito, kaya walang binuksan.',
+        'unverified': 'Hiniling ko sa Windows na buksan ang {app}, pero hindi ko ma-verify ang nakikitang window ng {app}. Walang nakumpirmang matagumpay na pagbukas.',
+        'no_receipt': 'Hindi nagbalik ng na-verify na resulta ang launcher ng {app}, kaya walang nakumpirmang matagumpay na pagbukas.',
+        'missing_launch': 'May hiniling na pagbukas ng {app}, pero nawawala ang resulta ng tool. Hindi ko makumpirma na tumakbo ito.',
+        'not_confirmed': 'Hindi kinumpirma ng Windows na nabuksan ang {app}. Tingnan ang resulta ng tool sa itaas.',
+        'needs_access': 'Gamitin ang skill na "Computer use" at i-on ang computer access sa "Settings" para mabuksan ang {app} sa PC mo.',
+        'justification': 'Gusto mo bang buksan ng OpenCore ang {app} sa karaniwan mong Windows session, gamit ang sarili mong profile at mga sign-in?',
+        'explain_run': 'Hiniling mong buksan ang {app}. Pinapatakbo ko ang Windows launcher na naglalabas sa harap ng bukas nitong window o nagbubukas nito tulad ng Start menu, at saka nito vine-verify ang window.',
+        'explain_find': 'Hiniling mong buksan ang {app}. Hinahanap ko ang ID ng naka-install nitong Windows app.',
+        'explain_launch': 'Ibinalik ng Windows ang {app} sa listahan ng mga naka-install na app. Binubuksan ko ang mismong app na iyon.',
+        'explain_list': 'Tinanggap ng Windows ang pagbukas ng {app}. Tinitingnan ko ang mga bukas na window para ma-verify na nakikita ito.',
+        'purpose_open': 'Buksan ang {app}',
+        'purpose_find': 'Hanapin ang {app}',
+        'purpose_verify': 'I-verify ang window ng {app}',
+        'no_tool': 'Wala akong pinatakbong tool para diyan, kaya walang binuksan o na-verify sa PC mo.',
+    },
+    'vi': {
+        'opened': '{app} đang mở trên máy tính của bạn. Tôi đã xác minh cửa sổ của nó.',
+        'focused': '{app} đã mở sẵn, nên tôi đưa cửa sổ của nó lên trước. Tôi đã xác minh cửa sổ của nó.',
+        'behind': '{app} đã mở sẵn trên máy tính của bạn. Tôi đã xác minh cửa sổ của nó, nhưng Windows vẫn giữ một cửa sổ khác ở phía trước.',
+        'not_found': 'Tôi không tìm thấy {app} được cài trên máy tính này, nên không có gì được mở.',
+        'unverified': 'Tôi đã yêu cầu Windows mở {app}, nhưng không thể xác minh cửa sổ {app} đang hiển thị. Chưa xác nhận được việc mở thành công.',
+        'no_receipt': 'Trình khởi chạy {app} không trả về kết quả đã xác minh, nên chưa xác nhận được việc mở thành công.',
+        'missing_launch': 'Đã yêu cầu mở {app}, nhưng thiếu kết quả của công cụ. Tôi không thể xác nhận nó đã chạy.',
+        'not_confirmed': 'Windows không xác nhận rằng {app} đã được mở. Hãy xem kết quả công cụ ở trên.',
+        'needs_access': 'Hãy dùng kỹ năng "Computer use" và bật quyền truy cập máy tính trong "Settings" để mở {app} trên máy tính của bạn.',
+        'justification': 'Bạn có muốn OpenCore mở {app} trong phiên Windows bình thường của bạn, với hồ sơ và thông tin đăng nhập của chính bạn không?',
+        'explain_run': 'Bạn đã yêu cầu tôi mở {app}. Tôi đang chạy trình khởi chạy của Windows để đưa cửa sổ đang mở của nó lên trước hoặc khởi động nó như menu Start, rồi xác minh cửa sổ của nó.',
+        'explain_find': 'Bạn đã yêu cầu tôi mở {app}. Tôi đang tìm ID ứng dụng Windows đã cài của nó.',
+        'explain_launch': 'Windows đã trả về {app} trong danh sách ứng dụng đã cài. Tôi đang khởi chạy đúng ứng dụng đó.',
+        'explain_list': 'Windows đã chấp nhận việc mở {app}. Tôi đang kiểm tra các cửa sổ đang mở để xác minh nó hiển thị.',
+        'purpose_open': 'Mở {app}',
+        'purpose_find': 'Tìm {app}',
+        'purpose_verify': 'Xác minh cửa sổ {app}',
+        'no_tool': 'Tôi chưa chạy công cụ nào cho việc đó, nên không có gì được mở hay xác minh trên máy tính của bạn.',
+    },
+    'zh': {
+        'opened': '{app} 已在你的电脑上打开。我已确认它的窗口。',
+        'focused': '{app} 已经打开，所以我把它的窗口切换到了前台。我已确认它的窗口。',
+        'behind': '{app} 已经在你的电脑上打开。我已确认它的窗口，但 Windows 让另一个窗口保持在前台。',
+        'not_found': '我在这台电脑上找不到已安装的 {app}，所以没有打开任何东西。',
+        'unverified': '我已请求 Windows 打开 {app}，但无法确认有可见的 {app} 窗口。未能确认启动成功。',
+        'no_receipt': '{app} 启动器没有返回经过验证的结果，所以未能确认启动成功。',
+        'missing_launch': '已请求启动 {app}，但缺少工具结果。我无法确认它已运行。',
+        'not_confirmed': 'Windows 没有确认 {app} 已启动。请查看上方的工具结果。',
+        'needs_access': '请使用“Computer use”技能，并在“Settings”中启用电脑访问权限，以便在你的电脑上打开 {app}。',
+        'justification': '要让 OpenCore 在你平常的 Windows 会话中，用你自己的配置文件和登录状态打开 {app} 吗？',
+        'explain_run': '你让我打开 {app}。我正在运行 Windows 启动器：它会把已打开的窗口切换到前台，或像开始菜单一样启动它，然后确认它的窗口。',
+        'explain_find': '你让我打开 {app}。我正在查找它在 Windows 中已安装应用的 ID。',
+        'explain_launch': 'Windows 在已安装应用列表中返回了 {app}。我正在启动这个应用。',
+        'explain_list': 'Windows 已接受启动 {app}。我正在检查打开的窗口，确认它是否可见。',
+        'purpose_open': '打开 {app}',
+        'purpose_find': '查找 {app}',
+        'purpose_verify': '确认 {app} 窗口',
+        'no_tool': '我没有为此运行任何工具，所以你的电脑上没有打开或确认任何东西。',
+    },
+    'zh-Hant': {
+        'opened': '{app} 已在你的電腦上開啟。我已確認它的視窗。',
+        'focused': '{app} 已經開啟，所以我把它的視窗切換到前景。我已確認它的視窗。',
+        'behind': '{app} 已經在你的電腦上開啟。我已確認它的視窗，但 Windows 讓另一個視窗保持在前景。',
+        'not_found': '我在這台電腦上找不到已安裝的 {app}，所以沒有開啟任何東西。',
+        'unverified': '我已請求 Windows 開啟 {app}，但無法確認有可見的 {app} 視窗。未能確認啟動成功。',
+        'no_receipt': '{app} 啟動器沒有傳回經過驗證的結果，所以未能確認啟動成功。',
+        'missing_launch': '已請求啟動 {app}，但缺少工具結果。我無法確認它已執行。',
+        'not_confirmed': 'Windows 沒有確認 {app} 已啟動。請查看上方的工具結果。',
+        'needs_access': '請使用「Computer use」技能，並在「Settings」中啟用電腦存取權限，才能在你的電腦上開啟 {app}。',
+        'justification': '要讓 OpenCore 在你平常的 Windows 工作階段中，用你自己的設定檔和登入狀態開啟 {app} 嗎？',
+        'explain_run': '你要求我開啟 {app}。我正在執行 Windows 啟動器：它會把已開啟的視窗切換到前景，或像開始功能表一樣啟動它，然後確認它的視窗。',
+        'explain_find': '你要求我開啟 {app}。我正在尋找它在 Windows 中已安裝應用程式的 ID。',
+        'explain_launch': 'Windows 在已安裝應用程式清單中傳回了 {app}。我正在啟動這個應用程式。',
+        'explain_list': 'Windows 已接受啟動 {app}。我正在檢查開啟的視窗，確認它是否可見。',
+        'purpose_open': '開啟 {app}',
+        'purpose_find': '尋找 {app}',
+        'purpose_verify': '確認 {app} 視窗',
+        'no_tool': '我沒有為此執行任何工具，所以你的電腦上沒有開啟或確認任何東西。',
+    },
+    'ja': {
+        'opened': '{app} はPCで開いています。ウィンドウを確認しました。',
+        'focused': '{app} はすでに開いていたので、ウィンドウを前面に表示しました。ウィンドウを確認しました。',
+        'behind': '{app} はすでにPCで開いています。ウィンドウを確認しましたが、Windows が別のウィンドウを前面に保ちました。',
+        'not_found': 'このPCにインストールされた {app} が見つからなかったため、何も開いていません。',
+        'unverified': 'Windows に {app} を開くよう依頼しましたが、表示されている {app} のウィンドウを確認できませんでした。起動の成功は確認されていません。',
+        'no_receipt': '{app} のランチャーから確認済みの結果が返らなかったため、起動の成功は確認されていません。',
+        'missing_launch': '{app} の起動が要求されましたが、ツールの結果がありません。実行されたことを確認できません。',
+        'not_confirmed': 'Windows は {app} の起動を確認しませんでした。上のツールの結果を確認してください。',
+        'needs_access': 'PCで {app} を開くには、「Computer use」スキルを使い、「Settings」でコンピューターへのアクセスを有効にしてください。',
+        'justification': 'ふだんの Windows セッションで、ご自身のプロファイルとサインイン状態のまま OpenCore に {app} を開かせますか？',
+        'explain_run': '{app} を開くよう頼まれました。開いているウィンドウを前面に表示するか、スタートメニューと同じ方法で起動し、そのウィンドウを確認する Windows ランチャーを実行しています。',
+        'explain_find': '{app} を開くよう頼まれました。インストール済みの Windows アプリ ID を探しています。',
+        'explain_launch': 'Windows のインストール済みアプリ一覧に {app} がありました。そのアプリを起動しています。',
+        'explain_list': 'Windows が {app} の起動を受け付けました。表示されているか、開いているウィンドウを確認しています。',
+        'purpose_open': '{app} を開く',
+        'purpose_find': '{app} を探す',
+        'purpose_verify': '{app} のウィンドウを確認',
+        'no_tool': 'そのためのツールは実行していないので、PCでは何も開いておらず、確認もしていません。',
+    },
+    'ko': {
+        'opened': '{app} 앱이 PC에서 열려 있습니다. 창을 확인했습니다.',
+        'focused': '{app} 앱이 이미 열려 있어서 창을 앞으로 가져왔습니다. 창을 확인했습니다.',
+        'behind': '{app} 앱이 이미 PC에서 열려 있습니다. 창을 확인했지만 Windows가 다른 창을 앞에 유지했습니다.',
+        'not_found': '이 PC에 설치된 {app} 앱을 찾지 못해서 아무것도 열지 않았습니다.',
+        'unverified': 'Windows에 {app} 앱을 열도록 요청했지만 보이는 {app} 창을 확인하지 못했습니다. 실행 성공이 확인되지 않았습니다.',
+        'no_receipt': '{app} 실행기가 확인된 결과를 반환하지 않아 실행 성공이 확인되지 않았습니다.',
+        'missing_launch': '{app} 앱 실행이 요청되었지만 도구 결과가 없습니다. 실행되었는지 확인할 수 없습니다.',
+        'not_confirmed': 'Windows가 {app} 앱 실행을 확인하지 않았습니다. 위의 도구 결과를 확인하세요.',
+        'needs_access': 'PC에서 {app} 앱을 열려면 "Computer use" 스킬을 사용하고 "Settings"에서 컴퓨터 액세스를 켜세요.',
+        'justification': 'OpenCore가 평소 Windows 세션에서 본인의 프로필과 로그인 상태로 {app} 앱을 열까요?',
+        'explain_run': '{app} 앱을 열어 달라고 요청하셨습니다. 열린 창을 앞으로 가져오거나 시작 메뉴처럼 앱을 실행한 뒤 창을 확인하는 Windows 실행기를 실행하고 있습니다.',
+        'explain_find': '{app} 앱을 열어 달라고 요청하셨습니다. 설치된 Windows 앱 ID를 찾고 있습니다.',
+        'explain_launch': 'Windows의 설치된 앱 목록에서 {app} 앱을 찾았습니다. 바로 그 앱을 실행하고 있습니다.',
+        'explain_list': 'Windows가 {app} 앱 실행을 받아들였습니다. 앱이 보이는지 열린 창을 확인하고 있습니다.',
+        'purpose_open': '{app} 앱 열기',
+        'purpose_find': '{app} 앱 찾기',
+        'purpose_verify': '{app} 창 확인',
+        'no_tool': '그 작업을 위해 어떤 도구도 실행하지 않았으므로 PC에서 아무것도 열거나 확인하지 않았습니다.',
+    },
+    'tr': {
+        'opened': '{app} uygulaması bilgisayarınızda açık. Penceresini doğruladım.',
+        'focused': '{app} uygulaması zaten açıktı, bu yüzden penceresini öne getirdim. Penceresini doğruladım.',
+        'behind': '{app} uygulaması bilgisayarınızda zaten açık. Penceresini doğruladım, ancak Windows başka bir pencereyi önde tuttu.',
+        'not_found': '{app} uygulamasını bu bilgisayarda yüklü olarak bulamadım, bu yüzden hiçbir şey açılmadı.',
+        'unverified': 'Windows’tan {app} uygulamasını açmasını istedim, ancak görünür bir {app} penceresini doğrulayamadım. Başarılı bir açılış doğrulanmadı.',
+        'no_receipt': '{app} başlatıcısı doğrulanmış bir sonuç döndürmedi, bu yüzden başarılı bir açılış doğrulanmadı.',
+        'missing_launch': '{app} uygulamasının başlatılması istendi, ancak araç sonucu eksik. Çalıştığını doğrulayamıyorum.',
+        'not_confirmed': 'Windows, {app} uygulamasının başlatıldığını doğrulamadı. Yukarıdaki araç sonucunu kontrol edin.',
+        'needs_access': 'Bilgisayarınızda {app} uygulamasını açmak için "Computer use" becerisini kullanın ve "Settings" bölümünde bilgisayar erişimini açın.',
+        'justification': 'OpenCore, {app} uygulamasını kendi profiliniz ve oturum açma bilgilerinizle normal Windows oturumunuzda açsın mı?',
+        'explain_run': '{app} uygulamasını açmamı istediniz. Açık penceresini öne getiren ya da uygulamayı Başlat menüsü gibi başlatan, ardından penceresini doğrulayan Windows başlatıcısını çalıştırıyorum.',
+        'explain_find': '{app} uygulamasını açmamı istediniz. Yüklü Windows uygulama kimliğini arıyorum.',
+        'explain_launch': 'Windows, yüklü uygulamalar listesinde {app} uygulamasını döndürdü. Tam olarak bu uygulamayı başlatıyorum.',
+        'explain_list': 'Windows, {app} uygulamasının başlatılmasını kabul etti. Göründüğünü doğrulamak için açık pencereleri kontrol ediyorum.',
+        'purpose_open': '{app} uygulamasını aç',
+        'purpose_find': '{app} uygulamasını bul',
+        'purpose_verify': '{app} penceresini doğrula',
+        'no_tool': 'Bunun için hiçbir araç çalıştırmadım, bu yüzden bilgisayarınızda hiçbir şey açılmadı veya doğrulanmadı.',
+    },
+    'hi': {
+        'opened': '{app} आपके PC पर खुला है। मैंने उसकी विंडो की पुष्टि की।',
+        'focused': '{app} पहले से खुला था, इसलिए मैंने उसकी विंडो को सामने ला दिया। मैंने उसकी विंडो की पुष्टि की।',
+        'behind': '{app} आपके PC पर पहले से खुला है। मैंने उसकी विंडो की पुष्टि की, लेकिन Windows ने दूसरी विंडो को सामने रखा।',
+        'not_found': 'मुझे इस PC पर {app} इंस्टॉल नहीं मिला, इसलिए कुछ भी नहीं खोला गया।',
+        'unverified': 'मैंने Windows से {app} खोलने को कहा, लेकिन {app} की कोई दिखाई देने वाली विंडो की पुष्टि नहीं हो सकी। सफल लॉन्च की पुष्टि नहीं हुई।',
+        'no_receipt': '{app} लॉन्चर ने सत्यापित परिणाम नहीं लौटाया, इसलिए सफल लॉन्च की पुष्टि नहीं हुई।',
+        'missing_launch': '{app} लॉन्च करने का अनुरोध किया गया था, लेकिन टूल का परिणाम नहीं मिला। इसके चलने की पुष्टि नहीं की जा सकती।',
+        'not_confirmed': 'Windows ने पुष्टि नहीं की कि {app} लॉन्च हुआ। ऊपर टूल का परिणाम देखें।',
+        'needs_access': 'अपने PC पर {app} खोलने के लिए "Computer use" स्किल का उपयोग करें और "Settings" में कंप्यूटर एक्सेस चालू करें।',
+        'justification': 'क्या आप चाहते हैं कि OpenCore {app} को आपके सामान्य Windows सत्र में, आपकी अपनी प्रोफ़ाइल और साइन-इन के साथ खोले?',
+        'explain_run': 'आपने {app} खोलने को कहा। Windows लॉन्चर चलाया जा रहा है, जो उसकी खुली विंडो को सामने लाता है या उसे Start मेनू की तरह शुरू करता है, फिर उसकी विंडो की पुष्टि करता है।',
+        'explain_find': 'आपने {app} खोलने को कहा। उसकी इंस्टॉल की गई Windows ऐप ID खोजी जा रही है।',
+        'explain_launch': 'Windows ने इंस्टॉल किए गए ऐप्स की सूची में {app} लौटाया। ठीक वही ऐप लॉन्च किया जा रहा है।',
+        'explain_list': 'Windows ने {app} का लॉन्च स्वीकार किया। यह पुष्टि करने के लिए खुली विंडो जाँची जा रही हैं कि वह दिखाई दे रहा है।',
+        'purpose_open': '{app} खोलें',
+        'purpose_find': '{app} खोजें',
+        'purpose_verify': '{app} विंडो की पुष्टि करें',
+        'no_tool': 'इसके लिए मैंने कोई टूल नहीं चलाया, इसलिए आपके PC पर कुछ भी खोला या सत्यापित नहीं किया गया।',
+    },
+    'th': {
+        'opened': '{app} เปิดอยู่บนพีซีของคุณ ตรวจสอบหน้าต่างแล้ว',
+        'focused': '{app} เปิดอยู่แล้ว จึงนำหน้าต่างขึ้นมาด้านหน้า ตรวจสอบหน้าต่างแล้ว',
+        'behind': '{app} เปิดอยู่แล้วบนพีซีของคุณ ตรวจสอบหน้าต่างแล้ว แต่ Windows ยังให้หน้าต่างอื่นอยู่ด้านหน้า',
+        'not_found': 'ไม่พบ {app} ที่ติดตั้งบนพีซีเครื่องนี้ จึงไม่ได้เปิดอะไรเลย',
+        'unverified': 'ขอให้ Windows เปิด {app} แล้ว แต่ไม่สามารถตรวจสอบหน้าต่าง {app} ที่มองเห็นได้ ยังไม่ยืนยันว่าเปิดสำเร็จ',
+        'no_receipt': 'ตัวเปิด {app} ไม่ได้ส่งผลลัพธ์ที่ตรวจสอบแล้วกลับมา จึงยังไม่ยืนยันว่าเปิดสำเร็จ',
+        'missing_launch': 'มีการขอให้เปิด {app} แต่ไม่มีผลลัพธ์ของเครื่องมือ จึงยืนยันไม่ได้ว่าทำงานแล้ว',
+        'not_confirmed': 'Windows ไม่ได้ยืนยันว่าเปิด {app} แล้ว โปรดดูผลลัพธ์ของเครื่องมือด้านบน',
+        'needs_access': 'ใช้ทักษะ "Computer use" และเปิดการเข้าถึงคอมพิวเตอร์ใน "Settings" เพื่อเปิด {app} บนพีซีของคุณ',
+        'justification': 'ต้องการให้ OpenCore เปิด {app} ในเซสชัน Windows ปกติของคุณ พร้อมโปรไฟล์และการลงชื่อเข้าใช้ของคุณเองหรือไม่',
+        'explain_run': 'คุณขอให้เปิด {app} กำลังเรียกใช้ตัวเปิดของ Windows ซึ่งจะนำหน้าต่างที่เปิดอยู่ขึ้นมาด้านหน้าหรือเปิดแอปเหมือนเมนู Start แล้วตรวจสอบหน้าต่าง',
+        'explain_find': 'คุณขอให้เปิด {app} กำลังค้นหา ID ของแอป Windows ที่ติดตั้งไว้',
+        'explain_launch': 'Windows พบ {app} ในรายการแอปที่ติดตั้งไว้ กำลังเปิดแอปนั้น',
+        'explain_list': 'Windows รับคำสั่งเปิด {app} แล้ว กำลังตรวจสอบหน้าต่างที่เปิดอยู่เพื่อยืนยันว่ามองเห็นได้',
+        'purpose_open': 'เปิด {app}',
+        'purpose_find': 'ค้นหา {app}',
+        'purpose_verify': 'ตรวจสอบหน้าต่าง {app}',
+        'no_tool': 'ไม่ได้เรียกใช้เครื่องมือใดสำหรับคำขอนั้น จึงไม่มีอะไรถูกเปิดหรือตรวจสอบบนพีซีของคุณ',
+    },
+}
+# Messages only English words apart; other languages say them with the closer one.
+_LAUNCH_TEXT_SAME = {'not_listed': 'not_found', 'accepted_unverified': 'unverified', 'missing_action': 'missing_launch'}
+
+
+def launch_text(key, language='en', app=''):
+    """One launcher message in the request's language, falling back to English."""
+    table = _LAUNCH_TEXT.get(language) or _LAUNCH_TEXT['en']
+    text = table.get(key) or table.get(_LAUNCH_TEXT_SAME.get(key, key)) or _LAUNCH_TEXT['en'][key]
+    return text.replace('{app}', app)
+
+
+def _launch_reply(spec, content, language='en'):
+    """Report only what the launcher's matching receipt verified."""
+    app = spec['app']
+    text, failed = _tool_output(content)
+    receipt = {}
+    for marker in re.findall(r'(?m)^OPENCORE_APP_RESULT=(\{[^\r\n]*\})\s*$', text):
+        try:
+            value = json.loads(marker)
+        except ValueError:
+            continue
+        if isinstance(value, dict) and value.get('id') == spec['id']:
+            receipt = value
+            break
+    if (not failed and receipt.get('launched') is True and receipt.get('verified') is True
             and type(receipt.get('pid')) is int and receipt['pid'] > 0
-            and type(receipt.get('windowId')) is int and receipt['windowId'] > 0
-            and str(receipt.get('executablePath', '')).replace('\\', '/').lower().endswith('/chrome.exe')):
-        return {'role': 'assistant', 'content': 'Google Chrome is open on your PC. I verified its window.'}
-    return {'role': 'assistant', 'content': 'I couldn’t verify a visible Chrome window from the launch tool result. No successful launch was confirmed.'}
+            and type(receipt.get('windowId')) is int and receipt['windowId'] > 0):
+        if receipt.get('alreadyRunning') is True:
+            if receipt.get('focused') is True:
+                return launch_text('focused', language, app)
+            return launch_text('behind', language, app)
+        return launch_text('opened', language, app)
+    if receipt.get('reason') == 'not_found':
+        return launch_text('not_found', language, app)
+    if receipt:
+        return launch_text('unverified', language, app)
+    return launch_text('no_receipt', language, app)
 
 
-def chrome_launch_step(question, tools, history, user_history=()):
-    """Use approved native tools for a standalone request to launch Chrome."""
+def _call_arguments(call):
+    try:
+        arguments = json.loads((call.get('function') or {}).get('arguments') or '{}')
+    except (TypeError, ValueError):
+        return {}
+    return arguments if isinstance(arguments, dict) else {}
+
+
+def _schema_properties(tools, name):
+    return next(((entry.get('function', {}).get('parameters') or {}).get('properties') or {}
+                 for entry in tools or [] if entry.get('function', {}).get('name') == name), {})
+
+
+def app_launch_step(question, tools, history, user_history=(), escalate=False):
+    """Use approved native tools for a standalone request to open a Windows app."""
     question = action_user_text(question)
-    if _CHROME_RETRY.fullmatch(question):
+    if _LAUNCH_RETRY.fullmatch(question):
         for message in reversed(user_history):
             if not _is_user_request(message):
                 continue
             previous = action_user_text(message.get('content'))
-            if _CHROME_RETRY.fullmatch(previous):
+            if _LAUNCH_RETRY.fullmatch(previous):
                 continue
             question = previous
             break
-    if not _CHROME_LAUNCH.fullmatch(question):
+    spec = app_launch_spec(question)
+    if spec is None:
         return None
+    app = spec['app']
+    language = launch_language(question)
     declared = {canonical_tool_name(entry.get('function', {}).get('name')):
                 entry.get('function', {}).get('name') for entry in tools or []}
+
     def tool_name(name):
         return next((declared[key] for key in ('mcp__opencore__' + name, name) if key in declared), None)
-
-    system = tool_name('system_use')
-    desktop = tool_name('desktop_use')
-
-    def call(name, **arguments):
-        properties = next((entry.get('function', {}).get('parameters', {}).get('properties', {})
-                           for entry in tools or [] if entry.get('function', {}).get('name') == name), {})
-        explanations = {
-            'find_apps': ('You asked me to open Chrome. I am finding its installed Windows application ID.', 'Find Google Chrome'),
-            'launch_app': ('Windows returned Chrome in its installed app list. I am launching that exact application.', 'Open Google Chrome'),
-            'list': ('Windows accepted the Chrome launch. I am checking the open windows to verify it is visible.', 'Verify Chrome window'),
-        }
-        explanation, purpose = explanations[arguments['action']]
-        if 'explanation' in properties:
-            arguments['explanation'] = explanation
-        if 'purpose' in properties:
-            arguments['purpose'] = purpose
-        return {'role': 'assistant', 'content': None, 'tool_calls': [{
-            'id': 'call_' + uuid.uuid4().hex, 'type': 'function', 'index': 0,
-            'function': {'name': name, 'arguments': json.dumps(arguments)}}]}
 
     def reply(text):
         return {'role': 'assistant', 'content': text}
 
+    def request(name, arguments):
+        return {'role': 'assistant', 'content': None, 'tool_calls': [{
+            'id': 'call_' + uuid.uuid4().hex, 'type': 'function', 'index': 0,
+            'function': {'name': name, 'arguments': json.dumps(arguments)}}]}
+
+    def outcome(name, matches):
+        calls = [call for message in history for call in message.get('tool_calls') or []
+                 if (call.get('function') or {}).get('name') == name and matches(_call_arguments(call))]
+        if not calls:
+            return None
+        result = next((message for message in reversed(history) if message.get('role') == 'tool'
+                       and message.get('tool_call_id') == calls[-1].get('id')), None)
+        if result is None:
+            return reply(launch_text('missing_launch', language, app))
+        return reply(_launch_reply(spec, result.get('content'), language))
+
+    command = app_launch_command(spec)
+    system = tool_name('system_use')
+    desktop = tool_name('desktop_use')
     # A standalone app launch needs no screen capture or input injection.
     # Use the declared terminal under its normal approval policy when available.
     terminal = next((declared[key] for key in ('exec_command', 'functions__exec_command') if key in declared), None)
     if terminal:
-        return terminal_chrome_step(terminal, history)
+        done = outcome(terminal, lambda arguments: arguments.get('cmd') == command)
+        if done:
+            return done
+        arguments = {'cmd': command, 'shell': 'powershell', 'login': False, 'yield_time_ms': 30000, 'max_output_tokens': 1000}
+        schema = _schema_properties(tools, terminal)
+        if escalate and 'sandbox_permissions' in schema:
+            # A sandboxed process would start a separate browser profile.
+            arguments['sandbox_permissions'] = 'require_escalated'
+            if 'justification' in schema:
+                arguments['justification'] = launch_text('justification', language, app)
+        return request(terminal, arguments)
     if not system:
-        return reply('Use the Computer use skill and enable computer access in Settings to open Chrome on your PC.')
+        return reply(launch_text('needs_access', language, app))
 
-    requests = {}
-    results = {}
+    properties = _schema_properties(tools, system)
+    actions = (properties.get('action') or {}).get('enum') or []
+    explanations = {action: (launch_text(explanation, language, app), launch_text(purpose, language, app))
+                    for action, explanation, purpose in (('run_command', 'explain_run', 'purpose_open'),
+                                                         ('find_apps', 'explain_find', 'purpose_find'),
+                                                         ('launch_app', 'explain_launch', 'purpose_open'),
+                                                         ('list', 'explain_list', 'purpose_verify'))}
+
+    def call(name, **arguments):
+        explanation, purpose = explanations[arguments['action']]
+        schema = _schema_properties(tools, name)
+        if 'explanation' in schema:
+            arguments['explanation'] = explanation
+        if 'purpose' in schema:
+            arguments['purpose'] = purpose
+        return request(name, arguments)
+
+    if 'run_command' in actions:
+        done = outcome(system, lambda arguments: arguments.get('action') == 'run_command' and arguments.get('command') == command)
+        return done or call(system, action='run_command', command=command)
+
+    requests, results = {}, {}
     for message in history:
         for item in message.get('tool_calls') or []:
-            fn = item.get('function') or {}
-            if fn.get('name') not in (system, desktop):
-                continue
-            try:
-                args = json.loads(fn.get('arguments') or '{}')
-            except (TypeError, ValueError):
-                continue
-            if isinstance(args, dict) and item.get('id'):
-                requests[item['id']] = args.get('action')
+            if (item.get('function') or {}).get('name') in (system, desktop) and item.get('id'):
+                requests[item['id']] = _call_arguments(item).get('action')
         if message.get('role') != 'tool' or message.get('tool_call_id') not in requests:
             continue
-        action = requests[message['tool_call_id']]
         try:
             raw = message.get('content') or '{}'
             if isinstance(raw, str):
@@ -452,33 +1602,111 @@ def chrome_launch_step(question, tools, history, user_history=()):
             value = json.loads(raw)
         except (TypeError, ValueError):
             value = None
-        if isinstance(value, dict) and not value.get('isError'):
-            value = value.get('structuredContent', value)
-        else:
-            value = None
-        results[action] = value if isinstance(value, dict) else {}
+        value = value.get('structuredContent', value) if isinstance(value, dict) and not value.get('isError') else None
+        results[requests[message['tool_call_id']]] = value if isinstance(value, dict) else {}
 
     if any(action not in results for action in requests.values()):
-        return reply('A Chrome action was requested, but its tool result is missing. I can’t confirm it ran.')
+        return reply(launch_text('missing_action', language, app))
     if 'find_apps' not in results:
-        return call(system, action='find_apps', query='Google Chrome')
-    chrome = next((app for app in results['find_apps'].get('apps') or []
-                   if isinstance(app, dict) and str(app.get('Name', '')).lower() in ('google chrome', 'chrome')
-                   and isinstance(app.get('AppID'), str) and 0 < len(app['AppID']) <= 1000), None)
-    if not chrome:
-        return reply('I couldn’t find Google Chrome in the Windows app list. No launch was confirmed.')
+        return call(system, action='find_apps', query=app)
+    ids = {value.casefold() for value in spec['appIds']}
+    exe = spec['exe'].casefold()
+    found = next((item for item in results['find_apps'].get('apps') or []
+                  if isinstance(item, dict) and isinstance(item.get('AppID'), str) and 0 < len(item['AppID']) <= 1000
+                  and (item['AppID'].casefold() in ids or _app_key(item.get('Name')) in spec['names']
+                       or (exe and item['AppID'].casefold().endswith('\\' + exe)))), None)
+    app_id = found['AppID'] if found else (spec['appIds'][0] if spec['appIds'] else None)
+    if not app_id:
+        return reply(launch_text('not_listed', language, app))
     if 'launch_app' not in results:
-        return call(system, action='launch_app', appId=chrome['AppID'])
-    if results['launch_app'].get('appId') != chrome['AppID'] or not results['launch_app'].get('launched'):
-        return reply('Windows did not confirm that Chrome was launched. Check the launch tool result above.')
+        return call(system, action='launch_app', appId=app_id)
+    if results['launch_app'].get('appId') != app_id or not results['launch_app'].get('launched'):
+        return reply(launch_text('not_confirmed', language, app))
     if desktop and 'list' not in results:
         return call(desktop, action='list')
-    windows = results.get('list', {}).get('windows') or []
-    if any(isinstance(window, dict) and
-           str(window.get('executablePath', '')).replace('\\', '/').lower().endswith('/chrome.exe')
-           for window in windows):
-        return reply('Google Chrome is open on your PC. I verified its window.')
-    return reply('Windows accepted the Chrome launch, but I couldn’t verify a Chrome window.')
+    processes = set(spec['process']) | {name for name in spec['names'] if len(name) >= 4}
+    if exe:
+        processes.add(exe[:-4] if exe.endswith('.exe') else exe)
+    package = re.match(r'^([^_!\\]+)_[a-z0-9]{13}!', app_id.casefold())
+
+    def visible(window):
+        path = str(window.get('executablePath', '')).replace('\\', '/').casefold()
+        stem = path.rsplit('/', 1)[-1]
+        stem = stem[:-4] if stem.endswith('.exe') else stem
+        return bool(path) and (stem in processes or bool(package and f'/windowsapps/{package.group(1)}_' in path))
+
+    if any(isinstance(window, dict) and visible(window) for window in results.get('list', {}).get('windows') or []):
+        return reply(launch_text('opened', language, app))
+    return reply(launch_text('accepted_unverified', language, app))
+
+
+chrome_launch_step = app_launch_step
+
+_DESKTOP_VERB = re.compile(
+    r'(?i)\b(?:open|launch|start|close|quit|switch\s+to|bring\s+up|pull\s+up|fire\s+up|focus|minimi[sz]e|maximi[sz]e)\b')
+_DESKTOP_VERB_HE = re.compile(r'(?:פתח|תפתח|הפעל|תפעיל|סגור|תסגור|הרץ|תריץ)')
+_DESKTOP_TARGETS = frozenset('app apps application applications program programs browser browsers window '
+                             'pc computer desktop laptop'.split())
+_UNVERIFIED_DESKTOP_CLAIM = re.compile(
+    r"(?i)(?:\bi(?:'ve|’ve|\s+have)?\s+(?:just\s+|now\s+|successfully\s+)?"
+    r"(?:opened|launched|started|closed|focused|verified|brought)\b"
+    r"|\bverified\s+(?:its|the)\s+window"
+    r"|\bis\s+(?:now\s+)?open(?:ed)?\s+on\s+your\s+(?:pc|computer|desktop|screen)"
+    r"|\byou(?:'re|’re|\s+are)\s+open\b"
+    r"|\bhas\s+been\s+(?:opened|launched|started)"
+    # The same first-person claims in the other request languages.
+    r"|\b(?:he|hemos)\s+(?:abierto|iniciado|lanzado)\b|\babr[ií]\b|\best[áa]\s+(?:ahora\s+|ya\s+)?abiert[oa]\b"
+    r"|\b(?:abri|iniciei)\b|\best[áa]\s+abert[oa]\b"
+    r"|\bj['’]ai\s+(?:ouvert|lancé|démarré)\b|\best\s+(?:maintenant\s+)?ouvert[e]?\b"
+    r"|\bhabe\b[^.!?\n]{0,40}\b(?:geöffnet|gestartet)\b|\bist\s+(?:jetzt\s+)?(?:geöffnet|offen|gestartet)\b"
+    r"|\bho\s+(?:aperto|avviato)\b|\bè\s+(?:ora\s+)?apert[oa]\b"
+    r"|\b(?:otworzyłem|otworzyłam|uruchomiłem|uruchomiłam)\b"
+    r"|\b(?:открыл|открыла|запустил|запустила|відкрив|відкрила)\b|\bоткрыт[оа]?\b"
+    r"|פתחתי|הפעלתי|\bנפתח(?:ה)?\b|فتحت|تم\s+فتح|شغلت|تم\s+تشغيل"
+    r"|已(?:经|經)?(?:打开|打開|启动|啟動)|開きました|起動しました|열었습니다|열었어요|실행했습니다|실행했어요"
+    r"|\baçtım\b|\bbaşlattım\b|खोल\s+दिया|\bđã\s+(?:mở|khởi\s+động)\b|\b(?:telah|sudah)\s+(?:membuka|menjalankan|dibuka)\b"
+    r"|เปิดแล้ว)")
+UNVERIFIED_DESKTOP_GUIDANCE = (
+    'ECHO: no tool ran in this turn, so nothing on the PC was opened or verified. Call the declared terminal '
+    'or computer tool to do it, or tell the user plainly that it was not done.')
+UNVERIFIED_DESKTOP_REPLY = _LAUNCH_TEXT['en']['no_tool']
+
+
+def turn_has_tool_result(live):
+    """True when the current turn already holds a tool receipt (live or compacted)."""
+    if getattr(live, 'compacted_tool_ids', None):
+        return True
+    entries = getattr(live, 'entries', None) or []
+    start = max((index for index, entry in enumerate(entries) if entry.get('kind') == live.TURN), default=-1)
+    return any((entry.get('message') or {}).get('role') == 'tool' for entry in entries[start + 1:])
+
+
+def desktop_action_request(question):
+    """The user asked to act on an app or window, not how-to prose such as 'start a business'."""
+    text = action_user_text(question) or ''
+    if _DESKTOP_VERB_HE.search(text):
+        return True
+    for verb in _DESKTOP_VERB.finditer(text):
+        words = [word.casefold().strip(".'’") for word in re.findall(r"[\w+.'’-]+", text[verb.end():])[:6]]
+        if any(word in _DESKTOP_TARGETS for word in words):
+            return True
+        if any(_app_key(' '.join(words[start:start + size])) in _APP_ALIASES
+               for start in range(min(3, len(words))) for size in (1, 2, 3) if words[start:start + size]):
+            return True
+    # The same request in another language: 'abre el navegador', 'Chromeを開いて'.
+    found = None if _APP_LAUNCH.fullmatch(text) else _launch_phrase(text)
+    if found:
+        tries = _launch_tries(found[0]) + list(found[2])
+        return bool(set(found[0].casefold().split()) & _DESKTOP_TARGETS_INTL or _catalog_entry(tries)
+                    or _start_app_resolve(tries))
+    return False
+
+
+def unverified_desktop_claim(question, text, live):
+    """A reply that claims a desktop action although no tool ran in this turn."""
+    return bool(_UNVERIFIED_DESKTOP_CLAIM.search(text or '')
+                and desktop_action_request(question)
+                and not turn_has_tool_result(live))
 
 
 def compact_builtin_tool_docs(tools):
@@ -2605,7 +3833,10 @@ class Handler(BaseHTTPRequestHandler):
             user_content = supplied[user_index].get('content')
             text_only = isinstance(user_content, str) or isinstance(user_content, list) and all(
                 isinstance(part, dict) and part.get('type') == 'text' for part in user_content)
-            action = chrome_launch_step(question, payload.get('tools'), client_tail, supplied[:user_index]) if text_only else None
+            unrestricted = any('`sandbox_mode` is `danger-full-access`' in str(message.get('content') or '')
+                               for message in pinned)
+            action = app_launch_step(question, payload.get('tools'), client_tail, supplied[:user_index],
+                                     escalate=not unrestricted) if text_only else None
             if action and not tool_call_error(action, payload.get('tools')):
                 if archive_input:
                     self.state.archive_messages(supplied, conversation)
@@ -2744,6 +3975,7 @@ class Handler(BaseHTTPRequestHandler):
                              if (owns_timeline or tool_request) and not payload.get('stream') else None)
         backend_session_id = hashlib.sha256(conversation.encode("utf-8")).hexdigest()
         empty_calls = 0
+        unverified_claims = 0
         malformed_controls = 0
         malformed_tools = 0
         # Native chat forwards timeline ownership; some managed model proxies
@@ -2975,6 +4207,16 @@ class Handler(BaseHTTPRequestHandler):
                             count, "echo")
                 continue
             empty_calls = 0
+            if agent_request and tool_request and unverified_desktop_claim(question, text, live):
+                # A 350M model can narrate "I opened Edge" without calling a
+                # tool. Ask once for the real action, then replace the claim.
+                unverified_claims += 1
+                if unverified_claims == 1:
+                    live.append({'role': 'user', 'content': UNVERIFIED_DESKTOP_GUIDANCE}, count, 'echo')
+                    ensure_room(reserve)
+                    continue
+                text = launch_text('no_tool', launch_language(question))
+                message['content'] = text
             match = COMMAND.fullmatch(text)
             if match:
                 before = list(session.ids)

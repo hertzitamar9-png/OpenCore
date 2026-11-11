@@ -1,4 +1,5 @@
 import type { TimelineEntry } from "./types";
+import { isResponseReceipt } from './response-receipt.js';
 
 export type ToolStep = { call: TimelineEntry; result?: TimelineEntry };
 
@@ -11,7 +12,7 @@ export type ResponseSegment =
 
 export function visibleEchoReceiptGroups(events: TimelineEntry[], active: boolean): TimelineEntry[][] {
   if (active) return [];
-  const receipts = events.filter((entry) => entry.kind === "echo");
+  const receipts = events.filter(isResponseReceipt);
   return receipts.length ? [receipts] : [];
 }
 
@@ -28,7 +29,7 @@ export function buildResponseSegments(events: TimelineEntry[]): ResponseSegment[
   let tools: Extract<ResponseSegment, { type: "tools" }> | null = null;
   let narrated = false;
   const paired = new Set<number>();
-  const visible = events.filter((entry) => entry.kind !== "echo");
+  const visible = events.filter((entry) => !isResponseReceipt(entry));
   const callId = (entry: TimelineEntry) => {
     if (typeof entry.metadata.toolCallId === "string") return entry.metadata.toolCallId;
     if (entry.kind === "tool_call" && typeof entry.metadata.id === "string") return entry.metadata.id;

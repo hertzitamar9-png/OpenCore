@@ -21,13 +21,12 @@ fixture+=String.raw`
   assert.equal(await changes.count(),1,'The empty composer must not mount a second receipt');
   assert.equal(await page.locator('.workspace-coverage').count(),0,'Collapsed file changes must keep diagnostics out of the chat');
   await changes.getByRole('button',{name:'Show all file changes'}).click();
-  const diagnostics=changes.locator('.workspace-coverage');
-  await diagnostics.getByText('Capture coverage · 101 notes',{exact:true}).waitFor();
-  assert.equal(await diagnostics.getAttribute('open'),null);
-  await diagnostics.locator('summary').click();
+  await changes.getByRole('button',{name:/game.html/}).waitFor();
+  assert.equal(await changes.locator('.workspace-coverage').count(),0,'File changes must not expose capture diagnostics');
+  await page.evaluate(()=>{fixture.receipt.files.push({id:'cache',path:'C:/ProgramData/Microsoft/Windows/Caches/cversions.2.db',source:'Windows',mime:'application/octet-stream',added:null,removed:null},{id:'snip',path:'C:/Users/test/AppData/Local/Packages/Microsoft.ScreenSketch_8wekyb3d8bbwe/TempState/clip.png',source:'Windows',mime:'image/png',added:null,removed:null});window.dispatchEvent(new Event('opencore-file-changes'));});
   for(const width of [390,1400]){
    await page.setViewportSize({width,height:width===390?844:1000});
-   assert.ok(await diagnostics.locator('ul').evaluate(node=>node.clientHeight<=220&&node.scrollHeight>node.clientHeight&&getComputedStyle(node).overflowY==='auto'));
+   assert.equal(await page.getByText(/Windows process cache|Capture coverage|cversions|ScreenSketch/).count(),0,'Internal Windows cache records stay out of the chat');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(output)await page.screenshot({path:path.join(output,'diagnostics-'+width+'.png')});
   }
@@ -37,7 +36,7 @@ fixture+=String.raw`
   await page.waitForFunction(()=>!document.querySelector('.file-changes-receipt'));
   assert.equal(await page.locator('.workspace-coverage').count(),0);
   assert.deepEqual(errors,[]);
-  console.log('PASS: new and unchanged chats hide scan notes; real changes retain collapsed, height-bounded diagnostics at desktop and phone widths.');
+  console.log('PASS: real task files remain available; Windows cache, Snip Sketch and capture diagnostics stay hidden at desktop and phone widths.');
  }catch(error){console.error('Coverage fixture errors',errors);console.error((await page.locator('body').innerText()).slice(0,1600));throw error;}finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1});`;
 const filename=path.join(__dirname,'qa-capture-coverage.fixture.cjs'),compiled=new Module(filename,module);compiled.filename=filename;compiled.paths=Module._nodeModulePaths(__dirname);compiled._compile(fixture,filename);

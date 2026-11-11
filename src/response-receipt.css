@@ -1,0 +1,6 @@
+.response-receipt-content { padding: 0 14px 12px; }
+.response-receipt-section { padding: 10px 0; border-top: 1px solid var(--line-soft,#26313c); }
+.response-receipt-section h4 { margin: 0 0 5px; font-size: 12px; }
+.response-receipt-section p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.response-receipt-data { margin-top: 8px; }
+.response-receipt-data > summary { padding: 5px 0; }

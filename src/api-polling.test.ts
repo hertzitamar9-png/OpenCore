@@ -21,6 +21,28 @@ it("shares pending polls per conversation and reads fresh data after completion"
   expect(bridge.invoke).toHaveBeenCalledTimes(3);
 });
 
+it("acknowledges the revision at native read creation rather than a later coalesced caller", async () => {
+  Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
+  const visibility = vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+  const row = { id: 'ack-shared', status: 'complete', messageCount: 2 };
+  let finish!: (rows: unknown[]) => void;
+  bridge.invoke.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  try {
+    api.conversationIndicators.observe([row], row.id);
+    const first = api.conversation(row.id);
+    const newer = { ...row, messageCount: 4 };
+    api.conversationIndicators.observe([newer], row.id);
+    const second = api.conversation(row.id);
+    finish([{ conversationId: row.id }, { conversationId: row.id }]);
+    await Promise.all([first, second]);
+    expect(bridge.invoke).toHaveBeenCalledTimes(1);
+    expect(api.conversationIndicators.stateFor(newer)).toBe('unread');
+    bridge.invoke.mockResolvedValue([{ conversationId: row.id }]);
+    await api.conversation(row.id, { fresh: true });
+    expect(api.conversationIndicators.stateFor(newer)).toBe('idle');
+  } finally { visibility.mockRestore(); }
+});
+
 it("releases a failed background read so a later refresh can recover", async () => {
   Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
   bridge.invoke.mockRejectedValueOnce(new Error("Temporary disk read failure")).mockResolvedValue([]);

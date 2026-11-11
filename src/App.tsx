@@ -1,4 +1,5 @@
 import { EchoContextStatus } from "./EchoContextStatus";
+import './conversation-indicators.css';
 import {useChatImageSelection,selectChatImageModel,ImageSamplingStats,imageSelectionLabel} from './image-generation-panel.js';
 import { EchoMemorySettings } from "./EchoMemorySettings";
 import { ClaudeBridgePanel } from "./ClaudeBridgePanel";
@@ -304,8 +305,9 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
 }
 
 const ConversationRows = memo(function ConversationRows({ items, selected, onSelect, onTogglePin }: { items: ConversationSummary[]; selected?: string; onSelect: (id: string) => void; onTogglePin: (item: ConversationSummary) => void }) {
+  api.conversationIndicators.useRevision({useEffect, useState}, items);
   return <>{items.map((item) => <div key={item.id} className={`conversation-row-shell ${selected === item.id ? "selected" : ""}`}><button className={`conversation-row ${selected === item.id ? "selected" : ""}`} onClick={() => onSelect(item.id)}>
-    <span className={`client-dot client-${item.client.toLowerCase().replaceAll(" ", "-")}`} style={/^(active|running|complete|completed|stop)$/.test(item.status) ? { background: "var(--green)" } : undefined} />
+    <span className={`client-dot client-${item.client.toLowerCase().replaceAll(" ", "-")}`} data-state={api.conversationIndicators.stateFor(item)} role="img" aria-label={api.conversationIndicators.labelFor(item)} title={api.conversationIndicators.labelFor(item)} />
     <span className="conversation-copy"><strong>{item.title || "Untitled conversation"}</strong><small>{item.client}{item.project && item.project !== item.client ? ` · ${item.project}` : ""}</small></span>
     <time>{shortTime(item.updatedAt)}</time>
   </button><button className={`conversation-row-pin ${item.pinned ? "is-pinned" : ""}`} onClick={() => onTogglePin(item)} title={item.pinned ? "Unpin chat" : "Pin chat"} aria-label={`${item.pinned ? "Unpin" : "Pin"} ${item.title}`}>
@@ -346,6 +348,7 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
   onOpenProjectFolder: (project: ProjectSummary) => Promise<string>; onChangeProjectFolder: (project: ProjectSummary) => Promise<string>;
   importRevision: number;
 }) {
+  api.conversationIndicators.useRows({useEffect}, conversations, selected);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "hermes" | "opencode" | "imported" | "projects">("all");
@@ -1691,7 +1694,7 @@ export default function App({ initialView = "overview" }: { initialView?: View }
 
   const hideConversationList = conversationsCollapsed || (workspaceOpen && viewportWidth < 1440);
   const mainBlocked = runtimeTransitionReason || (studioActive ? 'Wait for the active studio task to finish.' : (snapshot.activeConversationIds || []).some(id => id !== selectedConversation) || Boolean(inferenceOwner && inferenceOwner !== selectedConversation) ? 'Another chat is working. Wait for it to finish before sending.' : undefined);
-  const conversationList = <ConversationsList conversations={snapshot.conversations.map(item => snapshot.activeConversationIds?.includes(item.id) ? { ...item, status: "running" } : item)} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} importRevision={importRevision} />;
+  const conversationList = <ConversationsList conversations={snapshot.conversations.map(item => ({ ...item, indicatorActive: Boolean(snapshot.activeConversationIds?.includes(item.id)) }))} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} importRevision={importRevision} />;
   const conversationContent = <div className={`conversation-content-grid ${hideConversationList ? 'conversation-list-collapsed' : ''}`} style={{'--conversation-list-width': `${sidebarWidth}px`} as CSSProperties}>
       {conversationList}<div className="conversation-resizer" role="separator" tabIndex={0} aria-label="Resize conversations" aria-orientation="vertical" aria-valuemin={230} aria-valuemax={600} aria-valuenow={sidebarWidth} onKeyDown={event => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setSidebarWidth(current => Math.min(600, Math.max(230, current + (event.key === 'ArrowRight' ? 24 : -24)))); } }} onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
       <div className="conversation-chat-content"><AssistantConversation

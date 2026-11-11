@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 596,
+  "families": 599,
   "withFive": 238,
   "models": [
     {
@@ -5206,6 +5206,17 @@
       ]
     },
     {
+      "id": "publisher-breeze-tts-2",
+      "label": "Breeze-TTS-2",
+      "category": "tts",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "BreezeBlue/Breeze-TTS-2"
+      ]
+    },
+    {
       "id": "publisher-carbon-x",
       "label": "Carbon-X",
       "category": "text",
@@ -5578,6 +5589,17 @@
       "repositories": [
         "Jackrong/Kestrel-4B-Coder",
         "Jackrong/Kestrel-4B-Coder-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-kitten-tts-2",
+      "label": "Kitten TTS 2",
+      "category": "tts",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "KittenML/kitten-tts-2"
       ]
     },
     {
@@ -6099,6 +6121,17 @@
       "source": "bundled packages",
       "repositories": [
         "AlmawaveLabs/Velvet2-3B"
+      ]
+    },
+    {
+      "id": "publisher-voxcpm2",
+      "label": "VoxCPM2",
+      "category": "tts",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "openbmb/VoxCPM2"
       ]
     }
   ]

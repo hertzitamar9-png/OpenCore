@@ -1,0 +1,4 @@
+.conversation-row .client-dot { width: 10px; height: 10px; box-sizing: border-box; background: #8c99a9; border: 1px solid #c6d0dd88; }
+.conversation-list-focus .conversation-row { grid-template-columns: 10px minmax(0,1fr) 44px; }
+.conversation-row .client-dot[data-state="working"] { background: #34d399; border-color: #7befbe; }
+.conversation-row .client-dot[data-state="unread"] { background: #fbbf24; border-color: #fde68a; }

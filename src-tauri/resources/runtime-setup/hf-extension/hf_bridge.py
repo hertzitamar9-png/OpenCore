@@ -41,6 +41,8 @@ from hf_computer_driver import ComputerDriverManager
 from model_modes import apply_operating_modes, supports_text_generation, mode_context
 from hf_download_queue import DownloadQueue
 from hf_speech import SpeechManager, supports as supports_speech
+from hf_tts import TtsManager, supports as supports_tts
+from hf_runtime import ModelLoadError
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -106,6 +108,7 @@ class BridgeState:
         self._load_catalog()
         self._seed_publisher_catalog()
         self.speech = SpeechManager(self.root, self.resources, lambda identity: self.entry(identity, installed=True))
+        self.tts = TtsManager(self.root, self.resources)
         try:
             saved = _read_json(self.job_path, 1024 * 1024)
             if isinstance(saved, dict) and isinstance(saved.get("progress"), dict):
@@ -222,7 +225,7 @@ class BridgeState:
         preparing = command == 'hub_prepare_model' or command == 'runtime_setup_start' and not resolved['args']['options'].get('installWeights')
         if not preparing:
             self._download_entry(entry, pause, report, parallel_ranges=not item.get('_parallel'))
-            preparing = supports_computer(entry) or supports_ocr(entry) or supports_image(entry) or entry.get('runtime', {}).get('adapter') and getattr(self.runtime, 'automatic_preparation', False)
+            preparing = supports_computer(entry) or supports_ocr(entry) or supports_image(entry) or supports_tts(entry) or entry.get('runtime', {}).get('adapter') and getattr(self.runtime, 'automatic_preparation', False)
         if preparing:
             def prepare():
                 progress = {'id': identity, 'jobId': item['id'], 'status': 'running', 'kind': 'prepare'}
@@ -303,6 +306,7 @@ class BridgeState:
                         if supports_computer(entry): self.computer.stop()
                         elif supports_ocr(entry): self.ocr.stop()
                         elif supports_image(entry): self.images.stop()
+                        elif supports_tts(entry): pass  # TtsManager.prepare watches pause and cancels its own verification job.
                         else:
                             cancellation = getattr(self.runtime, '_cancel', None)
                             if cancellation: cancellation.set()
@@ -662,6 +666,9 @@ class BridgeState:
         if supports_speech(entry):
             result['runtimeReady'] = self.speech.ready(result, preparation)
             result['speechSelected'] = self.speech.selected(entry['id'])
+        if supports_tts(entry):
+            result['runtimeReady'] = self.tts.ready(result, preparation)
+            result['hardwareFit'] = self.tts.fit(entry)
         if receipt:
             result.update(localDirectory=receipt["localDirectory"], receiptPath=receipt["receiptPath"], installReceipt=copy.deepcopy(receipt))
         if self.progress and self.progress.get("id") == entry["id"] and self.progress.get("status") in ACTIVE | {"paused", "failed"}:
@@ -671,6 +678,10 @@ class BridgeState:
     def catalog(self):
         with self.lock:
             return [self._hydrate(x) for x in self.entries.values()]
+
+    def tts_entries(self):
+        with self.lock:
+            return [self._hydrate(entry) for entry in self.entries.values() if supports_tts(entry)]
 
     def image_generated(self,entry,proof):
         with self.lock:
@@ -857,14 +868,19 @@ class BridgeState:
     def _work(self, entry, kind, pause, cancel, *, progress=None, external_report=None):
         progress = self.progress if progress is None else progress
         last_saved = [0.0]
+        accept_progress = True
         def report(value):
             with self.lock:
+                if not accept_progress:
+                    return
                 progress.update(value, updatedAt=time.time())
                 if cancel.is_set(): progress.update(status='cancelling', stage='cancelling')
                 if external_report: external_report(value)
                 if not external_report and time.monotonic() - last_saved[0] > 1:
                     self._persist_progress()
                     last_saved[0] = time.monotonic()
+        def runtime_report(**value):
+            report(value)
         def prepare_ocr():
             result = self.ocr.prepare(self.entry(entry['id'], installed=True), report, pause)
             if pause.is_set():
@@ -887,6 +903,13 @@ class BridgeState:
                 self.entries[entry['id']]['runtimePreparation'] = result
                 self.persist_catalog()
             return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
+        def prepare_tts():
+            result = self.tts.prepare(self.entry(entry['id'], installed=True), report, pause)
+            if pause.is_set(): raise Paused('Speech runtime preparation paused; downloaded files were retained')
+            with self.lock:
+                self.entries[entry['id']]['runtimePreparation'] = result
+                self.persist_catalog()
+            return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
         try:
             if kind == "download":
                 result = self._download_entry(entry, pause, report)
@@ -894,6 +917,8 @@ class BridgeState:
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
                 if supports_speech(entry):
                     final = prepare_speech()
+                elif supports_tts(entry):
+                    final = prepare_tts()
                 elif supports_computer(entry):
                     final = prepare_computer()
                 elif supports_ocr(entry):
@@ -907,7 +932,7 @@ class BridgeState:
                 elif entry.get('runtime',{}).get('adapter') and getattr(self.runtime,'automatic_preparation',False):
                     if pause.is_set():raise Paused('Installation paused after downloading; files were retained')
                     report({'stage':'preparing-runtime','detail':'Download verified. Preparing and testing the model runtime.','bytesTotal':0})
-                    self.runtime.on_progress=lambda **value:report(value)
+                    self.runtime.on_progress=runtime_report
                     result=self.runtime.prepare(self.entry(entry['id'],installed=True))
                     if pause.is_set():
                         self.runtime.stop()
@@ -922,6 +947,8 @@ class BridgeState:
                     final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
             elif supports_speech(entry):
                 final = prepare_speech()
+            elif supports_tts(entry):
+                final = prepare_tts()
             elif supports_computer(entry):
                 final = prepare_computer()
             elif supports_ocr(entry):
@@ -933,7 +960,7 @@ class BridgeState:
                     self.persist_catalog()
                 final={'status':'ready','stage':'ready','bytesDone':entry['bytes']}
             else:
-                self.runtime.on_progress=lambda **value:report(value)
+                self.runtime.on_progress=runtime_report
                 result = self.runtime.prepare(entry)
                 if not isinstance(result, dict) or result.get("runtimeReady") is not True:
                     raise ValueError("The runtime did not confirm this model is ready")
@@ -950,10 +977,13 @@ class BridgeState:
             report({"status": "paused", "stage": "paused", "error": str(error), "finishedAt": time.time()})
         except Exception as error:
             # Never include request bodies, credentials, signed URLs or traceback text in UI errors.
-            detail = str(error) if isinstance(error, (ValueError, HubError, RuntimeError)) else "Managed model operation failed; verified files and resumable partials are retained"
-            report({"status": "paused" if pause.is_set() else "failed", "stage": "paused" if pause.is_set() else "failed", "error": detail[:1000], "finishedAt": time.time()})
+            detail = str(error) if isinstance(error, (ValueError, HubError, RuntimeError, OSError)) else "Managed model operation failed; verified files and resumable partials are retained"
+            report({"status": "paused" if pause.is_set() else "failed", "stage": "paused" if pause.is_set() else "failed", "error": str(ModelLoadError(detail)), "finishedAt": time.time()})
         finally:
             with self.lock:
+                accept_progress = False
+                if getattr(self.runtime, 'on_progress', None) is runtime_report:
+                    self.runtime.on_progress = lambda **value: None
                 if cancel.is_set():
                     cleanup = self._discard_entry_partials(entry) if kind == 'download' and not external_report else {'removedBytes': 0, 'retainedPartials': []}
                     progress.update(status='cancelled', stage='cancelled', error=None, finishedAt=time.time(),
@@ -974,7 +1004,7 @@ class BridgeState:
             if supports_image(self.entries.get(self.progress.get('id'),{})) and self.images.operation.locked():self.images.stop()
             if ocr_job and self.ocr.active():
                 self.ocr.stop()
-            if not ocr_job and (self.progress.get('kind')=='prepare' or stage in ('preparing-runtime','installing-runtime','installing-dependencies','checking-hardware','loading-model','verifying-inference','preparing-echo','verifying-echo')):
+            if not ocr_job and not supports_tts(self.entries.get(self.progress.get('id'), {})) and (self.progress.get('kind')=='prepare' or stage in ('preparing-runtime','installing-runtime','installing-dependencies','checking-hardware','loading-model','verifying-inference','preparing-echo','verifying-echo')):
                 cancellation=getattr(self.runtime,'_cancel',None)
                 if cancellation:cancellation.set()
                 else:self.runtime.stop()
@@ -1087,6 +1117,9 @@ class BridgeState:
             if getattr(self.runtime,'_active',None) and self.runtime._active['id']==model_id:
                 self.runtime.stop()
             if self.speech.selected(model_id): self.speech.select(None)
+            if supports_tts(entry):
+                try: self.tts.release(model_id)
+                except ValueError as error: raise Conflict(str(error)) from error
             if folder.is_dir():shutil.rmtree(folder)
             self.entries[model_id].pop('runtimePreparation',None)
             self.entries[model_id].pop('specialistPreparation',None)
@@ -1108,6 +1141,7 @@ class BridgeState:
         self.pause_event.set()
         self.ocr.stop()
         self.speech.close()
+        self.tts.close()
         self.images.stop()
         self.computer.stop()
         self.runtime.stop()
@@ -1302,6 +1336,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.computer.status())
             elif route == '/speech/status':
                 self._send(200, {'status': state.speech.status()})
+            elif route == '/tts/status':
+                self._send(200, {'status': state.tts.status(state.tts_entries())})
+            elif route == '/tts/jobs':
+                self._send(200, {'jobs': state.tts.list()})
             elif route == '/computer-driver/status':
                 self._send(200, state.computer_driver.status())
             elif route == '/images/jobs':
@@ -1321,7 +1359,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.command == "DELETE" and route == "/token":
             self._send(200, state.tokens.clear())
             return
-        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') or route == '/speech/transcribe' else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 512 * 1024 if route.startswith('/groups/') else 256 * 1024)
+        body = self._body(17 * 1024 * 1024 if route == '/tts/jobs' else 48 * 1024 * 1024 if route.startswith('/mobile/host/') or route == '/speech/transcribe' else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 512 * 1024 if route.startswith('/groups/') else 256 * 1024)
         if body is None:
             return
         if self.command == "PUT" and route == "/token":
@@ -1491,6 +1529,20 @@ class BridgeHandler(BaseHTTPRequestHandler):
                     raise Conflict('Wait for the active installation to finish before using OCR')
                 entry = state.entry(body.get('id'), installed=True)
                 self._send(202, state.ocr.start(entry, body.get('image')))
+        elif route == '/tts/jobs':
+            with state.lock:
+                if state.progress and state.progress.get('status') in ACTIVE:
+                    raise Conflict('Wait for the active installation before generating speech')
+                entry = state.entry((body.get('request') or {}).get('modelId'), installed=True)
+            if not entry.get('runtimeReady'):
+                raise Conflict('Finish preparing this speech model before generating audio')
+            self._send(202, {'job': state.tts.submit(entry, body.get('request'))})
+        elif route == '/tts/cancel':
+            self._send(200, state.tts.cancel(body.get('id')))
+        elif route == '/tts/preview':
+            self._send(200, state.tts.preview(body.get('id')))
+        elif route == '/tts/delete':
+            self._send(200, state.tts.delete(body.get('id')))
         elif route=='/images/upscaler/prepare':
             self._send(200,state.images.prepare_upscaler())
         elif route=='/images/generate':
@@ -1583,6 +1635,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def _handle(self):
         try:
             self._dispatch()
+        except ModelLoadError as error:
+            self._send(400, {'error': {'message': str(error)[:1000], 'type': 'model_load_error', 'code': 'model_load_failed'}})
         except Conflict as error:
             self._send(409, {"error": str(error)})
         except HubError as error:

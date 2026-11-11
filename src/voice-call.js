@@ -171,6 +171,8 @@ export async function runVoiceChat(text, signal, { blocked, currentId, settings,
   return reply;
 }
 async function speakModel(text, modelId, voice, signal) {
+  const managed = globalThis.__opencoreManagedTts;
+  if (managed?.owns(modelId)) { for await (const clip of managed.speak(modelId, text, voice, signal)) await playAudio(clip, signal); return; }
   let job = await callRpc("submit_studio_job", { request: { modelId, prompt: text,
     settings: voice ? { voice } : {}, conversationId: null } });
   const id = job.id;

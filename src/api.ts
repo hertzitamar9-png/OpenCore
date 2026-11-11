@@ -1,4 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
+import { createConversationIndicators } from './conversation-indicators.js';
+export const conversationIndicators = createConversationIndicators();
 
 // A slow disk read must not accumulate another request on each polling tick.
 // Manual refreshes share the in-flight read; completed results are never cached.
@@ -234,11 +236,11 @@ export async function conversation(id: string, options?: { fresh?: boolean }): P
     // A persisted checkpoint/final event must read after any pre-event poll.
     // Reusing that older read could clear the live answer before it is visible.
     if (options?.fresh) await pendingReads.get(key)?.catch(() => undefined);
-    return sharedRead(key, () => invoke<TimelineEntry[]>("get_conversation", { id }));
+    return sharedRead(key, () => conversationIndicators.trackLoad(id, invoke<TimelineEntry[]>("get_conversation", { id })));
   }
   if (id !== "preview") return [];
-  return new URLSearchParams(window.location.search).has("previewReasoning")
-    ? previewTimeline.filter((entry) => entry.id <= 4.5) : previewTimeline;
+  return conversationIndicators.trackLoad(id, Promise.resolve(new URLSearchParams(window.location.search).has("previewReasoning")
+    ? previewTimeline.filter((entry) => entry.id <= 4.5) : previewTimeline));
 }
 
 export async function startProfile(profile: RuntimeProfile, attachUrl?: string): Promise<void> {

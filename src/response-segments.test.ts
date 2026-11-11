@@ -11,6 +11,12 @@ const shape = (events: TimelineEntry[]) => buildResponseSegments(events).map((se
     : segment.type === "tools" ? `tools×${segment.steps.length}` : segment.type);
 
 describe("buildResponseSegments", () => {
+  it('groups verification and automatic memory with the archive instead of rendering them as narration', () => {
+    const answer = row(1, 'message', 'OpenCore', 'Chrome is open.');
+    const receipts = [row(2, 'progress', 'Checks and changes', 'Command evidence'), row(3, 'progress', 'Automatic memory', 'No new memories'), row(4, 'echo', 'ECHO', 'Saved')];
+    expect(shape([answer, ...receipts])).toEqual(['entry']);
+    expect(visibleEchoReceiptGroups([answer, ...receipts], false)).toEqual([receipts]);
+  });
   it("pairs concurrent SDK calls with their own results even when completion order differs", () => {
     const segments = buildResponseSegments([
       row(1,"tool_call","Read",'{"id":"a"}'), row(2,"tool_call","Read",'{"id":"b"}'),
