@@ -19,6 +19,84 @@ def wrapped(question, records):
 
 
 class FollowupContextTests(unittest.TestCase):
+    def test_an_unanswered_old_prompt_does_not_hide_the_last_completed_action(self):
+        with ExitStack() as stack:
+            state = self.state(stack)
+            archive = state.archives.get('chat')
+            for message in [{'role': 'user', 'content': 'Open Chrome.'},
+                            {'role': 'assistant', 'content': 'Chrome window 111 is open.'}]:
+                archive.record_source_event(message, 'chat')
+            live = LiveTranscript(archive, 'chat')
+            live.start_turn('Try the earlier search.', state.count_tokens)
+            handler = Handler.__new__(Handler)
+            handler.state = state
+            handler._restore_recent_turn(live, 'chat', 'Search for cats in that browser.', 2048)
+            self.assertIn('Chrome window 111 is open.', [message.get('content') for message in live.messages])
+
+    def test_current_tool_rounds_are_not_restored_into_their_own_live_turn(self):
+        with ExitStack() as stack:
+            state = self.state(stack)
+            handler = Handler.__new__(Handler)
+            handler.state, handler.headers = state, {'x-opencore-timeline-owner': 'app'}
+            bodies = []
+            def generate(body, phase):
+                bodies.append(body)
+                call = {'id': 'call-' + str(len(bodies)), 'type': 'function', 'function': {'name': 'workspace', 'arguments': '{}'}}
+                return {'choices': [{'message': {'role': 'assistant', 'content': '', 'tool_calls': [call]}, 'finish_reason': 'tool_calls'}]}
+            handler._generate_live = generate
+            handler._send_json = lambda status, result: (status, result)
+            question = {'role': 'user', 'content': 'Inspect the workspace.'}
+            messages = [question]
+            for index in range(3):
+                code, result = handler._controlled_context_serial({'messages': list(messages), 'max_tokens': 512,
+                    'tools': [{'type': 'function', 'function': {'name': 'workspace', 'parameters': {'type': 'object', 'properties': {}}}}]}, 'chat', archive_input=True)
+                self.assertEqual(code, 200)
+                reply = result['choices'][0]['message']
+                messages += [reply, {'role': 'tool', 'tool_call_id': reply['tool_calls'][0]['id'], 'content': 'Observed state ' + str(index)}]
+            actual = bodies[-1]['messages']
+            self.assertEqual(sum(message == question for message in actual), 1)
+            self.assertEqual(sum(call['id'] == 'call-1' for message in actual for call in message.get('tool_calls', [])), 1)
+            self.assertEqual(sum(message.get('tool_call_id') == 'call-1' for message in actual), 1)
+
+    def test_restoring_history_excludes_the_reply_to_a_legacy_memory_request(self):
+        with ExitStack() as stack:
+            state = self.state(stack)
+            archive = state.archives.get('chat')
+            for message in [
+                {'role': 'user', 'content': 'Open Chrome.'},
+                {'role': 'assistant', 'content': 'Chrome window 111 is open.'},
+                {'role': 'user', 'content': json.dumps({'HUMAN_SOURCE': 'I play football.', 'deleted_keys': [], 'existing': [], 'has_project': False})},
+                {'role': 'assistant', 'content': '{"memories":[{"quote":"I play football."}]}'},
+            ]:
+                archive.record_source_event(message, 'chat')
+            handler = Handler.__new__(Handler)
+            handler.state = state
+            live = LiveTranscript(archive, 'chat')
+            handler._restore_recent_turn(live, 'chat', 'Search for cats.', 2048)
+            self.assertIn('Chrome window 111 is open.', [message.get('content') for message in live.messages])
+            self.assertNotIn('memories', json.dumps(live.messages))
+            self.assertNotIn('football', json.dumps(live.messages))
+
+    def test_repeated_question_restores_the_latest_completed_browser_exchange(self):
+        with ExitStack() as stack:
+            state = self.state(stack)
+            archive = state.archives.get('chat')
+            question = 'Now search for cats on it.'
+            for message in [
+                {'role': 'user', 'content': 'Open Chrome.'},
+                {'role': 'assistant', 'content': 'Chrome window 111 is open.'},
+                {'role': 'user', 'content': question},
+                {'role': 'assistant', 'content': 'Cats were searched in Chrome.'},
+                {'role': 'user', 'content': 'Open Edge.'},
+                {'role': 'assistant', 'content': 'Edge window 222 is open.'},
+            ]:
+                archive.record_source_event(message, 'chat')
+            handler = Handler.__new__(Handler)
+            handler.state = state
+            live = LiveTranscript(archive, 'chat')
+            handler._restore_recent_turn(live, 'chat', question, 2048)
+            self.assertEqual([message['content'] for message in live.messages], ['Open Edge.', 'Edge window 222 is open.'])
+
     def test_personal_recall_is_only_injected_when_the_current_question_matches(self):
         records = [{'key': 'sport', 'content': 'I played football in Israel in 2011.'},
                    {'key': 'interface.computer_highlight', 'content': 'The computer highlight should be blue.'}]

@@ -2436,14 +2436,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def _restore_recent_turn(self, live, conversation, question, budget):
         """Recover the latest exact exchange after an older generic checkpoint."""
-        if any(entry.get('kind') == live.TURN and action_user_text(entry['message'].get('content')) != question
+        if any(entry.get('checkpoint_records') or entry['message'].get('role') in ('assistant', 'tool')
                for entry in live.entries):
+            # Tool continuation already has its real exchange. Restoring the
+            # archive here would duplicate the same call/result and user turn.
             return
         archive = self.state.archives.get(conversation)
         with archive._lock:
             rows = archive.db.execute('SELECT role,content,metadata FROM source_events WHERE conversation_id=? '
                                       'ORDER BY timestamp DESC,rowid DESC LIMIT 96', (conversation,)).fetchall()
-        history = []
+        exchanges, history = [], []
         for role, content, raw in reversed(rows):
             if role not in ('user', 'assistant', 'tool'):
                 continue
@@ -2451,18 +2453,35 @@ class Handler(BaseHTTPRequestHandler):
             metadata = json.loads(raw or '{}')
             message.update({key: metadata[key] for key in ('tool_calls', 'tool_call_id') if key in metadata})
             if role == 'user':
-                if not _is_user_request(message) or is_legacy_harness_auxiliary_turn(message):
+                if not _is_user_request(message):
+                    continue
+                if history:
+                    exchanges.append(history)
+                history = []
+                if is_legacy_harness_auxiliary_turn(message):
+                    # Its following assistant JSON belongs to the auxiliary
+                    # request too, not to the preceding visible reply.
                     continue
                 message['content'] = action_user_text(content)
-                if message['content'] == question:
-                    break
                 history = [message]
-            elif history:
+            elif history and not harness_checkpoint_marker(message):
                 history.append(message)
-        if len(history) < 2 or history[-1].get('role') != 'assistant' or history[-1].get('tool_calls'):
+        if history:
+            exchanges.append(history)
+        history = []
+        for exchange in reversed(exchanges):
+            calls = {call.get('id') for message in exchange for call in message.get('tool_calls') or []}
+            answered = {message.get('tool_call_id') for message in exchange if message.get('role') == 'tool'}
+            if (len(exchange) > 1 and calls <= answered and not exchange[-1].get('tool_calls')
+                    and exchange[-1].get('role') in ('assistant', 'tool')):
+                history = exchange
+                break
+        if not history:
             return
         count = self.state.count_tokens
         if sum(live.cost(message, count) for message in history) > budget:
+            if history[-1].get('role') == 'tool':
+                return  # Never restore an orphan result without its full call.
             # Retain the exact question and verified final outcome. Full tool
             # receipts remain in the canonical archive for explicit reads.
             history = [history[0], history[-1]]
