@@ -309,6 +309,8 @@ class JobLifecycleTests(unittest.TestCase):
             {'id': 'default_1', 'label': 'Cillian en Irish M 1', 'embedding': 'English/Cillian_en-Irish_M_1.embedding.npy'},
             {'id': 'default_2', 'label': 'Imogen en British F 1'}, {'id': 'default_3', 'label': 'Gaspard fr M 1'},
             {'id': 'default_4', 'label': 'Haoran zh energetic M 1'}, {'id': 'default_5', 'label': 'Ananya hi F 1'},
+            {'id': 'default_6', 'label': 'Chaitanya te M 1'}, {'id': 'default_7', 'label': 'Thaddeus en announcervoice M 1'},
+            {'id': 'default_8', 'label': 'Willow en asrm F 1'},
             {'id': 'bad', 'label': 'Nameless'}, {'id': 'dup', 'label': 'Cillian en Irish M 2'}, 'not a voice']), encoding='utf-8')
 
     def submit(self, runtime, text='Hello.', internal=False, **settings):
@@ -355,8 +357,12 @@ class JobLifecycleTests(unittest.TestCase):
             {'id': 'Imogen', 'language': 'en_gb', 'gender': 'female', 'style': 'British'},
             {'id': 'Gaspard', 'language': 'fr_fr', 'gender': 'male', 'style': ''},
             {'id': 'Haoran', 'language': 'cmn', 'gender': 'male', 'style': 'energetic'},
-            # Hindi and Telugu speakers are kept as voices; the model speaks one of its own languages with them.
-            {'id': 'Ananya', 'language': 'en_us', 'gender': 'female', 'style': ''}])
+            # Hindi and Telugu speakers are kept as voices and say so; the model speaks one of its own languages with them.
+            {'id': 'Ananya', 'language': 'en_us', 'gender': 'female', 'style': 'Hindi speaker'},
+            {'id': 'Chaitanya', 'language': 'en_us', 'gender': 'male', 'style': 'Telugu speaker'},
+            # The release index's misspelled style words are shown readably.
+            {'id': 'Thaddeus', 'language': 'en_us', 'gender': 'male', 'style': 'announcer'},
+            {'id': 'Willow', 'language': 'en_us', 'gender': 'female', 'style': 'ASMR'}])
         languages = {item['id'] for item in hf_tts.FAMILIES['zonos3-mini-v1']['languages']}
         self.assertTrue(all(voice['language'] in languages for voice in voices))
         job = self.submit('zonos3-mini-v1', voice='Imogen', preset='Calm', language='en_gb', temperature=0.7, normalize=True)

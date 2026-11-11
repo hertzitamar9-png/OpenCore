@@ -24,17 +24,26 @@ ZONOS3_REPOSITORY = 'Zyphra/ZONOS3-Mini'
 ZONOS3_BUNDLE = 'assets/steering/studio_bundle_mect60k_x10.json'
 ZONOS3_PRESET_NAMES = {'BBC newsreader': 'British newsreader'}
 DOTS_EDIT_TAG = re.compile(r'<\s*/?\s*(?:sub|ins|del|emo|pitch|rate|pause|enhance|bg|spk_transfer)\b', re.IGNORECASE)
+ZONOS3_LANGUAGE_CODES = {'fr': 'fr_fr', 'de': 'de', 'es': 'es', 'it': 'it', 'pt': 'pt_br', 'ko': 'ko', 'zh': 'cmn', 'ja': 'ja'}
+# Speakers recorded in a language ZONOS3 has no text front end for; they read one of its own languages.
+ZONOS3_SPEAKER_LANGUAGES = {'hi': 'Hindi', 'te': 'Telugu'}
+ZONOS3_STYLE_WORDS = {'announcervoice': 'announcer', 'asrm': 'ASMR'}
 
 
 def zonos3_voice(item):
-    """A ZONOS3 release voice ('Cillian en Irish M 1') as its name, language code and gender."""
+    """A ZONOS3 release voice ('Cillian en Irish M 1') as its name, language code, gender and style."""
     parts = str(item.get('label') or '').split()
     if len(parts) < 4 or parts[-2] not in ('M', 'F'):
         return None
-    language = {'en': 'en_gb' if 'British' in parts[2:-2] else 'en_us', 'fr': 'fr_fr', 'de': 'de', 'es': 'es', 'it': 'it',
-                'pt': 'pt_br', 'ko': 'ko', 'zh': 'cmn', 'ja': 'ja'}.get(parts[1], 'en_us')
-    return {'id': parts[0], 'language': language, 'gender': 'female' if parts[-2] == 'F' else 'male',
-            'style': ' '.join(parts[2:-2])}
+    code, style = parts[1], [ZONOS3_STYLE_WORDS.get(word.lower(), word) for word in parts[2:-2]]
+    if code == 'en':
+        language = 'en_gb' if 'British' in style else 'en_us'
+    elif code in ZONOS3_LANGUAGE_CODES:
+        language = ZONOS3_LANGUAGE_CODES[code]
+    else:
+        language = 'en_us'
+        style.insert(0, ZONOS3_SPEAKER_LANGUAGES.get(code, code) + ' speaker')
+    return {'id': parts[0], 'language': language, 'gender': 'female' if parts[-2] == 'F' else 'male', 'style': ' '.join(style)}
 
 
 def _seed(value):
