@@ -125,7 +125,11 @@ class LiveTranscript:
 
     @property
     def messages(self):
-        return [entry["message"] for entry in self.entries]
+        # The archive index is bookkeeping, not a user message. Exact task
+        # receipts remain visible; a generic checkpoint must not replace the
+        # conversation or become something the model answers.
+        return [entry["message"] for entry in self.entries if not (
+            entry.get('kind') == self.NOTE and str(entry['message'].get('content') or '').startswith('ECHO checkpoint:'))]
 
     @property
     def tokens(self):

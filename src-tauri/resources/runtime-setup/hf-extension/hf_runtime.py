@@ -747,11 +747,15 @@ class RuntimeManager:
         return proof
 
     def _capture_memory(self, active, payload, conversation):
-        from hf_memory_repair import MAX_RESPONSE, SCHEMA
+        from hf_memory_repair import MAX_RESPONSE, SCHEMA, INSTRUCTIONS
         # Dory's forced budget-zero closer collides with its JSON grammar.
         # Keep thinking off in the template and allow its natural delimiter.
         budget = -1 if active['proof'].get('engineId') == 'dory-cuda13-v1' else 0
-        body = {'model': payload.get('model'), 'messages': payload['messages'], 'stream': False,
+        instruction = next(message for message in payload['messages'][:-1] if message['content'].strip().startswith(
+            'Select durable facts, preferences, or explicitly stated lessons from the HUMAN_SOURCE data only.'))
+        messages = [{**instruction, 'content': instruction['content'] + '\n' + INSTRUCTIONS +
+            '\nRequests to change app colors, highlights, controls, or tools are implementation tasks, not personal memories. Do not store them.'}, payload['messages'][-1]]
+        body = {'model': payload.get('model'), 'messages': messages, 'stream': False,
                 'max_tokens': 1024, 'temperature': 0, 'reasoning_effort': 'none',
                 'reasoning_budget_tokens': budget, 'reasoning_min_tokens': 0, 'reasoning_format': 'deepseek',
                 'chat_template_kwargs': {'enable_thinking': False},
