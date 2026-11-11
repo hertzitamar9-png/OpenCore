@@ -3,7 +3,7 @@
 // inside the factory because this file shares one module scope with other bundled features.
 export function createAudioStudio(React, deps) {
   const h = React.createElement;
-  const {useHub, useInstall, progress: visibleProgress, pause, invoke, Tts, Form, History} = deps;
+  const {useHub, useInstall, progress: visibleProgress, pause, invoke, request, Tts, Form, History} = deps;
   const RATE = 16000, PART_SECONDS = 300, MAX_SECONDS = 30 * 60, MAX_FILE_BYTES = 300 * 1024 * 1024;
   const CHOICE_KEY = 'opencore.audio-studio.voice-model';
   const transcripts = []; // This session's transcripts survive closing and reopening the studio.
@@ -20,6 +20,12 @@ export function createAudioStudio(React, deps) {
     listeners.forEach(listener => listener(view));
   });
   const takeRequest = () => { const view = requested; requested = null; return view; };
+
+  // Whether each built-in speech model runs here (managed package, the app's own dictation, or not at all and why).
+  let support = null, supportLoad = null;
+  const loadSupport = () => supportLoad || (supportLoad = Promise.resolve(request ? request('/speech/support') : null)
+    .then(value => (support = value?.models || {}))
+    .catch(() => { supportLoad = null; return {}; }));
 
   const sizeText = bytes => !bytes ? '' : bytes >= 1e9 ? (bytes / 1e9).toFixed(bytes >= 1e10 ? 0 : 1) + ' GB' : Math.max(1, Math.round(bytes / 1e6)) + ' MB';
   const sentence = text => {
@@ -428,12 +434,30 @@ export function createAudioStudio(React, deps) {
         : null);
   }
 
-  // ---------- publisher-runtime voice models (Qwen3 TTS and similar) ----------
+  // ---------- voice models without a managed package ----------
   const MORE = [['tts', 'Speech synthesis'], ['voice-cloning', 'Reference voice']];
-  function MoreTab({category, onCategory, onNotice}) {
+  function Unsupported({modelId, item, hub, library, onOpen}) {
+    const model = library.find(entry => entry.id === modelId), name = model?.label || modelId;
+    const options = (item.use || []).map(id => {
+      const entry = (hub.catalog || []).find(candidate => candidate.id === id);
+      if (entry) return {id, name: nameOf(entry), view: {tab: 'speak', modelId: id}};
+      const native = library.find(candidate => candidate.id === id);
+      return native ? {id, name: native.label || id, view: {tab: 'transcribe'}} : null;
+    }).filter(Boolean).slice(0, 3);
+    return h('div', {className: 'studio-callout is-warning', role: 'note'},
+      icon(ICON.alert, 20),
+      h('div', null,
+        h('strong', null, 'OpenCore can’t run ' + name),
+        h('p', null, sentence(item.reason || 'There is no tested runtime for this model yet.')),
+        options.length ? h('div', {className: 'studio-actions'}, options.map(option =>
+          h('button', {key: option.id, type: 'button', onClick: () => onOpen(option.view)}, 'Use ' + option.name))) : null));
+  }
+  function MoreTab({category, modelId, support, hub, library, onCategory, onOpen, onNotice}) {
     const [revision, setRevision] = React.useState(0), label = (MORE.find(([id]) => id === category) || MORE[0])[1];
+    const item = modelId && support?.[modelId];
     return h('div', {className: 'audio-more'},
-      h('p', {className: 'studio-hint'}, 'Voice models that use their publisher’s own runtime, such as Qwen3 TTS.'),
+      item?.state === 'unavailable' ? h(Unsupported, {modelId, item, hub, library, onOpen}) : null,
+      h('p', {className: 'studio-hint'}, 'Voice models OpenCore runs itself are under Text to speech. Here you can connect a compatible runtime of your own for other voice models.'),
       h('div', {className: 'model-category-tabs', role: 'group', 'aria-label': 'Voice model type'},
         MORE.map(([id, text]) => h('button', {key: id, type: 'button', 'aria-pressed': category === id, onClick: () => onCategory(id)}, text))),
       h(Form, {key: category, category, label, onNotice, onSubmitted: () => setRevision(value => value + 1)}),
@@ -467,6 +491,14 @@ export function createAudioStudio(React, deps) {
       try { const value = await invoke('list_model_library', {}); if (Array.isArray(value?.models)) setLibrary(value.models); } catch {}
     }, []);
     React.useEffect(() => { void loadLibrary(); }, [loadLibrary, install.terminal, install.receiptsRevision]);
+    const [supported, setSupported] = React.useState(support);
+    React.useEffect(() => { let live = true; void loadSupport().then(value => { if (live) setSupported(value); }); return () => { live = false; }; }, []);
+    // A built-in model that now runs as a managed package or through dictation opens where it works.
+    React.useEffect(() => {
+      const item = view.tab === 'more' && view.modelId && supported?.[view.modelId];
+      if (item?.state === 'managed' && item.use?.[0]) setView({tab: 'speak', modelId: item.use[0]});
+      else if (item?.state === 'native') setView({tab: 'transcribe'});
+    }, [view, supported]);
     const more = view.tab === 'more' || library.some(model => !model.hubModel && model.backend !== 'hub' && model.installed && ['tts', 'voice-cloning'].includes(model.category));
     const tabs = [['speak', 'Text to speech'], ['transcribe', 'Speech to text'], ...more ? [['more', 'More voice models']] : []];
     const tab = tabs.some(([id]) => id === view.tab) ? view.tab : 'speak';
@@ -480,6 +512,7 @@ export function createAudioStudio(React, deps) {
       h('div', {className: 'audio-studio-panel', role: 'tabpanel', id: 'audio-studio-panel', 'aria-labelledby': 'audio-tab-' + tab},
         tab === 'speak' ? h(SpeakTab, {hub, install, view, onNotice})
           : tab === 'transcribe' ? h(TranscribeTab, {hub, install, library, onNotice, onLibrary: loadLibrary})
-            : h(MoreTab, {category: view.category === 'voice-cloning' ? 'voice-cloning' : 'tts', onCategory: category => setView({tab: 'more', category}), onNotice})));
+            : h(MoreTab, {category: view.category === 'voice-cloning' ? 'voice-cloning' : 'tts', modelId: view.modelId, support: supported, hub, library,
+              onCategory: category => setView({tab: 'more', category}), onOpen: next => setView(next), onNotice})));
   };
 }

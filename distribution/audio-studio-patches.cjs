@@ -23,7 +23,7 @@ module.exports=function applyAudioStudio(app,{editFunction,replaceOnce}){
   // Plain-language studio copy for models without an automatic runtime recipe.
   app=replaceOnce(app,'"Automatic runtime setup is unavailable for this architecture. Connect its publisher-compatible worker and dependencies."',
     '"OpenCore can\'t set up a runtime for this model type automatically yet. You can still download the weights; generating needs a compatible runtime for this model."');
-  app+='\nimport{createAudioStudio}from"./model-catalog-B8SfuDgQ.js";const $AudioStudio=createAudioStudio(p,{useHub:$useHub,useInstall:$useInstallState,progress:v=>$installCoordinator.visibleProgress(v),pause:()=>$installCoordinator.pause(),invoke:Ue,Tts:$ManagedTtsControls,Form:Yj,History:Zj});\n';
+  app+='\nimport{createAudioStudio}from"./model-catalog-B8SfuDgQ.js";const $AudioStudio=createAudioStudio(p,{useHub:$useHub,useInstall:$useInstallState,progress:v=>$installCoordinator.visibleProgress(v),pause:()=>$installCoordinator.pause(),invoke:Ue,request:$hubRequest,Tts:$ManagedTtsControls,Form:Yj,History:Zj});\n';
   return app;
 };
 module.exports.catalogSource=()=>'\n'+fs.readFileSync(path.join(__dirname,'../src/audio-studio.js'),'utf8');

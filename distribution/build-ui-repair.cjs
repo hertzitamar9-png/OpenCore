@@ -55,11 +55,15 @@ index=editFunction(index,'bp',text=>replaceOnce(text,
 index=editFunction(index,'Xv',()=>fs.readFileSync(path.join(root,'startup-entry.js'),'utf8'));
 index+='\nconst $viewCacheVersion='+JSON.stringify(releaseVersion)+';\n'+fs.readFileSync(path.join(root,'model-view-cache.js'),'utf8');
 index+='\n'+fs.readFileSync(path.join(root,'conversation-deletion.js'),'utf8');
-index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement("style");style.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/navigation-divider.css'),'utf8'))+';document.head.appendChild(style);}\n';
+// Stylesheets in the slot-limited entry asset are minified, so comments and the checkout's line endings
+// (CRLF on Windows) can't change its size from one build machine to the next.
+const entryCss=name=>JSON.stringify(fs.readFileSync(path.join(root,'../src',name),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')
+  .replace(/\s+/g,' ').replace(/\s*([{};,>])\s*/g,'$1').replace(/;}/g,'}').trim());
+index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement("style");style.textContent='+entryCss('navigation-divider.css')+';document.head.appendChild(style);}\n';
 // This global style is independent of the App module. Put it in the entry
 // asset so the fixed native App slot retains room for normal release versions.
-index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
-index+='\nconst $speechControlsStyle=document.createElement("style");$speechControlsStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/speech-controls.css'),'utf8'))+';document.head.appendChild($speechControlsStyle);\n';
+index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+entryCss('update-progress.css')+';document.head.appendChild($updateProgressStyle);\n';
+index+='\nconst $speechControlsStyle=document.createElement("style");$speechControlsStyle.textContent='+entryCss('speech-controls.css')+';document.head.appendChild($speechControlsStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 index=require('./conversation-indicator-patches.cjs').patchIndex(index,{editFunction,replaceOnce});
 app=require('./model-selection-patches.cjs')(app,{editFunction,replaceOnce});
