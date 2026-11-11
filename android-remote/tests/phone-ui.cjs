@@ -74,7 +74,7 @@ async function phoneStartupRegressions(browser){
   // browser. Assert the real interactive controls after hydration, rather
   // than using a non-waiting count() during this startup transition.
   await freshNav.waitFor({state:'visible',timeout:20000});
-  for(const name of ['Overview','Conversations','Models','Settings','Learning Studio','Media Studio']){
+  for(const name of ['Overview','Conversations','Models','Settings','Learning Studio','Media Studio','Audio Studio']){
    const button=freshNav.getByRole('button',{name,exact:true});
    await button.waitFor({state:'visible',timeout:10000});
    assert.equal(await button.count(),1,'Current Phone navigation exposes '+name);
@@ -137,7 +137,7 @@ async function phoneStartupRegressions(browser){
     await page.waitForFunction(()=>fixture.calls.some(call=>call.command==='get_snapshot'));
     assert.equal(await page.evaluate(()=>Object.keys(document.querySelector('#root')).some(key=>key.startsWith('__reactContainer'))),true,'Real React app mounted');
     const nav=page.getByRole('navigation',{name:'OpenCore sections',exact:true});
-    const labels=['Overview','Conversations','Chat Core','Scheduled tasks','Spaces','Live Context','Memory','Runtime & Logs','Models','Learning Studio','Music Studio','Game Dev Studio','Media Studio','Connectors','Settings','Troubleshooting'];
+    const labels=['Overview','Conversations','Chat Core','Scheduled tasks','Spaces','Live Context','Memory','Runtime & Logs','Models','Learning Studio','Music Studio','Game Dev Studio','Media Studio','Audio Studio','Connectors','Settings','Troubleshooting'];
     assert.deepEqual(await nav.getByRole('button').allTextContents(),labels,'Use current direct navigation, not removed More menu');
     await page.getByRole('heading',{name:'OpenCore',exact:true}).waitFor();
     await nav.getByRole('button',{name:'Conversations',exact:true}).click();
