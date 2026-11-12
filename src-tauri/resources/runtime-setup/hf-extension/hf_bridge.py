@@ -36,7 +36,7 @@ from hf_prompt_assistant import PromptAssistant
 from hf_chat_media import ChatMedia, saved_conversations_page, delete_empty_projects
 from hf_connectors import ConnectorProfiles
 from hf_telemetry import LiveTelemetry
-from hf_computer_runtime import ComputerManager, supports as supports_computer
+from hf_computer_runtime import ComputerManager, supports as supports_computer, profile_for as computer_profile
 from hf_computer_driver import ComputerDriverManager
 from model_modes import apply_operating_modes, supports_text_generation, mode_context
 from hf_download_queue import DownloadQueue
@@ -103,6 +103,7 @@ class BridgeState:
         self.autoloop = None
         self._memory_lock = threading.RLock()
         self.queue_prepare_lock = threading.Lock()
+        self.runtime_cleanup = None
         self.pause_event, self.closed = threading.Event(), False
         self.cancel_event = threading.Event()
         self._load_catalog()
@@ -1127,15 +1128,160 @@ class BridgeState:
             if supports_tts(entry):
                 try: self.tts.release(model_id)
                 except ValueError as error: raise Conflict(str(error)) from error
+            linked = self._runtimes_of(model_id)
             if folder.is_dir():shutil.rmtree(folder)
             self.entries[model_id].pop('runtimePreparation',None)
             self.entries[model_id].pop('specialistPreparation',None)
             if entry.get('origin') == 'autoloop': self.entries.pop(model_id,None)
             self.receipt_cache.pop(model_id,None)
             self.persist_catalog()
+            if linked: self._clean_runtimes_later(linked)
             return {'uninstalled':True,'id':model_id}
 
+    # Model runtimes: the Python environments prepared when a model first needs
+    # one. They are listed and removable in Settings, and a runtime that no
+    # installed model needs any more is removed after its last model goes.
+
+    def _runtime_storage(self):
+        for folder in (self.resources / 'runtime-setup', Path(__file__).resolve().parent.parent):
+            if (folder / 'runtime_storage.py').is_file():
+                if str(folder) not in sys.path: sys.path.insert(0, str(folder))
+                break
+        import runtime_storage
+        return runtime_storage
+
+    def _runtime_busy(self):
+        if self.closed:
+            return 'OpenCore is shutting down'
+        if self.progress and self.progress.get('status') in ACTIVE or self.worker and self.worker.is_alive():
+            return 'Wait for the current model installation to finish'
+        if self.download_queue.snapshot()['activeIds']:
+            return 'Wait for the download queue to finish'
+        if self.ocr.active() or self.images.operation.locked() or self.computer.operation.locked():
+            return 'Wait for the current model task to finish'
+        if self.speech.operation.locked() or self.speech.session_id or self.tts.busy():
+            return 'Wait for the current speech task to finish'
+        generation = getattr(self.runtime, '_generation', None)
+        if generation is not None and generation.locked():
+            return 'Wait for the current response to finish'
+        return None
+
+    def _runtime_demand(self):
+        """Installed model ids, and shared runtimes that installed Hub models need."""
+        installed, demand = set(), {}
+        for model_id, entry in list(self.entries.items()):
+            if not entry.get('installable') or not self._receipt(entry):
+                continue
+            installed.add(model_id)
+            needs = set()
+            try:
+                if supports_image(entry): needs.add('diffusers-images-v1')
+                if supports_tts(entry): needs.add('tts-speech-v1')
+                if supports_ocr(entry): needs.add('unlimited-ocr-2-v1')
+                profile = computer_profile(entry)[1] if supports_computer(entry) else None
+                if profile and profile.get('recipe'): needs.add(profile['recipe'])
+            except (KeyError, TypeError, ValueError, OSError):
+                pass
+            preparations = [entry.get('runtimePreparation'), *((entry.get('runtimePreparations') or {}).values())]
+            needs.update(item['recipe'] for item in preparations if isinstance(item, dict) and isinstance(item.get('recipe'), str))
+            for runtime_id in needs:
+                demand.setdefault(runtime_id, set()).add(model_id)
+        installed |= self._runtime_storage().installed_native_models(self.root)
+        return installed, demand
+
+    def _runtimes_of(self, model_id):
+        try:
+            storage = self._runtime_storage()
+            installed, demand = self._runtime_demand()
+            return storage.runtimes_used_by(storage.inventory(self.root, installed, demand, sizes=False), model_id)
+        except (ImportError, OSError, ValueError, KeyError):
+            return set()
+
+    def _purge_runtime_trash(self):
+        storage = self._runtime_storage()
+        def work():
+            try: storage.purge_trash(self.root)
+            except OSError: pass
+        self.runtime_cleanup = threading.Thread(target=work, daemon=True, name='runtime-trash')
+        self.runtime_cleanup.start()
+
+    def _clean_runtimes_later(self, only):
+        """After an uninstall, remove the runtimes that model used if nothing else needs them."""
+        def work():
+            try:
+                storage = self._runtime_storage()
+                with self.lock:
+                    if self._runtime_busy():
+                        return
+                    installed, demand = self._runtime_demand()
+                    result = storage.prune(self.root, installed, demand, grace=storage.REQUESTED_GRACE_SECONDS, only=only, purge=False)
+                if result['removed']:
+                    storage.purge_trash(self.root)
+            except (ImportError, OSError, ValueError, KeyError, RuntimeError):
+                pass  # Best effort: Settings lists anything left behind.
+        self.runtime_cleanup = threading.Thread(target=work, daemon=True, name='runtime-cleanup')
+        self.runtime_cleanup.start()
+
+    def runtime_inventory(self):
+        storage = self._runtime_storage()
+        with self.lock:
+            installed, demand = self._runtime_demand()
+            busy = self._runtime_busy()
+            names = {model_id: entry.get('name') or entry.get('repository') for model_id, entry in self.entries.items()
+                     if isinstance(entry.get('name') or entry.get('repository'), str)}
+        value = storage.public(storage.inventory(self.root, installed, demand))
+        wanted = {model for row in value['runtimes'] for model in row['users']}
+        value['modelNames'] = {model_id: name for model_id, name in names.items() if model_id in wanted}
+        trash = storage.trash_folder(self.root)
+        value['pendingBytes'] = storage.disk_bytes(trash) if trash.is_dir() else 0
+        value['busy'] = busy
+        return value
+
+    def remove_runtime(self, runtime_id):
+        if not isinstance(runtime_id, str) or not 0 < len(runtime_id) <= 120:
+            raise ValueError('Choose a runtime to remove')
+        storage = self._runtime_storage()
+        with self.lock:
+            busy = self._runtime_busy()
+            if busy:
+                raise Conflict(busy + ', then remove the runtime.')
+            installed, demand = self._runtime_demand()
+            rows = storage.inventory(self.root, installed, demand, sizes=False)
+            row = next((item for item in rows if item['id'] == runtime_id), None)
+            if row is None:
+                raise ValueError('This runtime is no longer installed. Refresh the list.')
+            active = getattr(self.runtime, '_active', None)
+            if isinstance(active, dict) and active.get('id') in row['installedUsers']:
+                self.runtime.stop()
+            try:
+                result = storage.remove(self.root, runtime_id, installed, demand, purge=False, rows=rows)
+            except storage.InUse as error:
+                raise Conflict(str(error)) from error
+        self._purge_runtime_trash()
+        return {'schema': 1, **result}
+
+    def prune_runtimes(self, model_id=None):
+        """Remove unused runtimes, or only those a just-uninstalled model used."""
+        storage = self._runtime_storage()
+        with self.lock:
+            busy = self._runtime_busy()
+            if busy:
+                return {'schema': 1, 'removed': [], 'kept': [], 'repaired': [], 'freedBytes': 0, 'skipped': busy}
+            installed, demand = self._runtime_demand()
+            only = None
+            if model_id is not None:
+                if not isinstance(model_id, str) or not 0 < len(model_id) <= 200:
+                    raise ValueError('Choose the uninstalled model')
+                rows = storage.inventory(self.root, installed, demand, sizes=False)
+                only = set() if model_id in installed else storage.runtimes_used_by(rows, model_id)
+            result = storage.prune(self.root, installed, demand, grace=storage.REQUESTED_GRACE_SECONDS, only=only, purge=False)
+        if result['removed']:
+            self._purge_runtime_trash()
+        return result
+
     def close(self):
+        if self.runtime_cleanup and self.runtime_cleanup is not threading.current_thread():
+            self.runtime_cleanup.join(timeout=5)
         self.download_queue.close()
         self.computer_driver.cancel()
         if self.closed:
@@ -1320,6 +1466,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, {**state.status(revision), "instanceId": self.server.instance_id})
             elif route == "/catalog":
                 self._send(200, {"catalog": state.catalog()})
+            elif route == '/runtimes':
+                self._send(200, state.runtime_inventory())
             elif route in ('/download-queue', '/download-queue/snapshot'):
                 self._send(200, state.download_queue.snapshot())
             elif route == "/token":
@@ -1596,6 +1744,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200,state.uninstall(body.get('id'),body.get('confirmationToken')))
         elif route == '/removal-plan':
             self._send(200,state.removal_plan(body.get('id')))
+        elif route == '/runtimes/remove':
+            self._send(200,state.remove_runtime(body.get('id')))
+        elif route == '/runtimes/prune':
+            self._send(200,state.prune_runtimes(body.get('modelId')))
         elif route == '/generation/settings':
             self._send(200,state.generation_settings(body))
         elif route in ("/context", "/context/release"):

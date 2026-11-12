@@ -199,6 +199,7 @@
   "runtime-setup/managed_model_sources.py": "src-tauri/resources/runtime-setup/managed_model_sources.py",
   "runtime-setup/provision_testing.py": "src-tauri/resources/runtime-setup/provision_testing.py",
   "runtime-setup/recipes.json": "src-tauri/resources/runtime-setup/recipes.json",
+  "runtime-setup/runtime_storage.py": "src-tauri/resources/runtime-setup/runtime_storage.py",
   "runtime-setup/setup_manager.py": "src-tauri/resources/runtime-setup/setup_manager.py",
   "speech/PHONON-LICENSE.txt": "src-tauri/resources/speech/PHONON-LICENSE.txt",
   "speech/PHONON-NOTICE.txt": "src-tauri/resources/speech/PHONON-NOTICE.txt",

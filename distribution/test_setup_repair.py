@@ -23,6 +23,13 @@ class ComfyRuntimeReleaseTests(unittest.TestCase):
             self.assertEqual(mappings.get(target), 'src-tauri/resources/' + target)
             self.assertTrue((repository/mappings[target]).is_file())
 
+    def test_runtime_cleanup_is_shipped_beside_the_setup_manager(self):
+        repository = Path(__file__).resolve().parents[1]
+        mappings = json.loads((repository/'distribution/resource-map.json').read_text(encoding='utf-8'))
+        target = 'runtime-setup/runtime_storage.py'
+        self.assertEqual(mappings.get(target), 'src-tauri/resources/' + target)
+        self.assertTrue((repository/mappings[target]).is_file())
+
     def test_signed_release_package_includes_pinned_moss_loader(self):
         from managed_model_sources import verify_pinned_plugin_sources
         repository = Path(__file__).resolve().parents[1]

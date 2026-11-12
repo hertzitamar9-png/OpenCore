@@ -261,6 +261,11 @@ async function $hubInvoke(command,args,run) {
     if(command==='uninstall_model')await $hubRefresh(true);
     return value;
   }
+  if(command==='uninstall_model'&&globalThis.__OPENCORE_PHONE__!==true){
+    const value=await run();
+    void $hubRequest('/runtimes/prune',{modelId:args.id}).then(()=>window.dispatchEvent(new CustomEvent('opencore-runtimes-changed'))).catch(()=>{});
+    return value;
+  }
   if(globalThis.__opencoreImageConversationInvoke&&['get_snapshot','list_conversations','get_conversation','list_studio_jobs','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command))return globalThis.__opencoreImageConversationInvoke(command,args,run);
   if(command==='list_model_library'){
     const library=await run();$hubNativeLibrary=library;await $hubRefresh().catch(()=>{});return $hubAugment(library);
@@ -407,9 +412,72 @@ function $HubSettings({inline=false}) {
   const state=$useHub(),[token,setToken]=p.useState(''),[busy,setBusy]=p.useState(false),[message,setMessage]=p.useState('');const h=p.createElement;
   async function save(event){event.preventDefault();setBusy(true);setMessage('');try{await $hubRequest('/token',{token},'PUT');setToken('');await $hubRefresh(true);setMessage('Hugging Face token saved securely for this Windows user.');}catch(e){setMessage(String(e).replaceAll(token||'\u0000','[redacted]'));}finally{setBusy(false);}}
   async function remove(){setBusy(true);try{await $hubRequest('/token',undefined,'DELETE');await $hubRefresh(true);setMessage('Token removed. Public model downloads remain available.');}catch(e){setMessage(String(e));}finally{setBusy(false);}}
-  return h('section',{className:'hub-browser','aria-label':inline?'Hugging Face access for model browser':'Hugging Face access'},!inline&&globalThis.__opencoreDownloadQueueUI?h(globalThis.__opencoreDownloadQueueUI.Settings):null,h('h2',null,'Hugging Face access'),h('p',null,'Public models work without a token. A read token enables private and gated repositories your account can access.'),
+  const section=h('section',{className:'hub-browser','aria-label':inline?'Hugging Face access for model browser':'Hugging Face access'},!inline&&globalThis.__opencoreDownloadQueueUI?h(globalThis.__opencoreDownloadQueueUI.Settings):null,h('h2',null,'Hugging Face access'),h('p',null,'Public models work without a token. A read token enables private and gated repositories your account can access.'),
     h('p',{role:'status'},state.tokenConfigured?'Access token saved':'No token saved'),h('form',{onSubmit:save,className:'hub-repository-form'},h('input',{type:'password',autoComplete:'off',value:token,'aria-label':inline?'Hugging Face access token for model browser':'Hugging Face access token',placeholder:'hf_…',onChange:e=>setToken(e.target.value)}),
       h('button',{disabled:busy||!token},busy?'Saving…':'Save token')),state.tokenConfigured?h('button',{disabled:busy,onClick:remove},'Remove token'):null,message?h('p',{role:'status'},message):null);
+  return inline?section:h(p.Fragment,null,section,h($HubRuntimes));
+}
+function $hubSize(bytes) {
+  const value=Math.max(0,Number(bytes)||0),[unit,divisor,short]=value>=1e9?['gigabyte',1e9,'GB']:value>=1e6?['megabyte',1e6,'MB']:['kilobyte',1e3,'KB'];
+  const amount=value/divisor,digits=amount<10&&amount>0?1:0;
+  try{return new Intl.NumberFormat(undefined,{style:'unit',unit,unitDisplay:'short',maximumFractionDigits:digits}).format(amount);}
+  catch{return amount.toFixed(digits)+' '+short;}
+}
+function $hubErrorText(error) {
+  return String(error?.message||error||'The operation failed.').replace(/^Error:\s*/,'');
+}
+function $HubRuntimes() {
+  const h=p.createElement,[data,setData]=p.useState(null),[loadError,setLoadError]=p.useState(''),[error,setError]=p.useState(''),[message,setMessage]=p.useState(''),
+    [working,setWorking]=p.useState(''),[confirming,setConfirming]=p.useState(''),alive=p.useRef(true);
+  const load=p.useCallback(async()=>{
+    try{const value=await $hubRequest('/runtimes');if(alive.current){setData(value&&typeof value==='object'?value:{});setLoadError('');}}
+    catch(e){if(alive.current)setLoadError($hubErrorText(e));}
+  },[]);
+  p.useEffect(()=>{alive.current=true;void load();let timer;
+    const later=()=>{clearTimeout(timer);timer=setTimeout(()=>void load(),1500);};
+    window.addEventListener('opencore-model-library-invalidated',later);window.addEventListener('opencore-runtimes-changed',later);
+    return()=>{alive.current=false;clearTimeout(timer);window.removeEventListener('opencore-model-library-invalidated',later);window.removeEventListener('opencore-runtimes-changed',later);};},[load]);
+  // Removed folders are deleted in the background; refresh until that space is free.
+  p.useEffect(()=>{if(!(data?.pendingBytes>0))return;const timer=setTimeout(()=>void load(),4000);return()=>clearTimeout(timer);},[data,load]);
+  const runtimes=Array.isArray(data?.runtimes)?data.runtimes:[],labels=new Map(runtimes.map(row=>[row.id,row.label||row.id]));
+  const native=new Map(($hubNativeLibrary?.models||[]).map(model=>[model.id,model.name||model.label||model.displayName]));
+  const modelName=id=>data?.modelNames?.[id]||native.get(id)||id;
+  const names=(ids,lookup)=>{const values=[...new Set((ids||[]).map(lookup))];return values.length>3?`${values.slice(0,3).join(', ')} and ${values.length-3} more`:values.join(', ');};
+  const describe=row=>row.status==='in-use'?`Used by ${names(row.installedUsers,modelName)}`:
+    row.status==='shared'?`Shares its packages with ${names(row.sharedWith,id=>labels.get(id)||id)}`:
+    row.status==='feature'?'Used by an OpenCore feature':row.status==='unused'?'No installed model uses it':'Not linked to an installed model';
+  const consequence=row=>row.status==='in-use'?`${names(row.installedUsers,modelName)} will download and set it up again the next time you use ${row.installedUsers.length>1?'them':'it'}.`:
+    row.status==='shared'?`${names(row.sharedWith,id=>labels.get(id)||id)} will be set up again the next time ${row.sharedWith.length>1?'they are':'it is'} used.`:
+    row.status==='feature'?'The feature that uses it sets it up again the next time you turn it on.':
+    'It is set up again automatically if a model needs it later.';
+  async function remove(row){setWorking(row.id);setMessage('');setError('');
+    try{const result=await $hubRequest('/runtimes/remove',{id:row.id});setConfirming('');
+      setMessage(`Removed ${result.label||row.label}${result.bytes?` and freed ${$hubSize(result.bytes)}`:''}.`);}
+    catch(e){setError($hubErrorText(e));}finally{setWorking('');await load();}}
+  async function prune(){setWorking('unused');setMessage('');setError('');
+    try{const result=await $hubRequest('/runtimes/prune',{});const removed=Array.isArray(result.removed)?result.removed:[],kept=Array.isArray(result.kept)?result.kept:[];
+      if(result.skipped)setMessage(`Nothing was removed: ${result.skipped}.`);
+      else setMessage([removed.length?`Removed ${removed.length} unused ${removed.length===1?'runtime':'runtimes'} and freed ${$hubSize(result.freedBytes)}.`:'No unused runtimes were removed.',
+        kept.some(item=>item.reason==='recently-changed')?'Runtimes set up in the last few minutes are kept; try again shortly.':'',
+        kept.some(item=>item.reason==='in-use')?'Some runtimes are open in another process. Stop the model that uses them, then try again.':''].filter(Boolean).join(' '));}
+    catch(e){setError($hubErrorText(e));}finally{setWorking('');await load();}}
+  const disabled=Boolean(working||data?.busy);
+  return h('section',{className:'hub-browser hub-runtimes','aria-label':'Model runtimes'},h('h2',null,'Model runtimes'),
+    h('p',null,'A runtime is the set of libraries a model needs to run. OpenCore downloads one only when you install or first use a model that needs it, shares large libraries between runtimes where it can, and removes a runtime when you uninstall the last model that uses it. Anything you delete here is set up again when a model needs it.'),
+    data?h('p',{role:'status'},runtimes.length?`${runtimes.length} ${runtimes.length===1?'runtime uses':'runtimes use'} ${$hubSize(data.totalBytes)}${data.unusedBytes>0?`, ${$hubSize(data.unusedBytes)} of it unused`:''}.`:'No model runtimes are installed.',
+      data.pendingBytes>0?` Freeing ${$hubSize(data.pendingBytes)} in the background…`:''):h('p',{role:'status'},loadError?'':'Checking runtimes…'),
+    data?.busy?h('p',{role:'status'},`${data.busy}, then you can remove runtimes.`):null,
+    data?.unusedBytes>0?h('button',{type:'button',disabled,onClick:prune},working==='unused'?'Removing…':`Remove unused runtimes (${$hubSize(data.unusedBytes)})`):null,
+    runtimes.length?h('ul',{className:'hub-runtime-list'},...runtimes.map(row=>h('li',{key:row.id},
+      h('div',{className:'hub-runtime-row'},h('span',{className:'hub-runtime-name'},row.label||row.id),h('span',{className:'hub-runtime-size'},typeof row.bytes==='number'?$hubSize(row.bytes):'')),
+      h('span',{className:'hub-runtime-detail'},describe(row),row.missingShared?' · Needs repair: it is set up again on next use':''),
+      confirming===row.id?h('div',{className:'hub-runtime-confirm',role:'group','aria-label':`Confirm deleting ${row.label||row.id}`},
+        h('p',null,`Delete ${row.label||row.id}${typeof row.bytes==='number'?` (${$hubSize(row.bytes)})`:''}? ${consequence(row)}`),
+        h('button',{type:'button',disabled,onClick:()=>void remove(row)},working===row.id?'Deleting…':'Delete runtime'),
+        h('button',{type:'button',disabled:working===row.id,onClick:()=>setConfirming('')},'Cancel')):
+      h('button',{type:'button',disabled,'aria-label':`Delete ${row.label||row.id}`,onClick:()=>{setConfirming(row.id);setMessage('');}},'Delete')))):null,
+    message?h('p',{role:'status'},message):null,error?h('p',{role:'alert'},error):null,
+    loadError?h('p',{role:'status'},`The runtime list could not be loaded: ${loadError}`):null);
 }
 function $HubOCR({entry}) {
   const h=p.createElement,[file,setFile]=p.useState(null),[job,setJob]=p.useState(null),[error,setError]=p.useState(''),[starting,setStarting]=p.useState(false);
@@ -699,3 +767,4 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
 const $hubStyle=document.createElement('style');$hubStyle.textContent=`.hub-browser{padding:16px;border:1px solid var(--border,#34404c);border-radius:10px;margin:16px 0}.hub-browser h3{margin:0 0 8px}.hub-browser p{font-size:12px}.hub-repository-form{display:flex;gap:10px;flex-wrap:wrap}.hub-repository-form input{flex:1;min-width:260px}.hub-repository-form input,.hub-search-filters input,.hub-search-filters select{color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px;font:inherit;min-height:42px;box-sizing:border-box}.hub-repository-form input:focus,.hub-search-filters input:focus,.hub-search-filters select:focus{outline:2px solid var(--theme-accent,#6dacf5);outline-offset:2px}.hub-repository-form input::placeholder,.hub-search-filters input::placeholder{color:var(--theme-muted,#aab7c6)}.hub-discovery-tabs{display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px}.hub-discovery-tabs [role=tab]{white-space:nowrap;min-height:40px;padding:8px 14px;border:1px solid var(--theme-border,#527397);border-radius:7px;background:#142233;color:#dbe5f0}.hub-discovery-tabs [aria-selected=true]{background:#235aa3;border-color:#80baff;color:#fff}.hub-discovery-tabs [role=tab]:focus-visible{outline:2px solid #80baff;outline-offset:2px}.hub-search-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0}.hub-search-filters label{display:grid;gap:6px;font-size:12px}.hub-search-filters input,.hub-search-filters select{width:100%;min-width:0}.hub-private-search{display:flex;align-items:center;gap:8px;margin:12px 0}.hub-browser summary{cursor:pointer;color:var(--theme-text,#dbe5f0);padding:8px 0}.hub-search-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:8px;max-height:350px;overflow:auto;margin:12px 0}.hub-search-results>p{grid-column:1/-1}.hub-search-results button{display:grid;align-content:start;justify-content:start;justify-items:start;gap:6px;width:100%;min-width:0;text-align:left;padding:12px;min-height:60px;overflow-wrap:anywhere}@media(max-width:980px){.hub-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.hub-search-results{grid-template-columns:1fr}}.hub-search-results span{color:var(--theme-muted,#aab7c6);font-size:12px}.hub-plan{margin-top:14px}.hub-variant-list{display:grid;gap:9px;max-height:240px;overflow:auto;margin:12px 0}.hub-variant-list label{display:flex;gap:10px}.hub-model-card header{display:flex;gap:12px;justify-content:space-between}.hub-model-card label{display:grid;gap:8px}.hub-model-card footer{display:flex;gap:8px}`;document.head.appendChild($hubStyle);
 $hubStyle.textContent+=`.hub-adapter-generate{display:grid;gap:8px}.hub-adapter-generate textarea,.hub-adapter-generate input{width:100%;min-width:0;box-sizing:border-box}.hub-base-picker{display:grid;gap:8px;padding:12px;margin:12px 0;border:1px solid var(--theme-border,#527397);border-radius:8px}.hub-base-actions{display:flex;gap:8px;flex-wrap:wrap}.hub-base-picker p,.hub-base-picker small{overflow-wrap:anywhere}.hub-base-picker select{width:100%;min-width:0}.hub-pagination{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.hub-pagination button{min-height:40px}@media(max-width:480px){.hub-pagination{display:grid;grid-template-columns:auto 1fr auto;gap:6px}.hub-pagination button{font-size:12px;padding:6px}.hub-pagination span{text-align:center;font-size:12px}}.hub-ocr{display:grid;gap:10px;margin-top:14px;min-width:0}.hub-ocr input,.hub-ocr textarea{max-width:100%;min-width:0;font:inherit}.hub-ocr textarea{box-sizing:border-box;width:100%;color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px}.hub-ocr button{min-height:42px;justify-self:start}`;
 $hubStyle.textContent+=`.hub-computer{display:grid;gap:10px;margin:14px 0;min-width:0}.hub-computer label{display:grid;gap:6px}.hub-computer textarea{width:100%;min-width:0;box-sizing:border-box;font:inherit;background:var(--theme-input-bg,#132435);color:var(--theme-text,#dbe5f0);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px}.hub-computer input{max-width:100%;min-width:0}.hub-computer pre{white-space:pre-wrap;overflow-wrap:anywhere}.hub-computer button{min-height:42px;justify-self:start}.model-prediction-progress{display:grid;gap:8px}.model-prediction-progress progress{width:100%}.computer-prediction-result{padding:12px;border:1px solid var(--theme-border,#527397);border-radius:8px}`;
+$hubStyle.textContent+=`.hub-runtimes .hub-runtime-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}.hub-runtime-list li{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--theme-border,var(--border,#34404c));border-radius:8px;min-width:0}.hub-runtime-row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;min-width:0}.hub-runtime-name{font-weight:600;overflow-wrap:anywhere;min-width:0}.hub-runtime-size{white-space:nowrap;font-variant-numeric:tabular-nums}.hub-runtime-detail{color:var(--theme-muted,#9aa5b1);font-size:.9em;overflow-wrap:anywhere}.hub-runtime-list li>button{justify-self:start}.hub-runtime-confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.hub-runtime-confirm p{flex-basis:100%;margin:0}`;

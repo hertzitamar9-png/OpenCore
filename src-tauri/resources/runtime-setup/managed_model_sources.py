@@ -34,13 +34,35 @@ def attach_shared_packages(root,environment,source):
     return marker
 
 
+def torch_lender_candidates(root,exclude=None):
+    """Interpreters of every app-managed environment that may already hold PyTorch.
+
+    The long-standing lenders come first; any other managed environment follows,
+    so CPU-only runtimes can share one CPU build instead of each downloading it.
+    The environment being prepared is never its own lender.
+    """
+    root=Path(root).resolve()
+    exe='Scripts/python.exe' if sys.platform=='win32' else 'bin/python'
+    environments,speech=root/'runtime-setup/environments',root/'speech'
+    ordered=[environments/'qwen-image-21-comfy-v1',environments/'moss-comfy-convrot-v1',speech/'phonon-venv']
+    for folder,suffix in ((environments,''),(speech,'-venv')):
+        try:children=sorted(folder.iterdir(),key=lambda child:child.name.lower())
+        except OSError:continue
+        ordered+=[child for child in children if child.name.endswith(suffix)]
+    excluded=os.path.normcase(str(environments/exclude)) if exclude else None
+    seen,result=set(),[]
+    for environment in ordered:
+        key=os.path.normcase(str(environment))
+        if key in seen or key==excluded:continue
+        seen.add(key)
+        if (environment/'pyvenv.cfg').is_file() and (environment/exe).is_file():result.append(environment/exe)
+    return result
+
+
 def shared_torch_source(root,recipe,runner):
     if not recipe.get('shareManagedTorch'):return None
     root=Path(root).resolve()
-    exe='Scripts/python.exe' if sys.platform=='win32' else 'bin/python'
-    candidates=[root/'runtime-setup/environments/qwen-image-21-comfy-v1'/exe,
-                root/'runtime-setup/environments/moss-comfy-convrot-v1'/exe,
-                root/'speech/phonon-venv'/exe]
+    candidates=torch_lender_candidates(root,recipe.get('id'))
     code="import importlib.metadata as m,json,sys;d=m.distribution('torch');print(json.dumps({'version':d.version,'site':str(d.locate_file('')),'python':sys.executable,'bits':__import__('struct').calcsize('P')*8}))"
     expected=recipe['torchPackages']['torch']+'+'+recipe['torchIndex'].rstrip('/').split('/')[-1]
     for candidate in candidates:
