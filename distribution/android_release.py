@@ -20,6 +20,7 @@ import zipfile
 
 from mobile_client import source_hashes, validate
 from mobile_ui import prepare as prepare_mobile_ui
+from phone_ui_release import NAMES as PHONE_UI_NAMES, build as build_phone_ui, java_signer, validate as validate_phone_ui
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -112,7 +113,7 @@ def build_release(args, environment):
     sources = source_hashes(ROOT)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    for name in ('android-client.json', 'phone-runtime-verification.json'):
+    for name in ('android-client.json', 'phone-runtime-verification.json', *PHONE_UI_NAMES):
         (output / name).unlink(missing_ok=True)
     apk = output / 'OpenCore.Remote.apk'
     # Children need the password variable, but not a second copy of the base64
@@ -131,22 +132,27 @@ def build_release(args, environment):
             env=child_environment, capture_output=True, text=True, encoding='utf-8', errors='replace')
         if result.returncode:
             raise RuntimeError('Android release build failed: ' + (result.stdout + result.stderr)[-16000:])
+        # Installed apps take this release's interface live from these assets; no APK install is involved.
+        phone_ui = build_phone_ui(ROOT / 'android-remote/shared-ui', output, 'app-v' + args.version,
+                                  java_signer(java_home() / 'bin/java.exe', keystore, PASSWORD_ENV, child_environment))
     tools, _ = sdk_inputs(args.sdk)
     identity = verify_apk(apk, tools, java_home(), child_environment)
     if identity['versionCode'] != version_code or identity['version'] != args.version:
         raise ValueError('The verified Android APK has a different release version')
     packaged = verify_packaged_inputs(apk, ROOT, sources)
+    validate_phone_ui(output, phone_ui, 'app-v' + args.version, packaged['sharedUiManifestSha256'], identity['signerCertificateSha256'])
     digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     receipt = {'schema': 1, **identity, 'bytes': apk.stat().st_size, 'sha256': digest,
                'sources': sources, 'buildOrigin': 'github-actions', 'commit': args.commit,
                'githubRunNumber': int(args.run_number), 'releaseTag': 'app-v' + args.version,
-               'sharedUiManifestSha256': packaged['sharedUiManifestSha256'], 'catalogSha256': packaged['catalogSha256']}
+               'sharedUiManifestSha256': packaged['sharedUiManifestSha256'], 'catalogSha256': packaged['catalogSha256'],
+               'phoneUi': phone_ui}
     verification = {'schema': 1, 'passed': True, 'verificationKind': 'signed-APK-packaging',
         'androidVersion': args.version, 'versionCode': version_code, 'commit': args.commit,
         'apkSha256': digest, **packaged,
         'androidArm64BinaryVerified': True, 'android16KbPagesVerified': True,
         'apkSigningIdentityPreserved': True, 'packagedSourcesMatchReviewedSources': True,
-        'sharedDesktopInterface': True, 'generatedCatalogMatchesInputs': True,
+        'sharedDesktopInterface': True, 'generatedCatalogMatchesInputs': True, 'phoneInterfaceSignedForLiveUpdates': True,
         'physicalPhoneVerified': False,
         'limitations': ['Build and packaging checks do not establish physical Android gameplay or inference performance',
                         'Android can require user approval or defer self-updates depending on system policy']}

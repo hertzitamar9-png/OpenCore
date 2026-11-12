@@ -102,7 +102,7 @@ public final class PhoneActivity extends Activity {
             if(kind.equals("phone-startup-error")){ui.startupFailed();return;}
             if(kind.equals("phone-ui-safe")){ui.safe(packet.optString("ticket"),packet.optBoolean("safe"));return;}
             if(kind.equals("phone-execution-settings")){reply(id,true,null,null);DeviceRouting.settings(this);return;}
-            if(kind.equals("phone-app-update")||kind.equals("phone-ui-check")){reply(id,true,null,null);ui.refresh();return;}
+            if(kind.equals("phone-app-update")||kind.equals("phone-ui-check")){reply(id,true,null,null);ui.refreshNow();return;}
             if(kind.equals("phone-disconnect")){reply(id,true,null,null);DeviceRouting.settings(this);return;}
             if(NotificationGate.startsDownload(packet)){notifications.beforeDownload(()->{if(!destroyed&&bridge!=null)bridge.request(packet);});return;}
             if(kind.equals("phone-dialog")){chooseFiles(packet);return;}

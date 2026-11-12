@@ -6,6 +6,8 @@ from pathlib import Path
 import shutil
 import zipfile
 
+from phone_ui_release import validate as validate_phone_ui
+
 HERE = Path(__file__).resolve().parent
 PACKAGE = 'ai.opencore.remote'
 SIGNER_SHA256 = '12fba5fd7e17b8bfa6e6b83f00de36e09b4a8f3fa00908d2b447469274a44e5d'
@@ -75,6 +77,12 @@ def validate(pinned, root=None, environment=None):
                     raise ValueError('The generated Android APK requires matching runtime packaging verification')
             if current != receipt['sources']:
                 raise ValueError('Rebuild and verify the signed Android client after changing its sources')
+            # Every CI release also publishes its interface, signed by this APK's key, for live phone updates.
+            if receipt.get('buildOrigin') == 'github-actions' and 'phoneUi' not in receipt:
+                raise ValueError('A CI Android release must publish its signed phone interface')
+            if 'phoneUi' in receipt:
+                bundled = hashlib.sha256(packaged.read('assets/phone/shared-ui/manifest.json')).hexdigest()
+                validate_phone_ui(pinned, receipt['phoneUi'], 'app-v' + receipt['version'], bundled, SIGNER_SHA256)
         return receipt
     except (OSError, KeyError, TypeError, zipfile.BadZipFile) as error:
         raise ValueError('The verified Android release is missing or incomplete; rebuild this release') from error
@@ -93,6 +101,8 @@ def prepare(folder):
     sources = [apk, pinned / 'android-client.json']
     if receipt.get('buildOrigin') == 'github-actions':
         sources.append(pinned / 'phone-runtime-verification.json')
+    if 'phoneUi' in receipt:
+        sources += [pinned / name for name in receipt['phoneUi']['files']]
     for source in sources:
         target = folder / source.name
         if source.resolve() != target.resolve(): shutil.copyfile(source, target)

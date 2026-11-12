@@ -11,6 +11,7 @@ import java.util.*;
 final class LiveUiStore {
     static final int MANIFEST_LIMIT=128*1024, FILE_LIMIT=8*1024*1024, TOTAL_LIMIT=32*1024*1024;
     interface Source {byte[] get(String path,JSONObject body,int limit)throws Exception;}
+    interface Loader {byte[] read(String path,int bytes)throws Exception;}
     static String sha(byte[] bytes)throws Exception{
         StringBuilder out=new StringBuilder();for(byte b:MessageDigest.getInstance("SHA-256").digest(bytes))out.append(String.format(Locale.ROOT,"%02x",b&255));return out.toString();
     }
@@ -85,6 +86,10 @@ final class LiveUiStore {
             try{return open(previous);}catch(Exception ignored){state.remove("good");save();return null;}
         }
     }
+    synchronized Bundle cached(String revision)throws Exception{return open(revision);}
+    /** Which published release this store last resolved, so an unchanged release costs no download. */
+    synchronized String marker(){return state.optString("source");}
+    synchronized void marker(String value)throws Exception{state.put("source",value);save();}
     synchronized boolean rejected(String revision){JSONArray values=state.optJSONArray("rejected");if(values!=null)for(int i=0;i<values.length();i++)if(revision.equals(values.optString(i)))return true;return false;}
     private void reject(String revision)throws Exception{
         if(!revision(revision)||rejected(revision))return;JSONArray old=state.optJSONArray("rejected"),next=new JSONArray();
@@ -95,12 +100,17 @@ final class LiveUiStore {
         if(!revision(revision))throw new IOException("Update OpenCore on the PC to enable live UI assets");
         if(rejected(revision))return null;
         try{return open(revision);}catch(Exception ignored){}
-        byte[] raw=source.get("/uimanifest",new JSONObject().put("revision",revision),MANIFEST_LIMIT);JSONObject manifest=manifest(raw,revision,mode);
+        byte[] raw=source.get("/uimanifest",new JSONObject().put("revision",revision),MANIFEST_LIMIT);
+        return install(revision,raw,(path,bytes)->source.get("/ui",new JSONObject().put("path",path).put("revision",revision),bytes));
+    }
+    /** Stages one complete, hash-verified revision; a partial or tampered set is never visible. */
+    synchronized Bundle install(String revision,byte[] raw,Loader loader)throws Exception{
+        JSONObject manifest=manifest(raw,revision,mode);
         File stage=new File(root,"stage-"+UUID.randomUUID()),destination=new File(root,revision);
         if(!stage.mkdir())throw new IOException("Cannot stage UI bundle");
         try{
             JSONObject files=manifest.getJSONObject("files");Iterator<String> paths=files.keys();while(paths.hasNext()){
-                String path=paths.next();JSONObject record=files.getJSONObject(path);byte[] data=source.get("/ui",new JSONObject().put("path",path).put("revision",revision),record.getInt("bytes"));
+                String path=paths.next();JSONObject record=files.getJSONObject(path);byte[] data=loader.read(path,record.getInt("bytes"));
                 if(data.length!=record.getInt("bytes")||!sha(data).equals(record.getString("sha256")))throw new IOException("UI download checksum mismatch");write(new File(stage,path),data);
             }
             write(new File(stage,"manifest.json"),raw);

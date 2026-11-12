@@ -8,6 +8,8 @@ from http.server import ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import secrets
+import shutil
 import ssl
 import subprocess
 import sys
@@ -23,6 +25,7 @@ sys.path.insert(0, str(ROOT/'src-tauri/resources/runtime-setup/hf-extension'))
 sys.path.insert(0, str(ROOT/'distribution'))
 from remote_access import RemoteAccess, RemoteHandler
 from mobile_ui import prepare
+from phone_ui_release import ARCHIVE, NAMES, build as build_release_ui, java_signer, validate as validate_release_ui
 from tls_identity import create_identity
 
 
@@ -50,7 +53,8 @@ class LiveUiTests(unittest.TestCase):
         cls.classpath = os.pathsep.join(map(str, (cls.output, jar, max(platforms, key=platform_rank))))
         source = ROOT/'android-remote/src/ai/opencore/remote'
         result = subprocess.run([str(cls.java/'javac.exe'), '--release', '8', '-encoding', 'UTF-8', '-cp', cls.classpath, '-d', str(cls.output),
-                                 *map(str, [source/'LiveUiStore.java', source/'Connection.java', ROOT/'android-remote/tests/LiveUiStoreTest.java', ROOT/'android-remote/tests/LiveUiProbe.java'])], capture_output=True, text=True)
+                                 *map(str, [source/'LiveUiStore.java', source/'LiveUiRelease.java', source/'Connection.java', ROOT/'android-remote/tests/LiveUiStoreTest.java',
+                                             ROOT/'android-remote/tests/LiveUiReleaseTest.java', ROOT/'android-remote/tests/LiveUiProbe.java'])], capture_output=True, text=True)
         if result.returncode:
             raise AssertionError(result.stderr)
 
@@ -152,8 +156,61 @@ class LiveUiTests(unittest.TestCase):
                   'apkRequests':0, 'installerInvocationsInThisHarness':0, 'modes':results, 'requests':requests}
         (evidence/'results.json').write_text(json.dumps(report, indent=2)+'\n')
 
+    def test_phone_mode_installs_each_signed_release_without_an_apk(self):
+        # The real CI tooling builds and signs each release's interface; the
+        # production phone code then installs it. Test keys are throwaway.
+        work = self.output/'release-ui'
+        source, interface, releases = work/'frontend', work/'interface', work/'releases'
+        desktop = ROOT/'android-remote/shared-ui'
+        for path in desktop.rglob('*'):
+            if path.is_file() and path.name != 'manifest.json' and path.relative_to(desktop).parts[0] != 'phone':
+                to = source/path.relative_to(desktop)
+                to.parent.mkdir(parents=True, exist_ok=True)
+                to.write_bytes(path.read_bytes())
+        prepare(interface, source)
+        password = 'OPENCORE_TEST_SIGNING_PASSWORD'
+        environment = {**os.environ, password: secrets.token_hex(16)}
+        keytool = str(self.java/'keytool.exe')
+        def keystore(name):
+            path = work/(name+'.p12')
+            subprocess.run([keytool, '-genkeypair', '-keystore', str(path), '-storetype', 'PKCS12', '-alias', 'opencore-remote',
+                            '-keyalg', 'RSA', '-keysize', '2048', '-validity', '2', '-dname', 'CN=OpenCore test '+name,
+                            '-storepass:env', password, '-keypass:env', password], env=environment, check=True, capture_output=True)
+            return path
+        app, other = keystore('app'), keystore('other')
+        certificate = work/'app.der'
+        subprocess.run([keytool, '-exportcert', '-keystore', str(app), '-storetype', 'PKCS12', '-alias', 'opencore-remote',
+                        '-storepass:env', password, '-file', str(certificate)], env=environment, check=True, capture_output=True)
+        fingerprint = hashlib.sha256(certificate.read_bytes()).hexdigest()
+        java = self.java/'java.exe'
+        def release(tag, folder, key):
+            (releases/tag).mkdir(parents=True)
+            return build_release_ui(folder, releases/tag, tag, java_signer(java, key, password, environment))
+        record = release('app-v0.3.400', interface, app)
+        revision = hashlib.sha256((interface/'manifest.json').read_bytes()).hexdigest()
+        self.assertEqual((record['revision'], record['certificateSha256']), (revision, fingerprint))
+        self.assertEqual(validate_release_ui(releases/'app-v0.3.400', record, 'app-v0.3.400', revision, fingerprint), [releases/'app-v0.3.400'/name for name in NAMES])
+        self.assertNotIn(environment[password], json.dumps(record) + (releases/'app-v0.3.400'/NAMES[1]).read_text(encoding='utf-8'))
+        with self.assertRaisesRegex(ValueError, 'another|match'):
+            validate_release_ui(releases/'app-v0.3.400', record, 'app-v0.3.401', revision, fingerprint)
+        release('app-v0.3.401', interface, other)
+        shutil.copytree(releases/'app-v0.3.400', releases/'app-v0.3.402')
+        future = work/'future'
+        shutil.copytree(interface, future)
+        manifest = json.loads((future/'manifest.json').read_text(encoding='utf-8'))
+        (future/'manifest.json').write_text(json.dumps({**manifest, 'shellApi': 2}), encoding='utf-8')
+        release('app-v0.3.403', future, app)
+        # The archive is reproducible, so an unchanged interface publishes identical bytes.
+        again = work/'again'
+        again.mkdir()
+        build_release_ui(interface, again, 'app-v0.3.400', lambda tag, rev: (releases/'app-v0.3.400'/NAMES[1]).read_text(encoding='utf-8'))
+        self.assertEqual((again/ARCHIVE).read_bytes(), (releases/'app-v0.3.400'/ARCHIVE).read_bytes())
+        result = self.java_run('LiveUiReleaseTest', work/'phone', releases, certificate, interface)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('RELEASE_SIGNED_LIVE_UPDATE_REPLAY_TAMPER_SHELL_AND_HOST_CHECKS_PASSED', result.stdout)
+
     def test_ordinary_paths_do_not_reach_the_installer(self):
-        for name in ('MobileActivity.java', 'PhoneActivity.java', 'LiveUi.java', 'LiveUiStore.java'):
+        for name in ('MobileActivity.java', 'PhoneActivity.java', 'LiveUi.java', 'LiveUiStore.java', 'LiveUiRelease.java'):
             source = (ROOT/'android-remote/src/ai/opencore/remote'/name).read_text()
             self.assertNotIn('AppUpdates.check(', source)
             self.assertNotIn('PackageInstaller', source)

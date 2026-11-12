@@ -35,7 +35,7 @@ export function PromptAssistantSettings(){
 }
 export function PhoneAppUpdatesSettings(){
   const h=React.createElement;
-  return globalThis.__OPENCORE_MOBILE__?h('section',{className:'hub-settings'},h('h3',null,'Android app updates'),h('p',null,'Your interface updates from the PC automatically. Native app updates install over this app and keep your saved PC.'),h('button',{type:'button',onClick:()=>globalThis.__opencoreCheckAppUpdates?.()},'Check for app updates')):null;
+  return globalThis.__OPENCORE_MOBILE__?h('section',{className:'hub-settings'},h('h3',null,'App updates'),h('p',null,'Updates install by themselves, with no reinstall. Phone mode follows each release; Paired PC mode matches your PC.'),h('button',{type:'button',onClick:()=>globalThis.__opencoreCheckAppUpdates?.()},'Check for updates')):null;
 }
 export function PromptAssistantTools({prompt,onPrompt,conversationId}){
   const h=React.createElement,value=usePromptAssistantSettings(),[busy,setBusy]=React.useState(false),[message,setMessage]=React.useState(''),[previous,setPrevious]=React.useState('');

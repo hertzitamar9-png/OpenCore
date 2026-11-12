@@ -152,7 +152,7 @@ public final class MobileActivity extends Activity {
     void message(String raw,int targetGeneration){
         try{
             JSONObject value=new JSONObject(raw);String id=value.getString("id"),kind=value.getString("kind");
-            if(kind.equals("phone-app-update")||kind.equals("phone-ui-check")){ui.refresh();ok(id,null,targetGeneration);return;}
+            if(kind.equals("phone-app-update")||kind.equals("phone-ui-check")){ui.refreshNow();ok(id,null,targetGeneration);return;}
             if(kind.equals("phone-ui-safe")){ui.safe(value.optString("ticket"),value.optBoolean("safe"));return;}
             if(kind.equals("phone-execution-settings")){ok(id,null,targetGeneration);DeviceRouting.settings(this);return;}
             if(kind.equals("phone-disconnect")){ok(id,null,targetGeneration);removePc();return;}

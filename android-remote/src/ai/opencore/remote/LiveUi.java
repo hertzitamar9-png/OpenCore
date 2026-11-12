@@ -1,10 +1,13 @@
 package ai.opencore.remote;
 
 import android.app.Activity;
+import android.content.pm.*;
 import android.os.*;
 import org.json.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
+import java.security.cert.CertificateFactory;
 import java.util.concurrent.*;
 
 /** Refreshes web assets only; the execution backend and its data never change. */
@@ -13,9 +16,9 @@ final class LiveUi {
     final Activity app;final String mode;final Host host;
     final Handler main=new Handler(Looper.getMainLooper());
     final ScheduledExecutorService io=Executors.newSingleThreadScheduledExecutor();
-    volatile boolean resumed,closed,ready,activating;volatile Selection page,pending;
-    String sourceId="",ticket="";Connection source;LiveUiStore store;int sequence;
-    final JSONObject bundled;
+    volatile boolean resumed,closed,ready,activating,userCheck;volatile Selection page,pending;
+    String sourceId="",ticket="";Connection source;LiveUiStore store;LiveUiRelease release;int sequence;
+    final JSONObject bundled;final String bundledRevision;
     static final class Selection {
         final LiveUiStore store;final LiveUiStore.Bundle bundle;
         volatile boolean trial;
@@ -23,27 +26,48 @@ final class LiveUi {
     }
     LiveUi(Activity app,String mode,Host host)throws Exception{
         this.app=app;this.mode=mode;this.host=host;
-        try(InputStream input=app.getAssets().open("phone/shared-ui/manifest.json")){bundled=new JSONObject(new String(MobileActivity.read(input,LiveUiStore.MANIFEST_LIMIT),StandardCharsets.UTF_8)).getJSONObject("files");}
+        try(InputStream input=app.getAssets().open("phone/shared-ui/manifest.json")){byte[] raw=MobileActivity.read(input,LiveUiStore.MANIFEST_LIMIT);bundledRevision=LiveUiStore.sha(raw);bundled=new JSONObject(new String(raw,StandardCharsets.UTF_8)).getJSONObject("files");}
         selectSource();if(store!=null){LiveUiStore.Bundle good=store.good();if(good!=null)page=new Selection(store,good);}
         io.scheduleWithFixedDelay(this::check,0,20,TimeUnit.SECONDS);
     }
+    /**
+     * Paired PC mode shows the PC's own interface version. Phone mode updates on
+     * its own from each signed OpenCore release, so it needs no PC and no APK.
+     * An explicitly trusted interface server overrides both.
+     */
     void selectSource()throws Exception{
-        Connection next=Connection.load(app,"ui-source");if(next==null)next=Connection.load(app);
-        String id=next==null?"":LiveUiStore.sha((next.endpoint+"\n"+next.pin+"\n"+next.token).getBytes(StandardCharsets.UTF_8));
-        if(id.equals(sourceId))return;sourceId=id;source=next;pending=null;
-        store=next==null?null:new LiveUiStore(new File(app.getFilesDir(),"remote-ui/"+mode+"/"+id),mode);
+        Connection next=Connection.load(app,"ui-source");if(next==null&&mode.equals("pc"))next=Connection.load(app);
+        PackageInfo installed=next==null&&mode.equals("phone")?app.getPackageManager().getPackageInfo(app.getPackageName(),0):null;
+        String id=next!=null?LiveUiStore.sha((next.endpoint+"\n"+next.pin+"\n"+next.token).getBytes(StandardCharsets.UTF_8)):installed!=null?"release-"+versionCode(installed):"";
+        if(id.equals(sourceId))return;sourceId=id;source=next;pending=null;release=null;
+        store=id.isEmpty()?null:new LiveUiStore(new File(app.getFilesDir(),"remote-ui/"+mode+"/"+id),mode);
+        // Without the app's signing identity nothing from a release can be trusted; the cached and bundled interfaces stay.
+        if(installed!=null)try{release=new LiveUiRelease(store,new LiveUiRelease.GitHub(),signer(),installed.versionName,bundledRevision,mode);}catch(Exception ignored){}
+    }
+    static long versionCode(PackageInfo info){return Build.VERSION.SDK_INT>=28?info.getLongVersionCode():info.versionCode;}
+    /** The certificate that signed this installed app; a release interface must carry its signature. */
+    PublicKey signer()throws Exception{
+        PackageManager manager=app.getPackageManager();android.content.pm.Signature[] signers;
+        if(Build.VERSION.SDK_INT>=28){SigningInfo info=manager.getPackageInfo(app.getPackageName(),PackageManager.GET_SIGNING_CERTIFICATES).signingInfo;signers=info==null||info.hasMultipleSigners()?null:info.getApkContentsSigners();}
+        else signers=manager.getPackageInfo(app.getPackageName(),PackageManager.GET_SIGNATURES).signatures;
+        if(signers==null||signers.length!=1)throw new IOException("This app has no single signing identity");
+        return CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(signers[0].toByteArray())).getPublicKey();
     }
     void resume(){resumed=true;refresh();}
     void pause(){resumed=false;}
     void refresh(){if(!closed)io.execute(this::check);}
+    /** Check for updates now, and say what happened. */
+    void refreshNow(){userCheck=true;refresh();}
     void check(){
         if(closed||!resumed||activating)return;
+        boolean user=userCheck,problem=false;userCheck=false;
         try{
-            selectSource();Connection selected=source;LiveUiStore selectedStore=store;
-            if(selected!=null){LiveUiStore.Bundle next=selectedStore.fetch(selected::bytes);
-                Selection current=page;if(next!=null&&(current==null||current.store!=selectedStore||!current.bundle.revision.equals(next.revision)))pending=new Selection(selectedStore,next);
-            }
-        }catch(Exception ignored){/* Offline or an invalid candidate keeps the last verified page. */}
+            selectSource();Connection selected=source;LiveUiStore selectedStore=store;LiveUiRelease selectedRelease=release;
+            LiveUiStore.Bundle next=selected!=null?selectedStore.fetch(selected::bytes):selectedRelease!=null?selectedRelease.check(user):null;
+            Selection current=page;if(next!=null&&(current==null||current.store!=selectedStore||!current.bundle.revision.equals(next.revision)))pending=new Selection(selectedStore,next);
+        }catch(Exception error){problem=true;/* Offline or an invalid candidate keeps the last verified page. */}
+        if(user){Selection waiting=pending;boolean failed=problem;
+            main.post(()->{if(!closed)host.notice(failed?"Couldn't check for updates. OpenCore keeps the current version.":waiting!=null?"Update downloaded. OpenCore applies it as soon as you're not in the middle of something.":"OpenCore is up to date.");});}
         main.post(this::offer);
     }
     void offer(){
@@ -74,7 +98,10 @@ final class LiveUi {
     }
     void healthy(){
         ready=true;Selection selected=page;
-        if(selected!=null&&!closed)io.execute(()->{try{selected.store.healthy(selected.bundle);selected.trial=false;}catch(Exception ignored){}});
+        if(selected!=null&&!closed){
+            if(selected.trial)host.notice("OpenCore updated. Chats, models and settings are kept.");
+            io.execute(()->{try{selected.store.healthy(selected.bundle);selected.trial=false;}catch(Exception ignored){}});
+        }
         offer();
     }
     void failed(){

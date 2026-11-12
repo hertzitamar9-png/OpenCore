@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'distribution'))
 import mobile_client
+import phone_ui_release
 
 spec = importlib.util.spec_from_file_location('opencore_android_build', ROOT / 'android-remote/build.py')
 android_build = importlib.util.module_from_spec(spec)
@@ -120,10 +122,12 @@ class AndroidReleasePublicationTests(unittest.TestCase):
         self.sources = mobile_client.source_hashes(self.root)
         self.apk = self.output / 'OpenCore.Remote.apk'
 
-    def write_apk(self, embedded_sources=None):
+    def write_apk(self, embedded_sources=None, extra=None):
         with zipfile.ZipFile(self.apk, 'w') as archive:
             archive.writestr('assets/phone/build-sources.json', json.dumps(
                 self.sources if embedded_sources is None else embedded_sources))
+            for name, data in (extra or {}).items():
+                archive.writestr(name, data)
         self.receipt = {
             'schema': 1, 'package': 'ai.opencore.remote', 'versionCode': 100294,
             'version': '0.3.294', 'bytes': self.apk.stat().st_size,
@@ -169,6 +173,66 @@ class AndroidReleasePublicationTests(unittest.TestCase):
         (self.output / 'android-client.json').write_text(json.dumps(receipt), encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'commit|release'):
             self.prepare(GITHUB_SHA='b' * 40, OPENCORE_RELEASE_VERSION='0.3.294')
+
+    def test_ci_publication_carries_the_signed_phone_interface_for_live_updates(self):
+        interface = self.root / 'interface'
+        (interface / 'phone').mkdir(parents=True)
+        files = {'index.html': b'<html></html>', 'phone/mobile-shim.js': b'// shim', 'phone/mobile.css': b'body{}'}
+        for name, data in files.items():
+            (interface / name).write_bytes(data)
+        manifest = json.dumps({'schema': 1, 'shellApi': 1, 'modes': ['pc', 'phone'], 'files': {
+            name: {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest(), 'mime': 'text/plain'} for name, data in files.items()}}).encode()
+        (interface / 'manifest.json').write_bytes(manifest)
+        commit = 'a' * 40
+
+        def ci_release(phone_ui):
+            receipt = self.write_apk(extra={'assets/phone/shared-ui/manifest.json': manifest,
+                                            **{'assets/phone/shared-ui/' + name: data for name, data in files.items()}})
+            receipt.update(buildOrigin='github-actions', commit=commit, **({'phoneUi': phone_ui} if phone_ui else {}))
+            (self.output / 'android-client.json').write_text(json.dumps(receipt), encoding='utf-8')
+            (self.output / 'phone-runtime-verification.json').write_text(json.dumps({
+                'passed': True, 'apkSha256': receipt['sha256'], 'commit': commit, 'versionCode': receipt['versionCode'],
+                'physicalPhoneVerified': False}), encoding='utf-8')
+            return self.prepare(GITHUB_SHA=commit, OPENCORE_RELEASE_VERSION='0.3.294')
+
+        with self.assertRaisesRegex(ValueError, 'phone interface'):
+            ci_release(None)
+
+        def sign(tag, revision):
+            return json.dumps({'schema': 1, 'tag': tag, 'revision': revision, 'algorithm': 'SHA256withRSA',
+                               'certificateSha256': mobile_client.SIGNER_SHA256, 'signature': 'c2lnbmF0dXJl'})
+        record = phone_ui_release.build(interface, self.output, 'app-v0.3.294', sign)
+        self.assertEqual(record['revision'], hashlib.sha256(manifest).hexdigest())
+        published = ci_release(record)
+        self.assertEqual({path.name for path in published}, {'OpenCore.Remote.apk', 'android-client.json',
+                                                             'phone-runtime-verification.json', *phone_ui_release.NAMES})
+        self.assertFalse(any(path.suffix == '.part' or path.name.endswith('.tmp') for path in self.output.iterdir()))
+        with zipfile.ZipFile(self.output / phone_ui_release.ARCHIVE) as archive:
+            self.assertEqual({name: archive.read(name) for name in archive.namelist()}, files)
+
+        archive = (self.output / phone_ui_release.ARCHIVE).read_bytes()
+        (self.output / phone_ui_release.ARCHIVE).write_bytes(archive[:-1] + bytes([archive[-1] ^ 1]))
+        with self.assertRaisesRegex(ValueError, 'phone interface'):
+            ci_release(record)
+        (self.output / phone_ui_release.ARCHIVE).write_bytes(archive)
+        with self.assertRaisesRegex(ValueError, 'phone interface'):
+            ci_release({**record, 'tag': 'app-v0.3.293'})
+        with self.assertRaisesRegex(ValueError, 'phone interface'):
+            ci_release({**record, 'certificateSha256': '0' * 64})
+
+    def test_phone_interface_signing_keeps_the_password_out_of_argv(self):
+        calls = []
+
+        def run(command, **options):
+            calls.append((command, options))
+            return subprocess.CompletedProcess(command, 0, '{}', '')
+        with patch.object(phone_ui_release.subprocess, 'run', run):
+            phone_ui_release.java_signer('java', 'original.jks', 'OPENCORE_ANDROID_STORE_PASSWORD',
+                                         {'OPENCORE_ANDROID_STORE_PASSWORD': 'fixture-secret'})('app-v1.2.3', 'a' * 64)
+        command, options = calls[0]
+        self.assertNotIn('fixture-secret', ' '.join(map(str, command)))
+        self.assertIn('OPENCORE_ANDROID_STORE_PASSWORD', command)
+        self.assertEqual(options['env']['OPENCORE_ANDROID_STORE_PASSWORD'], 'fixture-secret')
 
 
 if __name__ == '__main__':

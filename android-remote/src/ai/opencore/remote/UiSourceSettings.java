@@ -14,7 +14,7 @@ final class UiSourceSettings {
         try{Connection saved=Connection.load(app,"ui-source");if(saved!=null){url.setText(saved.endpoint);pin.setText(saved.pin);token.setText(saved.token);}}catch(Exception ignored){}
         fields.addView(url);fields.addView(pin);fields.addView(token);
         AlertDialog dialog=new AlertDialog.Builder(app).setTitle("Interface update source").setView(fields).setNegativeButton("Cancel",null)
-            .setNeutralButton("Use paired PC",(d,w)->app.getSharedPreferences("ui-source",0).edit().clear().apply()).setPositiveButton("Trust UI server",null).create();
+            .setNeutralButton("Use automatic updates",(d,w)->app.getSharedPreferences("ui-source",0).edit().clear().apply()).setPositiveButton("Trust UI server",null).create();
         dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{try{
             String bearer=token.getText().toString();if(!bearer.matches("[A-Za-z0-9._~+/=-]{16,4096}"))throw new Exception("Enter the server's bearer token (at least 16 characters).");
             Connection selected=new Connection(url.getText().toString().trim(),pin.getText().toString().trim(),bearer);selected.name="Trusted UI server";selected.save(app,"ui-source");dialog.dismiss();
