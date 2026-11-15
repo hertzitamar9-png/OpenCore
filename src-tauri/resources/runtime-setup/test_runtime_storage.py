@@ -119,6 +119,18 @@ class InventoryTests(unittest.TestCase):
         rows = by_id(storage.inventory(self.root, installed={'hf-abc'}, now=LATER))
         self.assertEqual(rows['managed-transformers-text-cuda-v1']['status'], 'in-use')
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows short names')
+    def test_short_and_long_windows_paths_match(self):
+        import ctypes
+        folder = self.root / 'A Long Folder Name For Short Paths'
+        (folder / 'Scripts').mkdir(parents=True)
+        buffer = ctypes.create_unicode_buffer(1024)
+        ctypes.windll.kernel32.GetShortPathNameW(str(folder), buffer, 1024)
+        if '~' not in buffer.value:
+            self.skipTest('8.3 names are turned off on this volume')
+        self.assertTrue(storage.inside(Path(buffer.value) / 'Scripts' / 'python.exe', folder))
+        self.assertTrue(storage.inside(folder / 'Scripts', buffer.value))
+
     def test_receipt_environment_field_names_the_runtime(self):
         make_env(self.root, 'tts-speech-v1')
         receipt(self.root, 'hub-tts-runtime', environment='tts-speech-v1')

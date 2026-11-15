@@ -82,8 +82,30 @@ def plain(value):
     return Path(text)
 
 
+def _long(text):
+    """Expand Windows 8.3 short names (such as RUNNER~1) so equal paths compare equal."""
+    if os.name != 'nt' or '~' not in text:
+        return text
+    try:
+        import ctypes
+        head, tail = text, ''
+        while '~' in head:
+            size = ctypes.windll.kernel32.GetLongPathNameW(head, None, 0)
+            if size:
+                buffer = ctypes.create_unicode_buffer(size)
+                if ctypes.windll.kernel32.GetLongPathNameW(head, buffer, size):
+                    return os.path.join(buffer.value, tail) if tail else buffer.value
+            parent, name = os.path.split(head)
+            if parent == head:
+                break
+            head, tail = parent, os.path.join(name, tail) if tail else name
+    except (AttributeError, OSError, ValueError):
+        pass
+    return text
+
+
 def _key(value):
-    return os.path.normcase(os.path.abspath(plain(value)))
+    return os.path.normcase(_long(os.path.abspath(plain(value))))
 
 
 def inside(path, folder):
