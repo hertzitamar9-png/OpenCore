@@ -69,6 +69,7 @@ export function createAudioStudio(React, deps) {
     if (progress?.phase === 'paused' || queued?.phase === 'paused') return 'paused';
     if (install.active?.modelId === entry.id || progress && ['downloading', 'preparing', 'verifying', 'cancelling'].includes(progress.phase)) return 'installing';
     if (queued) return queued.phase === 'queued' ? 'queued' : 'installing';
+    if ((entry.libraryCategory || entry.category) === 'tts' && !entry.ttsRuntime) return 'unsupported';
     if (entry.status === 'installed' && entry.runtimeReady) return 'ready';
     if (entry.hardwareFit && !entry.hardwareFit.device) return 'blocked';
     if (progress?.phase === 'failed') return 'failed';
@@ -77,7 +78,7 @@ export function createAudioStudio(React, deps) {
   const percentOf = progress => progress?.totalBytes ? Math.min(100, Math.floor(progress.downloadedBytes / progress.totalBytes * 100)) : null;
   function Chip({entry, install, hub}) {
     const state = stateOf(entry, install, hub), percent = percentOf(progressFor(entry, install, hub));
-    const text = {ready: 'Ready', paused: 'Paused', queued: 'Queued', setup: 'Finish setup', blocked: 'Can’t run here', failed: 'Install failed',
+    const text = {ready: 'Ready', paused: 'Paused', queued: 'Queued', setup: 'Finish setup', blocked: 'Can’t run here', unsupported: 'Not supported yet', failed: 'Install failed',
       installing: percent == null ? 'Setting up…' : 'Installing ' + percent + '%', available: sizeText(entry.bytes) || 'Not installed'}[state];
     return h('span', {className: 'studio-chip is-' + state}, text);
   }
@@ -90,7 +91,7 @@ export function createAudioStudio(React, deps) {
 
   // ---------- text to speech ----------
   function SpeakTab({hub, install, view, onNotice}) {
-    const entries = (hub.catalog || []).filter(entry => (entry.libraryCategory || entry.category) === 'tts' && entry.ttsRuntime);
+    const entries = (hub.catalog || []).filter(entry => (entry.libraryCategory || entry.category) === 'tts');
     const [choice, setChoice] = React.useState(() => view?.modelId || store(CHOICE_KEY));
     React.useEffect(() => { if (view?.modelId) setChoice(view.modelId); }, [view]);
     const choose = id => { setChoice(id); store(CHOICE_KEY, id); };
@@ -134,7 +135,9 @@ export function createAudioStudio(React, deps) {
 
     const percent = percentOf(progress);
     let body;
-    if (state === 'blocked') {
+    if (state === 'unsupported') {
+      body = h('p', {className: 'studio-callout is-warning', role: 'note'}, 'Audio Studio can’t speak with this model yet. You can still manage it in Models.');
+    } else if (state === 'blocked') {
       const alternative = entries.find(item => item !== entry && stateOf(item, install, hub) === 'ready')
         || entries.find(item => item !== entry && stateOf(item, install, hub) !== 'blocked');
       body = h('div', {className: 'studio-callout is-warning', role: 'note'},
@@ -272,8 +275,10 @@ export function createAudioStudio(React, deps) {
     const choices = [...native.filter(model => model.installed).map(model => ({id: model.id, label: model.label || model.id})),
       ...hubSpeech.filter(entry => entry.status === 'installed' && entry.runtimeReady).map(entry => ({id: entry.id, label: nameOf(entry)}))];
     const installable = [...native.filter(model => !model.installed && model.installable !== false).map(model => ({id: model.id, label: model.label || model.id, bytes: model.downloadBytes || model.totalBytes})),
-      ...hubSpeech.filter(entry => entry.status !== 'installed' && entry.installable !== false && !(entry.hardwareFit && !entry.hardwareFit.device))
-        .map(entry => ({id: entry.id, label: nameOf(entry), bytes: entry.bytes}))].sort((a, b) => (a.bytes || 0) - (b.bytes || 0)).slice(0, 4);
+      ...hubSpeech.filter(entry => entry.status !== 'installed' && entry.installable !== false)
+        .map(entry => ({id: entry.id, label: nameOf(entry), bytes: entry.bytes, blocked: entry.hardwareFit && !entry.hardwareFit.device ? sentence(entry.hardwareFit.reason || 'This computer can’t run it.') : ''}))]
+      .sort((a, b) => !!a.blocked - !!b.blocked || (a.bytes || 0) - (b.bytes || 0));
+    const installSpeech = model => act(async () => { await invoke('install_model', {id: model.id}); onNotice('Installing ' + model.label + '. It appears in the model list when it is ready.'); await onLibrary(); });
     const currentId = status?.modelId && choices.some(choice => choice.id === status.modelId) ? status.modelId : null;
     const ready = !!currentId && status?.installed !== false && status?.enabled !== false;
     const result = items.find(item => item.id === selected) || null;
@@ -378,9 +383,9 @@ export function createAudioStudio(React, deps) {
     else if (!choices.length) setup = h(Empty, {title: 'Install a speech recognition model',
       text: 'A speech recognition model turns recordings into text on this computer. Pick one to install; smaller models are faster, larger ones are more accurate.'},
     installable.length ? h('ul', {className: 'studio-install-list'}, installable.map(model => h('li', {key: model.id},
-      h('span', null, h('strong', null, model.label), model.bytes ? h('small', null, sizeText(model.bytes)) : null),
-      h('button', {type: 'button', className: 'primary', disabled: !!install.active && !install.queue,
-        onClick: () => act(async () => { await invoke('install_model', {id: model.id}); onNotice('Installing ' + model.label + '. Progress also appears in Models.'); await onLibrary(); })}, 'Install')))) : null,
+      h('span', null, h('strong', null, model.label), h('small', null, model.blocked || sizeText(model.bytes))),
+      h('button', {type: 'button', className: 'primary', disabled: !!model.blocked || !!install.active && !install.queue,
+        onClick: () => installSpeech(model)}, model.blocked ? 'Can’t run here' : 'Install')))) : null,
     h('div', {className: 'studio-actions'}, h('button', {type: 'button', onClick: () => window.dispatchEvent(new CustomEvent('opencore-open-models'))}, 'Browse all models')));
     else if (!currentId) setup = h(Empty, {title: 'Choose a speech recognition model', text: 'Pick which installed model turns your audio into text.'},
       h('div', {className: 'studio-actions'}, choices.map(choice => h('button', {key: choice.id, type: 'button',
@@ -393,8 +398,13 @@ export function createAudioStudio(React, deps) {
     return h('div', {className: 'audio-transcribe'},
       ready || choices.length && currentId ? h('div', {className: 'audio-toolbar'},
         h('label', null, h('span', null, 'Model'),
-          h('select', {value: currentId || '', disabled: working, onChange: event => act(() => invoke('speech_set_model', {modelId: event.target.value}))},
-            choices.map(choice => h('option', {key: choice.id, value: choice.id}, choice.label)))),
+          h('select', {value: currentId || '', disabled: working, onChange: event => {
+            const value = event.target.value, pending = installable.find(model => model.id === value);
+            if (pending) installSpeech(pending); else act(() => invoke('speech_set_model', {modelId: value}));
+          }},
+            h('optgroup', {label: 'Installed'}, choices.map(choice => h('option', {key: choice.id, value: choice.id}, choice.label))),
+            installable.length ? h('optgroup', {label: 'Install another model'}, installable.map(model => h('option', {key: model.id, value: model.id, disabled: !!model.blocked},
+              model.label + ' · ' + (model.blocked ? 'can’t run here' : sizeText(model.bytes) || 'install')))) : null)),
         h('small', null, status?.phase === 'loading' ? 'Loading the model…' : status?.workerReady ? 'Ready' : 'Loads when you start')) : null,
       setup || h('section', {className: 'audio-card audio-capture' + (dragging ? ' is-dragging' : ''), 'aria-label': 'Record or upload audio',
         onDragOver: event => { if (working) return; event.preventDefault(); setDragging(true); },

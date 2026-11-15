@@ -68,6 +68,13 @@ export function clearChatImageSelection({scope=null,primary=true}={}){
 export function downloadedImageModels(models){
   return models.filter(model=>model.category==='image'&&model.hubEntry?.packageKind!=='adapter'&&model.hubEntry?.format!=='lora'&&model.installed===true);
 }
+// Image models that are not downloaded yet, smallest first; ones this computer can't run are kept but marked.
+export function installableImageModels(models){
+  return models.filter(model=>model.category==='image'&&model.hubEntry?.packageKind!=='adapter'&&model.hubEntry?.format!=='lora'&&model.installed!==true&&model.installable!==false)
+    .map(model=>({...model,blocked:model.hubEntry?.hardwareFit&&!model.hubEntry.hardwareFit.device?String(model.hubEntry.hardwareFit.reason||'can’t run on this computer'):''}))
+    .sort((a,b)=>!!a.blocked-!!b.blocked||(a.downloadBytes||a.totalBytes||0)-(b.downloadBytes||b.totalBytes||0));
+}
+const imageGigabytes=bytes=>bytes>0?(bytes/1e9).toLocaleString(undefined,{maximumFractionDigits:1})+' GB':'';
 async function readImageModelLibrary(options={}){
   const run=()=>window.__TAURI_INTERNALS__.invoke('list_model_library',{});
   const invoke=()=>globalThis.__opencoreInstallBridge?globalThis.__opencoreInstallBridge.invoke('list_model_library',{},run):run();
@@ -182,7 +189,7 @@ export function imageOutputs(job) {
 export function ImageGenerationPanel({conversationId,onConversationId,onNotice,onRefresh,onStateChange,studio=false,embedded=false,initialModelId=''}) {
   const h=React.createElement;
   const initialSelection=!studio&&!embedded?getChatImageSelection():null;
-  const [open,setOpen]=React.useState(studio||!!initialSelection),[models,setModels]=React.useState([]),[modelId,setModelId]=React.useState(initialModelId||initialSelection?.id||''),[adapters,setAdapters]=React.useState([]),[adapterId,setAdapterId]=React.useState(initialSelection?.adapterId||''),[prompt,setPrompt]=React.useState(''),[strength,setStrength]=React.useState(0.8),[steps,setSteps]=React.useState(30),[guidance,setGuidance]=React.useState(3),[size,setSize]=React.useState(512),[busy,setBusy]=React.useState(false),[stage,setStage]=React.useState(''),[error,setError]=React.useState(''),[jobs,setJobs]=React.useState([]),[images,setImages]=React.useState({});
+  const [open,setOpen]=React.useState(studio||!!initialSelection),[models,setModels]=React.useState([]),[installable,setInstallable]=React.useState([]),[modelId,setModelId]=React.useState(initialModelId||initialSelection?.id||''),[adapters,setAdapters]=React.useState([]),[adapterId,setAdapterId]=React.useState(initialSelection?.adapterId||''),[prompt,setPrompt]=React.useState(''),[strength,setStrength]=React.useState(0.8),[steps,setSteps]=React.useState(30),[guidance,setGuidance]=React.useState(3),[size,setSize]=React.useState(512),[busy,setBusy]=React.useState(false),[stage,setStage]=React.useState(''),[error,setError]=React.useState(''),[jobs,setJobs]=React.useState([]),[images,setImages]=React.useState({});
   const panel=React.useRef(null),requestedModel=React.useRef(initialSelection?.id||''),pending=React.useRef(null),inFlight=React.useRef(false),previewing=React.useRef(new Set()),conversation=React.useRef(conversationId),submitting=React.useRef(false),fingerprint=React.useRef('');
   const route=React.useRef(null);route.current={open,modelId,adapterId};
   const [attemptJobId,setAttemptJobId]=React.useState(null);
@@ -233,6 +240,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
   }
   async function refresh() {
     const lib=await (globalThis.__opencoreModelLibrary?.read?globalThis.__opencoreModelLibrary.read(()=>invoke('list_model_library')):invoke('list_model_library'));
+    setInstallable(installableImageModels(lib.models));
     const available=downloadedImageModels(lib.models);setModels(old=>old.length===available.length&&old.every((model,index)=>model===available[index])?old:available);
     const requested=requestedModel.current||globalThis.__opencoreRequestedImageModel;
     setModelId(id=>requested||id||available[0]?.id||'');
@@ -357,7 +365,13 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
   return h('section',{ref:panel,className:'image-generation-panel','data-image-mode':open?'open':'closed','aria-label':studio?'Image generation':'Chat image generation'},
     !studio?h('div',{className:'image-mode-tabs',role:'group','aria-label':'Chat generation mode'},h('button',{type:'button','aria-pressed':!open,disabled:busy,onClick:()=>clearChatImageSelection({scope:panel.current?.closest('.chat-composer-wrap')||panel.current,primary:!embedded})},'Text'),h('button',{type:'button','aria-pressed':open,disabled:busy,onClick:()=>setOpen(true)},'Images')):null,
     open?h(React.Fragment,null,h('h3',null,studio?'Generate an image':'Generate images in this chat'),
-      models.length?h('label',null,'Downloaded image model',h('select',{'aria-label':'Downloaded image model',value:modelId,disabled:busy,onChange:e=>{setModelId(e.target.value);setAdapterId('');}},...models.map(m=>h('option',{key:m.id,value:m.id},m.label+' · '+m.precision)))):h('p',{role:'status'},'No image models are downloaded. Install an image model in Models to start.'),
+      models.length||installable.length?h('label',null,'Image model',h('select',{'aria-label':'Image model',value:models.some(m=>m.id===modelId)?modelId:'',disabled:busy,onChange:e=>{
+        const value=e.target.value,pick=installable.find(m=>'install:'+m.id===value);
+        if(pick){setError('');invoke('install_model',{id:pick.id}).then(()=>onNotice?.('Installing '+pick.label+'. It appears under Installed when it is ready.')).catch(reason=>setError(String(reason)));return;}
+        setModelId(value);setAdapterId('');}},
+        models.length?null:h('option',{value:'',disabled:true},'Choose a model to install'),
+        models.length?h('optgroup',{label:'Installed'},...models.map(m=>h('option',{key:m.id,value:m.id},m.label+' · '+m.precision))):null,
+        installable.length?h('optgroup',{label:'Install another model'},...installable.map(m=>h('option',{key:m.id,value:'install:'+m.id,disabled:!!m.blocked},m.label+' · '+(m.blocked?'can’t run here':imageGigabytes(m.downloadBytes||m.totalBytes)||'install')))):null)):h('p',{role:'status'},'No image models are available yet. Open Models to add one.'),
       choices.length?h('div',{className:'image-panel-fields'},h('label',null,'LoRA',h('select',{'aria-label':'Image LoRA',value:choices.some(a=>a.id===adapterId)?adapterId:'',disabled:busy,onChange:e=>setAdapterId(e.target.value)},h('option',{value:''},'None'),...choices.map(a=>h('option',{key:a.id,value:a.id},a.familyLabel||a.name||a.repository)))),adapterId?h('label',null,'LoRA strength',h('input',{'aria-label':'Image LoRA strength',type:'number',min:0,max:2,step:0.1,value:strength,disabled:busy,onChange:e=>setStrength(Number(e.target.value))})):null):null,
       h('label',null,'Image prompt',h('textarea',{'aria-label':'Image generation prompt',placeholder:'Describe the image you want…',rows:3,value:prompt,disabled:busy,onChange:e=>setPrompt(e.target.value)})),
       h('div',{className:'image-panel-fields'},h('label',null,'Output size',h('select',{'aria-label':'Image size',value:size,disabled:busy,onChange:e=>setSize(Number(e.target.value))},...IMAGE_SIZE_OPTIONS.map(option=>h('option',{key:option.value,value:option.value},option.label)))),h('label',null,'Steps',h('input',{'aria-label':'Image steps',type:'number',min:1,max:100,value:steps,disabled:busy,onChange:e=>setSteps(Number(e.target.value))})),h('label',null,'Guidance',h('input',{'aria-label':'Image guidance',type:'number',min:0,max:30,step:0.5,value:guidance,disabled:busy,onChange:e=>setGuidance(Number(e.target.value))}))),

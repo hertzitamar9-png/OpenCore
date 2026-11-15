@@ -156,6 +156,13 @@
 .music-studio-start h2{margin:0;font-size:calc(18px * var(--ui-scale,1))}
 .music-studio-start p{color:var(--st-muted)}
 .music-studio>button{align-self:flex-start}
+.music-runtime-progress{display:flex;flex-direction:column;align-items:stretch;gap:8px;width:min(100%,420px);text-align:center}
+.music-runtime-progress progress{width:100%;height:8px;accent-color:var(--st-accent)}
+.music-runtime-progress span{color:var(--st-muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.music-runtime-progress button{align-self:center}
+.music-studio-start p.music-runtime-error{color:var(--st-danger,#c0392b);overflow-wrap:anywhere}
+.music-studio-start p.music-runtime-note{font-size:calc(13px * var(--ui-scale,1))}
+.music-studio-start>button.music-weights-download{background:var(--st-field);color:var(--st-ink);border-color:var(--st-edge);font-weight:500}
 
 /* ---------- two columns on wide windows: work on the left, results on the right ---------- */
 @media (min-width:1180px){
@@ -182,7 +189,9 @@
 .audio-layout{display:grid;grid-template-columns:minmax(220px,270px) minmax(0,1fr);gap:18px;align-items:start}
 .audio-models{padding:8px;position:sticky;top:0}
 .audio-models h2{margin:6px 10px 8px;font-size:calc(11.5px * var(--ui-scale,1));font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--st-muted)}
-.audio-models ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+/* One column that never grows past the list: long names shorten with an ellipsis instead of pushing chips into the card beside it. */
+.audio-models ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
+.audio-models li{min-width:0}
 .audio-studio .audio-models button{width:100%;min-height:46px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border-color:transparent;background:transparent;text-align:left}
 .audio-studio .audio-models button:hover:not(:disabled){background:var(--st-field);border-color:transparent}
 .audio-studio .audio-models button[aria-current=true]{background:var(--st-accent-soft);border-color:var(--st-accent-line)}
@@ -266,7 +275,7 @@
   .audio-layout{grid-template-columns:minmax(0,1fr)}
   .audio-models{position:static;padding:6px}
   .audio-models h2{display:none}
-  .audio-models ul{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+  .audio-models ul{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;grid-template-columns:none}
   .audio-models li{flex:none}
   .audio-studio .audio-models button{width:auto;max-width:240px}
 }
