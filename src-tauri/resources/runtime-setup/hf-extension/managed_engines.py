@@ -125,8 +125,9 @@ def select_engine(engine_id, preference='auto'):
             raise ValueError('No compatible Vulkan GPU was detected. Choose Automatic or CPU instead.')
     elif preference == 'vulkan':
         raise ValueError('This model requires a publisher-specific CPU runtime; Vulkan is not available for it yet.')
-    if engine_id in CUDA_VARIANTS or engine_id in VULKAN_VARIANTS:
-        raise ValueError('Automatic requires a compatible CUDA or Vulkan GPU. The model files are kept. Choose CPU explicitly if you want to run without a GPU.')
+    if preference == 'auto' and (engine_id in CUDA_VARIANTS or engine_id in VULKAN_VARIANTS):
+        # No usable GPU on this PC: Automatic means the CPU build, which always works.
+        return engine_id
     raise ValueError('This checkpoint has a publisher-specific CPU runtime. Choose CPU explicitly or select a checkpoint with GPU support.')
 
 

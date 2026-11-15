@@ -276,12 +276,22 @@ class ImageRuntimeManager:
             self._spawn([_python(self.root),'-I',self.resources/'runtime-setup/setup_manager.py','--root',self.root,
                          '--resources',self.resources,'--target',TARGET,'--recipe-id',RECIPE,'--cancel-file',self.directory/'cancel'],job)
             if not self.dependencies_ready():raise RuntimeError('The managed image tools did not pass verification')
-        engine=hf_sdcpp.ensure_engine(self.root,self.cancelled,lambda message:self._update(job,stage=message))
+        variant=hf_sdcpp.selected_variant(self.root)
+        engine=hf_sdcpp.ensure_engine(self.root,self.cancelled,lambda message:self._update(job,stage=message),variant)
         output=self.directory/job['id'];output.mkdir(exist_ok=False)
         payload={'entry':entry,'request':request,'engine':str(engine)}
         request_file=self.directory/(job['id']+'.json');atomic_json(request_file,payload)
         self._update(job,status='running',stage='Generating with Sakura-Iris · 30-step quality preset')
-        self._spawn([self.python(),'-I',self.resources/'runtime-setup/hf-extension/hf_sdcpp.py','--request',request_file,'--output',output],job,output=output)
+        try:
+            self._spawn([self.python(),'-I',self.resources/'runtime-setup/hf-extension/hf_sdcpp.py','--request',request_file,'--output',output],job,output=output)
+        except Exception as error:
+            # Never switch builds silently: name the alternative so the person can install it.
+            from hardware_profile import fallback_offer
+            offer=None if self.cancelled.is_set() else fallback_offer(variant,hf_sdcpp.VARIANTS)
+            if offer:
+                raise RuntimeError(str(error).rstrip('.')+'. The '+offer['label']+' image runtime may work on this PC: '
+                                   'install it in Settings > Model runtimes > Install another variant.') from error
+            raise
         proof=json.loads((output/'smoke-result.json').read_text(encoding='utf-8'))
         if proof.get('modelId')!=entry['id'] or proof.get('inferenceVerified') is not True:raise RuntimeError('The Iris worker did not verify the generation')
         paths=[str(_inside(item['path'],output)) for item in proof['outputs']]

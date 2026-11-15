@@ -38,7 +38,7 @@ class IrisRuntimeTests(unittest.TestCase):
             archive=folder/'runtime.zip'
             with zipfile.ZipFile(archive,'w') as package:package.writestr('../../outside.exe',b'fixture')
             with patch.object(runtime,'ENGINE_BYTES',archive.stat().st_size),patch.object(runtime,'ENGINE_SHA',runtime.digest(archive)):
-                with self.assertRaises(ValueError):runtime.ensure_engine(root,threading.Event(),lambda message:None)
+                with self.assertRaises(ValueError):runtime.ensure_engine(root,threading.Event(),lambda message:None,'vulkan')
             self.assertFalse((root/'runtime-setup/outside.exe').exists())
 
     def test_output_receipt_points_to_the_real_png_webp_or_jpeg_export(self):

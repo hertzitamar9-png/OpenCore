@@ -142,9 +142,11 @@ class RuntimeSafetyTests(unittest.TestCase):
         self.assertIn('--no-webui', plan['command'])
         self.assertNotIn('--trust-remote-code', plan['command'])
 
-    def test_automatic_tries_the_other_gpu_without_falling_back_to_cpu(self):
+    def test_failed_gpu_build_offers_the_other_build_without_installing_it(self):
+        import hardware_profile
         import managed_engines
-        for preference, expected in [('auto',['lfm3-cuda13-v1','lfm3-vulkan-v1']),('cuda',['lfm3-cuda13-v1'])]:
+        nvidia=hardware_profile.build({'gpus':[{'vendor':'nvidia','name':'RTX'}],'cudaDriver':13040,'computeCapability':[8,9],'vulkan':True})
+        for preference in ('auto','cuda'):
             self.entry['runtimePreference']=preference;calls=[]
             def fail(_root, engine_id, *args):
                 calls.append(engine_id)
@@ -152,9 +154,12 @@ class RuntimeSafetyTests(unittest.TestCase):
             runtime=RuntimeManager(self.root,self.resources)
             with patch('hf_runtime._available_memory',return_value=None), patch('hf_runtime._bundled_cuda_available',return_value=False), \
                  patch.object(managed_engines,'cuda_driver_version',return_value=13040), patch.object(managed_engines,'vulkan_gpu_available',return_value=True), \
-                 patch.object(managed_engines,'ensure',side_effect=fail):
-                with self.assertRaisesRegex(OSError,'Unavailable test runtime'):runtime.prepare(self.entry)
-            self.assertEqual(calls,expected)
+                 patch.object(hardware_profile,'profile',return_value=nvidia), patch.object(managed_engines,'ensure',side_effect=fail):
+                with self.assertRaisesRegex(RuntimeError,'Unavailable test runtime') as caught:runtime.prepare(self.entry)
+            # Only the CUDA build is downloaded; Vulkan is offered, never installed on its own.
+            self.assertEqual(calls,['lfm3-cuda13-v1'])
+            self.assertEqual(caught.exception.fallback['variant'],'vulkan')
+            self.assertIsInstance(caught.exception.__cause__,OSError)
             self.assertTrue(self.path.is_file(), 'Runtime preparation never removes the downloaded checkpoint')
 
     def test_generic_gguf_runtime_reserves_the_full_context_for_one_echo_slot(self):

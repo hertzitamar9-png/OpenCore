@@ -44,8 +44,8 @@ class ManagedEngineTests(unittest.TestCase):
             self.assertEqual(fallback['publisherEngine'],'lfm3-cpu-v1')
             self.assertEqual(fallback['command'][fallback['command'].index('--gpu-layers')+1],'0')
         with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=False):
-            with self.assertRaisesRegex(ValueError,'requires a compatible CUDA or Vulkan GPU'):
-                runtime_plan(entry,self.root,self.root/'resources')
+            # No usable GPU: Automatic runs the CPU build instead of refusing.
+            self.assertEqual(runtime_plan(entry,self.root,self.root/'resources')['publisherEngine'],'lfm3-cpu-v1')
 
     def test_automatic_and_manual_runtime_choices_respect_hardware_and_publisher(self):
         with patch.object(engines,'cuda_driver_version',return_value=13040), patch.object(engines,'vulkan_gpu_available',return_value=True):
@@ -57,8 +57,7 @@ class ManagedEngineTests(unittest.TestCase):
         with patch.object(engines,'cuda_driver_version',return_value=12040), patch.object(engines,'vulkan_gpu_available',return_value=True):
             self.assertEqual(engines.select_engine('flint-cpu-v1','auto'),'flint-cuda12-v1')
         with patch.object(engines,'cuda_driver_version',return_value=0), patch.object(engines,'vulkan_gpu_available',return_value=False):
-            with self.assertRaisesRegex(ValueError,'requires a compatible CUDA or Vulkan GPU'):
-                engines.select_engine('lfm3-cpu-v1','auto')
+            self.assertEqual(engines.select_engine('lfm3-cpu-v1','auto'),'lfm3-cpu-v1')
             with self.assertRaisesRegex(ValueError,'NVIDIA'):
                 engines.select_engine('lfm3-cpu-v1','cuda')
 

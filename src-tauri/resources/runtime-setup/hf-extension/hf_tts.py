@@ -40,6 +40,29 @@ MIN_DURATION_S, MIN_RMS = 0.5, 0.003
 ENV_FREE_BYTES = 15 * 1024 ** 3
 PYTORCH_INDEX = 'https://download.pytorch.org/whl/cu128'
 USER_AGENT = 'OpenCore speech runtime setup'
+# One PyTorch build per variant. The CUDA lock is the reviewed file itself; the
+# CPU variant swaps only the two Torch pins for their hashed CPU wheels.
+RUNTIME_ID = ENVIRONMENT
+TORCH_VARIANTS = {
+    'cuda': {'index': PYTORCH_INDEX, 'freeBytes': ENV_FREE_BYTES, 'summary': 'PyTorch CUDA, about 4 GB', 'pins': {}},
+    'cpu': {'index': 'https://download.pytorch.org/whl/cpu', 'freeBytes': 6 * 1024 ** 3, 'summary': 'PyTorch CPU, about 1 GB',
+            'pins': {'torch': '2.9.1+cpu --hash=sha256:a4e06b4f441675d26b462123c8a83e77c55f1ec8ebc081203be2db1ea8054add',
+                     'torchaudio': '2.9.1+cpu --hash=sha256:53dd3155b794019e8de2dc49d044f410e6bce081d23a0e6548c156f37dfc9d0d'}},
+}
+
+
+def variant_lock(text, variant):
+    """The hashed lock for one PyTorch variant of the speech environment."""
+    spec = TORCH_VARIANTS[variant]
+    lines = []
+    for line in text.replace('\r\n', '\n').split('\n'):
+        name = line.split('==', 1)[0].strip().lower()
+        if name in spec['pins'] and '==' in line:
+            line = name + '==' + spec['pins'][name]
+        elif line.startswith('# Torch wheels come from ') and variant != 'cuda':
+            line = '# Torch wheels come from ' + spec['index'] + '.'
+        lines.append(line)
+    return '\n'.join(lines)
 
 COMPONENTS = {
     's3genMeanflow': {
@@ -270,40 +293,9 @@ def capabilities(entry):
 
 
 def nvidia_gpu():
-    """Read the first NVIDIA GPU through the driver's NVML library, without loading PyTorch."""
-    if os.name != 'nt':
-        return None
-    import ctypes
-
-    class Memory(ctypes.Structure):
-        _fields_ = [('total', ctypes.c_ulonglong), ('free', ctypes.c_ulonglong), ('used', ctypes.c_ulonglong)]
-    # Absolute system paths keep DLL discovery away from model folders and the working directory.
-    for path in (Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32/nvml.dll',
-                 Path(os.environ.get('ProgramFiles', r'C:\Program Files')) / 'NVIDIA Corporation/NVSMI/nvml.dll'):
-        try:
-            library = ctypes.CDLL(str(path))
-            if library.nvmlInit_v2() != 0:
-                continue
-        except (OSError, AttributeError):
-            continue
-        try:
-            device, memory, name = ctypes.c_void_p(), Memory(), ctypes.create_string_buffer(96)
-            major, minor = ctypes.c_int(), ctypes.c_int()
-            if (library.nvmlDeviceGetHandleByIndex_v2(0, ctypes.byref(device))
-                    or library.nvmlDeviceGetName(device, name, 96)
-                    or library.nvmlDeviceGetMemoryInfo(device, ctypes.byref(memory))
-                    or library.nvmlDeviceGetCudaComputeCapability(device, ctypes.byref(major), ctypes.byref(minor))):
-                return None
-            return {'name': name.value.decode('utf-8', 'replace'), 'totalGiB': round(memory.total / 1024 ** 3, 2),
-                    'capability': [major.value, minor.value]}
-        except (OSError, AttributeError):
-            return None
-        finally:
-            try:
-                library.nvmlShutdown()
-            except (OSError, AttributeError):
-                pass
-    return None
+    """Read the first NVIDIA GPU through NVML (shared with every runtime's hardware profile)."""
+    from hardware_profile import nvidia_gpu as read
+    return read()
 
 
 def hardware_fit(runtime, gpu):
@@ -538,8 +530,29 @@ class TtsManager:
     def _receipt_path(self):
         return self.root / 'runtime-setup/receipts/hub-tts-runtime.json'
 
-    def lock_identity(self):
-        return hashlib.sha256(self._lock_file().read_text(encoding='utf-8').replace('\r\n', '\n').encode()).hexdigest()
+    def lock_text(self, variant=None):
+        return variant_lock(self._lock_file().read_text(encoding='utf-8'), variant or self.variant())
+
+    def lock_identity(self, variant=None):
+        return hashlib.sha256(self.lock_text(variant).encode()).hexdigest()
+
+    def installed_variant(self):
+        """The PyTorch variant of the verified environment on disk, if any."""
+        try:
+            receipt = json.loads(self._receipt_path().read_text(encoding='utf-8'))
+            if receipt.get('environment') != ENVIRONMENT or receipt.get('dependenciesVerified') is not True or not self.python().is_file():
+                return None
+            return next((variant for variant in TORCH_VARIANTS if receipt.get('lockSha256') == self.lock_identity(variant)), None)
+        except (OSError, ValueError, TypeError, AttributeError):
+            return None
+
+    def variant(self):
+        """The person's choice, else the verified install, else the best build for this PC."""
+        import hardware_profile
+        saved = hardware_profile.load_choices(self.root).get(RUNTIME_ID)
+        if saved in TORCH_VARIANTS:
+            return saved
+        return self.installed_variant() or hardware_profile.default_variant(tuple(TORCH_VARIANTS))
 
     def worker_identity(self):
         source = self.resources / 'runtime-setup/hf-extension/tts_worker.py'
@@ -600,25 +613,30 @@ class TtsManager:
         with self.setup_lock:
             if self.dependencies_ready():
                 return
+            variant = self.variant()
+            spec = TORCH_VARIANTS[variant]
             free = shutil.disk_usage(self.root).free
-            if free < ENV_FREE_BYTES:
-                raise RuntimeError('The speech runtime needs about 15 GB of free disk space to install')
+            if free < spec['freeBytes']:
+                raise RuntimeError('The speech runtime needs about ' + format(spec['freeBytes'] / 1024 ** 3, '.0f')
+                                   + ' GB of free disk space to install')
             base = self._base_python()
             self._stop_worker()
             self._receipt_path().unlink(missing_ok=True)
             if self.environment.exists():
                 shutil.rmtree(self.environment)
-            lock = self._lock_file()
+            # Only the selected PyTorch build is installed; other variants stay available on request.
+            lock = self.directory / ('speech-lock-' + variant + '.txt')
+            lock.write_text(self.lock_text(variant) + '\n', encoding='utf-8')
             self._run_setup([base, '-I', '-m', 'venv', self.environment], report, 'Creating the isolated speech environment')
             python = self.python()
             build_tools = self.directory / 'build-tools-lock.txt'
             build_tools.write_text(''.join(line + '\n' for line in lock.read_text(encoding='utf-8').splitlines()
                                            if line.lower().startswith('setuptools==')), encoding='utf-8')
             common = [python, '-I', '-m', 'pip', 'install', '--progress-bar', 'off', '--require-hashes', '--no-deps',
-                      '--index-url', 'https://pypi.org/simple', '--extra-index-url', PYTORCH_INDEX]
+                      '--index-url', 'https://pypi.org/simple', '--extra-index-url', spec['index']]
             self._run_setup(common + ['-r', build_tools], report, 'Installing verified build tools')
             self._run_setup(common + ['--no-build-isolation', '-r', lock], report,
-                            'Downloading and installing the speech runtime (PyTorch CUDA, about 4 GB)')
+                            'Downloading and installing the speech runtime (' + spec['summary'] + ')')
             probe = ('import json,importlib.util,torch,torchaudio,transformers,soundfile,librosa,kittenml,voxcpm,qwen_tts,'
                      'langcodes,loguru,torchdiffeq,zyphra_textnorm;'
                      'assert importlib.util.find_spec("dac"),"descript-audio-codec is missing";'
@@ -631,9 +649,10 @@ class TtsManager:
                 raise RuntimeError('The speech runtime failed its import check. ' + result.stderr[-1200:])
             hardware = json.loads(result.stdout.strip().splitlines()[-1])
             atomic_json(self._receipt_path(), {'schema': 1, 'environment': ENVIRONMENT, 'dependenciesVerified': True,
-                                               'lockSha256': self.lock_identity(), 'python': str(python),
-                                               'hardware': hardware, 'verifiedAt': time.time()})
+                                               'lockSha256': self.lock_identity(variant), 'variant': variant,
+                                               'python': str(python), 'hardware': hardware, 'verifiedAt': time.time()})
             build_tools.unlink(missing_ok=True)
+            lock.unlink(missing_ok=True)
 
     # ── pinned components ───────────────────────────────────────────────────
     def component_path(self, name):
@@ -718,7 +737,13 @@ class TtsManager:
     def fit(self, entry):
         if self.gpu is False:
             self.gpu = nvidia_gpu()
-        return hardware_fit(entry['ttsRuntime'], self.gpu) if supports(entry) else None
+        if not supports(entry):
+            return None
+        if self.gpu and self.variant() == 'cpu' and FAMILIES[entry['ttsRuntime']]['hardware']['cpu']:
+            return {'device': 'cpu', 'gpu': self.gpu['name'],
+                    'reason': 'the CPU speech runtime is selected, so it runs on the CPU, which is much slower. '
+                              'Install the CUDA variant in Settings > Model runtimes to use the GPU'}
+        return hardware_fit(entry['ttsRuntime'], self.gpu)
 
     def model_directory(self, entry):
         folder = _inside(entry['localDirectory'], self.root / 'models/hub')

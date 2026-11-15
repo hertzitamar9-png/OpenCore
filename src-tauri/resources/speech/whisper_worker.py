@@ -109,6 +109,8 @@ def transcribe_ct2(model, audio):
 
 
 class CTranslateWhisper:
+    cpu_only = False
+
     def __init__(self, directory, torch, psutil, awake):
         self.directory, self.torch, self.psutil = directory, torch, psutil
         self.minimum_gpu = 4 * 1024**3
@@ -123,16 +125,18 @@ class CTranslateWhisper:
         self.model = None
         self.origin = None
         self.device = "cpu"
-        if awake:
+        # CPU variant (or no usable GPU): run on the processor instead of failing.
+        self.cpu_only = not torch.cuda.is_available()
+        if awake and not self.cpu_only:
             require_cuda(torch, self.minimum_gpu, "Whisper dictation")
-        self.load("cuda" if awake else "cpu")
+        self.load("cuda" if awake and not self.cpu_only else "cpu")
 
     def load(self, device):
         if device == "cpu":
             require_ram(self.psutil, 8 * 1024**3, "full Whisper RAM standby")
         try:
             candidate = self.factory(str(self.directory), device=device,
-                compute_type="float16" if device == "cuda" else "float32",
+                compute_type="float16" if device == "cuda" else "int8" if self.cpu_only else "float32",
                 cpu_threads=2, num_workers=1, local_files_only=True)
         except RuntimeError as error:
             if device == "cuda":
@@ -146,6 +150,8 @@ class CTranslateWhisper:
         self.device = "cuda:0" if device == "cuda" else "cpu"
 
     def activate(self):
+        if self.cpu_only:
+            return 0
         started = time.monotonic()
         require_cuda(self.torch, self.minimum_gpu, "Whisper dictation")
         try:
@@ -165,6 +171,8 @@ class CTranslateWhisper:
         self.device = "cpu"
 
     def transcribe(self, audio):
+        if self.cpu_only:
+            return transcribe_ct2(self.model, audio)
         if self.device != "cuda:0":
             self.activate()
         try:
@@ -175,16 +183,20 @@ class CTranslateWhisper:
 
 
 class TransformersWhisper:
+    cpu_only = False
+
     def __init__(self, directory, torch, psutil, awake):
         from transformers import AutoProcessor, WhisperForConditionalGeneration, pipeline
         config = json.loads((directory / "config.json").read_text(encoding="utf-8"))
         self.minimum_gpu = (2.5 if config.get("decoder_layers") == 4 else 4) * 1024**3
         self.cpu_ram = (4 if config.get("decoder_layers") == 4 else 8) * 1024**3
         self.torch, self.psutil = torch, psutil
+        self.cpu_only = not torch.cuda.is_available()
         require_ram(psutil, self.cpu_ram, "Whisper checkpoint loading")
         processor = AutoProcessor.from_pretrained(str(directory), local_files_only=True)
         self.model = WhisperForConditionalGeneration.from_pretrained(str(directory),
-            local_files_only=True, use_safetensors=True, torch_dtype=torch.float16,
+            local_files_only=True, use_safetensors=True,
+            torch_dtype=torch.float32 if self.cpu_only else torch.float16,
             low_cpu_mem_usage=True)
         self.model.generation_config.language = None
         self.model.generation_config.task = "transcribe"
@@ -196,6 +208,8 @@ class TransformersWhisper:
             self.activate()
 
     def activate(self):
+        if self.cpu_only:
+            return 0
         started = time.monotonic()
         require_cuda(self.torch, self.minimum_gpu, "Whisper dictation")
         try:
@@ -208,12 +222,16 @@ class TransformersWhisper:
         return round((time.monotonic() - started) * 1000)
 
     def sleep(self):
+        if self.cpu_only:
+            return
         self.model.to(device="cpu", dtype=self.torch.float16)
         self.device = "cpu"
         self.recognizer.device = self.torch.device("cpu")
         release_cuda_cache(self.torch)
 
     def transcribe(self, audio):
+        if self.cpu_only:
+            return transcribe_code_switched(self.recognizer, audio)
         if self.device != "cuda:0":
             self.activate()
         try:

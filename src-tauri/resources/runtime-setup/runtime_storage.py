@@ -38,6 +38,33 @@ SAFE_NAME = re.compile(r'[A-Za-z0-9_.-]{1,80}')
 FEATURE_KINDS = {'memory', 'android', 'virtualbox', 'virtualbox-guest'}
 # Generic runtimes prepared for any model of one type (no per-model receipt).
 GENERIC_LABELS = {'tts-speech-v1': 'Speech generation runtime'}
+# Engine builds (llama.cpp, stable-diffusion.cpp and their CUDA libraries) live
+# here. Each is one hardware variant; only builds an installed model uses are kept.
+ENGINE_FOLDERS = ('runtime-setup/engines', 'runtime-setup/runtimes')
+OLD_COPY = re.compile(r'\.(previous|staging)-[0-9a-f]{8,32}$')
+VARIANT_WORDS = {'cuda12': 'CUDA 12', 'cuda13': 'CUDA 13', 'vulkan': 'Vulkan', 'rocm': 'ROCm', 'cpu': 'CPU'}
+
+
+def engine_label(name):
+    """A readable name for an engine folder, such as 'Lfm3 text engine (CUDA 12)'."""
+    old = bool(OLD_COPY.search(name))
+    base = re.sub(r'-v\d+$', '', OLD_COPY.sub('', name))
+    match = re.fullmatch(r'cuda(\d+)-libs', base)
+    if match:
+        label = 'CUDA ' + match[1] + ' libraries'
+    else:
+        parts = base.split('-')
+        variant = next((VARIANT_WORDS[part] for part in parts if part in VARIANT_WORDS), None)
+        family = [part for part in parts if part not in VARIANT_WORDS]
+        if family[:2] == ['iris', 'sdcpp']:
+            label = 'Image engine'
+        else:
+            label = (' '.join(family) or base).capitalize() + ' text engine'
+        # The original Iris folder holds the Vulkan build.
+        variant = variant or ('Vulkan' if family[:2] == ['iris', 'sdcpp'] else None)
+        if variant:
+            label += ' (' + variant + ')'
+    return label + (' - old copy' if old else '')
 
 
 class InUse(RuntimeError):
@@ -169,6 +196,12 @@ def discover(root):
         for child in sorted(speech.glob('*-venv')):
             if child.is_dir() and not _linked_path(child) and SAFE_NAME.fullmatch(child.name):
                 found.append({'id': 'speech:' + child.name, 'kind': 'speech', 'path': child})
+    for relative in ENGINE_FOLDERS:
+        engines = root / relative
+        if engines.is_dir():
+            for child in sorted(engines.iterdir()):
+                if child.is_dir() and not _linked_path(child) and SAFE_NAME.fullmatch(child.name):
+                    found.append({'id': 'engine:' + child.name, 'kind': 'engine', 'path': child})
     return found
 
 
@@ -191,6 +224,8 @@ def _label(runtime, recipe):
         return recipe['label']
     if runtime['id'] in GENERIC_LABELS:
         return GENERIC_LABELS[runtime['id']]
+    if runtime.get('kind') == 'engine':
+        return engine_label(runtime['id'].split(':', 1)[-1])
     name = runtime['id'].split(':', 1)[-1]
     return re.sub(r'[-_]+', ' ', re.sub(r'-v\d+$|-venv$', '', name)).strip().capitalize() or name
 
@@ -269,7 +304,8 @@ def inventory(root, installed=(), demand=None, sizes=True, now=None):
         runtime['users'] |= demand.get(runtime['id'], set())
         recipe = runtime['recipe']
         runtime['feature'] = bool(recipe and recipe['kind'] in FEATURE_KINDS)
-        if runtime['installedUsers'] or runtime['feature'] or not runtime['users']:
+        # Engine builds are always attributable: one no installed model uses is unused.
+        if runtime['installedUsers'] or runtime['feature'] or (not runtime['users'] and runtime['kind'] != 'engine'):
             needed.add(runtime['id'])
     pending = list(needed)
     while pending:
@@ -287,7 +323,7 @@ def inventory(root, installed=(), demand=None, sizes=True, now=None):
             status = 'shared'
         elif runtime['feature']:
             status = 'feature'
-        elif runtime['users']:
+        elif runtime['users'] or runtime['kind'] == 'engine':
             status = 'unused'
         else:
             status = 'unknown'

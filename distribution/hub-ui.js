@@ -426,6 +426,39 @@ function $hubSize(bytes) {
 function $hubErrorText(error) {
   return String(error?.message||error||'The operation failed.').replace(/^Error:\s*/,'');
 }
+function $HubRuntimeVariants() {
+  const h=p.createElement,[data,setData]=p.useState(null),[error,setError]=p.useState(''),[working,setWorking]=p.useState(''),alive=p.useRef(true),running=p.useRef(false);
+  const load=p.useCallback(async()=>{
+    try{const value=await $hubRequest('/runtimes/variants');if(!alive.current)return;
+      const rows=Array.isArray(value?.runtimes)?value.runtimes:[],active=rows.some(row=>row.job?.status==='running');
+      // A finished install changes the runtime list above; ask it to refresh.
+      if(running.current&&!active)window.dispatchEvent(new Event('opencore-runtimes-changed'));
+      running.current=active;setData(value);}
+    catch(e){if(alive.current)setError($hubErrorText(e));}
+  },[]);
+  p.useEffect(()=>{alive.current=true;void load();return()=>{alive.current=false;};},[load]);
+  p.useEffect(()=>{if(!data?.runtimes?.some(row=>row.job?.status==='running'))return;const timer=setTimeout(()=>void load(),2000);return()=>clearTimeout(timer);},[data,load]);
+  async function install(row,alternative){setWorking(row.id+':'+alternative.variant);setError('');
+    try{await $hubRequest('/runtimes/install-variant',{runtime:row.id,variant:alternative.variant});}
+    catch(e){setError($hubErrorText(e));}finally{setWorking('');await load();}}
+  const rows=Array.isArray(data?.runtimes)?data.runtimes:[],hardware=data?.hardware||{};
+  const pc=hardware.gpuName?`this PC (${hardware.gpuName})`:'this PC';
+  return h('section',{className:'hub-runtime-variants','aria-label':'Install another variant'},h('h3',null,'Install another variant'),
+    h('p',null,`OpenCore installs one build of each runtime, chosen for ${pc}: CUDA on NVIDIA GPUs, Vulkan on other GPUs and CPU when there is no GPU. Other builds are downloaded only if you choose them here, for example if the recommended one does not start.`),
+    !data&&!error?h('p',{role:'status'},'Checking this PC…'):null,
+    rows.length?h('ul',{className:'hub-runtime-list'},...rows.map(row=>{const busy=row.job?.status==='running';
+      return h('li',{key:row.id},h('div',{className:'hub-runtime-row'},h('span',{className:'hub-runtime-name'},row.label||row.id)),
+        row.note?h('span',{className:'hub-runtime-detail'},row.note):null,
+        row.job?h('p',{role:row.job.status==='failed'?'alert':'status'},row.job.status==='running'?`Installing ${row.job.variant.toUpperCase()}: ${row.job.stage||'working'}…`:
+          row.job.status==='failed'?`The ${row.job.variant.toUpperCase()} build could not be installed: ${row.job.error}. The previous build is still used.`:`${row.job.variant.toUpperCase()} build installed.`):null,
+        h('ul',{className:'hub-variant-list'},...(row.alternatives||[]).map(alternative=>h('li',{key:alternative.variant},
+          h('span',{className:'hub-runtime-name'},alternative.label,alternative.recommended?' · Recommended':'',alternative.installed?' · Installed':''),
+          h('span',{className:'hub-runtime-detail'},alternative.reason),
+          alternative.installed?null:h('button',{type:'button',disabled:Boolean(working||busy||!alternative.compatible),
+            'aria-label':`Install the ${alternative.label} build of ${row.label||row.id}`,onClick:()=>void install(row,alternative)},
+            working===row.id+':'+alternative.variant?'Starting…':`Install ${alternative.label}`)))));})):null,
+    error?h('p',{role:'alert'},error):null);
+}
 function $HubRuntimes() {
   const h=p.createElement,[data,setData]=p.useState(null),[loadError,setLoadError]=p.useState(''),[error,setError]=p.useState(''),[message,setMessage]=p.useState(''),
     [working,setWorking]=p.useState(''),[confirming,setConfirming]=p.useState(''),alive=p.useRef(true);
@@ -476,6 +509,7 @@ function $HubRuntimes() {
         h('button',{type:'button',disabled,onClick:()=>void remove(row)},working===row.id?'Deleting…':'Delete runtime'),
         h('button',{type:'button',disabled:working===row.id,onClick:()=>setConfirming('')},'Cancel')):
       h('button',{type:'button',disabled,'aria-label':`Delete ${row.label||row.id}`,onClick:()=>{setConfirming(row.id);setMessage('');}},'Delete')))):null,
+    h($HubRuntimeVariants),
     message?h('p',{role:'status'},message):null,error?h('p',{role:'alert'},error):null,
     loadError?h('p',{role:'status'},`The runtime list could not be loaded: ${loadError}`):null);
 }
@@ -710,7 +744,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
       ...entry.runtimeChoices.map(value=>h('option',{key:value,value},({auto:'Automatic · recommended',cuda:runtimeName+' · CUDA (NVIDIA)',vulkan:'llama.cpp · Vulkan GPU',cpu:runtimeName+' · CPU'}[value]||value)))),
       h('small',null,entry.runtimeReady&&entry.runtimePreparation?.runtimeBackend?
         ['Last verified: '+entry.runtimePreparation.runtimeBackend.toUpperCase(),entry.runtimePreparation.gpuOffloadedLayers&&entry.runtimePreparation.gpuOffloadedLayers+' layers on GPU',entry.runtimePreparation.gpuModules&&entry.runtimePreparation.gpuModules+' modules on GPU'].filter(Boolean).join(' · '):
-        entry.runtimeChoices.includes('vulkan')?'Automatic tries CUDA, then Vulkan. Layers that exceed available VRAM use system RAM and the CPU.':
+        entry.runtimeChoices.includes('vulkan')?'Automatic installs only the best build for this PC: CUDA on NVIDIA, Vulkan on other GPUs, CPU without a GPU. Other builds are downloaded only if you pick them here. Layers that exceed available VRAM use system RAM and the CPU.':
         entry.format==='safetensors'?'Automatic uses CUDA and keeps weights that exceed available VRAM in system RAM.':
         entry.runtimeChoices.includes('cuda')?'Requires a compatible NVIDIA GPU and CUDA driver. Layers that exceed VRAM use system RAM and the CPU.':
         'This package has a CPU-only runtime. Select CPU to run it.')):null,

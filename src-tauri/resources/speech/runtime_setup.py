@@ -9,6 +9,36 @@ import uuid
 
 RUNTIME_SCHEMA = 3
 EXECUTION_CONTRACT = 'cuda-kernel-v1'
+# One PyTorch build per variant. Only the selected one is installed.
+CONTRACTS = {'cuda': EXECUTION_CONTRACT, 'cpu': 'cpu-kernel-v1'}
+TORCH_INDEX = {'cuda': 'https://download.pytorch.org/whl/cu124', 'cpu': 'https://download.pytorch.org/whl/cpu'}
+INSTALL_BYTES = {'cuda': 6_000_000_000, 'cpu': 2_000_000_000}
+
+
+def _hardware_profile():
+    shared = Path(__file__).resolve().parents[1] / 'runtime-setup/hf-extension'
+    if str(shared) not in sys.path:
+        sys.path.append(str(shared))
+    import hardware_profile
+    return hardware_profile
+
+
+def selected_variant(data_root, runtime_id, choices=('cuda', 'cpu')):
+    """The variant this PC should use: the person's choice, else CUDA on NVIDIA and CPU otherwise."""
+    if os.environ.get('OPENCORE_SPEECH_VARIANT') in choices:
+        return os.environ['OPENCORE_SPEECH_VARIANT']
+    try:
+        return _hardware_profile().chosen_variant(data_root, runtime_id, choices)
+    except Exception:
+        return choices[0]
+
+
+def cuda_ready():
+    """True when this PC has an NVIDIA GPU with a CUDA 12+ driver (or the profile cannot be read)."""
+    try:
+        return bool(_hardware_profile().profile().get('cuda'))
+    except Exception:
+        return True
 
 
 def environment_signature(python, packages):
@@ -50,17 +80,19 @@ print(hashlib.sha256(json.dumps(sorted(rows)).encode()).hexdigest())
     return None
 
 
-def cached_verification(root, name, packages):
+def cached_verification(root, name, packages, variant='cuda'):
     """Reuse completed evidence only while this managed environment is unchanged."""
     root = Path(root)
     python = root / (name + '-venv') / 'Scripts/python.exe'
     try:
         receipt = json.loads((root / (name + '-runtime.json')).read_text(encoding='utf-8'))
         hardware = receipt.get('hardware') or {}
+        gpu_ready = variant != 'cuda' or (hardware.get('cudaBuild') and hardware.get('cudaAvailable') is True)
         if (not python.is_file() or receipt.get('schema') != RUNTIME_SCHEMA or
-                receipt.get('executionContract') != EXECUTION_CONTRACT or not receipt.get('dependenciesVerified') or
+                receipt.get('executionContract') != CONTRACTS[variant] or not receipt.get('dependenciesVerified') or
+                receipt.get('variant', 'cuda') != variant or
                 receipt.get('python') != str(python.resolve()) or not receipt.get('environmentSignature') or
-                not hardware.get('cudaBuild') or hardware.get('cudaAvailable') is not True or hardware.get('kernelVerified') is not True or
+                not gpu_ready or hardware.get('kernelVerified') is not True or
                 any(receipt.get('packages', {}).get(key, '').split('+')[0] != value for key, value in packages.items())):
             return None
         return receipt if environment_signature(python, packages) == receipt['environmentSignature'] else None
@@ -68,8 +100,10 @@ def cached_verification(root, name, packages):
         return None
 
 
-def verify(python, packages, imports):
-    """Verify versions/imports and a small CUDA kernel before claiming readiness."""
+def verify(python, packages, imports, variant='cuda'):
+    """Verify versions/imports and a small kernel on the selected device before claiming readiness."""
+    if variant == 'cpu':
+        return verify_cpu(python, packages, imports)
     code = '''import importlib,importlib.metadata,json,sys
 packages,imports=json.loads(sys.argv[1])
 versions={}
@@ -104,6 +138,36 @@ print(json.dumps({'packages':versions,'hardware':hardware}))
     return verification
 
 
+def verify_cpu(python, packages, imports):
+    """CPU variant: the same package checks, with the kernel check run on the processor."""
+    code = '''import importlib,importlib.metadata,json,sys
+packages,imports=json.loads(sys.argv[1])
+versions={}
+for name,want in packages.items():
+    actual=importlib.metadata.version(name)
+    if actual.split('+')[0]!=want: raise RuntimeError(f'{name} version {actual} does not match {want}')
+    versions[name]=actual
+for name,attributes in imports.items():
+    module=importlib.import_module(name)
+    for attribute in attributes: getattr(module,attribute)
+import torch
+if tuple(map(int,torch.__version__.split('+')[0].split('.')[:2]))<(2,5): raise RuntimeError('Speech requires PyTorch 2.5 or newer')
+tensor=torch.ones((8,8),dtype=torch.float32)
+if (tensor@tensor).sum().item()!=512: raise RuntimeError('CPU kernel verification failed')
+hardware={'torch':torch.__version__,'cudaBuild':torch.version.cuda,'cudaAvailable':bool(torch.version.cuda and torch.cuda.is_available()),'kernelVerified':True,'device':'cpu'}
+print(json.dumps({'packages':versions,'hardware':hardware}))
+'''
+    result = subprocess.run([str(python), '-I', '-c', code, json.dumps([packages, imports])], capture_output=True, text=True, timeout=120)
+    if result.returncode:
+        raise RuntimeError(result.stderr.strip()[-4000:] or 'Speech dependency verification failed')
+    verification = json.loads(result.stdout.strip().splitlines()[-1])
+    if (verification.get('hardware') or {}).get('kernelVerified') is not True:
+        raise RuntimeError('Speech dependency verification returned no kernel evidence')
+    if any(verification.get('packages', {}).get(name, '').split('+')[0] != want for name, want in packages.items()):
+        raise RuntimeError('Speech dependency verification returned mismatched package versions')
+    return verification
+
+
 def receipt_shared_cuda_runtime(path):
     """Retain external Torch paths when refreshing verified dependency evidence."""
     try:
@@ -112,15 +176,15 @@ def receipt_shared_cuda_runtime(path):
         return None
 
 
-def write_receipt(path, verification, **details):
-    receipt = {'schema': RUNTIME_SCHEMA, 'executionContract': EXECUTION_CONTRACT,
+def write_receipt(path, verification, variant='cuda', **details):
+    receipt = {'schema': RUNTIME_SCHEMA, 'executionContract': CONTRACTS[variant], 'variant': variant,
                'dependenciesVerified': True, 'inferenceVerified': False, **details, **verification}
     temporary = path.with_suffix('.json.partial')
     temporary.write_text(json.dumps(receipt), encoding='utf-8')
     temporary.replace(path)
 
 
-def probe(python):
+def probe(python, variant='cuda'):
     try:
         result = subprocess.run([str(python), '-c',
             'import ctypes,json,sys,site,struct,torch; from pathlib import Path; '
@@ -131,7 +195,8 @@ def probe(python):
         if not result.returncode:
             info = json.loads(result.stdout.strip().splitlines()[-1])
             major, minor = map(int,info['version'].split('+')[0].split('.')[:2])
-            if (major,minor) >= (2,5) and info['cuda']:
+            # CPU speech runs on any PyTorch build; CUDA speech needs a CUDA build.
+            if (major,minor) >= (2,5) and (info['cuda'] or variant == 'cpu'):
                 return info
     except (OSError,ValueError,subprocess.TimeoutExpired):
         pass
@@ -209,14 +274,14 @@ def quarantine_managed_torch(own, environment):
             entry.rename(quarantine / entry.name)
 
 
-def prepare(root, name, packages, imports=None):
+def prepare(root, name, packages, imports=None, variant='cuda'):
     root = Path(root)
     environment = root / name
     target = root / name / 'Scripts/python.exe'
-    effective = probe(target) if target.is_file() else None
+    effective = probe(target, variant) if target.is_file() else None
     shared = effective if effective and effective.get('torchSite') and not Path(effective['torchSite']).is_relative_to(environment.resolve()) else None
     if not effective:
-        shared = next((info for candidate in python_candidates(root) if candidate and (info:=probe(candidate))),None)
+        shared = next((info for candidate in python_candidates(root) if candidate and (info:=probe(candidate, variant))),None)
     if not target.is_file():
         base = shared['base'] if shared else sys.executable
         subprocess.run([base,'-c','import ctypes,tempfile; d=tempfile.TemporaryDirectory(); d.cleanup()'],check=True)
@@ -226,14 +291,17 @@ def prepare(root, name, packages, imports=None):
         quarantine_managed_torch(own, environment)
         # Append shared paths so selected local Transformers and other pins retain precedence.
         (own/'opencore_torch_shared.pth').write_text('\n'.join(shared['sites'])+'\n',encoding='utf-8')
-        effective = probe(target)
+        effective = probe(target, variant)
     if not effective:
-        if shutil.disk_usage(root).free < 6_000_000_000 + 64 * 1024 * 1024:
-            raise RuntimeError('Not enough disk space: CUDA speech runtime installation needs about 6 GB of temporary and installed package space.')
+        label = 'CUDA' if variant == 'cuda' else 'CPU'
+        if shutil.disk_usage(root).free < INSTALL_BYTES[variant] + 64 * 1024 * 1024:
+            raise RuntimeError('Not enough disk space: ' + label + ' speech runtime installation needs about '
+                               + str(INSTALL_BYTES[variant] // 1_000_000_000)
+                               + ' GB of temporary and installed package space.')
         subprocess.run([str(target),'-m','pip','install','--disable-pip-version-check','--no-cache-dir',
-            '--force-reinstall','--ignore-installed', '--index-url','https://download.pytorch.org/whl/cu124','torch==2.5.1'],check=True)
-        if not probe(target):
-            raise RuntimeError('The managed speech runtime still cannot import CUDA PyTorch after repair')
+            '--force-reinstall','--ignore-installed', '--index-url',TORCH_INDEX[variant],'torch==2.5.1'],check=True)
+        if not probe(target, variant):
+            raise RuntimeError('The managed speech runtime still cannot import ' + label + ' PyTorch after repair')
         shared = None
     failed = probe_packages(target, packages, imports)
     if failed:

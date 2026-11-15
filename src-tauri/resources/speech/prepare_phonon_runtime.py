@@ -75,7 +75,11 @@ def main():
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0,
             stdout=sys.stdout, stderr=sys.stderr)
         return
-    from runtime_setup import prepare, verify, write_receipt, receipt_shared_cuda_runtime, cached_verification, environment_signature
+    from runtime_setup import prepare, verify, write_receipt, receipt_shared_cuda_runtime, cached_verification, environment_signature, cuda_ready
+    if not args.verify_only and not cuda_ready():
+        # Phonon-2 has no CPU build; never download a 6 GB CUDA runtime that cannot start here.
+        raise SystemExit('Phonon-2 needs an NVIDIA GPU with a CUDA 12 or newer driver. '
+                         'Use Whisper for dictation on this PC; it has a CPU variant.')
     if not args.verify_only and cached_verification(root, 'phonon', PACKAGES):
         print('Phonon-2 verified speech runtime reused.', flush=True)
         return

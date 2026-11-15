@@ -42,6 +42,33 @@ from model_modes import apply_operating_modes, supports_text_generation, mode_co
 from hf_download_queue import DownloadQueue
 from hf_speech import SpeechManager, supports as supports_speech
 from hf_tts import TtsManager, supports as supports_tts
+import hardware_profile
+
+
+def _engine_demand(entry, preparations, root):
+    """Engine build folders an installed model needs, as runtime inventory ids."""
+    needs = set()
+    for item in preparations:
+        engine = item.get('engineId') if isinstance(item, dict) else None
+        if isinstance(engine, str) and re.fullmatch(r'[a-z0-9.-]{1,64}', engine):
+            needs.add('engine:' + engine)
+            if item.get('runtimeBackend') == 'cuda':
+                needs.add('engine:cuda' + ('13' if '-cuda13-' in engine else '12') + '-libs-v1')
+    try:
+        import hf_sdcpp
+        if hf_sdcpp.supports(entry):
+            needs.add('engine:' + hf_sdcpp.ENGINE_VARIANTS[hf_sdcpp.selected_variant(root)]['folder'])
+    except Exception:
+        pass
+    return needs
+
+
+def _has_gpu():
+    """True when this PC has a GPU an engine can use (CUDA or Vulkan)."""
+    try:
+        return hardware_profile.profile().get('best') != 'cpu'
+    except Exception:
+        return True
 from hf_runtime import ModelLoadError
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
@@ -110,6 +137,7 @@ class BridgeState:
         self._seed_publisher_catalog()
         self.speech = SpeechManager(self.root, self.resources, lambda identity: self.entry(identity, installed=True))
         self.tts = TtsManager(self.root, self.resources)
+        self.variant_jobs = {}
         try:
             saved = _read_json(self.job_path, 1024 * 1024)
             if isinstance(saved, dict) and isinstance(saved.get("progress"), dict):
@@ -656,7 +684,8 @@ class BridgeState:
                 result['runtimePreference'] = 'auto'
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
         if (entry.get('format') == 'gguf' and entry.get('runtimePreference', 'auto') == 'auto'
-                and preparation.get('runtimeBackend') == 'cpu'):
+                and preparation.get('runtimeBackend') == 'cpu' and _has_gpu()):
+            # On a PC with a GPU, Automatic must not stay on a CPU build; without one, CPU is the right build.
             result['runtimeReady'] = False
         if (entry.get('format') == 'safetensors' and entry.get('runtime', {}).get('adapter') == 'transformers'
                 and result['runtimePreference'] != 'cpu' and not preparation.get('gpuModules')):
@@ -1184,6 +1213,7 @@ class BridgeState:
                 pass
             preparations = [entry.get('runtimePreparation'), *((entry.get('runtimePreparations') or {}).values())]
             needs.update(item['recipe'] for item in preparations if isinstance(item, dict) and isinstance(item.get('recipe'), str))
+            needs.update(_engine_demand(entry, preparations, self.root))
             for runtime_id in needs:
                 demand.setdefault(runtime_id, set()).add(model_id)
         installed |= self._runtime_storage().installed_native_models(self.root)
@@ -1278,6 +1308,113 @@ class BridgeState:
         if result['removed']:
             self._purge_runtime_trash()
         return result
+
+    # ── Runtime variants: one build per PC by default, others on request ──────
+
+    def _variant_families(self):
+        """Runtimes that come in hardware variants: id, label, choices, installed, note."""
+        import hf_sdcpp
+        from hf_tts import TORCH_VARIANTS, RUNTIME_ID as TTS_ID
+        whisper = None
+        try:
+            receipt = json.loads((self.root / 'speech/whisper-runtime.json').read_text(encoding='utf-8'))
+            whisper = receipt.get('variant', 'cuda') if receipt.get('dependenciesVerified') else None
+        except (OSError, ValueError, AttributeError):
+            pass
+        engines = self.root / 'runtime-setup/engines'
+        text_installed = sorted({variant for variant, marker in (('cuda', '-cuda1'), ('vulkan', '-vulkan-'), ('cpu', '-cpu-'))
+                                 if engines.is_dir() and any(marker in child.name and '.' not in child.name
+                                                             for child in engines.iterdir() if child.is_dir())})
+        installed_tts = self.tts.installed_variant()
+        return [
+            {'id': 'text-gguf-v1', 'label': 'Text model engines (GGUF)', 'choices': ['cuda', 'vulkan', 'cpu'],
+             'installed': text_installed,
+             'note': 'Each text model uses Automatic unless you pick a runtime on its card. Installing here downloads '
+                     'that build for your installed text models so switching is instant.'},
+            {'id': hf_sdcpp.RUNTIME_ID, 'label': 'Image engine (Sakura-Iris)', 'choices': list(hf_sdcpp.VARIANTS),
+             'installed': hf_sdcpp.installed_variants(self.root),
+             'note': 'Image generation uses the build you install here.'},
+            {'id': TTS_ID, 'label': 'Text to speech runtime', 'choices': list(TORCH_VARIANTS),
+             'installed': [installed_tts] if installed_tts else [],
+             'note': 'Only one PyTorch build is kept; installing another replaces it.'},
+            {'id': 'speech-whisper-v1', 'label': 'Dictation runtime (Whisper)', 'choices': ['cuda', 'cpu'],
+             'installed': [whisper] if whisper else [],
+             'note': 'The new build is prepared the next time you use dictation.'},
+        ]
+
+    def runtime_variants(self):
+        import hardware_profile
+        hardware = hardware_profile.profile()
+        choices = hardware_profile.load_choices(self.root)
+        rows = []
+        for family in self._variant_families():
+            rows.append({**family, 'selected': choices.get(family['id']),
+                         'alternatives': hardware_profile.alternatives(family['choices'], hardware, family['installed']),
+                         'job': copy.deepcopy(self.variant_jobs.get(family['id']))})
+        return {'schema': 1, 'hardware': hardware_profile.public(hardware), 'runtimes': rows}
+
+    def install_variant(self, body):
+        import hardware_profile
+        runtime_id, variant = body.get('runtime'), body.get('variant')
+        family = next((item for item in self._variant_families() if item['id'] == runtime_id), None)
+        if family is None:
+            raise ValueError('Choose a runtime from the list')
+        if variant not in family['choices']:
+            raise ValueError('This runtime has no such variant')
+        if not hardware_profile.compatible(variant, hardware_profile.profile()):
+            raise ValueError('This PC cannot run the ' + hardware_profile.LABELS[variant] + ' build')
+        with self.lock:
+            busy = self._runtime_busy()
+            if busy:
+                raise ValueError(busy)
+            job = self.variant_jobs.get(runtime_id)
+            if job and job.get('status') == 'running':
+                raise ValueError('This runtime is already being installed')
+            self.variant_jobs[runtime_id] = {'variant': variant, 'status': 'running', 'stage': 'Starting', 'error': None}
+        job = self.variant_jobs[runtime_id]
+
+        def report(*values, **named):
+            detail = named.get('detail') or (values[0] if values else '')
+            if isinstance(detail, dict):
+                detail = detail.get('detail') or detail.get('stage') or ''
+            job['stage'] = str(detail)[:300] or job['stage']
+
+        def work():
+            try:
+                hardware_profile.save_choice(self.root, runtime_id, variant)
+                if runtime_id == 'text-gguf-v1':
+                    self._install_text_variant(variant, report)
+                elif runtime_id == 'speech-whisper-v1':
+                    # The native setup prepares dictation; dropping the receipt makes it use the new build.
+                    (self.root / 'speech/whisper-runtime.json').unlink(missing_ok=True)
+                elif runtime_id == 'tts-speech-v1':
+                    self.tts.ensure_environment(report)
+                else:
+                    import hf_sdcpp
+                    hf_sdcpp.ensure_engine(self.root, threading.Event(), report, variant)
+                job.update(status='completed', stage='Installed')
+            except Exception as error:  # Reported to the interface; the previous build stays usable.
+                job.update(status='failed', error=str(error)[:600])
+        threading.Thread(target=work, daemon=True, name='runtime-variant').start()
+        return {'schema': 1, 'runtime': runtime_id, 'job': copy.deepcopy(job)}
+
+    def _install_text_variant(self, variant, report):
+        from managed_engines import CUDA_VARIANTS, VULKAN_VARIANTS, cuda_driver_version, engine_for, ensure
+        families = set()
+        for entry in list(self.entries.values()):
+            if entry.get('format') == 'gguf' and entry.get('installable') and self._receipt(entry):
+                families.add(engine_for(entry) or 'lfm3-cpu-v1')
+        families &= set(CUDA_VARIANTS) | set(VULKAN_VARIANTS)
+        if not families:
+            raise RuntimeError('Install a GGUF text model first; its engine is downloaded for the runtime you choose.')
+        version = 13 if cuda_driver_version() >= 13000 else 12
+        for family in sorted(families):
+            engine = (CUDA_VARIANTS[family].get(version) if variant == 'cuda' else
+                      VULKAN_VARIANTS.get(family) if variant == 'vulkan' else family)
+            if engine:
+                ensure(self.root, engine, report)
+                if variant == 'cuda':
+                    ensure(self.root, 'cuda' + str(version) + '-libs-v1', report)
 
     def close(self):
         if self.runtime_cleanup and self.runtime_cleanup is not threading.current_thread():
@@ -1468,6 +1605,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, {"catalog": state.catalog()})
             elif route == '/runtimes':
                 self._send(200, state.runtime_inventory())
+            elif route == '/runtimes/variants':
+                self._send(200, state.runtime_variants())
             elif route in ('/download-queue', '/download-queue/snapshot'):
                 self._send(200, state.download_queue.snapshot())
             elif route == "/token":
@@ -1748,6 +1887,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200,state.remove_runtime(body.get('id')))
         elif route == '/runtimes/prune':
             self._send(200,state.prune_runtimes(body.get('modelId')))
+        elif route == '/runtimes/install-variant':
+            self._send(200,state.install_variant(body))
         elif route == '/generation/settings':
             self._send(200,state.generation_settings(body))
         elif route in ("/context", "/context/release"):

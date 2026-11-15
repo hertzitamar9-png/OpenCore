@@ -84,6 +84,32 @@ class InventoryTests(unittest.TestCase):
         self.assertGreater(rows['moss-comfy-convrot-v1']['bytes'], 1000)
         self.assertFalse(rows['moss-comfy-convrot-v1']['recentlyChanged'])
 
+    def test_engine_builds_are_listed_and_unused_without_demand(self):
+        for relative in ('runtime-setup/engines/lfm3-cuda12-v1', 'runtime-setup/engines/cuda12-libs-v1',
+                         'runtime-setup/engines/lfm3-vulkan-v1.previous-0123abcd',
+                         'runtime-setup/runtimes/iris-sdcpp-v1', 'runtime-setup/runtimes/iris-sdcpp-cuda12-v1'):
+            folder = self.root / relative
+            folder.mkdir(parents=True)
+            (folder / 'engine.bin').write_bytes(b'x' * 100)
+        rows = by_id(storage.inventory(self.root, demand={'engine:lfm3-cuda12-v1': {'hf-text'},
+                                                          'engine:cuda12-libs-v1': {'hf-text'},
+                                                          'engine:iris-sdcpp-cuda12-v1': {'hf-image'}},
+                                       installed={'hf-text', 'hf-image'}, now=LATER))
+        self.assertEqual(rows['engine:lfm3-cuda12-v1']['status'], 'in-use')
+        self.assertEqual(rows['engine:lfm3-cuda12-v1']['label'], 'Lfm3 text engine (CUDA 12)')
+        self.assertEqual(rows['engine:cuda12-libs-v1']['label'], 'CUDA 12 libraries')
+        self.assertEqual(rows['engine:iris-sdcpp-cuda12-v1']['status'], 'in-use')
+        self.assertEqual(rows['engine:iris-sdcpp-v1']['label'], 'Image engine (Vulkan)')
+        self.assertEqual(rows['engine:iris-sdcpp-v1']['status'], 'unused')
+        old = rows['engine:lfm3-vulkan-v1.previous-0123abcd']
+        self.assertEqual(old['status'], 'unused')
+        self.assertTrue(old['label'].endswith(' - old copy'))
+
+    def test_engine_labels(self):
+        self.assertEqual(storage.engine_label('lfm3-cpu-v1'), 'Lfm3 text engine (CPU)')
+        self.assertEqual(storage.engine_label('iris-sdcpp-rocm-v1'), 'Image engine (ROCm)')
+        self.assertEqual(storage.engine_label('cuda13-libs-v1'), 'CUDA 13 libraries')
+
     def test_receipts_attribute_runtimes_without_recipe_models(self):
         environment = make_env(self.root, 'managed-transformers-text-cuda-v1')
         receipt(self.root, 'hf-abc', environment)

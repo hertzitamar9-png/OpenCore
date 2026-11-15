@@ -21,6 +21,36 @@ QUANTS={'Q4_K_M':('Sakura-Iris-3B-Q4_K_M-3.14GiB.gguf','a65ca4a773ca9433166d1a3b
 ENGINE_URL='https://github.com/leejet/stable-diffusion.cpp/releases/download/master-956-1b0ba10/sd-master-1b0ba10-bin-win-vulkan-x64.zip'
 ENGINE_BYTES=30123908
 ENGINE_SHA='9e8b9baff514fe5dfb77e51bf08d85f11e6f10128eac14d4474c87f563309725'
+RUNTIME_ID='image-sdcpp-v1'
+RELEASE='https://github.com/leejet/stable-diffusion.cpp/releases/download/master-956-1b0ba10/'
+# One build per variant from the same reviewed release. Only the selected build is downloaded;
+# the others are offered in Settings > Model runtimes. Vulkan keeps its original folder.
+ENGINE_VARIANTS={
+    'cuda':{'folder':'iris-sdcpp-cuda12-v1','label':'CUDA','limit':1300*1024**2,'archives':[
+        (RELEASE+'sd-master-1b0ba10-bin-win-cuda12-x64.zip',337974452,'144b9631bf2eeb9bf6bf7f148cf40aaf05739ce7c49d3ac0ec2ddf6b65765d69'),
+        (RELEASE+'cudart-sd-bin-win-cu12-x64.zip',563452046,'fe20366827d357c00797eebb58244dddab7fd9a348d70090c3871004c320f38d')]},
+    'vulkan':{'folder':'iris-sdcpp-v1','label':'Vulkan','limit':256*1024**2,'archives':None},
+    'rocm':{'folder':'iris-sdcpp-rocm-v1','label':'ROCm','limit':1300*1024**2,'archives':[
+        (RELEASE+'sd-master-1b0ba10-bin-win-rocm-10.1.0-x64.zip',258996065,'08a58109d60b4dc28bff8a5bee4e09c75210b4c58fd77893bec1d5df1f8a2fc1')]},
+    'cpu':{'folder':'iris-sdcpp-cpu-v1','label':'CPU','limit':128*1024**2,'archives':[
+        (RELEASE+'sd-master-1b0ba10-bin-win-cpu-x64.zip',17543461,'39c2ea1cc03f697864c858ad0b22b9b8ce62f945ba428e8596a814527e6db6fb')]},
+}
+VARIANTS=('cuda','vulkan','rocm','cpu')
+
+def archives(variant):
+    spec=ENGINE_VARIANTS[variant]
+    # Vulkan reads the module pins at call time so existing installs and tests keep their identity.
+    return spec['archives'] or [(ENGINE_URL,ENGINE_BYTES,ENGINE_SHA)]
+
+def selected_variant(root):
+    from hardware_profile import chosen_variant
+    return chosen_variant(root,RUNTIME_ID,VARIANTS)
+
+def engine_folder(root,variant):
+    return Path(root)/'runtime-setup/runtimes'/ENGINE_VARIANTS[variant]['folder']
+
+def installed_variants(root):
+    return [variant for variant in VARIANTS if (engine_folder(root,variant)/'verified-files.json').is_file()]
 
 def digest(path):
     with Path(path).open('rb') as file:return hashlib.file_digest(file,'sha256').hexdigest()
@@ -43,7 +73,7 @@ def plan_variants(metadata):
             'files':pins,'bytes':sum(pin['bytes'] for pin in pins),'installable':True,'status':'not-installed','sourceUrl':'https://huggingface.co/'+REPOSITORY,
             'private':False,'gated':False,'modelType':'iris','architectures':[],'imageRuntime':'iris-sdcpp-v1',
             'imageDefaults':{'width':1024,'height':1024,'steps':30,'guidance':3},'catalogOrder':0 if quant=='Q8_0' else 1,
-            'runtime':{'adapter':'sdcpp-iris','available':False,'inferenceVerified':False,'reason':'Pinned Vulkan engine and text encoder; actual image generation is verified after installation.'}})
+            'runtime':{'adapter':'sdcpp-iris','available':False,'inferenceVerified':False,'reason':'Pinned engine (CUDA on NVIDIA, Vulkan on other GPUs, CPU otherwise) and text encoder; actual image generation is verified after installation.'}})
     return result
 
 def model_paths(entry):
@@ -60,43 +90,58 @@ def model_paths(entry):
         paths.append(path)
     return paths
 
-def ensure_engine(root,cancel,progress):
-    folder=Path(root)/'runtime-setup/runtimes/iris-sdcpp-v1'
+def _identity(variant):
+    pins=archives(variant)
+    return pins[0][2] if len(pins)==1 else hashlib.sha256('+'.join(pin[2] for pin in pins).encode()).hexdigest()
+
+def ensure_engine(root,cancel,progress,variant=None):
+    variant=variant or selected_variant(root)
+    if variant not in ENGINE_VARIANTS:raise ValueError('Unknown image runtime variant.')
+    spec=ENGINE_VARIANTS[variant];pins=archives(variant);identity=_identity(variant)
+    folder=engine_folder(root,variant)
     folder.mkdir(parents=True,exist_ok=True)
-    archive=folder/'runtime.zip'
     manifest=folder/'verified-files.json'
     try:
         receipt=json.loads(manifest.read_text())
-        if receipt['archiveSha256']==ENGINE_SHA and all((folder/name).resolve().is_relative_to(folder.resolve()) and digest(folder/name)==sha for name,sha in receipt['files'].items()) and 'sd-cli.exe' in receipt['files']:
+        if receipt['archiveSha256']==identity and all((folder/name).resolve().is_relative_to(folder.resolve()) and digest(folder/name)==sha for name,sha in receipt['files'].items()) and 'sd-cli.exe' in receipt['files']:
             return folder/'sd-cli.exe'
     except (OSError,ValueError,KeyError,TypeError):pass
-    if not archive.is_file() or archive.stat().st_size!=ENGINE_BYTES or digest(archive)!=ENGINE_SHA:
-        partial=folder/'runtime.zip.download'
-        size=0;hasher=hashlib.sha256()
-        try:
-            with urllib.request.urlopen(ENGINE_URL,timeout=45) as response,partial.open('wb') as output:
-                while chunk:=response.read(65536):
-                    if cancel.is_set():raise RuntimeError('Image runtime preparation cancelled.')
-                    size+=len(chunk)
-                    if size>ENGINE_BYTES:raise ValueError('Image runtime archive exceeds its verified size.')
-                    output.write(chunk);hasher.update(chunk)
-                    progress('Downloading the Iris image runtime · '+str(round(100*size/ENGINE_BYTES))+'%')
-            if size!=ENGINE_BYTES or hasher.hexdigest()!=ENGINE_SHA:raise ValueError('Iris runtime checksum differs from its pinned release.')
-            partial.replace(archive)
-        finally:partial.unlink(missing_ok=True)
+    needed=sum(size for _url,size,_sha in pins)+spec['limit']+512*1024**2
+    if shutil.disk_usage(folder).free<needed:
+        raise RuntimeError('The '+spec['label']+' image runtime needs about '+str(round(needed/1024**3,1))+' GB of free disk space.')
     files={};total=0
-    with zipfile.ZipFile(archive) as package:
-        for item in package.infolist():
-            if cancel.is_set():raise RuntimeError('Image runtime preparation cancelled.')
-            target=(folder/item.filename).resolve();total+=item.file_size
-            if not target.is_relative_to(folder.resolve()) or '\\' in item.filename or ':' in item.filename or (item.external_attr>>16)&0o170000==0o120000 or total>256*1024**2:
-                raise ValueError('Unsafe or oversized image runtime archive.')
-            if item.is_dir():target.mkdir(parents=True,exist_ok=True);continue
-            target.parent.mkdir(parents=True,exist_ok=True)
-            with package.open(item) as source,target.open('wb') as output:shutil.copyfileobj(source,output)
-            files[item.filename]=digest(target)
+    for index,(url,size_pin,sha_pin) in enumerate(pins):
+        archive=folder/('runtime.zip' if index==0 else 'runtime-'+str(index)+'.zip')
+        if not archive.is_file() or archive.stat().st_size!=size_pin or digest(archive)!=sha_pin:
+            partial=archive.with_name(archive.name+'.download')
+            size=0;hasher=hashlib.sha256()
+            try:
+                with urllib.request.urlopen(url,timeout=45) as response,partial.open('wb') as output:
+                    while chunk:=response.read(65536):
+                        if cancel.is_set():raise RuntimeError('Image runtime preparation cancelled.')
+                        size+=len(chunk)
+                        if size>size_pin:raise ValueError('Image runtime archive exceeds its verified size.')
+                        output.write(chunk);hasher.update(chunk)
+                        progress('Downloading the '+spec['label']+' image runtime · '+str(round(100*size/size_pin))+'%'
+                                 +(' (part '+str(index+1)+' of '+str(len(pins))+')' if len(pins)>1 else ''))
+                if size!=size_pin or hasher.hexdigest()!=sha_pin:raise ValueError('Iris runtime checksum differs from its pinned release.')
+                partial.replace(archive)
+            finally:partial.unlink(missing_ok=True)
+        with zipfile.ZipFile(archive) as package:
+            for item in package.infolist():
+                if cancel.is_set():raise RuntimeError('Image runtime preparation cancelled.')
+                target=(folder/item.filename).resolve();total+=item.file_size
+                if not target.is_relative_to(folder.resolve()) or '\\' in item.filename or ':' in item.filename or (item.external_attr>>16)&0o170000==0o120000 or total>spec['limit']:
+                    raise ValueError('Unsafe or oversized image runtime archive.')
+                if item.is_dir():target.mkdir(parents=True,exist_ok=True);continue
+                target.parent.mkdir(parents=True,exist_ok=True)
+                with package.open(item) as source,target.open('wb') as output:shutil.copyfileobj(source,output)
+                files[item.filename]=digest(target)
     if 'sd-cli.exe' not in files:raise ValueError('The reviewed runtime does not contain sd-cli.exe.')
-    manifest.write_text(json.dumps({'archiveSha256':ENGINE_SHA,'files':files},indent=2),encoding='utf-8')
+    manifest.write_text(json.dumps({'archiveSha256':identity,'variant':variant,'files':files},indent=2),encoding='utf-8')
+    # The extracted files are verified by the manifest; the archives would only double the disk use.
+    for index in range(len(pins)):
+        (folder/('runtime.zip' if index==0 else 'runtime-'+str(index)+'.zip')).unlink(missing_ok=True)
     return folder/'sd-cli.exe'
 
 def command(entry,request,output,engine):

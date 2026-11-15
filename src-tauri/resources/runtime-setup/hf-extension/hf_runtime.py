@@ -590,10 +590,15 @@ class RuntimeManager:
             if plan.get('bundledCuda') and cuda_driver_version() >= 12000:
                 self._report_progress(stage='loading-model', detail='Trying the managed CUDA runtime for this checkpoint.')
                 return self._prepare(entry, backend_override='managed-cuda')
-            if (preference == 'auto' and plan.get('runtimeBackend') == 'cuda'
-                    and plan.get('engineFamily') in VULKAN_VARIANTS and vulkan_gpu_available()):
-                self._report_progress(stage='loading-model', detail='CUDA could not start the model. Trying Vulkan GPU.')
-                return self._prepare(entry, backend_override='vulkan')
+            if plan.get('runtimeBackend') in ('cuda', 'vulkan') and plan.get('engineFamily') in VULKAN_VARIANTS:
+                # Never install a second build on our own: name the alternative so the person can choose it.
+                from hardware_profile import fallback_offer
+                offer = fallback_offer(plan['runtimeBackend'], ('cuda', 'vulkan', 'cpu'))
+                if offer:
+                    wrapped = RuntimeError(str(error).rstrip('.') + '. The ' + offer['label'] + ' runtime may work on this PC: '
+                                           'choose it in this model\'s Runtime setting. It is installed only if you choose it.')
+                    wrapped.fallback = offer
+                    raise wrapped from error
             raise error
         if plan.get('publisherEngine'):
             from managed_engines import ensure, folder

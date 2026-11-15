@@ -53,5 +53,26 @@ class RuntimeDiskSpace(unittest.TestCase):
             self.prepare_without_downloads(1_000_000_000)
 
 
+
+class RuntimeVariants(unittest.TestCase):
+    def test_variant_follows_the_shared_hardware_profile(self):
+        profile = runtime._hardware_profile()
+        nvidia = profile.build({'gpus': [{'vendor': 'nvidia', 'name': 'RTX'}], 'cudaDriver': 12080,
+                                'computeCapability': [8, 9], 'vulkan': True})
+        cpu_only = profile.build({'gpus': []})
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {}, clear=False):
+            os.environ.pop('OPENCORE_SPEECH_VARIANT', None)
+            with patch.object(profile, 'profile', return_value=nvidia):
+                self.assertEqual(runtime.selected_variant(directory, 'speech-whisper-v1'), 'cuda')
+                self.assertTrue(runtime.cuda_ready())
+            with patch.object(profile, 'profile', return_value=cpu_only):
+                self.assertEqual(runtime.selected_variant(directory, 'speech-whisper-v1'), 'cpu')
+                self.assertFalse(runtime.cuda_ready())
+                profile.save_choice(directory, 'speech-whisper-v1', 'cuda')
+                self.assertEqual(runtime.selected_variant(directory, 'speech-whisper-v1'), 'cuda')
+            os.environ['OPENCORE_SPEECH_VARIANT'] = 'cpu'
+            self.assertEqual(runtime.selected_variant(directory, 'speech-whisper-v1'), 'cpu')
+
+
 if __name__ == '__main__':
     unittest.main()
