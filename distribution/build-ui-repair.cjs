@@ -82,7 +82,7 @@ app=editFunction(app,'w8',text=>replaceOnce(text,'!l||Pe.current||["running","st
   'v==="stopped"&&globalThis.__OPENCORE_PHONE__!==true||!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch'));
 app=editFunction(app,'Gp',text=>replaceOnce(text,
   'f&&(an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])',
-  'f&&(globalThis.__opencoreInstallableTextModels=b.status==="fulfilled"?b.value.models.filter(g=>!g.installed&&g.installable!==!1&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,bytes:g.downloadBytes||g.totalBytes||0,blocked:g.hubEntry?.hardwareFit&&!g.hubEntry.hardwareFit.device?String(g.hubEntry.hardwareFit.reason||"can’t run on this computer"):""})).sort((x,y)=>!!x.blocked-!!y.blocked||x.bytes-y.bytes):[],globalThis.__opencoreUnreadyTextModels=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&!g.selectable&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,precision:g.precision})):[],an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])'));
+  'f&&(globalThis.__opencoreInstallableTextModels=b.status==="fulfilled"?globalThis.__opencoreTextInstall.pick(b.value.models):[],globalThis.__opencoreUnreadyTextModels=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&!g.selectable&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,precision:g.precision})):[],an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])'));
 // Show the known local list while provider configuration loads; an unavailable
 // provider must not make every subsequent opening rescan otherwise-ready models.
 app=editFunction(app,'Gp',text=>replaceOnce(replaceOnce(text,
@@ -97,7 +97,7 @@ app=editFunction(app,'Hp',text=>{
     'Could not check API providers. Check API settings or restart OpenCore.');
   text=replaceOnce(text,'No downloaded text models or API providers. Download a local model in Models or add a provider in API.',
     'No ready text model or API provider. Download a model, or prepare a downloaded model in Models.');
-  text=replaceOnce(text,':null]},d))]})}',':null]},d)),(globalThis.__opencoreInstallableTextModels||[]).map(d=>i.jsxs("button",{className:"model-picker-option",type:"button",disabled:n||!!d.blocked,onClick:()=>{window.__TAURI_INTERNALS__.invoke("install_model",{id:d.id}).catch(()=>{});window.dispatchEvent(new Event("opencore-open-models"))},children:[i.jsxs("span",{children:[i.jsx("strong",{children:d.label}),i.jsx("small",{children:d.blocked?"Can’t run on this computer":"Not installed · "+(d.bytes>0?(d.bytes/1e9).toLocaleString(void 0,{maximumFractionDigits:1})+" GB · ":"")+"click to install"})]})]},"install-"+d.id))]})}');
+  text=replaceOnce(text,':null]},d))]})}',':null]},d)),globalThis.__opencoreTextInstall.options(i,n)]})}');
   return replaceOnce(text,'c.map(({id:d,label:u,description:b})=>',
     '(globalThis.__opencoreUnreadyTextModels||[]).map(d=>i.jsxs("button",{className:"model-picker-option",type:"button",disabled:n,onClick:()=>window.dispatchEvent(new Event("opencore-open-models")),children:[i.jsxs("span",{children:[i.jsx("strong",{children:d.label}),i.jsx("small",{children:"Downloaded · prepare runtime in Models"})]})]},"unready-"+d.id)),c.map(({id:d,label:u,description:b})=>');
 });
@@ -232,8 +232,10 @@ app=require('./receipt-ui-patches.cjs')(app,{editFunction,replaceOnce});
 
 (async () => {
   const report = [];
+  // Text picker install options run from the model-catalog asset, which has room in its native slot.
+  const textInstallCode='\nglobalThis.__opencoreTextInstall={pick:models=>models.filter(g=>!g.installed&&g.installable!==!1&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,bytes:g.downloadBytes||g.totalBytes||0,blocked:g.hubEntry?.hardwareFit&&!g.hubEntry.hardwareFit.device?String(g.hubEntry.hardwareFit.reason||"can’t run on this computer"):""})).sort((x,y)=>!!x.blocked-!!y.blocked||x.bytes-y.bytes),options:(i,n)=>(globalThis.__opencoreInstallableTextModels||[]).map(d=>i.jsxs("button",{className:"model-picker-option",type:"button",disabled:n||!!d.blocked,onClick:()=>{window.__TAURI_INTERNALS__.invoke("install_model",{id:d.id}).catch(()=>{});window.dispatchEvent(new Event("opencore-open-models"))},children:[i.jsxs("span",{children:[i.jsx("strong",{children:d.label}),i.jsx("small",{children:d.blocked?"Can’t run on this computer":"Not installed · "+(d.bytes>0?(d.bytes/1e9).toLocaleString(void 0,{maximumFractionDigits:1})+" GB · ":"")+"click to install"})]})]},"install-"+d.id))};';
   const speechCode='\n'+fs.readFileSync(path.join(root,'../src/phonon-speech.js'),'utf8');
-  const ttsCode='\n'+fs.readFileSync(path.join(root,'../src/managed-tts.js'),'utf8')+require('./audio-studio-patches.cjs').catalogSource();
+  const ttsCode='\n'+fs.readFileSync(path.join(root,'../src/managed-tts.js'),'utf8')+require('./audio-studio-patches.cjs').catalogSource()+require('./music-studio-patches.cjs').catalogSource()+textInstallCode;
   const catalog=require('./frontend-catalog.cjs')(JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8')));
   const coordinatorCode='\nconst $createInstallCoordinator=(()=>{'+coordinatorSource.slice(0,coordinatorBoundary)+';return createInstallCoordinator})();export{$createInstallCoordinator as createInstallCoordinator};\n';
   const preferencesCode='\nconst $createAppUpdatePreferences=(()=>{'+fs.readFileSync(path.join(root,'../src/app-update-preferences.js'),'utf8').replace('export function ','function ')+';return createAppUpdatePreferences})();export{$createAppUpdatePreferences as createAppUpdatePreferences};\n';

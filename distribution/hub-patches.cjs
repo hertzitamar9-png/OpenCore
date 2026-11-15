@@ -2,6 +2,13 @@ const fs=require('fs');const path=require('path');
 const source=fs.readFileSync(path.join(__dirname,'hub-ui.js'),'utf8');
 const style=source.indexOf('const $hubStyle=');
 if(style<0)throw Error('Missing Hub styles');
+// The Settings runtime panels (storage cleanup and hardware builds) render from the
+// model-catalog asset: the App asset has no room left in its fixed native slot.
+const runtimesStart=source.indexOf('function $hubSize('),runtimesEnd=source.indexOf('\nfunction ',source.indexOf('function $HubRuntimes('));
+if(runtimesStart<0||runtimesEnd<0||runtimesEnd>style)throw Error('Missing Hub runtime panels');
+const runtimesSource=source.slice(runtimesStart,runtimesEnd);
+if(/\$hub(?!Request\b|NativeLibrary\b|Size\b|ErrorText\b)\w|\$use|\$Hub(?!Runtimes\b|RuntimeVariants\b)\w/.test(runtimesSource))throw Error('Hub runtime panels use another App helper');
+const appSource=source.slice(0,runtimesStart)+'const $HubRuntimes=globalThis.__opencoreCreateHubRuntimes(p,$hubRequest,()=>$hubNativeLibrary);\n'+source.slice(runtimesEnd,style);
 module.exports=function(app,{editFunction,replaceOnce}){
   app=editFunction(app,'yj',text=>{
     text=replaceOnce(text,'var Oe;','var Oe;const $hub=$useHub();');
@@ -22,6 +29,6 @@ module.exports=function(app,{editFunction,replaceOnce}){
     const at=open+marker.length;
     text=text.slice(0,at)+'i.jsx(ho,{category:"tools",children:i.jsxs(i.Fragment,{children:[i.jsx($HubSettings,{}),i.jsx($RemoteSettings,{})]})}),i.jsx(ho,{category:"data",children:i.jsx($PrivateChatLauncher,{})}),'+text.slice(at);return text;
   });
-  return app+'\n'+source.slice(0,style);
+  return app+'\n'+appSource;
 };
-module.exports.featureInstallerSource=()=>source.slice(style);
+module.exports.featureInstallerSource=()=>source.slice(style)+'\nglobalThis.__opencoreCreateHubRuntimes=(p,$hubRequest,$library)=>{'+runtimesSource.replace(/\$hubNativeLibrary/g,'$library()')+';return $HubRuntimes};';
