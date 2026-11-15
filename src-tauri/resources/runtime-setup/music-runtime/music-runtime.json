@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "runtimeVersion": "yue2-0.1.6-opencore-1",
+  "source": {
+    "repository": "https://github.com/multimodal-art-projection/YuE",
+    "commit": "1116bea76032bee5668e5f097294d082fa0b84f0",
+    "rawBase": "https://raw.githubusercontent.com/multimodal-art-projection/YuE/1116bea76032bee5668e5f097294d082fa0b84f0/",
+    "codeLicense": "Apache-2.0",
+    "weightsLicense": "CC-BY-NC-4.0",
+    "files": {
+      "LICENSE": {
+        "bytes": 11358,
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      "MODEL_LICENSE": {
+        "bytes": 23876,
+        "sha256": "c7a0e99360555513ff56815b5dbbc8f0b27a3ad762ceaeeab6838baea9743b3a"
+      },
+      "THIRD_PARTY_NOTICES.md": {
+        "bytes": 867,
+        "sha256": "c552c22ea11e421d4e6b85cfb03a346f33fd18ec00f894a7e6ccc3ae82fb8564"
+      },
+      "licenses/SnakeBeta-NVIDIA-MIT.txt": {
+        "bytes": 1076,
+        "sha256": "e2f86126a8a56dfd0882e9112e282c7599a34d2c4479f6f5c461b8c2121a579f"
+      },
+      "licenses/stable-audio-tools-MIT.txt": {
+        "bytes": 1069,
+        "sha256": "a1fac33b7bcd791b74fb33aeb439f825e7277e239fc119fb7d2ab6f084a0c101"
+      },
+      "src/yue2/__init__.py": {
+        "bytes": 562,
+        "sha256": "e35b3471f497934fe5dbe4aa615fc571b82e075b973fef3eebbe994368148ea8"
+      },
+      "src/yue2/cli.py": {
+        "bytes": 18735,
+        "sha256": "1909652d590ae964474cee96b9fc26452704a4b1c46746785306e74e2e821fe0"
+      },
+      "src/yue2/cuda_graph.py": {
+        "bytes": 15495,
+        "sha256": "fe9bd0a688ece8efd5a0174f43d90f09c2321b105f82e508a03b4cac2918d2fa"
+      },
+      "src/yue2/devices.py": {
+        "bytes": 1489,
+        "sha256": "a03ec1274c2e2326e437e69a061defe9c1ec1158bdb4e83a2ac6ca784e9162cd"
+      },
+      "src/yue2/fast.py": {
+        "bytes": 21219,
+        "sha256": "0760f6f9bd841969332d27d552b6a3aa26b35b27323ad5dea761b6eaa5de10dd"
+      },
+      "src/yue2/modeling_vae.py": {
+        "bytes": 26300,
+        "sha256": "119d4720189399ed31730a07df858c27bc4c4129c12ae08c207e643aa8b3ddca"
+      },
+      "src/yue2/modeling_yue2.py": {
+        "bytes": 35980,
+        "sha256": "163dc19293f7454c4c616377ea74e68f62dc5d02281175e148d59337adcb9be9"
+      },
+      "src/yue2/nar.py": {
+        "bytes": 14086,
+        "sha256": "62f151d1b2f1014aa2e795983b92deefe94c30971cf2dc27eb81c7e56cc57e15"
+      },
+      "src/yue2/pipeline.py": {
+        "bytes": 24625,
+        "sha256": "23c0ae20d522576ffd16073a9cb905ba6b5c1e079e75eab2c12ef2a2b5d0b967"
+      },
+      "src/yue2/placement.py": {
+        "bytes": 1070,
+        "sha256": "fdda8e2c40714d5eaf5827c1a46860f8e86db92efc3eb8558026ce93ec8697e2"
+      },
+      "src/yue2/progress.py": {
+        "bytes": 12497,
+        "sha256": "8de1fa588607dd0525aee37b652f44b17350689ad9e6ddcba8aaa8aaccf61b24"
+      },
+      "src/yue2/protocol.py": {
+        "bytes": 7255,
+        "sha256": "ac60cbdf05de608bd02dac69c85f45cb64edc8c973143a0b736936aa0dddf21a"
+      },
+      "src/yue2/quantization.py": {
+        "bytes": 5361,
+        "sha256": "91e54fcd38a638727ebc05e240d2997097c541eec0cc18693fe429f702f38e78"
+      },
+      "src/yue2/sampling.py": {
+        "bytes": 9263,
+        "sha256": "469a1161c4898238ea292b12cbbff2fe7e7aa637f6da0b49b9097adfca0d542b"
+      },
+      "src/yue2/storage.py": {
+        "bytes": 7954,
+        "sha256": "76fe54c5b22664fa01085efc36c1d38c0ba638a72135f7fd96af527f7140a827"
+      },
+      "src/yue2/tokenization_yue2.py": {
+        "bytes": 2005,
+        "sha256": "4f4de357d597671981cbc77bd650dd082d7fce6f7c19f867a6ef80cab5aa7f0e"
+      }
+    }
+  },
+  "python": {
+    "minimum": [
+      3,
+      10
+    ],
+    "maximumExclusive": [
+      3,
+      13
+    ]
+  },
+  "torch": {
+    "version": "2.10.0",
+    "variants": {
+      "cu128": {
+        "indexUrl": "https://download.pytorch.org/whl/cu128",
+        "downloadBytes": 2867409626,
+        "diskBytes": 10737418240,
+        "minimumDriver": "570.65",
+        "label": "NVIDIA CUDA 12.8"
+      },
+      "cu126": {
+        "indexUrl": "https://download.pytorch.org/whl/cu126",
+        "downloadBytes": 2589881452,
+        "diskBytes": 10200547328,
+        "minimumDriver": "528.33",
+        "label": "NVIDIA CUDA 12.6"
+      },
+      "xpu": {
+        "indexUrl": "https://download.pytorch.org/whl/xpu",
+        "downloadBytes": 705492488,
+        "diskBytes": 6442450944,
+        "label": "Intel Arc (XPU)"
+      },
+      "cpu": {
+        "indexUrl": "https://download.pytorch.org/whl/cpu",
+        "downloadBytes": 113671330,
+        "diskBytes": 3221225472,
+        "label": "CPU only"
+      }
+    }
+  },
+  "packages": {
+    "transformers": "4.57.6",
+    "huggingface-hub": "0.36.2",
+    "safetensors": "0.7.0",
+    "tiktoken": "0.12.0",
+    "numpy": "2.2.6",
+    "soundfile": "0.13.1",
+    "accelerate": "1.13.0"
+  },
+  "minimumComputeCapability": 8.0
+}

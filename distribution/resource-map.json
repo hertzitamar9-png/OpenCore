@@ -272,5 +272,8 @@
   "runtime-setup/hf-extension/autoloop_vendor/README.md": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/README.md",
   "runtime-setup/hf-extension/autoloop_vendor/runner.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/runner.py",
   "runtime-setup/hf-extension/autoloop_vendor/scaling.py": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/scaling.py",
-  "runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md"
+  "runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md": "src-tauri/resources/runtime-setup/hf-extension/autoloop_vendor/SOURCE_README.md",
+  "runtime-setup/hf-extension/hf_music_runtime.py": "src-tauri/resources/runtime-setup/hf-extension/hf_music_runtime.py",
+  "runtime-setup/music-runtime/music-runtime.json": "src-tauri/resources/runtime-setup/music-runtime/music-runtime.json",
+  "runtime-setup/music-runtime/studio_server.py": "src-tauri/resources/runtime-setup/music-runtime/studio_server.py"
 }

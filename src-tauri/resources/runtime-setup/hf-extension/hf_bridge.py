@@ -38,6 +38,7 @@ from hf_connectors import ConnectorProfiles
 from hf_telemetry import LiveTelemetry
 from hf_computer_runtime import ComputerManager, supports as supports_computer, profile_for as computer_profile
 from hf_computer_driver import ComputerDriverManager
+from hf_music_runtime import MusicRuntimeManager
 from model_modes import apply_operating_modes, supports_text_generation, mode_context
 from hf_download_queue import DownloadQueue
 from hf_speech import SpeechManager, supports as supports_speech
@@ -124,6 +125,7 @@ class BridgeState:
         self.connectors = ConnectorProfiles(self.root)
         self.computer = ComputerManager(self.root, self.resources, self.downloader)
         self.computer_driver = ComputerDriverManager(self.root, self.resources)
+        self.music_runtime = MusicRuntimeManager(self.root, self.resources)
         self.owner, self.remote, self.private, self.groups = None, None, None, None
         self.memory_repair = None
         self.prompt_assistant = None
@@ -1421,6 +1423,7 @@ class BridgeState:
             self.runtime_cleanup.join(timeout=5)
         self.download_queue.close()
         self.computer_driver.cancel()
+        self.music_runtime.cancel()
         if self.closed:
             return
         if self.groups: self.groups.close()
@@ -1638,6 +1641,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, {'jobs': state.tts.list()})
             elif route == '/computer-driver/status':
                 self._send(200, state.computer_driver.status())
+            elif route == '/music-runtime/status':
+                self._send(200, state.music_runtime.status())
             elif route == '/images/jobs':
                 self._send(200, {'jobs':state.images.list()})
             elif route == '/images/conversations':
@@ -1662,6 +1667,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.tokens.save(body.get("token"), state.client))
         elif self.command != "POST":
             self._send(405, {"error": "Method not allowed"})
+        elif route == '/music-runtime/install':
+            self._send(202, state.music_runtime.start())
+        elif route == '/music-runtime/cancel':
+            self._send(200, state.music_runtime.cancel())
         elif route == '/computer-driver/install':
             self._send(202, state.computer_driver.start())
         elif route == '/computer-driver/cancel':

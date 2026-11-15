@@ -38,9 +38,27 @@ owned text model is unloaded before the same installation is updated.
 
 ## Backend availability
 
-Music uses the existing local YuE2 Studio service and verifies its installation
-before sending requests. Downloading music weights does not install a missing
-YuE2 inference environment. A separate local YuE2 runtime is required.
+Music uses a local YuE2 Studio service and verifies its installation before
+sending requests. When the runtime is missing, Music Studio's **Install music
+runtime** button installs it into `%USERPROFILE%\YuE` (or `OPENCORE_MUSIC_HOME`)
+through the Hugging Face bridge (`/music-runtime/status`, `/install`, `/cancel`):
+
+1. A Python virtual environment is created with OpenCore's bundled Python.
+2. Exactly one PyTorch 2.10.0 build is installed for this computer, chosen from
+   `runtime-setup/music-runtime/music-runtime.json`: CUDA 12.8 or 12.6 for
+   NVIDIA GPUs with BF16 support (compute capability 8.0+) and a new enough
+   driver, XPU for Intel Arc, otherwise CPU, with a note explaining why.
+3. The pinned YuE inference code (Apache-2.0, a fixed commit of
+   multimodal-art-projection/YuE) is downloaded and every file is checked
+   against its recorded SHA-256 before it is moved into place.
+4. Imports and a small tensor calculation are verified on the chosen device.
+5. OpenCore's `studio/server.py` is written last, so a failed or cancelled
+   install never looks installed. An existing `server.py` that OpenCore did not
+   write is never replaced.
+
+The installer checks free disk space first and reports progress, the download
+size and errors in the card. The YuE2 weights (CC-BY-NC-4.0) are a separate
+download from Models and can run at the same time. Only Windows is supported.
 
 Assets Studio includes offline workers for TripoSR and supported Diffusers image
 pipelines. Connect a compatible Python interpreter; TripoSR also requires its
