@@ -47,6 +47,25 @@
       "inferenceVerified": true,
       "sampleSha256": "1ac684017ce4cd3b650c7203bd052b8d477d192af2ac2de3e6984306e31adf7b",
       "recipe": "computer-gui-jepa-v1"
+    },
+    {
+      "runtime": "minicpm-cua-v1",
+      "modelId": "hf-4d7871f42ea4a7a67b8823e9",
+      "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+      "baseRepository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "baseRevision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+      "baseBytes": 1081518336,
+      "workerVersion": 1,
+      "verifiedAt": "2026-11-16T15:35:27Z",
+      "inferenceVerified": true,
+      "sampleSha256": "367da293651aabf53c40ea2c0a88a427e4e9413fff73970554f4db7c446ac473",
+      "engineId": "minicpm-cuda13-v1",
+      "alsoVerifiedEngineIds": [
+        "minicpm-cpu-v1"
+      ],
+      "observedAction": "left_click(coordinate=[344, 286])",
+      "generatedTokens": 202
     }
   ]
 }

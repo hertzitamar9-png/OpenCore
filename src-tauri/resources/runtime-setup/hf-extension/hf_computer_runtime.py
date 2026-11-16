@@ -68,7 +68,7 @@ class ComputerManager:
         self.downloader = downloader or Downloader(self.root, HubClient())
         self.operation, self.lock = threading.Lock(), threading.RLock()
         self.cancelled = threading.Event()
-        self.child, self.job = None, None
+        self.child, self.job, self.fallback = None, None, None
 
     def dependency(self, profile):
         entry = next(value for value in CONFIG['dependencies'] if value['id'] == profile['dependencyId'])
@@ -160,7 +160,33 @@ class ComputerManager:
         if runtime == 'ternarypilot-v2':
             from managed_engines import ensure
             request['engine'] = str(ensure(self.root, 'prism-cpu-v1'))
-        return self._run([self.python(profile), '-I', Path(__file__).with_name('hf_computer_worker.py')], request, pause, timeout=360)
+        command = [self.python(profile), '-I', Path(__file__).with_name('hf_computer_worker.py')]
+        if runtime != 'minicpm-cua-v1':
+            return self._run(command, request, pause, timeout=360)
+        # Run on the GPU build this PC supports; the CPU build is the fallback, never the first choice on a GPU.
+        engines = self.minicpm_engines()
+        for index, (engine, backend, libraries) in enumerate(engines):
+            try:
+                return self._run(command, {**request, 'engine': engine, 'backend': backend, 'libraries': libraries}, pause, timeout=900)
+            except RuntimeError as error:
+                if index == len(engines)-1 or self.cancelled.is_set() or pause is not None and pause.is_set(): raise
+                self.fallback = backend+' failed: '+str(error)[:300]
+
+    def minicpm_engines(self, report=lambda **values: None):
+        from managed_engines import ensure, folder, select_engine
+        chosen, result = select_engine('minicpm-cpu-v1', 'auto'), []
+        if chosen != 'minicpm-cpu-v1':
+            backend = 'cuda' if '-cuda' in chosen else 'vulkan'
+            try:
+                libraries = None
+                if backend == 'cuda':
+                    library_id = 'cuda13-libs-v1' if '-cuda13-' in chosen else 'cuda12-libs-v1'
+                    ensure(self.root, library_id, report); libraries = str(folder(self.root, library_id))
+                result.append((str(ensure(self.root, chosen, report)), backend, libraries))
+            except (OSError, RuntimeError, ValueError) as error:
+                self.fallback = backend+' runtime unavailable: '+str(error)[:300]
+        result.append((str(ensure(self.root, 'minicpm-cpu-v1', report)), 'cpu', None))
+        return result
 
     def prepare(self, entry, report, pause):
         runtime, profile = profile_for(entry)
@@ -174,6 +200,9 @@ class ComputerManager:
                 report({'stage': 'installing-dependencies', 'detail': 'Preparing the isolated Windows computer-use runtime'})
                 self._run([_python(self.root), '-I', self.resources/'runtime-setup/setup_manager.py', '--root', self.root,
                            '--resources', self.resources, '--target', entry['id'], '--recipe-id', profile['recipe']], pause=pause, timeout=1800)
+            if runtime == 'minicpm-cua-v1':
+                report({'stage': 'installing-runtime', 'detail': 'Preparing llama.cpp b12032 for this PC'})
+                self.minicpm_engines(lambda **values: report(values))
             report({'stage': 'verifying-inference', 'detail': 'Checking an actual prediction with the selected adapter and base'})
             result = self._worker(entry, 'verify', pause=pause)
             if result.get('inferenceVerified') is not True: raise RuntimeError('The model did not produce a verified prediction')

@@ -132461,6 +132461,95 @@
       "publishedContextTokens": 262144
     },
     {
+      "id": "hf-4d7871f42ea4a7a67b8823e9",
+      "variantKey": "gguf:mc-v3-lora-f16.gguf",
+      "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+      "format": "gguf",
+      "quantization": "F16 LoRA",
+      "subdirectory": "",
+      "category": "computer-use",
+      "files": [
+        {
+          "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+          "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+          "filename": "chat_template.jinja",
+          "bytes": 7249,
+          "sha256": null,
+          "gitBlobSha1": "93107b9f70bdb7a39055d438779c52d5f3c8fc72",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+          "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+          "filename": "mc-v3-lora-f16.gguf",
+          "bytes": 20468032,
+          "sha256": "daa53dbef27ff485748602545db9cf6f28d606677538aefc503701cfffcee352",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+          "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+          "filename": "mmproj-MiniCPM-V-4.7-1B-base-F16.gguf",
+          "bytes": 1108763520,
+          "sha256": "e802faf767830650aa7b03d5ac481461f6da8e9867d18eed6863945a22a7a49c",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "bytes": 1129238801,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "gated": false,
+      "runtime": {
+        "adapter": "computer-use",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned base components and isolated Windows prediction runtime prepare automatically. An actual model prediction is required before Ready."
+      },
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "familyId": "publisher-minicpm-v-4-7-1b-computer-use",
+      "familyLabel": "MiniCPM-V 4.7 1B Computer Use",
+      "originalRepository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Unofficial 1B screenshot-to-action LoRA for MiniCPM-V 4.7 1B, trained on ProCUA-SFT. Downloads its pinned Q8 base, F16 vision projector and thinking chat template, and prepares llama.cpp b12032 for this PC (CUDA on NVIDIA, Vulkan on other GPUs, otherwise CPU). The publisher reports 5 of 99 held-out OSWorld tasks solved; predictions are suggestions to review, rather than proof that a desktop task has completed.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "MiniCPM-V 4.7 1B Computer Use · F16 LoRA",
+      "baseRepository": "openbmb/MiniCPM-V-4.7-1B",
+      "packageKind": "adapter",
+      "catalogOrder": 1,
+      "computerRuntime": "minicpm-cua-v1",
+      "outputsText": true,
+      "supportsTextGeneration": true,
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 8192,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 8192,
+          "supported": true
+        }
+      ],
+      "publishedContextTokens": null,
+      "computerBaseBytes": 1081518336
+    },
+    {
       "id": "hf-4f5ad2d2f3a6eb29faffc84a",
       "repository": "GUI-Gym/MobileGym-4B",
       "revision": "73e6092f304700d9ac685bc25ac9c3e3cfed4444",

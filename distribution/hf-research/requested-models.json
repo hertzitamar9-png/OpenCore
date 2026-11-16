@@ -1699,6 +1699,31 @@
       ]
     },
     {
+      "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "familyId": "publisher-minicpm-v-4-7-1b-computer-use",
+      "label": "MiniCPM-V 4.7 1B Computer Use",
+      "category": "computer-use",
+      "description": "Unofficial 1B screenshot-to-action LoRA for MiniCPM-V 4.7 1B, trained on ProCUA-SFT. Downloads its pinned Q8 base, F16 vision projector and thinking chat template, and prepares llama.cpp b12032 for this PC (CUDA on NVIDIA, Vulkan on other GPUs, otherwise CPU). The publisher reports 5 of 99 held-out OSWorld tasks solved; predictions are suggestions to review, rather than proof that a desktop task has completed.",
+      "baseRepository": "openbmb/MiniCPM-V-4.7-1B",
+      "sources": [
+        {
+          "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+          "quantization": "F16 LoRA",
+          "computerRuntime": "minicpm-cua-v1",
+          "visionInput": true,
+          "packages": [
+            {
+              "key": "gguf:mc-v3-lora-f16.gguf",
+              "format": "gguf",
+              "quantization": "F16",
+              "files": ["mc-v3-lora-f16.gguf", "chat_template.jinja"],
+              "requiredFiles": ["mc-v3-lora-f16.gguf", "chat_template.jinja"]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "repository": "LilCC/GUI-JEPA",
       "familyId": "publisher-gui-jepa",
       "label": "GUI-JEPA",

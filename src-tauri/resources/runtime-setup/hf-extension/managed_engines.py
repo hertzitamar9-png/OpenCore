@@ -13,9 +13,10 @@ import zipfile
 from contextlib import contextmanager
 
 HERE = Path(__file__).resolve().parent
-VULKAN_VARIANTS = {'lfm3-cpu-v1': 'lfm3-vulkan-v1', 'flint-cpu-v1': 'flint-vulkan-v1'}
+VULKAN_VARIANTS = {'lfm3-cpu-v1': 'lfm3-vulkan-v1', 'flint-cpu-v1': 'flint-vulkan-v1', 'minicpm-cpu-v1': 'minicpm-vulkan-v1'}
 CUDA_VARIANTS = {'lfm3-cpu-v1': {12: 'lfm3-cuda12-v1', 13: 'lfm3-cuda13-v1'},
-                 'flint-cpu-v1': {12: 'flint-cuda12-v1', 13: 'flint-cuda13-v1'}}
+                 'flint-cpu-v1': {12: 'flint-cuda12-v1', 13: 'flint-cuda13-v1'},
+                 'minicpm-cpu-v1': {12: 'minicpm-cuda12-v1', 13: 'minicpm-cuda13-v1'}}
 
 
 def cuda_driver_version():
@@ -193,7 +194,7 @@ def definition(engine_id):
 def folder(root, engine_id):
     if engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1', 'lfm3-vulkan-v1', 'flint-vulkan-v1',
                          'lfm3-cuda12-v1', 'lfm3-cuda13-v1', 'flint-cuda12-v1', 'flint-cuda13-v1', 'cuda12-libs-v1', 'cuda13-libs-v1',
-                         'dory-cuda13-v1'):
+                         'dory-cuda13-v1', 'minicpm-cpu-v1', 'minicpm-vulkan-v1', 'minicpm-cuda12-v1', 'minicpm-cuda13-v1'):
         raise ValueError('Unknown managed publisher runtime')
     base = Path(root).resolve() / 'runtime-setup/engines'
     target = (base / engine_id).resolve()

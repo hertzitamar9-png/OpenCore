@@ -24,6 +24,14 @@
       "dependencyId": "hf-a0afd91165d14a21463c53ae",
       "recipe": "computer-gui-jepa-v1",
       "baseBytes": 608863580
+    },
+    "minicpm-cua-v1": {
+      "id": "hf-4d7871f42ea4a7a67b8823e9",
+      "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+      "dependencyId": "hf-efd264abddcf623833514445",
+      "recipe": null,
+      "baseBytes": 1081518336
     }
   },
   "dependencies": [
@@ -318,6 +326,53 @@
       "gated": false,
       "sourceUrl": "https://huggingface.co/openai/clip-vit-base-patch32",
       "status": "not-installed"
+    },
+    {
+      "id": "hf-efd264abddcf623833514445",
+      "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+      "variantKey": "gguf:MiniCPM-V-4.7-1B-base-Q8_0.gguf",
+      "name": "minicpm-v-4.7-1b-computer-use \u00b7 Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "inputModalities": [
+        "image",
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "bytes": 1081518336,
+      "files": [
+        {
+          "repository": "banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+          "revision": "d1d425080766dea57e4b0cf5534c434f2d0ce286",
+          "filename": "MiniCPM-V-4.7-1B-base-Q8_0.gguf",
+          "bytes": 1081518336,
+          "sha256": "ea71c72d59a6f96b1f2b3c1c344702d5dbe5682b97d23518b828e9919104ac26",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/banyohavlusu23/minicpm-v-4.7-1b-computer-use",
+      "status": "not-installed",
+      "contextTokens": 32768,
+      "memoryMode": "echo"
     }
   ]
 }

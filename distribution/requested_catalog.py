@@ -180,12 +180,13 @@ def append_requested(entries, manifest, snapshots):
                 if source.get('computerRuntime'):
                     reviewed = {'Hobbylm/hobbylm-1B-computer-use': 'hobbylm-v1',
                                 'adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA': 'ternarypilot-v2',
-                                'LilCC/GUI-JEPA': 'gui-jepa-v1'}
+                                'LilCC/GUI-JEPA': 'gui-jepa-v1',
+                                'banyohavlusu23/minicpm-v-4.7-1b-computer-use': 'minicpm-cua-v1'}
                     if reviewed.get(repository) != source['computerRuntime']:
                         raise ValueError('Unreviewed computer-use runtime')
                     entry['computerRuntime'] = source['computerRuntime']
                     entry['category'] = 'computer-use'
-                    entry['contextTokens'] = {'hobbylm-v1': 1024, 'ternarypilot-v2': 16384, 'gui-jepa-v1': 0}[source['computerRuntime']]
+                    entry['contextTokens'] = {'hobbylm-v1': 1024, 'ternarypilot-v2': 16384, 'gui-jepa-v1': 0, 'minicpm-cua-v1': 8192}[source['computerRuntime']]
                     entry.pop('memoryMode', None)
                     entry['runtime'].update(adapter='computer-use',reason='The pinned base components and isolated Windows prediction runtime prepare automatically. An actual model prediction is required before Ready.')
                     entry.pop('managedEngine', None)

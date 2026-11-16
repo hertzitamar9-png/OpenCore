@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 601,
+  "families": 602,
   "withFive": 238,
   "models": [
     {
@@ -5865,6 +5865,17 @@
         "Mininglamp-2718/Mano-CUA-2.0-4B",
         "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
         "mradermacher/Mano-CUA-2.0-4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-minicpm-v-4-7-1b-computer-use",
+      "label": "MiniCPM-V 4.7 1B Computer Use",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "banyohavlusu23/minicpm-v-4.7-1b-computer-use"
       ]
     },
     {

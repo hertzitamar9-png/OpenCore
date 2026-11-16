@@ -47,6 +47,18 @@ record('GUI-JEPA sends the uploaded image and candidate tree with its own model 
 await policy.getByRole('button',{name:'Stop prediction',exact:true}).click();
 await policy.getByText('Stopped',{exact:true}).waitFor();
 record('the stop control reaches the owned computer-use service',await page.evaluate(()=>fixture.calls.some(call=>call.route==='/specialist/computer/stop')));
+await search.fill('MiniCPM-V 4.7 1B Computer Use');const mini=page.getByRole('article',{name:'MiniCPM-V 4.7 1B Computer Use',exact:true});
+record('MiniCPM-V Computer Use has one card with the action runtime',await mini.count()===1&&await mini.getByText('Computer-use · Action prediction',{exact:true}).count()===1);
+await mini.getByRole('button',{name:'Use computer-use',exact:true}).click();
+const screen=mini.getByRole('region',{name:'Computer-use prediction'});
+await screen.getByRole('textbox',{name:'Task',exact:true}).fill('Open the Downloads folder');
+record('MiniCPM-V Computer Use requires a screenshot before running',await screen.getByRole('button',{name:'Predict action',exact:true}).isDisabled());
+await screen.getByLabel('Screenshot',{exact:true}).setInputFiles({name:'screen.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aH7sAAAAASUVORK5CYII=','base64')});
+await screen.getByRole('button',{name:'Predict action',exact:true}).click();
+await screen.getByRole('button',{name:'Stop prediction',exact:true}).waitFor();
+record('MiniCPM-V Computer Use sends the screenshot with its own model identity',await page.evaluate(()=>fixture.calls.some(call=>call.route==='/specialist/computer'&&call.body.id==='hf-4d7871f42ea4a7a67b8823e9'&&call.body.image&&call.body.task==='Open the Downloads folder')));
+await screen.getByRole('button',{name:'Stop prediction',exact:true}).click();
+await screen.getByText('Stopped',{exact:true}).waitFor();
 await page.setViewportSize({width:390,height:844});
 record('phone controls stay within the viewport',await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
 await page.screenshot({path:path.join(output,'phone-policy.png'),fullPage:true});

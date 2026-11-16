@@ -150,6 +150,126 @@ def ternary(request):
             except subprocess.TimeoutExpired: process.kill(); process.wait(timeout=5)
 
 
+# Prompt, tool schema and 0-999 grid exactly as the publisher trained and scored
+# MiniCPM-V-4.7-1B-Computer-Use (examples/run_agent.py, prompt variant action-line).
+MINICPM_GRID = 999
+MINICPM_SYSTEM = (
+    "You are a computer-use agent. You complete the user's task on a desktop computer by acting through the "
+    "computer_use tool, one action per turn. After each action you get a new screenshot.\n"
+    "Reply with exactly one line 'Action: <what you do next, in a short sentence>' and then exactly one computer_use "
+    "tool call. When the task is complete, call terminate with status success. If the task is impossible, call "
+    "terminate with status failure.")
+MINICPM_ACTIONS = ['left_click', 'double_click', 'triple_click', 'right_click', 'middle_click', 'mouse_move',
+                   'left_click_drag', 'type', 'key', 'scroll', 'wait', 'terminate']
+MINICPM_TOOL = {'type': 'function', 'function': {
+    'name': 'computer_use',
+    'description': ('Use a mouse and keyboard to interact with the computer. The screen is shown as a screenshot. '
+                    f'Coordinates are on a 0-{MINICPM_GRID} grid: x=0 is the left edge, x={MINICPM_GRID} the right edge, y=0 the top, '
+                    f'y={MINICPM_GRID} the bottom. Click the centre of elements.'),
+    'parameters': {'type': 'object', 'properties': {
+        'action': {'type': 'string', 'enum': MINICPM_ACTIONS, 'description': (
+            'left_click/double_click/triple_click/right_click/middle_click/mouse_move: at `coordinate`. '
+            'left_click_drag: press at `start_coordinate`, release at `coordinate`. '
+            'type: type `text`. key: press `keys` together (e.g. ["ctrl", "s"]). '
+            'scroll: scroll `pixels` wheel clicks at `coordinate` (positive = up, negative = down). '
+            'wait: wait `time` seconds. terminate: stop, with `status` success or failure.')},
+        'coordinate': {'type': 'array', 'items': {'type': 'integer'}, 'description': '[x, y] on the grid'},
+        'start_coordinate': {'type': 'array', 'items': {'type': 'integer'}, 'description': '[x, y] drag start'},
+        'text': {'type': 'string'}, 'keys': {'type': 'array', 'items': {'type': 'string'}},
+        'pixels': {'type': 'integer'}, 'time': {'type': 'number'},
+        'status': {'type': 'string', 'enum': ['success', 'failure']}},
+        'required': ['action']}}}
+
+
+def minicpm_prompt(task, state, keep=8):
+    history = [line.strip() for line in (state or '').splitlines() if line.strip()]
+    start = max(0, len(history)-keep)
+    previous = '\n'.join(f'Step {index+1}: {line}' for index, line in enumerate(history) if index >= start) or 'None'
+    if start: previous = f'({start} earlier steps not shown)\n'+previous
+    return f'Task: {task}\n\nPrevious actions:\n{previous}\n\nWhat is the next action?'
+
+
+def minicpm_action(message):
+    content = message.get('content') or ''
+    match = re.search(r'Action:\s*(.+)', content)
+    line = match.group(1).strip() if match else ''
+    calls = [call.get('function', {}) for call in message.get('tool_calls') or []]
+    if not calls:
+        # Some templates leave the call in the text instead of the parsed field.
+        raw = re.search(r'<tool_call>\s*(\{.*?\})\s*</tool_call>', content, re.S)
+        if raw: calls = [json.loads(raw.group(1))]
+    if not calls: raise ValueError('MiniCPM-V Computer Use returned no computer_use tool call; retry the step')
+    call = calls[0]
+    arguments = call.get('arguments', {})
+    if isinstance(arguments, str): arguments = json.loads(arguments)
+    if call.get('name') not in (None, 'computer_use') or not isinstance(arguments, dict) or arguments.get('action') not in MINICPM_ACTIONS:
+        raise ValueError('MiniCPM-V Computer Use returned an unknown action')
+    for name in ('coordinate', 'start_coordinate'):
+        point = arguments.get(name)
+        if point is not None and (not isinstance(point, list) or len(point) != 2
+                                  or not all(type(value) in (int, float) and 0 <= value <= MINICPM_GRID for value in point)):
+            raise ValueError('MiniCPM-V Computer Use returned a coordinate outside its 0-999 grid')
+    return line, arguments
+
+
+def minicpm(request):
+    folder, base = Path(request['folder']), Path(request['base'])
+    raw = fixture_png() if request['mode'] == 'verify' else base64.b64decode(request['image'], validate=True)
+    mime = 'image/png' if raw.startswith(b'\x89PNG') else 'image/jpeg' if raw.startswith(b'\xff\xd8\xff') else None
+    if mime is None: raise ValueError('MiniCPM-V Computer Use accepts PNG or JPEG screenshots')
+    with socket.socket() as sock: sock.bind(('127.0.0.1', 0)); port = sock.getsockname()[1]
+    key = secrets.token_urlsafe(32)
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    def call(path, payload=None, timeout=2):
+        headers = {'Authorization': 'Bearer '+key, 'Content-Type': 'application/json'}
+        data = None if payload is None else json.dumps(payload).encode()
+        with opener.open(urllib.request.Request('http://127.0.0.1:'+str(port)+path, data=data, headers=headers), timeout=timeout) as response:
+            return json.load(response)
+    gpu = request.get('backend') in ('cuda', 'vulkan')
+    threads = str(max(2, min(8, (os.cpu_count() or 4)//2)))
+    with tempfile.TemporaryDirectory(prefix='opencore-minicpm-') as directory:
+        keyfile = Path(directory)/'key'; keyfile.write_text(key, encoding='utf-8')
+        command = [request['engine'], '--model', str(base/'MiniCPM-V-4.7-1B-base-Q8_0.gguf'),
+                   '--mmproj', str(folder/'mmproj-MiniCPM-V-4.7-1B-base-F16.gguf'), '--lora', str(folder/'mc-v3-lora-f16.gguf'),
+                   '--chat-template-file', str(folder/'chat_template.jinja'), '--jinja',
+                   '--host', '127.0.0.1', '--port', str(port), '--api-key-file', str(keyfile), '--ctx-size', '8192',
+                   '--threads', threads, '--threads-batch', threads, '--parallel', '1', '--no-webui', '--no-warmup',
+                   '--cache-ram', '0', '--gpu-layers', '99' if gpu else '0']
+        environment = dict(os.environ)
+        if request.get('libraries'): environment['PATH'] = request['libraries']+os.pathsep+environment.get('PATH', '')
+        process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=sys.stderr, stderr=sys.stderr, env=environment,
+                                   cwd=str(Path(request['engine']).parent), creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        try:
+            deadline = time.monotonic()+180
+            while time.monotonic() < deadline:
+                if process.poll() is not None: raise RuntimeError('llama.cpp could not load the MiniCPM-V base, projector and LoRA')
+                try:
+                    if call('/health').get('status') == 'ok': break
+                except OSError: pass
+                time.sleep(.2)
+            else: raise RuntimeError('The MiniCPM-V runtime did not become ready')
+            verify = request['mode'] == 'verify'
+            task = 'Click the blue button.' if verify else request['task']
+            result = call('/v1/chat/completions', {'messages': [
+                    {'role': 'system', 'content': MINICPM_SYSTEM},
+                    {'role': 'user', 'content': [
+                        {'type': 'image_url', 'image_url': {'url': 'data:'+mime+';base64,'+base64.b64encode(raw).decode()}},
+                        {'type': 'text', 'text': minicpm_prompt(task, '' if verify else request.get('state', ''))}]}],
+                    'tools': [MINICPM_TOOL], 'temperature': 0.7, 'top_p': 0.95, 'top_k': 100,
+                    'max_tokens': 2048 if verify else 4096, 'seed': 1 if verify else -1,
+                    'chat_template_kwargs': {'enable_thinking': True}}, timeout=840)
+            message = result.get('choices', [{}])[0].get('message', {})
+            line, arguments = minicpm_action(message)
+            text = ('Action: '+line+'\n' if line else '')+json.dumps(arguments, ensure_ascii=False)
+            return {'text': text, 'action': {'protocol': 'computer_use', 'grid': MINICPM_GRID, 'raw': line, 'call': arguments},
+                    'adapterApplied': True, 'inferenceVerified': True, 'backend': request.get('backend', 'cpu'),
+                    'outputTokens': result.get('usage', {}).get('completion_tokens')}
+        finally:
+            if process.poll() is None: process.terminate()
+            try: process.wait(timeout=5)
+            except subprocess.TimeoutExpired: process.kill(); process.wait(timeout=5)
+
+
 def gui_jepa(request):
     import random
     import numpy as np
@@ -228,7 +348,7 @@ def main():
         request = json.loads(sys.stdin.buffer.read(10*1024*1024))
         start = time.monotonic()
         with redirect_stdout(sys.stderr):
-            result = {'hobbylm-v1': hobby, 'ternarypilot-v2': ternary, 'gui-jepa-v1': gui_jepa}[request['runtime']](request)
+            result = {'hobbylm-v1': hobby, 'ternarypilot-v2': ternary, 'gui-jepa-v1': gui_jepa, 'minicpm-cua-v1': minicpm}[request['runtime']](request)
         result['elapsedSeconds'] = time.monotonic()-start
         print(json.dumps(result, ensure_ascii=True))
     except Exception as error:

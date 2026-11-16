@@ -130,6 +130,38 @@
       "source": "https://github.com/PrismML-Eng/llama.cpp/tree/9d9efeadbdd1d77458d98717a96fbfa3a016e159",
       "revision": "9d9efeadbdd1d77458d98717a96fbfa3a016e159",
       "version": "prism-b10831"
+    },
+    "minicpm-cpu-v1": {
+      "label": "llama.cpp b12032 · MiniCPM-V 4.7",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-cpu-x64.zip",
+      "sha256": "5296f5d18bb7d422c7c26f4bb9bc796d9d4f41e1312a8c296cff475bdc60d0d4",
+      "bytes": 24582754,
+      "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
+    },
+    "minicpm-cuda12-v1": {
+      "label": "llama.cpp b12032 · CUDA 12.4",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-cuda-12.4-x64.zip",
+      "sha256": "36c7e24ad048cceabf00c1b49d0f0411b954c6a410a7ff4300af8721a94fd00a",
+      "bytes": 279952566,
+      "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
+    },
+    "minicpm-cuda13-v1": {
+      "label": "llama.cpp b12032 · CUDA 13.4",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-cuda-13.4-x64.zip",
+      "sha256": "4b2d4c4678192fbadc443e2c406fef06356d1b064ae9ab79b9f67e4329903511",
+      "bytes": 165164493,
+      "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
+    },
+    "minicpm-vulkan-v1": {
+      "label": "llama.cpp b12032 · Vulkan GPU",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-vulkan-x64.zip",
+      "sha256": "19a8bbf269fa683ae7bc04f886c9c2a93e0655c2606f37d2b60069bf9e8bcc32",
+      "bytes": 37523450,
+      "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
     }
   }
 }
