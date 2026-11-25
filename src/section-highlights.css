@@ -111,7 +111,16 @@
   box-shadow: none !important;
 }
 
-/* Close uses the same hover highlight as minimize and maximize. */
-.window-titlebar .window-controls .window-close:hover {
+/* Caption buttons share one palette, including the recovered UI's close button. */
+.window-titlebar .window-controls > button {
+  background: transparent !important;
+  color: var(--theme-ink, #cbd2df) !important;
+}
+.window-titlebar .window-controls > button svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+}
+.window-titlebar .window-controls > button:hover {
   background: var(--theme-highlight, #ffffff18) !important;
+  color: var(--theme-ink, #cbd2df) !important;
 }
