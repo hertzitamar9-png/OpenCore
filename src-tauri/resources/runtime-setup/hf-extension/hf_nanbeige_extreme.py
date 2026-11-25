@@ -50,7 +50,7 @@ def catalog_entry():
         originalRepository="Nanbeige/Nanbeige4.2-3B",sourceUrl="https://huggingface.co/Nanbeige/Nanbeige4.2-3B",
         license="apache-2.0",supportsTextChat=True,supportsTextGeneration=True,outputsText=True,
         inputModalities=["text"],outputModalities=["text"],contextTokens=8192,supportedContextTokens=8192,
-        operatingMode="native",operatingModes=modes,modeAvailability=[dict(x,scope="text") for x in modes],
+        memoryMode="echo",echoWorkingWindowTokens=8192,operatingMode="native",operatingModes=modes,modeAvailability=[dict(x,scope="text") for x in modes],
         runtimePreference="cuda")
 
 def check_entry(entry):

@@ -89226,6 +89226,8 @@
       ],
       "contextTokens": 8192,
       "supportedContextTokens": 8192,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 8192,
       "operatingMode": "native",
       "operatingModes": [
         {
