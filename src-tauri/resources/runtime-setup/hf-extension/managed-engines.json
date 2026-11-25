@@ -314,12 +314,12 @@
       ]
     },
     "nanbeige-extreme-cuda12-v1": {
-      "label": "Nanbeige Extreme llama.cpp b12503 CUDA 12.4",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12503/llama-b12503-bin-win-cuda-12.4-x64.zip",
-      "sha256": "9df9b6316051ce258debb234b3475762eecd8721e6bb41474f0743d54aad08aa",
-      "bytes": 363875811,
-      "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b12503",
-      "revision": "4577932fab595eaa8b27ad71734d5de1f3c07d8c",
+      "label": "Nanbeige Extreme llama.cpp b12732 CUDA 12.4",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12732/llama-b12732-bin-win-cuda-12.4-x64.zip",
+      "sha256": "2eb1f3cc20a0e4e493bfad32c7f733c6e8ec769cdfbaf28d8586da9c76dcb3eb",
+      "bytes": 358612680,
+      "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b12732",
+      "revision": "62d6c8cb3ae7e345c6fe510e99faea470b5eb192",
       "requiredFiles": [
         "llama-server.exe",
         "llama-server-impl.dll",

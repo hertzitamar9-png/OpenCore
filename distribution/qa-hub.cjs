@@ -8,7 +8,7 @@ const app=fs.readFileSync(path.join(directory,'assets',appName),'utf8')+'\nexpor
 const fixture=`
 window.fixture={catalog:[],progress:null,calls:[],token:false};
 window.fixtureProfile=id=>'api:provider-fixture:'+Array.from(new TextEncoder().encode(id),byte=>byte.toString(16).padStart(2,'0')).join('');
-fixture.variants=['Q4_K_M','Q8_0'].map((q,j)=>({id:'hf-'+String(j+1).repeat(24),repository:'fixture/tiny-model',revision:'a'.repeat(40),variantKey:'gguf:'+q,name:'tiny-model',quantization:q,format:'gguf',subdirectory:'',bytes:100+j,files:[{filename:'model-'+q+'.gguf',bytes:100+j,role:'model',sha256:'b'.repeat(64)}],installable:true,runtime:{adapter:'gguf'},runtimeChoices:['auto','cuda','vulkan','cpu'],runtimePreference:'auto',sourceUrl:'https://huggingface.co/fixture/tiny-model',status:'not-installed'}));
+fixture.variants=['Q4_K_M','Q8_0'].map((q,j)=>({id:'hf-'+String(j+1).repeat(24),repository:'fixture/tiny-model',revision:'a'.repeat(40),variantKey:'gguf:'+q,name:'tiny-model',category:'text',supportsTextGeneration:true,operatingMode:'native',quantization:q,format:'gguf',subdirectory:'',bytes:100+j,files:[{filename:'model-'+q+'.gguf',bytes:100+j,role:'model',sha256:'b'.repeat(64)}],installable:true,runtime:{adapter:'gguf'},runtimeChoices:['auto','cuda','vulkan','cpu'],runtimePreference:'auto',sourceUrl:'https://huggingface.co/fixture/tiny-model',status:'not-installed'}));
 window.__TAURI_INTERNALS__={invoke:async(command,args={})=>{fixture.calls.push({command,args});switch(command){
 case 'get_snapshot':return{runtime:{status:'stopped'},conversations:[],activeConversationIds:[]};
 case 'runtime_setup_probe':return{hubBridge:{available:true,url:'http://127.0.0.1:59999',secret:'fixture-secret-secret-secret-secret',authHeader:'X-OpenCore-Hub-Secret'}};
@@ -31,6 +31,7 @@ else if(route==='/install'){fixture.progress={id:body.id,jobId:'download-fixture
 else if(route==='/pause'){fixture.progress={...fixture.progress,status:'paused',stage:'paused'};value={paused:true};}
 else if(route==='/prepare'){fixture.progress={id:body.id,jobId:'prepare-fixture',kind:'prepare',status:'running',stage:'loading-model',bytesDone:0,bytesTotal:0};value=fixture.progress;}
 else if(route==='/catalog/profile'){Object.assign(fixture.catalog.find(v=>v.id===body.id),body);value=fixture.catalog.find(v=>v.id===body.id);}
+else if(route==='/runtime/mode'){const item=fixture.catalog.find(v=>v.id===body.id);if(!item)throw Error('Unknown model mode fixture');item.operatingMode=body.operatingMode;value=item;}
 else if(route==='/runtime/backend'){Object.assign(fixture.catalog.find(v=>v.id===body.id),{runtimePreference:body.runtimePreference});value=fixture.catalog.find(v=>v.id===body.id);}
 else if(route==='/token'){if(options.method==='PUT')fixture.token=true;if(options.method==='DELETE')fixture.token=false;value={configured:fixture.token};}
 return{ok:true,json:async()=>structuredClone(value)};};
@@ -58,13 +59,14 @@ await (await page.getByRole('button',{name:'Install',exact:true}).elementHandle(
 record('pause reaches service and releases the same install lock',await page.getByRole('button',{name:'Install',exact:true}).isEnabled()&&await page.evaluate(()=>fixture.calls.some(c=>c.route==='/pause')));
 await page.evaluate(()=>{fixture.catalog[0].status='installed';fixture.progress=null;});await page.getByRole('button',{name:'Prepare runtime',exact:true}).waitFor();
 await page.getByRole('button',{name:'Prepare runtime',exact:true}).click();await page.waitForTimeout(1300);record('runtime preparation uses indeterminate shared progress',await page.locator('.model-install-progress').first().locator('progress').getAttribute('value')===null);
-await page.evaluate(()=>{fixture.catalog[0].runtimeReady=true;fixture.catalog[0].runtimePreparation={contextTokens:8192,runtimeReady:true};fixture.progress={...fixture.progress,status:'ready',stage:'ready'};});
-await page.getByRole('button',{name:'Use model',exact:true}).waitFor();await page.getByRole('button',{name:'Use model',exact:true}).click();await page.waitForTimeout(400);
-record('Use model registers and selects an actual native chat profile',await page.evaluate(()=>window.selected?.startsWith('api:provider-fixture:')));
+await page.evaluate(()=>{fixture.catalog[0].runtimeReady=true;fixture.catalog[0].runtimePreparation={contextTokens:8192,runtimeReady:true,operatingMode:'native'};fixture.progress={...fixture.progress,status:'ready',stage:'ready'};});
+await page.getByRole('button',{name:'Use model',exact:true}).waitFor();await page.getByRole('button',{name:'Use model',exact:true}).click();
+await page.waitForFunction(()=>window.selected===fixtureProfile(fixture.catalog[0].id));
+record('Use model registers and selects an actual native chat profile',await page.evaluate(()=>window.selected===fixtureProfile(fixture.catalog[0].id)&&fixture.calls.some(c=>c.command==='api_provider_model'&&c.args.model===fixture.catalog[0].id)));
 await page.getByLabel('Hugging Face access token',{exact:true}).fill('hf_fake_fixture_token');await page.getByRole('button',{name:'Save token',exact:true}).click();await page.getByRole('region',{name:'Hugging Face access',exact:true}).getByText('Access token saved',{exact:true}).waitFor();
 record('token save clears password field and returns status only',await page.getByLabel('Hugging Face access token',{exact:true}).inputValue()===''&&!await page.locator('body').innerText().then(t=>t.includes('hf_fake_fixture_token')));
 await page.getByRole('button',{name:'Remove token',exact:true}).click();await page.getByRole('region',{name:'Hugging Face access',exact:true}).getByText('No token saved',{exact:true}).waitFor();record('token removal is independent from public catalog',await page.getByRole('article').count()===1);
-await page.evaluate(()=>{fixture.catalog=[{...fixture.variants[0],id:'hf-'+'8'.repeat(24),familyId:'echo-vision-fixture',familyLabel:'Echo Vision fixture',category:'text',libraryCategory:'omni',memoryMode:'echo',status:'installed',runtimeReady:true,profileId:null,providerId:null}];fixture.progress=null;});
+await page.evaluate(()=>{fixture.catalog=[{...fixture.variants[0],id:'hf-'+'8'.repeat(24),familyId:'echo-vision-fixture',familyLabel:'Echo Vision fixture',category:'text',libraryCategory:'omni',memoryMode:'echo',operatingMode:'echo',status:'installed',runtimeReady:true,profileId:null,providerId:null}];fixture.progress=null;});
 const echoCard=page.getByRole('article',{name:'Echo Vision fixture'});await echoCard.waitFor();
 const pending=await page.evaluate(async()=>{const {TestAugment}=await import('/assets/App-kNA9sRUP.js');return TestAugment({models:[]}).models.find(m=>m.id==='hf-'+'8'.repeat(24));});
 record('a ready imported text model waits for a real chat profile rather than exposing an invalid model id',pending.memoryMode==='echo'&&!pending.selectable);

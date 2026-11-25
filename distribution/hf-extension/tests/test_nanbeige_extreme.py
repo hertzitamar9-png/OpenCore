@@ -21,8 +21,10 @@ class ExtremeTests(unittest.TestCase):
         self.assertEqual(engine_for(entry),extreme.ENGINE)
         self.assertEqual(_engine_demand(entry,[],None),
                          {"engine:"+extreme.ENGINE,"engine:"+extreme.LIBS})
-        for name in (extreme.ENGINE,extreme.LIBS):
-            self.assertIn("/b12503/",definition(name)["url"])
+        self.assertIn("/b12732/",definition(extreme.ENGINE)["url"])
+        self.assertIn("/b12503/",definition(extreme.LIBS)["url"])
+        self.assertEqual(definition(extreme.ENGINE)["sha256"],
+                         "2eb1f3cc20a0e4e493bfad32c7f733c6e8ec769cdfbaf28d8586da9c76dcb3eb")
         bad=dict(entry,revision="0"*40)
         with self.assertRaises(ValueError):extreme.check_entry(bad)
     def test_plan_keeps_precision_and_verified_speculation(self):
