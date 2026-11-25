@@ -185,9 +185,11 @@ def native_mode_aliases(catalog):
     models.extend(aliases)
     return len(aliases)
 
+# Exact top-level fields consumed by the pinned Rust Artifact and Model structs.
+# Full publisher/UI metadata remains in expanded-catalog.json and the Hub.
+NATIVE_ARTIFACT_FIELDS = frozenset('id path repo revision filename sha256 bytes compatibleLocalSha256'.split())
+NATIVE_MODEL_FIELDS = frozenset('id label description precision contextTokens artifacts license experimental note selectable category backend memoryMode vramWeightMultiplier runtimeReady installable sourceUrl setupUrl variantOf runtimeModelPath visionProjectorPath weightArtifacts speechLanguage runtimePrecision preparedRuntime'.split())
+
 def native_catalog(catalog):
-    result=copy.deepcopy(catalog)
-    for model in result['models']:
-        for key in ('operatingModes','publishedContextTokens','supportsTextGeneration','modeProfiles','modeAliasOf'):
-            model.pop(key,None)
-    return result
+    return {'artifacts': [{k: copy.deepcopy(v) for k,v in a.items() if k in NATIVE_ARTIFACT_FIELDS} for a in catalog['artifacts']],
+            'models': [{k: copy.deepcopy(v) for k,v in m.items() if k in NATIVE_MODEL_FIELDS} for m in catalog['models']]}

@@ -18,12 +18,12 @@ function resolveLegacyId(id) {
 }
 
 function nativeCatalog(catalog) {
-  const models = catalog.models.map(model => {
-    const row = { ...model };
-    for (const key of ['operatingModes', 'publishedContextTokens', 'supportsTextGeneration', 'modeProfiles', 'modeAliasOf'])
-      delete row[key];
-    return row;
-  });
+  // Exact fields deserialized by the pinned native Rust Model/Artifact types.
+  // Keep the full catalog (including UI-only metadata) outside these slots.
+  const modelFields = new Set('id label description precision contextTokens artifacts license experimental note selectable category backend memoryMode vramWeightMultiplier runtimeReady installable sourceUrl setupUrl variantOf runtimeModelPath visionProjectorPath weightArtifacts speechLanguage runtimePrecision preparedRuntime'.split(' '));
+  const artifactFields = new Set('id path repo revision filename sha256 bytes compatibleLocalSha256'.split(' '));
+  const project = (row, fields) => Object.fromEntries(Object.entries(row).filter(([k]) => fields.has(k)));
+  const models = catalog.models.map(model => project(model, modelFields));
   const byId = new Map(models.map(model => [model.id, model]));
 
   // When a root's legacy name resolves to its own child, make that child the
@@ -38,7 +38,7 @@ function nativeCatalog(catalog) {
   }
 
   validateNativeFamilies(models);
-  return { ...catalog, models };
+  return { artifacts: catalog.artifacts.map(artifact => project(artifact, artifactFields)), models };
 }
 
 // A cycle in any row blocks the native planner for every model. Validate

@@ -28,8 +28,17 @@ class CatalogBuildTests(unittest.TestCase):
 
     def test_native_validation_and_slot_size(self):
         self.builder.validate_catalog(self.catalog)
-        raw = json.dumps(self.catalog, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
-        self.assertLessEqual(len(raw), 5256247)
+        projected = self.builder.native_catalog(self.catalog)
+        raw = json.dumps(projected, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+        self.assertLessEqual(len(raw), self.builder.SLOT_BYTES)
+        self.assertEqual(len(projected['models']), len(self.catalog['models']))
+        self.assertEqual(len(projected['artifacts']), len(self.catalog['artifacts']))
+        for original, native in zip(self.catalog['artifacts'], projected['artifacts']):
+            for key in ('id', 'path', 'repo', 'revision', 'filename', 'sha256', 'bytes'):
+                self.assertEqual(original[key], native[key])
+        for original, native in zip(self.catalog['models'], projected['models']):
+            for key in native:
+                self.assertEqual(original[key], native[key])
         self.assertEqual(len(self.models), len(self.catalog['models']))
         self.assertEqual(len(self.artifacts), len(self.catalog['artifacts']))
 
