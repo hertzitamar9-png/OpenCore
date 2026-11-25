@@ -13,9 +13,17 @@ import zipfile
 from contextlib import contextmanager
 
 HERE = Path(__file__).resolve().parent
-VULKAN_VARIANTS = {'lfm3-cpu-v1': 'lfm3-vulkan-v1', 'flint-cpu-v1': 'flint-vulkan-v1', 'minicpm-cpu-v1': 'minicpm-vulkan-v1'}
+INKLING_GGUF = {
+    'unsloth/inkling-2-mini-gguf': ('inkling-unsloth-cpu-v1', '6d523d5085480baec756f305f2173da5d71331ba'),
+    'atomicchat/inkling-2-mini-gguf': ('inkling-unsloth-cpu-v1', '150a934ee007a918574b682a14f8e3776f359efd'),
+    'ggml-org/inkling-2-mini-gguf': ('inkling-loop-cpu-v1', 'db61c5b492a6a034d986328d28274af0a439aa6c'),
+}
+INKLING_ENGINES = frozenset(engine for engine, _ in INKLING_GGUF.values())
+VULKAN_VARIANTS = {'lfm3-cpu-v1': 'lfm3-vulkan-v1', 'flint-cpu-v1': 'flint-vulkan-v1',
+                   'inkling-unsloth-cpu-v1': 'inkling-unsloth-vulkan-v1', 'minicpm-cpu-v1': 'minicpm-vulkan-v1'}
 CUDA_VARIANTS = {'lfm3-cpu-v1': {12: 'lfm3-cuda12-v1', 13: 'lfm3-cuda13-v1'},
                  'flint-cpu-v1': {12: 'flint-cuda12-v1', 13: 'flint-cuda13-v1'},
+                 'inkling-unsloth-cpu-v1': {12: 'inkling-unsloth-cuda12-v1', 13: 'inkling-unsloth-cuda13-v1'},
                  'minicpm-cpu-v1': {12: 'minicpm-cuda12-v1', 13: 'minicpm-cuda13-v1'}}
 
 
@@ -102,6 +110,17 @@ def engine_variants(engine_id):
 def select_engine(engine_id, preference='auto'):
     if preference not in ('auto', 'cuda', 'vulkan', 'cpu'):
         raise ValueError('Choose Automatic, CUDA, Vulkan or CPU')
+    if engine_id=='nanbeige-extreme-cuda12-v1':
+        if preference not in ('auto','cuda') or cuda_driver_version()<12040:
+            raise ValueError('Nanbeige Extreme requires CUDA 12.4')
+        return engine_id
+    if engine_id=='raon-nano-cpu-v1':
+        if preference not in ('auto','cpu'):raise ValueError('The integrated Raon nano runtime is CPU-only; choose Automatic or CPU')
+        return engine_id
+    if engine_id == 'inkling-loop-cpu-v1':
+        if preference not in ('auto', 'cpu'):
+            raise ValueError('The ggml-org Inkling 2 Mini editions use the upstream Windows CPU runtime.')
+        return engine_id
     if engine_id == 'dory-cuda13-v1':
         if preference not in ('auto', 'cuda') or not dory_cuda_devices():
             raise ValueError('Dory needs an NVIDIA GPU with compute capability 8.9 or newer and a CUDA 13.3 compatible driver. Downloaded weights are kept.')
@@ -163,8 +182,15 @@ def runtime_lock(path):
 def engine_for(entry):
     if entry.get('format') != 'gguf':
         return None
+    if entry.get('id')=='hf-6e616e626569676565787472':
+        return 'nanbeige-extreme-cuda12-v1'
     model_type = str(entry.get('modelType') or '').lower()
     repository = str(entry.get('repository') or '').lower()
+    reviewed = INKLING_GGUF.get(repository)
+    if reviewed and (entry.get('managedEngine'), entry.get('revision')) == reviewed:
+        return reviewed[0]
+    if entry.get('managedEngine')=='edge0-cuda13-v1' and repository.startswith(('edge0/edge0-120b','edge0/edge0-145b')):return 'edge0-cuda13-v1'
+    if entry.get('managedEngine')=='raon-nano-cpu-v1' and repository=='krafton/raon-1-nano-gguf':return 'raon-nano-cpu-v1'
     if entry.get('nativeWeightProfile') and entry.get('managedEngine') == 'dory-cuda13-v1':
         return 'dory-cuda13-v1'
     if entry.get('managedEngine') in ('velociq8-cpu-v1', 'prism-cpu-v1'):
@@ -192,9 +218,10 @@ def definition(engine_id):
 
 
 def folder(root, engine_id):
-    if engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1', 'lfm3-vulkan-v1', 'flint-vulkan-v1',
+    if (engine_id not in engine_variants('inkling-unsloth-cpu-v1') and engine_id != 'inkling-loop-cpu-v1'
+            and engine_id not in ('flint-cpu-v1', 'raon-cpu-v1', 'edgerock-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1', 'lfm3-vulkan-v1', 'flint-vulkan-v1',
                          'lfm3-cuda12-v1', 'lfm3-cuda13-v1', 'flint-cuda12-v1', 'flint-cuda13-v1', 'cuda12-libs-v1', 'cuda13-libs-v1',
-                         'dory-cuda13-v1', 'minicpm-cpu-v1', 'minicpm-vulkan-v1', 'minicpm-cuda12-v1', 'minicpm-cuda13-v1'):
+                         'dory-cuda13-v1','minicpm-cpu-v1','minicpm-vulkan-v1','minicpm-cuda12-v1','minicpm-cuda13-v1','raon-nano-cpu-v1','edge0-cuda13-v1','nanbeige-extreme-cuda12-v1','nanbeige-extreme-cuda12-libs-v1')):
         raise ValueError('Unknown managed publisher runtime')
     base = Path(root).resolve() / 'runtime-setup/engines'
     target = (base / engine_id).resolve()
@@ -204,7 +231,7 @@ def folder(root, engine_id):
 
 
 def executable(root, engine_id):
-    return folder(root, engine_id) / 'llama-server.exe'
+    return folder(root, engine_id) / definition(engine_id).get('executable','llama-server.exe')
 
 
 def digest(path, cancel=lambda: None):
@@ -249,6 +276,9 @@ def ensure(root, engine_id, report=lambda **values: None, cancel=lambda: None):
 
 
 def _install(target, pin, engine_id, report, cancel):
+    if pin.get('sourceBuild'):
+        from hf_source_engine import install
+        return install(target,pin,engine_id,report,cancel)
     staging = target.with_name(target.name + '.staging-' + uuid.uuid4().hex)
     archive = target.with_suffix('.zip.partial')
     try:
@@ -277,7 +307,7 @@ def _install(target, pin, engine_id, report, cancel):
         files = []
         with zipfile.ZipFile(archive) as package:
             members = package.infolist()
-            if len(members) > 1000 or sum(item.file_size for item in members) > 2 * 1024 ** 3:
+            if len(members) > min(pin.get('maxFiles',1000),10000) or sum(item.file_size for item in members) > 2 * 1024 ** 3:
                 raise ValueError('Publisher runtime archive exceeds its extraction limit')
             seen = set()
             for item in members:
@@ -295,6 +325,8 @@ def _install(target, pin, engine_id, report, cancel):
                     if not name.startswith(prefix):
                         raise ValueError('Publisher runtime archive leaves its reviewed layout prefix')
                     name = name[len(prefix):]
+                includes=pin.get('includePaths')
+                if includes and not any(name==allowed or allowed.endswith('/') and name.startswith(allowed) for allowed in includes):continue
                 local = (staging / name).resolve()
                 if not local.is_relative_to(staging.resolve()) or name.casefold() in seen:
                     raise ValueError('Publisher runtime archive contains a colliding path')

@@ -1,0 +1,3 @@
+SenseNova Loop source is bundled under Apache-2.0.
+The model implementation is byte-for-byte publisher code; local adapters live in protocol.py.
+No code from a downloaded model directory is imported.

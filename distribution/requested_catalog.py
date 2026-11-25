@@ -9,6 +9,7 @@ from pathlib import PurePosixPath
 from hf_catalog import build_plan, _pin, stable_id, echo_context_tokens, generation_defaults, safe_filename
 from hf_download import validate_entry
 from hf_lineage import same_checkpoint, bases, quantized_relation, checkpoint_name
+from managed_engines import INKLING_ENGINES, INKLING_GGUF
 
 
 def append_requested(entries, manifest, snapshots):
@@ -61,11 +62,21 @@ def append_requested(entries, manifest, snapshots):
             if source.get('packages'):
                 variants = []
                 for package in source['packages']:
-                    pins = [_pin(repository, metadata['sha'], item,
-                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx', '.cmf', '.litertlm')) or re.search(r'\.onnx_data(?:_\d+)?$', item['rfilename']) else 'support')
-                            for item in metadata['siblings'] if any(fnmatch.fnmatchcase(item['rfilename'], pattern) for pattern in package['files'])]
+                    companions = set(package.get('companionFiles', []))
+                    pins = []
+                    for item in metadata['siblings']:
+                        filename = item['rfilename']
+                        if not any(fnmatch.fnmatchcase(filename, pattern) for pattern in package['files']):
+                            continue
+                        role = 'support'
+                        if filename in companions:
+                            role = 'companion'
+                        elif filename.endswith(('.safetensors', '.gguf', '.pt', '.pth', '.onnx', '.cmf', '.litertlm')) or re.search(r'\.onnx_data(?:_\d+)?$', filename):
+                            role = 'model'
+                        pins.append(_pin(repository, metadata['sha'], item, role))
                     selected = {pin['filename'] for pin in pins}
-                    if not pins or any(not pin['pinned'] for pin in pins) or any(filename not in selected for filename in package.get('requiredFiles', [])):
+                    required = companions.union(package.get('requiredFiles', []))
+                    if not pins or any(not pin['pinned'] for pin in pins) or not required.issubset(selected):
                         raise ValueError('Incomplete curated package: ' + repository)
                     key = package['key']
                     variant = {'id': stable_id(repository, key), 'variantKey': key, 'repository': repository,
@@ -91,9 +102,26 @@ def append_requested(entries, manifest, snapshots):
             for value in plan['variants']:
                 entry = copy.deepcopy(value)
                 if source.get('inferenceCategory'):
-                    if source['inferenceCategory'] != 'text' or not (repository.startswith('LiquidAI/LFM3-') or repository=='mradermacher/Terminal-RSI-27B-i1-GGUF'):
+                    text_override = source['inferenceCategory'] == 'text' and (repository.startswith('LiquidAI/LFM3-') or repository=='mradermacher/Terminal-RSI-27B-i1-GGUF')
+                    pointer_override = (source['inferenceCategory'] == 'computer-use'
+                                        and repository == 'llstar/deskpaw-cua-2b' and row['category'] == 'computer-use'
+                                        and 'Qwen3VLForConditionalGenerationWithPointer' in (original.get('config') or {}).get('architectures', [])
+                                        and bool(source.get('runtimeReason')))
+                    if not text_override and not pointer_override:
                         raise ValueError('Unreviewed inference category override')
-                    entry['category'] = 'text'
+                    entry['category'] = source['inferenceCategory']
+                    if pointer_override:
+                        entry.update(supportsTextChat=False, inputModalities=['image', 'text'], outputModalities=['coordinates'])
+                if source.get('capabilityProfile'):
+                    if not (source['capabilityProfile'] == 'haru-full-duplex'
+                            and repository == 'higurashi-ai/Haru-4B' and row['category'] == 'omni'
+                            and (original.get('config') or {}).get('model_type') == 'haru'
+                            and bool(source.get('runtimeReason'))):
+                        raise ValueError('Unreviewed capability profile')
+                    # Haru emits text alongside continuous audio frames. That
+                    # stream is not the text agent's generate/tool-call protocol.
+                    entry.update(supportsTextChat=False, inputModalities=['audio', 'text'], outputModalities=['audio', 'text'])
+                    entry['haruRuntime'] = 'haru-duplex-v1'
                 quant = source.get('quantization', source.get('quantizationLabels', {}).get(entry['quantization'], entry['quantization']))
                 identity = (entry['format'], quant.upper().replace('FP16', 'F16').replace('FP32', 'F32'))
                 if identity in known:
@@ -107,6 +135,7 @@ def append_requested(entries, manifest, snapshots):
                             or not any(pin['role'] == 'companion' for pin in entry['files'])):
                         raise ValueError('Reviewed vision input needs a pinned projector and a vision-language checkpoint')
                     entry['inputModalities'] = ['image', 'text']
+                    entry['outputModalities'] = ['text']
                 if entry['format'] != 'gguf':
                     selected = {pin['filename'] for pin in entry['files']}
                     for item in metadata['siblings']:
@@ -155,13 +184,44 @@ def append_requested(entries, manifest, snapshots):
                     if defaults:entry['generationDefaults']={**defaults,**entry.get('generationDefaults',{})}
                 if source.get('runtimeReason'):
                     entry['runtime'].update(adapter=None, reason=source['runtimeReason'])
+                    if entry.get('haruRuntime'):
+                        entry['runtime'].update(adapter='haru-duplex', reason='The isolated Haru duplex engine prepares automatically. Real audio frames must pass verification before live calls become available; actual speed depends on free GPU memory and offload.')
+                elif source.get('textRuntime') == 'sensenova-loop-v1':
+                    if (repository != 'sensenova/SenseNova-Loop-9B'
+                            or metadata['sha'] != '329a65f701ba8c48b73c30d0cbaa6f0449733673'
+                            or config.get('model_type') != 'sensenova_loop'
+                            or entry['format'] != 'safetensors'):
+                        raise ValueError('Unreviewed SenseNova Loop checkpoint')
+                    entry.update(textRuntime='sensenova-loop-v1', publishedContextTokens=524288,
+                                 contextTokens=32768, supportsTextChat=True,
+                                 inputModalities=['image', 'text'], outputModalities=['text'])
+                    entry['runtime'].update(adapter='transformers', reason='The app-owned publisher Loop/mHC implementation and isolated Transformers 5.18 runtime prepare automatically. Native and ECHO share the same weights. Hugging Face access approval is required. Ready requires real generation; model execution has not been verified.')
                 elif entry['format'] == 'gguf' and entry['category'] == 'text':
                     engine = source.get('managedEngine', 'flint-cpu-v1')
-                    if engine not in ('flint-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1'):
+                    if engine not in INKLING_ENGINES and engine not in ('flint-cpu-v1', 'lfm3-cpu-v1', 'velociq8-cpu-v1', 'prism-cpu-v1','raon-nano-cpu-v1'):
                         raise ValueError('Unreviewed requested-model runtime: ' + engine)
                     entry['managedEngine'] = engine
                     entry['runtime']['adapter'] = 'gguf'
                     entry['runtime']['reason'] = 'The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified.'
+                    if engine=='raon-nano-cpu-v1':
+                        if repository!='KRAFTON/Raon-1-nano-gguf':raise ValueError('The Nano engine is only reviewed for the official Nano checkpoint')
+                        entry.update(modelType='raon1_nano',runtimePreference='cpu')
+                        entry['runtime']['reason']='The pinned KRAFTON Nano CPU runtime builds inside OpenCore with CMake and Visual Studio 2022 C++ Build Tools. Native and ECHO use this same architecture-compatible engine. Generation is verified after loading; MTP acceleration remains unverified.'
+                    if engine in INKLING_ENGINES:
+                        if (INKLING_GGUF.get(repository.lower()) != (engine, metadata['sha'])
+                                or (original.get('config') or {}).get('model_type') != 'inkling2_loop'
+                                or not source.get('visionInput')):
+                            raise ValueError('Unreviewed Inkling 2 Mini GGUF package')
+                        architecture = 'inkling2_loop' if engine == 'inkling-loop-cpu-v1' else 'inkling2'
+                        entry.update(modelType=architecture, publishedContextTokens=1048576,
+                                     supportsTextChat=True, runtimePreference='cpu',
+                                     generationDefaults={'temperature': 1.0, 'top_p': 1.0, 'top_k': 0, 'min_p': 0.0})
+                        setup = ('The pinned upstream llama.cpp CPU build uses CMake and Visual Studio 2022 C++ Build Tools.'
+                                 if architecture == 'inkling2_loop' else
+                                 'The pinned Unsloth llama.cpp runtime supports CPU, CUDA and Vulkan on Windows.')
+                        entry['runtime']['reason'] = (setup + ' Both OpenCore modes share the weights and included vision projector. '
+                                                     'Windows starts with up to 32,768 tokens depending on free memory. '
+                                                     'Text and image probes run when the model first loads.')
                 elif entry['runtime'].get('adapter') == 'transformers':
                     entry['runtime']['reason'] = 'The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified.'
                 elif not entry['runtime'].get('reason'):
@@ -172,6 +232,15 @@ def append_requested(entries, manifest, snapshots):
                 if row.get('baseRepositories'):
                     entry['baseRepositories'] = list(row['baseRepositories'])
                 entry['catalogOrder'] = 0 if entry['runtime'].get('adapter') else 1
+                if source.get('imageRuntime') == 'tessera-small-v1':
+                    import hf_tessera
+                    entry.update(imageRuntime=hf_tessera.RUNTIME, catalogOrder=0, contextTokens=0,
+                                 inputModalities=['text'], outputModalities=['image'], supportsTextChat=False,
+                                 componentBytes=hf_tessera.ENCODER['bytes'],
+                                 imageDefaults={'width': 16, 'height': 16, 'steps': 16, 'guidance': 3})
+                    if not hf_tessera.supports(entry):
+                        raise ValueError('The Tessera package differs from the reviewed release')
+                    entry['runtime'].update(adapter='tessera-small', reason='Local CPU pixel-art generator. Setup downloads the 95 MB Tessera checkpoint, 609 MB CLIP encoder package and the CPU runtime. Generates a transparent 16 × 16 PNG.')
                 if source.get('imageRuntime')=='iris-sdcpp-v1':
                     from hf_sdcpp import REPOSITORY,REVISION
                     if repository!=REPOSITORY or metadata['sha']!=REVISION:raise ValueError('Sakura runtime package identity differs')
@@ -180,15 +249,18 @@ def append_requested(entries, manifest, snapshots):
                 if source.get('computerRuntime'):
                     reviewed = {'Hobbylm/hobbylm-1B-computer-use': 'hobbylm-v1',
                                 'adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA': 'ternarypilot-v2',
+                                'llstar/deskpaw-cua-2b': 'deskpaw-v1',
                                 'LilCC/GUI-JEPA': 'gui-jepa-v1',
                                 'banyohavlusu23/minicpm-v-4.7-1b-computer-use': 'minicpm-cua-v1'}
                     if reviewed.get(repository) != source['computerRuntime']:
                         raise ValueError('Unreviewed computer-use runtime')
                     entry['computerRuntime'] = source['computerRuntime']
                     entry['category'] = 'computer-use'
-                    entry['contextTokens'] = {'hobbylm-v1': 1024, 'ternarypilot-v2': 16384, 'gui-jepa-v1': 0, 'minicpm-cua-v1': 8192}[source['computerRuntime']]
+                    entry['contextTokens'] = {'hobbylm-v1': 1024, 'ternarypilot-v2': 16384, 'gui-jepa-v1': 0, 'minicpm-cua-v1': 8192, 'deskpaw-v1': 0}[source['computerRuntime']]
                     entry.pop('memoryMode', None)
                     entry['runtime'].update(adapter='computer-use',reason='The pinned base components and isolated Windows prediction runtime prepare automatically. An actual model prediction is required before Ready.')
+                    if source['computerRuntime'] == 'deskpaw-v1':
+                        entry['runtime']['reason'] = 'The reviewed pointer head and isolated Windows CUDA runtime prepare automatically. A real screenshot-grounding prediction must pass before Ready. Executing the predicted click is a separate approved action.'
                     entry.pop('managedEngine', None)
                 validate_entry(entry)
                 entries.append(entry)

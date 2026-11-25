@@ -1,0 +1,221 @@
+{
+  "_id": "6af74b4a51c779a9e336707a",
+  "id": "mradermacher/Baphomet-1.1-4B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "merge",
+    "evogm",
+    "evolutionary-merge",
+    "task-vector",
+    "linear-merge",
+    "qwen3_5",
+    "vision-language",
+    "en",
+    "base_model:CloudGoat/Baphomet-1.1-4B",
+    "base_model:quantized:CloudGoat/Baphomet-1.1-4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 0,
+  "likes": 0,
+  "modelId": "mradermacher/Baphomet-1.1-4B-GGUF",
+  "author": "mradermacher",
+  "sha": "38e170bb428bbabe2968f0459b771e81fe3c38a6",
+  "lastModified": "2026-11-13T19:47:37.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "CloudGoat/Baphomet-1.1-4B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "merge",
+      "evogm",
+      "evolutionary-merge",
+      "task-vector",
+      "linear-merge",
+      "qwen3_5",
+      "vision-language"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 4326350848,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 8665622816
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a4aee48b8c666e525600a7da9558fbe1f5ef8ac8",
+      "size": 2415
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.IQ4_XS.gguf",
+      "blobId": "0002381e09cc378fac6fa71b67fb030425d6998b",
+      "size": 2593558816,
+      "lfs": {
+        "sha256": "c84f15c9862f02351fd17698189ffaaebe63369878a172c61c936de4af919983",
+        "size": 2593558816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q2_K.gguf",
+      "blobId": "fb3a96dba9996e70217237b62add367591cf7eec",
+      "size": 1959170336,
+      "lfs": {
+        "sha256": "9f8061a8c044865e00d96a8dcce517b0ead59ffa4de680c06399499d20f6b7f5",
+        "size": 1959170336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q3_K_L.gguf",
+      "blobId": "14d51d4a5ad621c421d50f855168a06ce3d7326f",
+      "size": 2482649376,
+      "lfs": {
+        "sha256": "41baa52c4b4742e1b535e3432f43191988c2f635df8f11de98dc220b9192ba35",
+        "size": 2482649376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q3_K_M.gguf",
+      "blobId": "3e1d961696cb34cd2ebd55b4658de6db726e1298",
+      "size": 2318809376,
+      "lfs": {
+        "sha256": "bbce83e4336e1b98351e0bdb76b16027da2953168477800bd00542618d4d9674",
+        "size": 2318809376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q3_K_S.gguf",
+      "blobId": "eb920e049661df2110532fcd8df2a91a8f514250",
+      "size": 2121750816,
+      "lfs": {
+        "sha256": "d25bd047c7c782e3d17a1b59ff526fa664c55e1c9fdff36bccfabb0e5f5cec29",
+        "size": 2121750816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q4_K_M.gguf",
+      "blobId": "71f0356bda1e9f6cca9103c7624281dcd83d30ab",
+      "size": 2783449376,
+      "lfs": {
+        "sha256": "a4292424ca4bbcef178be4ded2226cb068f2b08c41528b6b2341aae0833851cc",
+        "size": 2783449376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q4_K_S.gguf",
+      "blobId": "49095b98562b5c3a8a290b6d3d86b436fa5abcaf",
+      "size": 2631774496,
+      "lfs": {
+        "sha256": "6b441479f29dc7bb7510c9b1ee4d339f10fc07a40c68b2951cb9be2d4ccc0e1d",
+        "size": 2631774496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q5_K_M.gguf",
+      "blobId": "7bc70e8f221b55bce93d4c4fe0afdf688426682d",
+      "size": 3161428256,
+      "lfs": {
+        "sha256": "180671128a41e237f248ded8b0e475f9887a5519c154e558df7270263b96907f",
+        "size": 3161428256,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q5_K_S.gguf",
+      "blobId": "ce54f05af15c4376d1a9377ba2b7662c26c85c02",
+      "size": 3072995616,
+      "lfs": {
+        "sha256": "c9a1635e204915e9d52a3e91e3fd600556db27b2f282a2c956ac89f22d191f3a",
+        "size": 3072995616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q6_K.gguf",
+      "blobId": "8b9d826152ecc2029f47e9228c8e4b330ac14a7d",
+      "size": 3563030816,
+      "lfs": {
+        "sha256": "eaf49b457df35932d4031187953e85d2251894dd955cfe9a302898cbc318d54a",
+        "size": 3563030816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.Q8_0.gguf",
+      "blobId": "5d05bd3d4368b2f3f342b2e24f0d872fe48161bf",
+      "size": 4610582816,
+      "lfs": {
+        "sha256": "ade5509df481d75ef5e42e9c3be76d49d191eae3c2aee136ef8184a8ac0587f9",
+        "size": 4610582816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.f16.gguf",
+      "blobId": "3105f6178319e9e1465853b708661573aa09760f",
+      "size": 8665622816,
+      "lfs": {
+        "sha256": "013c23ae8c6faef5dab0d5156b590457dc8d900fa9d6c12a5ca825c528604cc7",
+        "size": 8665622816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.mmproj-Q8_0.gguf",
+      "blobId": "fa9be6594ee15e9ea257bce9efd8269e093ea7b1",
+      "size": 366896640,
+      "lfs": {
+        "sha256": "1ad5f5eeef71d489783a8a9420983cc31352af93bc0e5bae459f6f2f2b058c3d",
+        "size": 366896640,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.mmproj-f16.gguf",
+      "blobId": "9c19876463898194997458344cfaa57d8643857c",
+      "size": 672425472,
+      "lfs": {
+        "sha256": "320e3e6e2232dca0449f333fa2237312953333cb21a4029ea4016ee7299f3d59",
+        "size": 672425472,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "bc0365fcf6f39ff7ce158bc9ef8a2d2e1802bcb2",
+      "size": 3911
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-13T17:39:22.000Z",
+  "usedStorage": 41004145024
+}

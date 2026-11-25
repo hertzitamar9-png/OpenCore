@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "models": {
+    "Edge0/Edge0-120B-q3k": "51a60a20d6fd51385a11e8d1e5f6c767c6715088",
+    "Edge0/Edge0-120B-NVFP4": "291b1ee04fa2660f1d2edb57a66e1cdf4b460229",
+    "Edge0/Edge0-145B-q3k": "d7de835cfce7d9bb22a3d5ebb7d1e8565d4ecf74",
+    "Edge0/Edge0-145B-NVFP4": "6aab5f4337b4c7146dd69130dad4c719f83fca03"
+  }
+}

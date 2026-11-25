@@ -22,6 +22,23 @@ test('first paint includes conversational VL and OCR categories while preserving
   }
 });
 
+test('all specialist cards expose Regular and ECHO with disabled capability explanations',async()=>{
+  for(const category of ['3d','image','video','speech','tts','music','policy','embedding']){
+    const model={id:'specialist-'+category,category,supportsTextGeneration:false,runtime:{adapter:null,reason:'Publisher runtime required.'},operatingModes:[]};
+    const f=await fixture(new Map(),[],{models:[model]},{models:[]});
+    const control=f.api.Control({model});
+    assert.equal(control?.type,'section',category+' has an operating-mode control');
+    const elements=[];function walk(value){if(!value||typeof value!=='object')return;elements.push(value);for(const item of value.children||[])if(Array.isArray(item))item.forEach(walk);else walk(item);}walk(control);
+    const options=elements.filter(item=>item.type==='option');
+    assert.deepEqual(options.map(item=>item.props.value).sort(),['echo','native']);
+    assert.ok(options.every(item=>item.props.disabled));
+    const selector=elements.find(item=>item.type==='select');
+    assert.equal(selector.props.value,'native');
+    await selector.props.onChange({target:{value:'echo'}});
+    assert.equal(f.requests.length,1,'An unsupported specialist mode never reaches the text runtime');
+  }
+});
+
 test('catalog descriptors retain reviewed caps before the runtime metadata response',async()=>{
   const model={id:'capped',category:'text',contextTokens:262144,supportsTextGeneration:true,
     operatingModes:[{id:'native',contextTokens:32768,supported:false},{id:'echo',contextTokens:8192,supported:false}]};

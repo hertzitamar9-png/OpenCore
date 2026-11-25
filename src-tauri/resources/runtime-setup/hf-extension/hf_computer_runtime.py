@@ -13,6 +13,7 @@ import uuid
 
 from hf_download import Downloader, HubClient
 from hf_runtime import checked_model_files, _hash, _python, _available_memory
+from hf_interactive import InteractiveManager
 
 CONFIG = json.loads(Path(__file__).with_name('computer-models.json').read_text(encoding='utf-8'))
 VERSION = 1
@@ -69,8 +70,11 @@ class ComputerManager:
         self.operation, self.lock = threading.Lock(), threading.RLock()
         self.cancelled = threading.Event()
         self.child, self.job, self.fallback = None, None, None
+        self.interactive = InteractiveManager(self.root, self.resources)
 
     def dependency(self, profile):
+        if profile.get('dependencyId') is None:
+            raise ValueError('This full checkpoint has no separate base-model dependency')
         entry = next(value for value in CONFIG['dependencies'] if value['id'] == profile['dependencyId'])
         folder = self.downloader.directory(entry)
         return {**entry, 'localDirectory': str(folder), 'receiptPath': str(folder/'install-receipt.json')}
@@ -81,6 +85,7 @@ class ComputerManager:
 
     def ready(self, entry, proof):
         runtime, profile = profile_for(entry)
+        if runtime == 'deskpaw-v1': return self.interactive.ready(entry, proof)
         if not runtime or entry.get('status') != 'installed' or not isinstance(proof, dict): return False
         if proof.get('workerVersion') != VERSION or proof.get('revision') != entry['revision'] or proof.get('inferenceVerified') is not True: return False
         try:
@@ -95,6 +100,7 @@ class ComputerManager:
 
     def stop(self):
         self.cancelled.set()
+        self.interactive.stop()
         with self.lock: child = self.child
         if child and child.poll() is None:
             child.terminate()
@@ -151,6 +157,8 @@ class ComputerManager:
 
     def _worker(self, entry, mode, body=None, pause=None):
         runtime, profile = profile_for(entry)
+        if runtime == 'deskpaw-v1':
+            return self.interactive.predict({**entry, 'runtimePreparation': entry.get('specialistPreparation')}, body or {})
         available = _available_memory()
         if available is not None and available < 6*1024**3: raise RuntimeError('This computer-use runtime needs at least 6 GiB of free host memory')
         checked_model_files(entry, self.root, pause)
@@ -190,6 +198,7 @@ class ComputerManager:
 
     def prepare(self, entry, report, pause):
         runtime, profile = profile_for(entry)
+        if runtime == 'deskpaw-v1': return self.interactive.prepare(entry, 'deskpaw', report, pause)
         if not runtime or entry.get('status') != 'installed': raise ValueError('Install this exact reviewed checkpoint first')
         if not self.operation.acquire(blocking=False): raise RuntimeError('Another computer-use operation is running')
         self.cancelled.clear()
@@ -217,23 +226,31 @@ class ComputerManager:
     def start(self, entry, body):
         runtime, profile = profile_for(entry)
         if not runtime or not entry.get('specialistReady'): raise ValueError('Prepare this model runtime before requesting a prediction')
+        operating_mode=body.get('operatingMode','native')
         body = request_values(body, runtime)
         if not self.operation.acquire(blocking=False): raise RuntimeError('Another computer-use prediction is running')
         self.cancelled.clear()
         identity = uuid.uuid4().hex
-        with self.lock: self.job = {'id': identity, 'modelId': entry['id'], 'status': 'running', 'stage': 'Loading and running the local model', 'startedAt': time.time()}
+        with self.lock: self.job = {'id': identity, 'modelId': entry['id'], 'category':'computer-use','operatingMode':operating_mode,'requiresTurnHandoff':operating_mode=='echo',
+                                  'status': 'running', 'stage': 'Loading and running the local model', 'startedAt': time.time()}
         def work():
             start = time.monotonic()
             try:
+                if getattr(self,'before_inference',None):self.before_inference(self.job,self.cancelled,self._update_job)
                 result = self._worker(entry, 'predict', body)
                 value = {'id': identity, 'modelId': entry['id'], 'status': 'complete', 'result': result, 'elapsedSeconds': time.monotonic()-start}
             except Exception as error:
-                value = {'id': identity, 'modelId': entry['id'], 'status': 'failed', 'error': str(error)[:1000], 'elapsedSeconds': time.monotonic()-start}
+                value = {'id': identity, 'modelId': entry['id'], 'status': 'cancelled' if self.cancelled.is_set() else 'failed',
+                         'error': None if self.cancelled.is_set() else str(error)[:1000], 'elapsedSeconds': time.monotonic()-start}
             finally:
                 with self.lock: self.job = value
                 self.operation.release()
         threading.Thread(target=work, daemon=True).start()
         return self.status()
+
+    def _update_job(self,job,**values):
+        with self.lock:
+            if self.job is job:job.update(values)
 
     def status(self):
         with self.lock: return dict(self.job) if self.job else {'status': 'idle'}

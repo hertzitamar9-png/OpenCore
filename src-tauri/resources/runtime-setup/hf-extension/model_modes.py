@@ -2,6 +2,7 @@
 import copy
 import json
 from pathlib import Path
+from pipeline_capabilities import pipeline_kind
 
 NATIVE_TARGET = 1048576
 ECHO_TARGET = 32768
@@ -34,8 +35,8 @@ def produces_text(model, info=None):
     """
     info=info or {}
     output=model.get('outputModalities')
-    if isinstance(output,(list,tuple)) and any(str(value).lower()=='text' for value in output):
-        return True
+    if isinstance(output,(list,tuple)) and output:
+        return any(str(value).lower()=='text' for value in output)
     task=str(info.get('pipeline_tag') or model.get('task') or '').lower()
     return task in {
         'text-generation','text2text-generation','conversational','image-text-to-text',
@@ -60,6 +61,27 @@ def descriptors(model, info=None):
         choices.append({'id':mode,'targetContextTokens':target,'contextTokens':min(target,*known) if known else None,'supported':supported})
     return published,choices
 
+def mode_availability(model, info=None):
+    """Both library choices are visible; execution profiles remain capability-specific."""
+    runtime = model.get('runtime') or {}
+    if supports_text_generation(model, info):
+        choices = copy.deepcopy(descriptors(model, info)[1])
+        for choice in choices:
+            choice['scope'] = 'text'
+            if not choice['supported']:
+                choice['reason'] = runtime.get('reason') or model.get('note') or 'This checkpoint needs an integrated text-generation runtime.'
+        return choices
+    supported = bool(runtime.get('adapter') or model.get('preparedRuntime') or model.get('runtimeConnected')
+                     or model.get('runtimeReady') is True)
+    tool = pipeline_kind(model)
+    return [
+        {'id': 'native', 'scope': 'pipeline', 'contextTokens': None, 'supported': supported,
+         **({} if supported else {'reason': runtime.get('reason') or model.get('note') or 'The model-specific runtime is not integrated.'})},
+        {'id': 'echo', 'scope': 'tool' if tool else 'text', 'contextTokens': None, 'supported': bool(tool and supported),
+         'reason': 'The ECHO chat agent can run this model through its native '+tool+' pipeline tools.' if tool and supported else
+                   'ECHO requires an integrated pipeline tool or a conversational text-generation interface for this architecture.'},
+    ]
+
 def apply_operating_modes(models, metadata=lambda _:{}):
     for model in models:
         info=metadata(model) or {}
@@ -69,6 +91,7 @@ def apply_operating_modes(models, metadata=lambda _:{}):
         model['operatingModes']=[]
         if enabled:
             model['publishedContextTokens'],model['operatingModes']=descriptors(model,info)
+        model['modeAvailability'] = mode_availability(model, info)
     return models
 
 def mode_context(entry, mode=None):

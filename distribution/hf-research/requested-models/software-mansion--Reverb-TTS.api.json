@@ -1,0 +1,437 @@
+{
+  "_id": "6abed505a4edc3b7626a0d18",
+  "id": "software-mansion/Reverb-TTS",
+  "private": false,
+  "pipeline_tag": "text-to-speech",
+  "library_name": "reverb-tts",
+  "tags": [
+    "reverb-tts",
+    "safetensors",
+    "executorch",
+    "text-to-speech",
+    "voice-cloning",
+    "zero-shot",
+    "on-device",
+    "en",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "pl",
+    "pt",
+    "base_model:k2-fsa/OmniVoice",
+    "base_model:finetune:k2-fsa/OmniVoice",
+    "license:cc-by-nc-4.0",
+    "region:us"
+  ],
+  "downloads": 786,
+  "likes": 73,
+  "modelId": "software-mansion/Reverb-TTS",
+  "author": "software-mansion",
+  "sha": "9c0da9ddfd47619375ce8e5aeede4681fe32d24d",
+  "lastModified": "2026-11-19T15:36:37.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "cc-by-nc-4.0",
+    "language": [
+      "en",
+      "de",
+      "fr",
+      "es",
+      "it",
+      "pl",
+      "pt"
+    ],
+    "base_model": "k2-fsa/OmniVoice",
+    "base_model_relation": "finetune",
+    "pipeline_tag": "text-to-speech",
+    "library_name": "reverb-tts",
+    "tags": [
+      "text-to-speech",
+      "voice-cloning",
+      "zero-shot",
+      "executorch",
+      "on-device"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "48fa59ef49a27d66816b6be7df4aead0d544890b",
+      "size": 1783
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "89dd3e9bd2cf1b82d1833d333737b570d2b2efbf",
+      "size": 12833
+    },
+    {
+      "rfilename": "assets/frontier_size_speed.png",
+      "blobId": "0f818b952cf9a0c5b6425a2d21577c8d26c80917",
+      "size": 491887,
+      "lfs": {
+        "sha256": "e239629e2d60a082cd6c4cc29445255f03d8c1e38221afbf7e5a05207cc9b619",
+        "size": 491887,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/frontier_size_speed_dark.png",
+      "blobId": "7e13ae25690bb94bc81884d133940149bd8d97ec",
+      "size": 483431,
+      "lfs": {
+        "sha256": "94846f71821c8f39074e1c73554f7dda2688a140512856667bc5f5573d752091",
+        "size": 483431,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/header.png",
+      "blobId": "a08075e6e9a6816953593a67dd734b2932493c6b",
+      "size": 30488,
+      "lfs": {
+        "sha256": "0d46e7f7b31fc801653f1082eebe7b7fe800fcf1bb79c9fe6b73771b9e1a9590",
+        "size": 30488,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "assets/header_dark.png",
+      "blobId": "5bcfe2dc329598bc93051139047b201e6908382d",
+      "size": 29916,
+      "lfs": {
+        "sha256": "a4c254cb9dc8f12109a50ad4cc97e6f676e92436c1c424259ca9a1bcb24d2aa6",
+        "size": 29916,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "assets/swm_ai_labs.svg",
+      "blobId": "c858a2aa69cff17cd3b040f63f72585c744f0d94",
+      "size": 1433
+    },
+    {
+      "rfilename": "assets/swm_ai_labs_dark.svg",
+      "blobId": "4510d165be7313dac7ab94052f0efe664a84d8e7",
+      "size": 1433
+    },
+    {
+      "rfilename": "assets/training_scheme.png",
+      "blobId": "c40ece7b4b2d3e757da908da902febd5b0884478",
+      "size": 29435,
+      "lfs": {
+        "sha256": "ad24eb1ceb7585202591182b8931b517edf5f2cf45de0f1e447c4e0a0898e11d",
+        "size": 29435,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "assets/training_scheme_dark.png",
+      "blobId": "ce11d983246a627c83a848d625c5a8aa3d89c3af",
+      "size": 29469,
+      "lfs": {
+        "sha256": "d116b6f1b80ad2e29445f6e74624fcf2f48ea2bad75ff875eb8d4bf661ff5636",
+        "size": 29469,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "model/chat_template.jinja",
+      "blobId": "01be9b307daa2d425f7c168c9fb145a286e0afb4",
+      "size": 4168
+    },
+    {
+      "rfilename": "model/executorch/mlx/fp16/reverb_mlx_fp16.pte",
+      "blobId": "5c17911e7219ae0f0531d6fd6f42c9c5d8572efb",
+      "size": 611532036,
+      "lfs": {
+        "sha256": "dd2d2e0c73cbf3b845cd0a6f633b22e6b480a6112b21661522f1e9160dd73b7c",
+        "size": 611532036,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/mlx/int4/reverb_mlx_int4.pte",
+      "blobId": "0a10d61c247da412c0ddb9cf6b3b9ef98bd6d493",
+      "size": 231837188,
+      "lfs": {
+        "sha256": "47fce933c81b1f0c41328be1893fe61aefaddb8fc7181d74c5539517a74c0aaa",
+        "size": 231837188,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/mlx/int8/reverb_mlx_int8.pte",
+      "blobId": "a14d6cfa9803c739caea5441504a581ea92da283",
+      "size": 351578756,
+      "lfs": {
+        "sha256": "15664acec2019b75979e3378192b3bdb56b0b646174737d61eca651f62c349ef",
+        "size": 351578756,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/qnn/int4/reverb_qnn_int4_v69.pte",
+      "blobId": "d83625d4759b95fe212b5b88799a03783e37d9f1",
+      "size": 232072960,
+      "lfs": {
+        "sha256": "3f85d1b0ef8fabb92eeb2e7185c506544ee0ac2ceeaafddc0ab56405f9faa9cc",
+        "size": 232072960,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/qnn/int4/reverb_qnn_int4_v73.pte",
+      "blobId": "2794862db5cc9483dfeb9fb14de46479b4d7f8f4",
+      "size": 233506560,
+      "lfs": {
+        "sha256": "e5ad2199754226f8bc9be53611074bf98ecea98988ddac63ad4de52cbaff517a",
+        "size": 233506560,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/qnn/int4/reverb_qnn_int4_v75.pte",
+      "blobId": "79b9b577a7a87ae6a693aac2bce5a2777c1a9b66",
+      "size": 232802048,
+      "lfs": {
+        "sha256": "0d5efbbc1fc529591e7777ca5e8228daa2b96af34ebe26cb7b2d828ffa1034ff",
+        "size": 232802048,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/qnn/int4/reverb_qnn_int4_v79.pte",
+      "blobId": "3ffbc97221a53c409e0d8d3fa349c37a6e5a163f",
+      "size": 233248512,
+      "lfs": {
+        "sha256": "2799bc83e98274f475e710a8cbe844cb69f131fbf2fcd642a5a2d71c9ffc1e82",
+        "size": 233248512,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/qnn/int4/reverb_qnn_int4_v81.pte",
+      "blobId": "d1811c457532675fbc1ef14a7ea4b39e02188afe",
+      "size": 236902400,
+      "lfs": {
+        "sha256": "e4ffc1df1ba09f809f9fe5da6c51162f5bc48448673fd1c1ab55337f52f8ca77",
+        "size": 236902400,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/vulkan/int4/reverb_vulkan_int4.pte",
+      "blobId": "464292ddb486f3db45ceddf771c7916b7181585f",
+      "size": 233043076,
+      "lfs": {
+        "sha256": "0a2f1338e2c97bf60cb9b086e47eaa1a81cddd446dbd9bd00851b6f83f5013c5",
+        "size": 233043076,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/executorch/xnnpack/int8a8/reverb_xnnpack_8da8w.pte",
+      "blobId": "6e321f561bcdf55a59f5d39ce3064d460f96671f",
+      "size": 325742336,
+      "lfs": {
+        "sha256": "ab287ea1c28716e3f069e467f83db11dcc3aaad34b4b22d7b8ad9fddbbf96e70",
+        "size": 325742336,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/runntime/int4/model.safetensors",
+      "blobId": "4f552e34b8ada51eaa022a161ef8c6b436c29d77",
+      "size": 190532806,
+      "lfs": {
+        "sha256": "7df6cca18cfe8039cc840721d7d32a84d4747d89e50c30526326a87a9c756e68",
+        "size": 190532806,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/runntime/int8/model.safetensors",
+      "blobId": "b45e7c485f3353e11c473b2c2f19ecef12f8f397",
+      "size": 306580694,
+      "lfs": {
+        "sha256": "20a0df7507af3f193dfac8ff28229343134929a5903c07e7ac472ff77d1bce0e",
+        "size": 306580694,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/safetensors/fp16/config.json",
+      "blobId": "371796963cbd58915d375e216948d56d82de4316",
+      "size": 5388
+    },
+    {
+      "rfilename": "model/safetensors/fp16/model.safetensors",
+      "blobId": "8f46827f96f30a2d5af96a2c7b87c904a2d9e00b",
+      "size": 594498000,
+      "lfs": {
+        "sha256": "aa9c3c265ec65af3593686b85ff8b57f16d6e538892ab48a7256b354e6327805",
+        "size": 594498000,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/safetensors/fp32/config.json",
+      "blobId": "7849776f0de516ce4bf411c3cffcc629eb6fbe16",
+      "size": 5388
+    },
+    {
+      "rfilename": "model/safetensors/fp32/model.safetensors",
+      "blobId": "57637bf5c4dee2b0879d7e5070db1ea59cbedca4",
+      "size": 1188966480,
+      "lfs": {
+        "sha256": "ffa26b9994a0c3c0edcf1c8d722422d10140a2430e6028ee8e3fc790ed3df0d9",
+        "size": 1188966480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model/safetensors/int4/config.json",
+      "blobId": "451e1a828710fb5b3babfd2786f6120a383efbb6",
+      "size": 5656
+    },
+    {
+      "rfilename": "model/safetensors/int4/model.safetensors",
+      "blobId": "1c4e61ffdd83c3dd6b235f6a187609e399dbed44",
+      "size": 190532750,
+      "lfs": {
+        "sha256": "3b607d6d70fd2ef094020f5d76508543db7a7f192c6030ab14249161e3521e8e",
+        "size": 190532750,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/safetensors/int8/config.json",
+      "blobId": "a7965fc96f4af0393e19d7d7921315d9fef2a515",
+      "size": 5638
+    },
+    {
+      "rfilename": "model/safetensors/int8/model.safetensors",
+      "blobId": "efec66e7c1741920c3b0b3cdbcde12acaaa627fc",
+      "size": 306580622,
+      "lfs": {
+        "sha256": "5d57b29ecb504510eeda31c121ac6da2e3fb0bd162f222a58a5f825374edfcb5",
+        "size": 306580622,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/safetensors/int8a8/config.json",
+      "blobId": "bba3e3af857fe63bed809e7b9dd6b4f4cdcf58bf",
+      "size": 5644
+    },
+    {
+      "rfilename": "model/safetensors/int8a8/model.safetensors",
+      "blobId": "127a7035c62dc55eccb732a7f759cb8e3f4c1614",
+      "size": 306580622,
+      "lfs": {
+        "sha256": "1105ab0586b95d5f1fd2a39db5ff17d7dbbd97ec773c89a7a14c06fa9d663fc7",
+        "size": 306580622,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model/tokenizer.json",
+      "blobId": "b669bb7b79ad9c5291be4a99ea7a48de2598cc70",
+      "size": 2170389
+    },
+    {
+      "rfilename": "model/tokenizer_config.json",
+      "blobId": "a7fb6f8558cce2a23d4cbb186a4a740bd2d9d481",
+      "size": 533
+    },
+    {
+      "rfilename": "voices/de_female_standard.json",
+      "blobId": "6f73595bac2ce5d4365e0696a9928ca45959d66b",
+      "size": 6775
+    },
+    {
+      "rfilename": "voices/de_male_standard.json",
+      "blobId": "c48bb59986e6894955d0347c176c43e3e48a6711",
+      "size": 9466
+    },
+    {
+      "rfilename": "voices/en_female_narrator.json",
+      "blobId": "034eb96e1b67a2dc5c1c2f677a9b0a406107bd9c",
+      "size": 14990
+    },
+    {
+      "rfilename": "voices/en_female_whisper.json",
+      "blobId": "0ef3e00845a5d67f1ebfabd285c3cad7078199f1",
+      "size": 13933
+    },
+    {
+      "rfilename": "voices/en_male_angry.json",
+      "blobId": "977389df5decb35303e70169e21b0e8d3f9f0c0d",
+      "size": 7017
+    },
+    {
+      "rfilename": "voices/en_male_narrator_1.json",
+      "blobId": "86401473c1e10d688ab4e66042d7a7f6aae3af5c",
+      "size": 7855
+    },
+    {
+      "rfilename": "voices/en_male_narrator_2.json",
+      "blobId": "7dbdd7cd85c72da0d34c3b69ab91a19ea365d528",
+      "size": 14830
+    },
+    {
+      "rfilename": "voices/es_male_standard_1.json",
+      "blobId": "6b762065c6c384760c4783dbfaf0d8b297360418",
+      "size": 5365
+    },
+    {
+      "rfilename": "voices/es_male_standard_2.json",
+      "blobId": "c71c26d09c2c31beeb307a6e812bdc2ce629db19",
+      "size": 8087
+    },
+    {
+      "rfilename": "voices/fr_female_standard.json",
+      "blobId": "f910308dc1a0b128fe5a4b06aceadc1de384a2ff",
+      "size": 6394
+    },
+    {
+      "rfilename": "voices/fr_male_standard.json",
+      "blobId": "65ab66a677fbec09c49678a332df38516470b7e5",
+      "size": 7772
+    },
+    {
+      "rfilename": "voices/it_male_expressive.json",
+      "blobId": "eff1f0fe78b54da74225380c43725ae125cecfbb",
+      "size": 8770
+    },
+    {
+      "rfilename": "voices/it_male_standard.json",
+      "blobId": "511937fe872f7d636ded46c061a0147bdfb5fa57",
+      "size": 6448
+    },
+    {
+      "rfilename": "voices/pl_male_standard.json",
+      "blobId": "b8e4ada87b7cc13b0216f6d48bece3b58ccd4859",
+      "size": 8867
+    },
+    {
+      "rfilename": "voices/pt_female_standard.json",
+      "blobId": "fc193913ddad23011c434951f3ba3c0529685dd0",
+      "size": 7164
+    },
+    {
+      "rfilename": "voices/pt_male_standard.json",
+      "blobId": "f4673344a335618965f3e34fc73a219946fd32fa",
+      "size": 6436
+    }
+  ],
+  "spaces": [
+    "software-mansion/Reverb-TTS-runntime"
+  ],
+  "createdAt": "2026-10-01T21:47:49.000Z",
+  "usedStorage": 15192987191
+}

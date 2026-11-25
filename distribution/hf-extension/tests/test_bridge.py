@@ -394,7 +394,7 @@ class BridgeTests(unittest.TestCase):
         self.assertIsNone(self.runtime.context)
 
     def test_modes_persist_with_separate_proofs_and_never_download_the_checkpoint_again(self):
-        entry=self.seed();entry['category']='text';entry['contextTokens']=131072
+        entry=self.seed();entry.update(category='text',format='gguf',runtime={'adapter':'gguf'},contextTokens=131072)
         self.request('POST','/api/install',{'id':entry['id']});self.wait_job()
         files=list((self.root/'models/hub'/entry['id']).rglob('*.gguf'))
         before={str(file):file.read_bytes() for file in files}
@@ -426,7 +426,7 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(self.request('POST','/api/runtime/mode',{'id':entry['id'],'operatingMode':'fake'})[0],400)
 
     def test_mode_failure_retains_selection_and_pinned_downloads(self):
-        entry=self.seed();entry['category']='text'
+        entry=self.seed();entry.update(category='text',format='gguf',runtime={'adapter':'gguf'})
         with patch.object(self.runtime,'change_mode',side_effect=RuntimeError('active request'),create=True):
             self.assertEqual(self.request('POST','/api/runtime/mode',{'id':entry['id'],'operatingMode':'native'})[0],409)
         self.assertEqual(self.state.entry(entry['id'])['operatingMode'],'echo')

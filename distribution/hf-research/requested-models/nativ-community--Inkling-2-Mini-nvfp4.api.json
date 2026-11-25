@@ -1,0 +1,256 @@
+{
+  "_id": "6b00b02ebffba7be2ba65a97",
+  "id": "nativ-community/Inkling-2-Mini-nvfp4",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "mlx",
+  "tags": [
+    "mlx",
+    "safetensors",
+    "inkling2_loop",
+    "conversational",
+    "image-text-to-text",
+    "moe",
+    "nvfp4",
+    "mxfp8",
+    "base_model:thinkingmachines/Inkling-2-Mini",
+    "base_model:quantized:thinkingmachines/Inkling-2-Mini",
+    "license:apache-2.0",
+    "4-bit",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 2,
+  "modelId": "nativ-community/Inkling-2-Mini-nvfp4",
+  "author": "nativ-community",
+  "sha": "26f71eef259a1dd7fc476778d67020351e0dfb8c",
+  "lastModified": "2026-11-20T20:45:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Inkling2LoopForConditionalGeneration"
+    ],
+    "model_type": "inkling2_loop",
+    "quantization_config": {
+      "bits": 4
+    },
+    "tokenizer_config": {
+      "eos_token": "<|content_model_end_sampling|>",
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "{%- set effort_map = {\"none\": 0.0, \"minimal\": 0.1, \"low\": 0.2, \"medium\": 0.7, \"high\": 0.9, \"xhigh\": 0.99, \"max\": 0.99} -%}\n{%- set role_token = {\"user\": \"<|message_user|>\", \"assistant\": \"<|message_model|>\", \"system\": \"<|message_system|>\", \"tool\": \"<|message_tool|>\"} -%}\n\n{%- macro emit_thinking_effort() -%}\n    {%- set eff = reasoning_effort if reasoning_effort is defined and reasoning_effort is not none else 0.9 -%}\n    {%- if eff is string -%}\n        {%- set key = eff | trim -%}\n        {%- if key not in effort_map -%}\n            {{- raise_exception(\"Unknown reasoning_effort: \" ~ eff) -}}\n        {%- endif -%}\n        {%- set num = effort_map[key] -%}\n    {%- else -%}\n        {%- set num = eff | float -%}\n    {%- endif -%}\n    {%- if num < 0.0 or num > 0.99 -%}\n        {{- raise_exception(\"reasoning_effort must be in [0.0, 0.99]\") -}}\n    {%- endif -%}\n    {{- \"<|message_system|><|content_text|>Thinking effort level: \" -}}\n    {%- if num == 0.0 -%}0{%- else -%}{{ num }}{%- endif -%}\n    {{- \"<|end_message|>\" -}}\n{%- endmacro -%}\n\n{%- if tools -%}\n    {%- set tool_state = namespace(specs=[]) -%}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {%- set spec = {\n            \"description\": (fn.description if fn.description is defined and fn.description else \"\"),\n            \"name\": fn.name,\n            \"parameters\": (fn.parameters if fn.parameters is defined and fn.parameters else {}),\n            \"type\": (tool.type if tool.type is defined and tool.type else \"function\"),\n        } -%}\n        {%- set tool_state.specs = tool_state.specs + [spec] -%}\n    {%- endfor -%}\n    {{- \"<|message_system|>tool_declare<|content_xml|>\" -}}\n    {{- tool_state.specs | tojson(sort_keys=true, separators=(\",\", \":\")) -}}\n    {{- \"<|end_message|>\" -}}\n{%- endif -%}\n\n{%- set state = namespace(effort_emitted=false) -%}\n{%- for message in messages -%}\n    {%- if message.role not in role_token -%}\n        {{- raise_exception(\"Unknown message role: \" ~ message.role) -}}\n    {%- endif -%}\n    {%- if not state.effort_emitted and message.role != \"system\" -%}\n        {{- emit_thinking_effort() -}}\n        {%- set state.effort_emitted = true -%}\n    {%- endif -%}\n\n    {%- set header = namespace(text=role_token[message.role]) -%}\n    {%- if message.role == \"tool\" -%}\n        {%- if message.name is defined and message.name -%}\n            {%- set header.text = header.text ~ message.name -%}\n        {%- elif message.tool_call_id is defined and message.tool_call_id -%}\n            {%- for prev in messages -%}\n                {%- if prev.role == \"assistant\" and prev.tool_calls -%}\n                    {%- for tc in prev.tool_calls -%}\n                        {%- if tc.id is defined and tc.id == message.tool_call_id and tc.function.name is defined -%}\n                            {%- set header.text = header.text ~ tc.function.name -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endif -%}\n    {%- elif message.role == \"assistant\" and message.name is defined and message.name -%}\n        {%- set header.text = header.text ~ message.name -%}\n    {%- endif -%}\n    {%- set rtok = header.text -%}\n    {%- set rendered -%}\n\n    {%- if message.role == \"assistant\" and message.reasoning_content is defined and message.reasoning_content -%}\n        {{- rtok ~ \"<|content_thinking|>\" ~ message.reasoning_content ~ \"<|end_message|>\" -}}\n    {%- endif -%}\n\n    {%- if message.content is string and (message.content or not (message.role == \"assistant\" and (message.tool_calls or message.reasoning_content))) -%}\n        {{- rtok ~ \"<|content_text|>\" ~ message.content ~ \"<|end_message|>\" -}}\n    {%- elif message.content -%}\n        {%- for part in message.content -%}\n            {%- if part is string -%}\n                {{- rtok ~ \"<|content_text|>\" ~ part ~ \"<|end_message|>\" -}}\n            {%- elif part.type is not defined or part.type in (\"text\", \"input_text\") -%}\n                {%- set text_part = (part.text if part.text is defined and part.text is string else \"\") -%}\n                {{- rtok ~ \"<|content_text|>\" ~ text_part ~ \"<|end_message|>\" -}}\n            {%- elif part.type in (\"image\", \"input_image\", \"image_url\") -%}\n                {%- if message.role not in (\"user\", \"tool\") -%}\n                    {{- raise_exception(\"Image content is only supported for user and tool messages\") -}}\n                {%- endif -%}\n                {{- rtok ~ \"<|content_image|><|unused_200054|><|end_message|>\" -}}\n            {%- elif part.type in (\"audio\", \"input_audio\", \"audio_url\") -%}\n                {{- raise_exception(\"Inkling 2 does not accept audio input\") -}}\n            {%- else -%}\n                {{- raise_exception(\"Unsupported content part type: \" ~ part.type) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n\n    {%- if message.role == \"assistant\" and message.tool_calls -%}\n        {%- for tc in message.tool_calls -%}\n            {%- set fn = tc.function -%}\n            {%- if fn.name is not defined or fn.name is not string -%}\n                {{- raise_exception(\"tool call function name must be a string\") -}}\n            {%- endif -%}\n            {%- if message.name is defined and message.name and message.name != fn.name -%}\n                {{- raise_exception(\"assistant name \" ~ message.name ~ \" does not match its tool call \" ~ fn.name) -}}\n            {%- endif -%}\n            {%- set args = fn.arguments if fn.arguments is defined and fn.arguments else {} -%}\n            {%- if args is string -%}\n                {{- raise_exception(\"tool call arguments must be a parsed object, not a JSON string; canonicalize upstream\") -}}\n            {%- endif -%}\n            {%- if args is not mapping -%}\n                {{- raise_exception(\"tool call arguments must be an object\") -}}\n            {%- endif -%}\n            {{- \"<|message_model|>\" ~ fn.name ~ \"<|content_invoke_tool_json|>\" -}}\n            {{- '{\"name\":' ~ (fn.name | tojson(sort_keys=true, separators=(\",\", \":\"))) ~ ',\"args\":' -}}\n            {{- \"{\" -}}\n            {%- for key, value in args | dictsort(case_sensitive=true) -%}\n                {{- (key | tojson) ~ \":\" ~ (value | tojson(separators=(\",\", \":\"))) -}}\n                {%- if not loop.last -%},{%- endif -%}\n            {%- endfor -%}\n            {{- \"}}<|end_message|>\" -}}\n        {%- endfor -%}\n    {%- endif -%}\n\n    {%- if message.role == \"assistant\" -%}\n        {{- \"<|content_model_end_sampling|>\" -}}\n    {%- endif -%}\n    {%- endset -%}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}{{- rendered -}}{%- endgeneration -%}\n    {%- else -%}\n        {{- rendered -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if not state.effort_emitted -%}\n    {{- emit_thinking_effort() -}}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "library_name": "mlx",
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "thinkingmachines/Inkling-2-Mini",
+    "tags": [
+      "mlx",
+      "conversational",
+      "image-text-to-text",
+      "moe",
+      "nvfp4",
+      "mxfp8"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "116e05f2b3373f32febcbcfff6ca51f12e2acf9d",
+      "size": 1658
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b36cc5813f858c72d8dd141e4b7eecb77ce19c03",
+      "size": 4792
+    },
+    {
+      "rfilename": "UPSTREAM_README.md",
+      "blobId": "4f69cc893133c796c1ab2a9025a183235dfc4d54",
+      "size": 54797
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "cae99e08917fe3d9ff21551a7c9a835981c69032",
+      "size": 6868
+    },
+    {
+      "rfilename": "checksums.json",
+      "blobId": "e6b8dbd7bfd2bc48af100741a5439e9b167b8cd5",
+      "size": 3251
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "25221ac9862ef300febb88393d3246c6e6ff9493",
+      "size": 26540
+    },
+    {
+      "rfilename": "conversion.json",
+      "blobId": "56bb277b3cfb43e722baf2e79d64f0b13364ef9f",
+      "size": 600
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "1b5d49d129001d2be58c2f254bfae3221eab6d96",
+      "size": 98
+    },
+    {
+      "rfilename": "hf_quant_config.json",
+      "blobId": "ec915fa4d2b07bfe26240f71e981d34778022baf",
+      "size": 67924
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "b9886227ca6ae597726ac3d2dc7aa53b85295ac5",
+      "size": 5365563528,
+      "lfs": {
+        "sha256": "61843021c7f3340aa84dfc74ce67e2c8ff5a19466ddb342c13b5f4c30c003e1c",
+        "size": 5365563528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "3946fbdcf1c6550fe545efe2fe10a2805760d144",
+      "size": 5266581936,
+      "lfs": {
+        "sha256": "62d7b61cb250eae07474407664b0094dd17fbfc2e15d8c174f66cff51086a6c8",
+        "size": 5266581936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "57ed54fa67bbd4cd283aa75c5328dce4a00a976f",
+      "size": 5173559890,
+      "lfs": {
+        "sha256": "1e23827f087302aef766d4c8e3dcbc457acc198b8137d0c59cd507ce998f1b7b",
+        "size": 5173559890,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "86ebfc1ad311ebc45cc1bd85ecdccf12869a60ac",
+      "size": 3720338350,
+      "lfs": {
+        "sha256": "bf22d5cb28345f9c1d59ddd16fae9fe50e42a866a6bdd385cb2a0e01b1b920db",
+        "size": 3720338350,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "66a51e1048ea3f9136410811bbd7631720b044f8",
+      "size": 127699
+    },
+    {
+      "rfilename": "mtp.safetensors",
+      "blobId": "d4be15f6c0f8552e04f4278cd024afd36ad2042b",
+      "size": 635801416,
+      "lfs": {
+        "sha256": "7c3b651317f01f73bcf4e1dceba66ef8b7e1a1eac6bc171e882e690a4b10a1d2",
+        "size": 635801416,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "0e6df76a75a15f8af795dc08346dad6741f6421e",
+      "size": 461
+    },
+    {
+      "rfilename": "runtime/LICENSE",
+      "blobId": "938e89e95eb6e4cc12e137291ff6ff9a3e9a93a2",
+      "size": 1069
+    },
+    {
+      "rfilename": "runtime/README.md",
+      "blobId": "d8ab7b51d25a200fc8bd9ccfc44859dfc94f4ecd",
+      "size": 650
+    },
+    {
+      "rfilename": "runtime/inkling2-mini.patch",
+      "blobId": "2fb42a404d6f53ca78de6978f4a573e33c2c8c53",
+      "size": 27259
+    },
+    {
+      "rfilename": "runtime/mlx_vlm-0.8.0+inkling2mini-py3-none-any.whl",
+      "blobId": "96b8b7ec3ddd259c6529e3cda7498774f83ed758",
+      "size": 3876401,
+      "lfs": {
+        "sha256": "d4a9c48a56719eae44879151f7c147776ee0dc3e593c8cb9206c9cc056e29745",
+        "size": 3876401,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "e4fe9735b528be1c630eb832d655fc8c4c2c309f",
+      "size": 529
+    },
+    {
+      "rfilename": "tiktoken/tokenizer.model",
+      "blobId": "5206e2465982316e8d9648a88014d41e059204cf",
+      "size": 3386494,
+      "lfs": {
+        "sha256": "f170372dd655728909228220d77cf6b8104a59f38a91262a7d2c4027906ec0d8",
+        "size": 3386494,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "5e55fd2939ffee98a8dd9f273b7e8c999e56f9c2",
+      "size": 26178678,
+      "lfs": {
+        "sha256": "7f332727f9a3f093dd452a39cc978e6757627e5dad1b0673aa4e75174f236dd6",
+        "size": 26178678,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "a759726fc10add78edfd02e3cac68b6edf3d7f1a",
+      "size": 2923
+    },
+    {
+      "rfilename": "validation.json",
+      "blobId": "8bb3fadf5711ff93ab41c6479f63fcb2d9f768f8",
+      "size": 1194
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-20T20:40:14.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1927217664,
+      "F32": 242688,
+      "U32": 24461180928
+    },
+    "total": 26388641280
+  },
+  "usedStorage": 20195286693
+}

@@ -126,12 +126,27 @@ def build():
     entries = append_requested(entries, HERE / 'hf-research/requested-models.json', HERE / 'hf-research/requested-models')
     from tts_catalog import append_tts
     entries = append_tts(entries, HERE / 'hf-research/requested-models')
+    from hf_generation import supports as supports_generation
+    from hf_edge0 import supports as supports_edge0
+    components=json.loads((EXTENSION/'budget3d-runtime/components.json').read_text(encoding='utf-8'))['components']
+    for entry in entries:
+        if supports_edge0(entry):
+            entry.update(managedEngine='edge0-cuda13-v1',modelType='edge0_latent_moe')
+            entry['runtime'].update(adapter='edge0',available=False,inferenceVerified=False,
+                reason='The pinned Edge0 CLI/Strata runtime prepares automatically and connects to Native or ECHO. Requires CUDA 13, at least 16 GiB VRAM and 20 GiB available system RAM. Real generation is required before Ready.')
+        if supports_generation(entry):
+            entry['generationRuntime']='budget3d-idol-v1'
+            entry['componentBytes']=sum(item['bytes'] for item in components)
+            entry['runtime'].update(adapter='budget3d-idol',available=False,inferenceVerified=False,
+                reason='The pinned Budget3D/IDOL engine, Gaussian decoders, DINOv3 and FLUX.2 VAE prepare in an isolated runtime. DINOv3 requires publisher access. Native generation and ECHO tools use the same image-to-3D pipeline; actual generation must pass before Ready.')
     for entry in entries:
         entry['builtIn'] = True
     from echo_catalog import publisher_echo_policy
     from hf_catalog import echo_context_tokens
     publisher_echo_policy(entries,HERE/'hf-research',echo_context_tokens)
     apply_operating_modes(entries,snapshot_metadata(HERE/'hf-research'))
+    from hf_nanbeige_extreme import catalog_entry as extreme_catalog_entry
+    entries.append(validate_entry(extreme_catalog_entry()))
     entries.sort(key=lambda e: (e['familyId'], e.get('catalogOrder', 0), e['format'] != 'gguf', e['bytes'], e['id']))
     from speech_support import speech_support
     return {'schema': 1, 'entries': entries, 'speechSupport': speech_support(catalog, entries)}

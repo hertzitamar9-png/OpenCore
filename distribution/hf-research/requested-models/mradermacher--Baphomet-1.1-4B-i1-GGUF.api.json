@@ -1,0 +1,86 @@
+{
+  "_id": "6af765c806eee6352697f2d2",
+  "id": "mradermacher/Baphomet-1.1-4B-i1-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "merge",
+    "evogm",
+    "evolutionary-merge",
+    "task-vector",
+    "linear-merge",
+    "qwen3_5",
+    "vision-language",
+    "en",
+    "base_model:CloudGoat/Baphomet-1.1-4B",
+    "base_model:quantized:CloudGoat/Baphomet-1.1-4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 0,
+  "modelId": "mradermacher/Baphomet-1.1-4B-i1-GGUF",
+  "author": "mradermacher",
+  "sha": "f85ee286571dcae095660135ffc7da19d3bd1b9e",
+  "lastModified": "2026-11-13T19:47:00.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "CloudGoat/Baphomet-1.1-4B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "merge",
+      "evogm",
+      "evolutionary-merge",
+      "task-vector",
+      "linear-merge",
+      "qwen3_5",
+      "vision-language"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 1797272,
+    "totalFileSize": 7260384
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "b21f7beaa147495d48087442c524b55ea2b5d1ca",
+      "size": 1584
+    },
+    {
+      "rfilename": "Baphomet-1.1-4B.imatrix.gguf",
+      "blobId": "2290f7c98d7f3afdf97dfb0e9f4263d834ae2cbe",
+      "size": 7260384,
+      "lfs": {
+        "sha256": "533e4274e6e44c5fdde4a4266811f5d3050a03cd89d507b4cb8e09293ae4ece6",
+        "size": 7260384,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "8668c3f1f0d3fae2b95703395498575cd75438ad",
+      "size": 2617
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-13T19:32:24.000Z",
+  "usedStorage": 7260384
+}

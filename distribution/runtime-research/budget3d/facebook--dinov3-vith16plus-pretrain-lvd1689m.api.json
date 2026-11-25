@@ -1,0 +1,147 @@
+{
+  "_id": "6892f5130e01fa0d90417c3c",
+  "id": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+  "private": false,
+  "pipeline_tag": "image-feature-extraction",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "dinov3_vit",
+    "image-feature-extraction",
+    "dino",
+    "dinov3",
+    "arxiv:2508.10104",
+    "en",
+    "base_model:facebook/dinov3-vit7b16-pretrain-lvd1689m",
+    "base_model:finetune:facebook/dinov3-vit7b16-pretrain-lvd1689m",
+    "license:other",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 59769,
+  "likes": 255,
+  "modelId": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+  "author": "facebook",
+  "sha": "c807c9eeea853df70aec4069e6f56b28ddc82acc",
+  "lastModified": "2025-08-19T09:00:48.000Z",
+  "gated": "manual",
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "DINOv3ViTModel"
+    ],
+    "model_type": "dinov3_vit"
+  },
+  "cardData": {
+    "extra_gated_fields": {
+      "First Name": "text",
+      "Last Name": "text",
+      "Date of birth": "date_picker",
+      "Country": "country",
+      "Affiliation": "text",
+      "Job title": {
+        "type": "select",
+        "options": [
+          "Student",
+          "Research Graduate",
+          "AI researcher",
+          "AI developer/engineer",
+          "Reporter",
+          "Other"
+        ]
+      },
+      "geo": "ip_location",
+      "By clicking Submit below I accept the terms of the license and acknowledge that the information I provide will be collected stored processed and shared in accordance with the Meta Privacy Policy": "checkbox"
+    },
+    "extra_gated_description": "The information you provide will be collected, stored, processed and shared in accordance with the [Meta Privacy Policy](https://www.facebook.com/privacy/policy/).",
+    "extra_gated_button_content": "Submit",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "dino",
+      "dinov3",
+      "arxiv:2508.10104"
+    ],
+    "license": "other",
+    "license_name": "dinov3-license",
+    "license_link": "https://ai.meta.com/resources/models-and-libraries/dinov3-license",
+    "base_model": "facebook/dinov3-vit7b16-pretrain-lvd1689m",
+    "pipeline_tag": "image-feature-extraction",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "pipeline_tag": "image-feature-extraction",
+    "processor": "AutoImageProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "LICENSE.md",
+      "blobId": "f531b1e6b5ab2318957bbf8ad1bda9f800a23e17",
+      "size": 7503
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c3c92dc57d4bcc685694f26151dd87db1920567a",
+      "size": 14528
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "136174e19cf92f5af441d1b42b4534a81e831b97",
+      "size": 744
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "fba5c0415c9e144657cd85442f0f611de7fafc42",
+      "size": 3362432800,
+      "lfs": {
+        "sha256": "3e1d4d18b9bfa9f28fad8e9de6a783f1313532d3460efa4cd0b12521d81d1a4d",
+        "size": 3362432800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "0126173c1ab7b75bbd9102e37de8a56ffe0a012b",
+      "size": 585
+    }
+  ],
+  "spaces": [
+    "mteb/leaderboard",
+    "nvidia/DVSM",
+    "silveroxides/Lodestone-Tagger-UI",
+    "Thouph/lode-tagger-experiment",
+    "merve/dinov3-viz",
+    "manu02/DINOv3-Interactive-Patch-Cosine-Similarity",
+    "sayedM/DINOv3-features",
+    "sayedM/DINOv3-PCA-visualization",
+    "SMSD75/SynthScope",
+    "Longxiang-ai/TransNormal",
+    "ShesterG/visual-tree",
+    "ClintHardwood/lode-tagger-experiment",
+    "xiaopht/ImageCluster4.0",
+    "AndreiM82/DINOv3-Interactive-Patch-Cosine-Similarity",
+    "0xjoy/DINOv3-Interactive-Patch-Cosine-Similarity",
+    "LiamCr965/DINOv3-Interactive-Patch-Cosine-Similarity",
+    "lalamony2017/tg-image-search",
+    "akhaliq/idol-studio",
+    "fffiloni/calque-sketch-to-3D-idol",
+    "khjjl/walnut"
+  ],
+  "createdAt": "2025-08-06T06:24:19.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 840592640
+    },
+    "total": 840592640
+  },
+  "usedStorage": 3362432800
+}

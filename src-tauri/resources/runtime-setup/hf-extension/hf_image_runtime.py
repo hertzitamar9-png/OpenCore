@@ -16,6 +16,7 @@ import urllib.request
 from hf_download import atomic_json
 from hf_runtime import checked_model_files, _inside, _python
 import hf_sdcpp
+import hf_tessera
 
 RECIPE='diffusers-images-v1'
 TARGET='hub-image-runtime'
@@ -23,7 +24,7 @@ ACTIVE={'queued','starting','running','preparing'}
 
 
 def supports(entry):
-    return hf_sdcpp.supports(entry) or (entry.get('category')=='image' and entry.get('format')=='diffusers'
+    return hf_tessera.supports(entry) or hf_sdcpp.supports(entry) or (entry.get('category')=='image' and entry.get('format')=='diffusers'
             and entry.get('packageKind')!='adapter'
             and any(Path(file['filename']).name=='model_index.json' for file in entry.get('files',[])))
 
@@ -34,13 +35,22 @@ def validate_request(request):
     if not isinstance(prompt,str) or not prompt.strip() or len(prompt)>16000:raise ValueError('Enter an image prompt up to 16000 characters')
     settings=request.get('settings') or {}
     if not isinstance(settings,dict):raise ValueError('Invalid image controls')
-    for name,default,low,high in [('width',512,128,2048),('height',512,128,2048),('steps',30,1,100),('numImages',1,1,8),('seed',831001,0,2**32-1)]:
+    sprite = request.get('modelId') == hf_tessera.MODEL_ID
+    minimum = 16 if sprite else 128
+    if sprite:
+        if any(settings.get(key, 16) != 16 for key in ('width', 'height', 'outputWidth', 'outputHeight')):
+            raise ValueError('Tessera generates 16 × 16 sprites')
+        if settings.get('outputFormat', 'png') != 'png' or any(settings.get(key) for key in
+                ('referencePaths', 'negativePrompt', 'loraPath', 'upscaleModelPath')):
+            raise ValueError('Tessera accepts a text prompt and produces a transparent PNG')
+        settings = {'width': 16, 'height': 16, 'steps': 16, 'guidanceScale': 3.0, **settings}
+    for name,default,low,high in [('width',512,minimum,2048),('height',512,minimum,2048),('steps',30,1,100),('numImages',1,1,8),('seed',831001,0,2**32-1)]:
         value=settings.get(name,default)
         if type(value) is not int or not low<=value<=high:raise ValueError(f'{name} must be an integer from {low} to {high}')
     if any(settings.get(name,512)%8 for name in ('width','height')):raise ValueError('Image dimensions must be multiples of 8')
     for name in ('outputWidth','outputHeight'):
-        if name in settings and (type(settings[name]) is not int or not 128<=settings[name]<=8192 or settings[name]%8):
-            raise ValueError(f'{name} must be a multiple of 8 from 128 to 8192')
+        if name in settings and (type(settings[name]) is not int or not minimum<=settings[name]<=8192 or settings[name]%8):
+            raise ValueError(f'{name} must be a multiple of 8 from {minimum} to 8192')
     if 'cpuOffload' in settings and type(settings['cpuOffload']) is not bool:raise ValueError('CPU offload must be on or off')
     if set(settings)-{'width','height','outputWidth','outputHeight','steps','numImages','seed','guidanceScale','negativePrompt','outputFormat','loraPath','loraStrength','referencePaths','upscaleModelPath','promptRecap','originalPrompt','cpuOffload'}:
         raise ValueError('This image request contains unsupported controls')
@@ -56,7 +66,9 @@ def validate_request(request):
     conversation=request.get('conversationId')
     if conversation is not None and (not isinstance(conversation,str) or len(conversation)>512 or any(value in conversation for value in ('..','/','\\','\x00'))):
         raise ValueError('Invalid conversation identity')
-    return {'modelId':request.get('modelId'),'prompt':prompt.strip(),'settings':copy.deepcopy(settings),'conversationId':conversation}
+    if request.get('operatingMode','native') not in ('native','echo'):raise ValueError('Choose Native or ECHO')
+    return {'modelId':request.get('modelId'),'prompt':prompt.strip(),'settings':copy.deepcopy(settings),'conversationId':conversation,
+            'operatingMode':request.get('operatingMode','native')}
 
 
 class ImageRuntimeManager:
@@ -111,6 +123,8 @@ class ImageRuntimeManager:
         except (OSError,ValueError,TypeError,StopIteration):return False
 
     def ready(self,entry,proof):
+        if hf_tessera.supports(entry):
+            return hf_tessera.ready(self.root, entry, proof)
         try:
             return bool(supports(entry) and entry.get('status')=='installed' and isinstance(proof,dict)
                         and proof.get('inferenceVerified') is True and proof.get('receiptRevision')==entry['revision']
@@ -238,6 +252,8 @@ class ImageRuntimeManager:
     def _run(self,entry,request,job):
         self._update(job,status='preparing',stage='Verifying installed model files')
         checked_model_files(entry,self.root,self.cancelled)
+        if hf_tessera.supports(entry):
+            return hf_tessera.run(self, entry, request, job)
         folder=_inside(entry['localDirectory'],self.root/'models/hub')
         directory=_inside(folder/entry['subdirectory'],folder) if entry.get('subdirectory') else folder
         if hf_sdcpp.supports(entry):
@@ -251,6 +267,7 @@ class ImageRuntimeManager:
             self._spawn([_python(self.root),'-I',self.resources/'runtime-setup/setup_manager.py','--root',self.root,
                          '--resources',self.resources,'--target',TARGET,'--recipe-id',RECIPE,'--cancel-file',self.directory/'cancel'],job)
             if not self.dependencies_ready():raise RuntimeError('The managed image dependencies did not pass verification')
+        if getattr(self,'before_inference',None):self.before_inference(job,self.cancelled,self._update)
         output=self.directory/job['id']
         output.mkdir(exist_ok=False)
         native_request={**request,'modelRoot':str(self.root),'modelDirectory':str(directory),'sourceRepository':entry['repository'],'pipelineVariant':entry.get('diffusersVariant')}
@@ -278,6 +295,7 @@ class ImageRuntimeManager:
             if not self.dependencies_ready():raise RuntimeError('The managed image tools did not pass verification')
         variant=hf_sdcpp.selected_variant(self.root)
         engine=hf_sdcpp.ensure_engine(self.root,self.cancelled,lambda message:self._update(job,stage=message),variant)
+        if getattr(self,'before_inference',None):self.before_inference(job,self.cancelled,self._update)
         output=self.directory/job['id'];output.mkdir(exist_ok=False)
         payload={'entry':entry,'request':request,'engine':str(engine)}
         request_file=self.directory/(job['id']+'.json');atomic_json(request_file,payload)
@@ -300,13 +318,14 @@ class ImageRuntimeManager:
         return {'runtimeReady':True,'inferenceVerified':True,'receiptRevision':entry['revision'],'workerVersion':1,'workerSha256':self.worker_identity(),'verifiedAt':time.time()}
 
     def _new(self,entry,request,internal=False):
-        if not supports(entry) or entry.get('status')!='installed':raise ValueError('Download a complete supported Diffusers image package first')
+        if not supports(entry) or entry.get('status')!='installed':raise ValueError('Download a supported image model first')
         if not self.operation.acquire(blocking=False):raise ValueError('An image operation is already running')
         self.cancelled.clear()
         try:
             (self.directory/'cancel').unlink(missing_ok=True)
             job={'id':'hub-image-'+uuid.uuid4().hex,'source':'hub-image','category':'image','request':request,'status':'queued',
-                 'stage':'Queued','createdAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'outputs':[],'error':None,'internalVerification':internal}
+                 'stage':'Queued','createdAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'outputs':[],'error':None,'internalVerification':internal,
+                 'requiresTurnHandoff':request.get('operatingMode')=='echo'}
             with self.lock:self.jobs.append(job)
             self._update(job)
         except Exception:
@@ -328,7 +347,10 @@ class ImageRuntimeManager:
         return copy.deepcopy(job)
 
     def prepare(self,entry,report,pause):
-        request=validate_request({'modelId':entry['id'],'prompt':'A blue ceramic cup on a plain table','settings':{'width':512,'height':512,'steps':20 if hf_sdcpp.supports(entry) else 4,'guidanceScale':3,'outputFormat':'png'}})
+        settings = {} if hf_tessera.supports(entry) else {
+            'width': 512, 'height': 512, 'steps': 20 if hf_sdcpp.supports(entry) else 4,
+            'guidanceScale': 3, 'outputFormat': 'png'}
+        request = validate_request({'modelId': entry['id'], 'prompt': 'A blue ceramic cup on a plain table', 'settings': settings})
         job=self._new(entry,request,internal=True)
         try:
             report({'stage':'verifying-inference','detail':'Preparing the image runtime and generating a verification image'})

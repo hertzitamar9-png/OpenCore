@@ -30,6 +30,7 @@ import zipfile
 
 from hf_download import Paused, atomic_json, managed_path
 from hf_runtime import checked_model_files, _inside
+import hf_reverb as reverb
 
 ENVIRONMENT = 'tts-speech-v1'
 WORKER_VERSION = 1
@@ -96,6 +97,7 @@ COMPONENTS = {
 ZONOS3_LANGUAGES = [('en_us', 'English (US)'), ('en_gb', 'English (UK)'), ('fr_fr', 'French'), ('de', 'German'),
                     ('es', 'Spanish'), ('it', 'Italian'), ('pt_br', 'Portuguese (Brazil)'), ('ja', 'Japanese'),
                     ('cmn', 'Mandarin Chinese'), ('ko', 'Korean')]
+COMPONENTS.update(reverb.COMPONENTS)
 ZONOS3_STYLES = ['Neutral', 'Angry', 'Happy', 'Sad', 'Calm', 'Scared', 'Confused', 'British newsreader',
                  'Elderly Scottish narrator', 'Young Australian', 'Gravelly old man', 'Soft-spoken Irish woman',
                  'Indian English caller', 'Chatty podcaster', 'Late-night radio']
@@ -278,11 +280,16 @@ FAMILIES = {
 
 SETTINGS = {'voice', 'preset', 'instruction', 'referenceAudio', 'referenceText', 'cfg', 'steps', 'seed',
             'temperature', 'topP', 'topK', 'minP', 'normalize', 'maxNewTokens', 'language'}
+FAMILIES.update({runtime: reverb.family(runtime) for runtime in reverb.VARIANTS})
 
 
 def supports(entry):
     family = FAMILIES.get(entry.get('ttsRuntime'))
     return bool(family and entry.get('repository') == family['repository'] and entry.get('revision') == family['revision'])
+
+
+def environment_id(entry):
+    return FAMILIES.get(entry.get('ttsRuntime'), {}).get('environment', ENVIRONMENT)
 
 
 def capabilities(entry):
@@ -302,6 +309,8 @@ def hardware_fit(runtime, gpu):
     """Estimate before installation whether this computer can run a model; the worker makes the final check."""
     family = FAMILIES[runtime]
     hardware, label = family['hardware'], family['label']
+    if hardware.get('cpuOnly'):
+        return {'device': 'cpu', 'gpu': None, 'reason': label + ' uses an isolated CPU runtime'}
     if not gpu:
         reason = 'no NVIDIA GPU was found'
     else:
@@ -402,7 +411,12 @@ def validate_request(entry, request):
     if reference:
         if not family['reference']:
             raise ValueError(f'{family["label"]} does not clone voices; remove the reference recording')
-        decode_reference(reference)
+        decoded = decode_reference(reference)
+        if family.get('environment') == reverb.ENVIRONMENT:
+            with wave.open(io.BytesIO(decoded), 'rb') as recording:
+                length = recording.getnframes() / recording.getframerate()
+            if not 3 <= length <= 20:
+                raise ValueError('Reverb needs a reference recording from 3 to 20 seconds long')
         if family['reference'] == 'transcript-required' and not transcript:
             raise ValueError(f'{family["label"]} needs the exact words spoken in the reference recording')
         if family['reference'] == 'audio-only' and transcript:
@@ -557,6 +571,11 @@ class TtsManager:
     def worker_identity(self):
         source = self.resources / 'runtime-setup/hf-extension/tts_worker.py'
         return hashlib.sha256(source.read_text(encoding='utf-8').replace('\r\n', '\n').encode()).hexdigest()
+
+    def _runtime_pins(self, entry):
+        if environment_id(entry) == reverb.ENVIRONMENT:
+            return reverb.worker_identity(self.resources), reverb.lock_identity(self.resources)
+        return self.worker_identity(), self.lock_identity()
 
     def dependencies_ready(self):
         try:
@@ -729,12 +748,16 @@ class TtsManager:
             return bool(supports(entry) and entry.get('status') == 'installed' and isinstance(proof, dict)
                         and proof.get('inferenceVerified') is True and proof.get('receiptRevision') == entry['revision']
                         and proof.get('ttsRuntime') == entry['ttsRuntime'] and proof.get('workerVersion') == WORKER_VERSION
-                        and proof.get('workerSha256') == self.worker_identity() and proof.get('lockSha256') == self.lock_identity()
-                        and self.dependencies_ready() and all(self.component_ready(name) for name in family['components']))
+                        and (proof.get('workerSha256'), proof.get('lockSha256')) == self._runtime_pins(entry)
+                        and (reverb.dependencies_ready(self.root, self.resources) if environment_id(entry) == reverb.ENVIRONMENT
+                             else self.dependencies_ready())
+                        and all(self.component_ready(name) for name in family['components']))
         except (OSError, ValueError, TypeError, KeyError):
             return False
 
     def fit(self, entry):
+        if supports(entry) and environment_id(entry) == reverb.ENVIRONMENT:
+            return hardware_fit(entry['ttsRuntime'], None)
         if self.gpu is False:
             self.gpu = nvidia_gpu()
         if not supports(entry):
@@ -827,7 +850,9 @@ class TtsManager:
             clean['settings']['referencePath'] = str(reference)
         job = {'id': identity, 'source': 'hub-tts', 'category': 'tts', 'request': clean, 'status': 'queued',
                'stage': 'Queued', 'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'outputs': [],
-               'error': None, 'result': None, 'internalVerification': internal, 'ttsRuntime': entry['ttsRuntime']}
+               'error': None, 'result': None, 'internalVerification': internal, 'ttsRuntime': entry['ttsRuntime'],
+               'operatingMode': request.get('operatingMode', 'native'),
+               'requiresTurnHandoff': request.get('operatingMode') == 'echo' and environment_id(entry) != reverb.ENVIRONMENT}
         with self.lock:
             self.jobs.append(job)
             self._save()
@@ -892,20 +917,24 @@ class TtsManager:
                 except subprocess.TimeoutExpired:
                     child.kill()
 
-    def _start_worker(self):
+    def _start_worker(self, use_reverb=False):
         log = self.directory / 'worker.log'
         if log.is_file() and log.stat().st_size > 8 * 1024 ** 2:
             log.replace(self.directory / 'worker.previous.log')
-        cache = self.root / 'runtime-setup/cache/tts-speech-v1'
+        cache = self.root / 'runtime-setup/cache' / (reverb.ENVIRONMENT if use_reverb else ENVIRONMENT)
         cache.mkdir(parents=True, exist_ok=True)
         environment = dict(os.environ, PYTHONIOENCODING='utf-8', HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1',
                            HF_HUB_DISABLE_TELEMETRY='1', HF_HOME=str(cache / 'hf'), TORCH_HOME=str(cache / 'torch'),
                            NUMBA_CACHE_DIR=str(cache / 'numba'), TOKENIZERS_PARALLELISM='false')
+        python = self.python() if not use_reverb else reverb.python_path(self.root)
+        worker = self.resources / 'runtime-setup/hf-extension/tts_worker.py'
+        if use_reverb:
+            worker = reverb.worker_path(self.resources)
+            environment.update(CUDA_VISIBLE_DEVICES='-1', OMP_NUM_THREADS='4', MKL_NUM_THREADS='4')
         stream = log.open('ab')
         try:
             # -X utf8: model code reads its JSON with the default codec, which is not UTF-8 on many Windows locales.
-            child = subprocess.Popen([str(self.python()), '-I', '-X', 'utf8',
-                                      str(self.resources / 'runtime-setup/hf-extension/tts_worker.py')],
+            child = subprocess.Popen([str(python), '-I', '-X', 'utf8', str(worker)],
                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stream, env=environment, cwd=str(cache),
                                      creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0))
         finally:
@@ -970,12 +999,16 @@ class TtsManager:
 
     def _load(self, entry, job):
         family = entry['ttsRuntime']
+        use_reverb = family in reverb.VARIANTS
         if self.child and self.child.poll() is None and self.child_model == entry['id']:
             return
         self._stop_worker()
         self._update(job, status='preparing', stage='Checking the speech runtime')
         report = lambda stage: self._update(job, stage=stage)
-        self.ensure_environment(report)
+        if use_reverb:
+            reverb.ensure_environment(self, report)
+        else:
+            self.ensure_environment(report)
         components = {}
         for name in FAMILIES[family]['components']:
             components[name] = str(self.ensure_component(name, report))
@@ -988,7 +1021,10 @@ class TtsManager:
             checked_model_files(entry, self.root, self.setup_cancel)
             self.verified_files[entry['id']] = marker
         self._update(job, stage='Starting the speech worker')
-        self._start_worker()
+        if use_reverb:
+            self._start_worker(use_reverb=True)
+        else:
+            self._start_worker()
         self._update(job, stage='Loading ' + FAMILIES[family]['label'] + ' into memory')
         hardware = dict(FAMILIES[family]['hardware'], label=FAMILIES[family]['label'])
         info = self._send({'op': 'load', 'family': family, 'modelDir': str(directory), 'components': components,
@@ -1000,9 +1036,12 @@ class TtsManager:
 
     def _execute(self, job, entry):
         with self.lock:
+            self.setup_cancel.clear()
             self.current = job
-        self.setup_cancel.clear()
         try:
+            if job.get('cancelRequested'):raise Paused('Speech generation cancelled')
+            if job.get('requiresTurnHandoff') and getattr(self, 'before_inference', None):
+                self.before_inference(job, self.setup_cancel, self._update)
             self._load(entry, job)
             self._update(job, status='running', stage='Generating speech')
             output = managed_path(self.directory, job['id'], 'speech.wav')
@@ -1079,9 +1118,10 @@ class TtsManager:
         if current['status'] != 'completed':
             raise RuntimeError(current.get('error') or 'Speech verification did not finish')
         result = current['result']
+        worker_hash, lock_hash = self._runtime_pins(entry)
         return {'runtimeReady': True, 'inferenceVerified': True, 'receiptRevision': entry['revision'],
-                'ttsRuntime': entry['ttsRuntime'], 'workerVersion': WORKER_VERSION, 'workerSha256': self.worker_identity(),
-                'lockSha256': self.lock_identity(), 'verifiedAt': time.time(), 'sampleRate': result['sampleRate'],
+                'ttsRuntime': entry['ttsRuntime'], 'workerVersion': WORKER_VERSION, 'workerSha256': worker_hash,
+                'lockSha256': lock_hash, 'verifiedAt': time.time(), 'sampleRate': result['sampleRate'],
                 'durationS': result['durationS'], 'rms': result['rms'], 'device': self.child_info.get('device'),
                 'gpu': self.child_info.get('gpu'), 'verificationJobId': job['id']}
 

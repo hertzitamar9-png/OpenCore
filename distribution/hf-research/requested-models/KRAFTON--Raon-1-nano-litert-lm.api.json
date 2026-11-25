@@ -1,0 +1,85 @@
+{
+  "_id": "6af2edff3677e330696bc547",
+  "id": "KRAFTON/Raon-1-nano-litert-lm",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "litert-lm",
+  "tags": [
+    "litert-lm",
+    "raon",
+    "text-generation",
+    "base_model:KRAFTON/Raon-1-nano",
+    "base_model:quantized:KRAFTON/Raon-1-nano",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 26,
+  "likes": 12,
+  "modelId": "KRAFTON/Raon-1-nano-litert-lm",
+  "author": "KRAFTON",
+  "sha": "f5bc293e528bf2b9a3ac7484c6edd8cd5ba0f5e9",
+  "lastModified": "2026-11-10T11:36:51.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "base_model": "KRAFTON/Raon-1-nano",
+    "base_model_relation": "quantized",
+    "tags": [
+      "raon",
+      "litert-lm"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6b5330fb3c2330ab4d3dfda999d892ebb4481b91",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b1ed9ccf930445961ec181cda6de8da44289f2ae",
+      "size": 16823
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "9ad688cb707466f1acf7216980ed588204251a35",
+      "size": 81
+    },
+    {
+      "rfilename": "model.litertlm",
+      "blobId": "269517978b20a338dc37247e1aaafb7834338088",
+      "size": 1815742976,
+      "lfs": {
+        "sha256": "8f8ab92bc22d6341566beef295571eb06fbacbb6078a22167a7620dac224c836",
+        "size": 1815742976,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-11-10T10:12:15.000Z",
+  "usedStorage": 1815742976
+}

@@ -60,7 +60,8 @@ def installed(entry, root):
 class CatalogTests(unittest.TestCase):
     def test_release_package_ships_the_speech_runtime(self):
         mappings = json.loads((REPO / 'distribution/resource-map.json').read_text(encoding='utf-8'))
-        for name in ('hf_tts.py', 'tts_worker.py', 'tts-speech-lock.txt', 'hf_bridge.py', 'publisher-models.json'):
+        for name in ('hf_tts.py', 'tts_worker.py', 'tts-speech-lock.txt', 'hf_bridge.py', 'publisher-models.json',
+                     'hf_reverb.py', 'reverb_worker.py', 'reverb-cpu-lock.txt'):
             target = 'runtime-setup/hf-extension/' + name
             with self.subTest(file=name):
                 self.assertEqual(mappings.get(target), 'src-tauri/resources/' + target)
@@ -70,7 +71,7 @@ class CatalogTests(unittest.TestCase):
         values = entries()
         self.assertEqual(set(values), set(hf_tts.FAMILIES))
         self.assertEqual(set(values), {'kitten-tts-2-v1', 'voxcpm2-v1', 'breeze-tts-2-v1', 'zonos3-mini-v1', 'dots-tts-edit-v1'}
-                         | set(QWEN3))
+                         | set(QWEN3) | {'reverb-tts-fp32-v1', 'reverb-tts-fp16-v1', 'reverb-tts-int8-v1', 'reverb-tts-int4-v1'})
         for runtime, entry in values.items():
             family = hf_tts.FAMILIES[runtime]
             self.assertEqual(entry['repository'], family['repository'])
@@ -83,6 +84,16 @@ class CatalogTests(unittest.TestCase):
             self.assertTrue(any(pin['role'] == 'model' for pin in entry['files']))
             self.assertTrue(hf_tts.supports(entry))
             validate_entry(entry)
+
+    def test_reverb_variants_keep_exact_weights_and_all_preset_voices(self):
+        variants = [value for value in entries().values() if value['familyId'] == 'publisher-reverb-tts']
+        self.assertEqual({item['quantization'] for item in variants}, {'FP32', 'FP16', 'INT8', 'INT4'})
+        for item in variants:
+            names = {pin['filename'] for pin in item['files'] if pin['role'] == 'model'}
+            self.assertEqual(names, {'model/safetensors/' + item['quantization'].lower() + '/model.safetensors'})
+            self.assertEqual(len([pin for pin in item['files'] if pin['filename'].startswith('voices/')]), 16)
+            self.assertEqual(item['ttsComponentBytes'], 805668365)
+            self.assertEqual(hf_tts.environment_id(item), 'reverb-tts-cpu-v1')
 
     def test_packages_leave_out_files_the_runtime_never_loads(self):
         values = entries()
@@ -702,7 +713,11 @@ class DeviceSelectionTests(unittest.TestCase):
     def test_every_family_declares_its_hardware_to_the_studio(self):
         for runtime, entry in entries().items():
             hardware = hf_tts.FAMILIES[runtime]['hardware']
-            self.assertGreater(hardware['gpuGiB'], 0)
+            if hardware.get('cpuOnly'):
+                self.assertIs(hardware['cpu'], True)
+                self.assertEqual(hardware['gpuGiB'], 0)
+            else:
+                self.assertGreater(hardware['gpuGiB'], 0)
             self.assertIsInstance(hardware['bf16'], bool)
             self.assertIsInstance(hardware['cpu'], bool)
             self.assertTrue(hardware['summary'])
@@ -755,7 +770,10 @@ class DeviceSelectionTests(unittest.TestCase):
         gtx1660 = {'name': 'NVIDIA GeForce GTX 1660', 'totalGiB': 6.0, 'capability': [7, 5]}
         gtx1080 = {'name': 'NVIDIA GeForce GTX 1080', 'totalGiB': 8.0, 'capability': [6, 1]}
         for runtime in hf_tts.FAMILIES:
-            self.assertEqual(fit(runtime, rtx4090), {'device': 'cuda', 'gpu': rtx4090['name'], 'reason': None})
+            if hf_tts.FAMILIES[runtime]['hardware'].get('cpuOnly'):
+                self.assertEqual(fit(runtime, rtx4090)['device'], 'cpu')
+            else:
+                self.assertEqual(fit(runtime, rtx4090), {'device': 'cuda', 'gpu': rtx4090['name'], 'reason': None})
         self.assertEqual(fit('kitten-tts-2-v1', None)['device'], 'cpu')
         self.assertEqual(fit('kitten-tts-2-v1', gtx1660)['device'], 'cuda')
         self.assertIn('too old for the bundled PyTorch build', fit('kitten-tts-2-v1', gtx1080)['reason'])

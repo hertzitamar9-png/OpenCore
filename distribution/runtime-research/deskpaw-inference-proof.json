@@ -1,0 +1,106 @@
+{
+  "workerVersion": 1,
+  "revision": "b36bcd79729b8a81563ead920b9bb4aff3186658",
+  "workerSha256": "4d7b9efb7e0c24ade86d47be1d2e76b7d8502109e80bab9a04f46eb6feedbbc8",
+  "modelFingerprint": {
+    "receipt": "2b7c1b99a32ee68faf979fffd50e3eca860c3654d391cb14d51881352cafbeb2",
+    "files": [
+      [
+        "model-00001-of-00006.safetensors",
+        709346680,
+        1794611931552007900
+      ],
+      [
+        "model-00002-of-00006.safetensors",
+        713102984,
+        1794611946814097100
+      ],
+      [
+        "model-00003-of-00006.safetensors",
+        734078480,
+        1794611964296850200
+      ],
+      [
+        "model-00004-of-00006.safetensors",
+        729879824,
+        1794611980690920000
+      ],
+      [
+        "model-00005-of-00006.safetensors",
+        713268448,
+        1794612387186151900
+      ],
+      [
+        "model-00006-of-00006.safetensors",
+        654389352,
+        1794612406598842100
+      ],
+      [
+        "chat_template.jinja",
+        5292,
+        1794612407871052900
+      ],
+      [
+        "config.json",
+        2219,
+        1794612408075902100
+      ],
+      [
+        "generation_config.json",
+        204,
+        1794612408274713100
+      ],
+      [
+        "merges.txt",
+        1671839,
+        1794612408667212500
+      ],
+      [
+        "model.safetensors.index.json",
+        56139,
+        1794612409044677000
+      ],
+      [
+        "processor_config.json",
+        1240,
+        1794612409403662200
+      ],
+      [
+        "tokenizer.json",
+        11423610,
+        1794612411122647000
+      ],
+      [
+        "tokenizer_config.json",
+        596,
+        1794612411494894500
+      ],
+      [
+        "vocab.json",
+        2776833,
+        1794612411900719100
+      ]
+    ]
+  },
+  "runtimeReady": true,
+  "inferenceVerified": true,
+  "verifiedAt": 1794613442.727144,
+  "device": "cuda:0",
+  "offloadedLayers": 0,
+  "sample": {
+    "action": {
+      "kind": "click",
+      "x": 304,
+      "y": 180,
+      "normalizedX": 0.475,
+      "normalizedY": 0.5
+    },
+    "text": "{\"x\": 304, \"y\": 180, \"normalizedX\": 0.475, \"normalizedY\": 0.5}",
+    "inferenceVerified": true,
+    "elapsedSeconds": 0.9529999999795109,
+    "imageWidth": 640,
+    "imageHeight": 360,
+    "scope": "One screenshot-grounded click prediction. Execution is a separate user-approved action.",
+    "fixtureTargetHit": true
+  }
+}

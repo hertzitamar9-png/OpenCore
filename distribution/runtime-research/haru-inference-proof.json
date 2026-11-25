@@ -1,0 +1,43 @@
+{
+  "workerVersion": 1,
+  "revision": "8d6e83bcd3701a76fc27a764965665da1df7da78",
+  "workerSha256": "fb7e0cb44aa8c8187aa381a8461d04e90777dabc6a258b498958352d8d5fc11c",
+  "modelFingerprint": {
+    "receipt": "177235abdfe59de4bd2ad653ccf3ebdef59edb6d285b9fc89d8575cecb3f98e6",
+    "files": [
+      [
+        "model.safetensors",
+        10540113510,
+        1794612557276153400
+      ],
+      [
+        "config.json",
+        2735,
+        1794612570776924400
+      ],
+      [
+        "tokenizer.json",
+        19989325,
+        1794612572100639600
+      ],
+      [
+        "tokenizer_config.json",
+        496,
+        1794612572390849700
+      ]
+    ]
+  },
+  "runtimeReady": true,
+  "inferenceVerified": true,
+  "verifiedAt": 1794613037.661767,
+  "device": "cuda:0",
+  "offloadedLayers": 3,
+  "sample": {
+    "inferenceVerified": true,
+    "frames": 4,
+    "audioSamples": 12800,
+    "meanFrameSeconds": 0.18776899999162802,
+    "realtime": false,
+    "text": "This is Haru"
+  }
+}

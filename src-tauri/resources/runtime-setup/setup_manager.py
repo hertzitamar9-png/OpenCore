@@ -520,7 +520,10 @@ def install(root, resources, target, options, runner, recipe_id=None):
     elif kind == "text":
         from managed_model_sources import shared_torch_source,attach_shared_packages
         shared=None
-        flavors = (('cu126',) if recipe.get('requiresCuda') else ('cpu',) if recipe.get('cpuOnly') else ('cpu', 'cu126'))
+        torch_flavor = recipe.get('torchFlavor', 'cu126')
+        if torch_flavor not in ('cpu', 'cu126', 'cu128', 'cu130'):
+            raise ValueError('Unreviewed managed PyTorch build')
+        flavors = ((torch_flavor,) if recipe.get('requiresCuda') else ('cpu',) if recipe.get('cpuOnly') else ('cpu', torch_flavor))
         for flavor in flavors:
             candidate=dict(recipe,torchIndex='https://download.pytorch.org/whl/'+flavor)
             shared=shared_torch_source(root,candidate,runner)
@@ -534,7 +537,7 @@ def install(root, resources, target, options, runner, recipe_id=None):
         torch_packages = recipe['torchPackages'] if not shared else {name: version for name, version in recipe['torchPackages'].items() if name != 'torch'}
         if torch_packages:
             if recipe.get('requiresCuda'):
-                torch_packages = {name: version + '+cu126' for name, version in torch_packages.items()}
+                torch_packages = {name: version + '+' + torch_flavor for name, version in torch_packages.items()}
             runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:','--index-url',recipe['torchIndex'],
                         *[f'{name}=={version}' for name, version in torch_packages.items()]],env=environment)
         wheel=recipe.get('transformersWheel')
@@ -546,7 +549,9 @@ def install(root, resources, target, options, runner, recipe_id=None):
         verification=verify_environment(python,{**recipe['torchPackages'],**recipe['packages']},recipe['imports'],runner,
                                         require_cuda=recipe.get('requiresCuda', False))
         model_type=options.get('modelType')
-        if model_type and model_type not in ('gptx3','edgerock','spark2_5'):
+        if model_type == 'sensenova_loop':
+            runner.run([python, '-I', '-c', 'import sys;sys.path.insert(0,sys.argv[1]);from sensenova_loop.modeling_sensenova_loop import SenseNovaLoopConfig,SenseNovaLoopForConditionalGeneration;from transformers import Qwen3VLProcessor', str(resources/'text-runtime')], timeout=60)
+        elif model_type and model_type not in ('gptx3','edgerock','spark2_5'):
             runner.run([python,'-I','-c',"import sys;from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES;assert sys.argv[1] in CONFIG_MAPPING_NAMES,'The current text runtime does not support architecture '+sys.argv[1]",model_type],timeout=30)
         result={'python':str(python),'runner':str(resources/'text-runtime/serve_text.py'),**verification}
     elif kind == "memory":

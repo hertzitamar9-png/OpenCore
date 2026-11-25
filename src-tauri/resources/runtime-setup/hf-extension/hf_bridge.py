@@ -25,12 +25,14 @@ from urllib.request import Request, urlopen
 # The bundled interpreter is launched with -I; only this managed extension folder is admitted.
 if str(Path(__file__).resolve().parent) not in sys.path:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-from hf_catalog import build_plan, parse_repository, DRAFT
+from hf_catalog import build_plan, parse_repository, quantization_count, DRAFT
 from hf_lineage import source_identity
 from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, managed_path, validate_entry, partial_identity
 from hf_security import TokenStore
 from hf_specialist_ocr import OCRManager, supports as supports_ocr
 from hf_image_runtime import ImageRuntimeManager, supports as supports_image
+from hf_generation import GenerationManager, supports as supports_generation
+from pipeline_admission import PipelineAdmission
 from hf_memory_repair import MemoryRepair
 from hf_prompt_assistant import PromptAssistant
 from hf_chat_media import ChatMedia, saved_conversations_page, delete_empty_projects
@@ -39,7 +41,8 @@ from hf_telemetry import LiveTelemetry
 from hf_computer_runtime import ComputerManager, supports as supports_computer, profile_for as computer_profile
 from hf_computer_driver import ComputerDriverManager
 from hf_music_runtime import MusicRuntimeManager
-from model_modes import apply_operating_modes, supports_text_generation, mode_context
+from hf_interactive import supports as supports_interactive
+from model_modes import apply_operating_modes, supports_text_generation, mode_context, mode_availability
 from hf_download_queue import DownloadQueue
 from hf_speech import SpeechManager, supports as supports_speech
 from hf_tts import TtsManager, supports as supports_tts
@@ -49,6 +52,9 @@ import hardware_profile
 def _engine_demand(entry, preparations, root):
     """Engine build folders an installed model needs, as runtime inventory ids."""
     needs = set()
+    if entry.get('id')=='hf-6e616e626569676565787472':
+        from hf_nanbeige_extreme import ENGINE, LIBS
+        return {'engine:'+ENGINE,'engine:'+LIBS}
     for item in preparations:
         engine = item.get('engineId') if isinstance(item, dict) else None
         if isinstance(engine, str) and re.fullmatch(r'[a-z0-9.-]{1,64}', engine):
@@ -122,8 +128,10 @@ class BridgeState:
         self.progress, self.worker = None, None
         self.ocr = OCRManager(self.root, self.resources)
         self.images=ImageRuntimeManager(self.root,self.resources)
+        self.generation=GenerationManager(self.root,self.resources,self.downloader)
         self.connectors = ConnectorProfiles(self.root)
         self.computer = ComputerManager(self.root, self.resources, self.downloader)
+        self.duplex = self.computer.interactive
         self.computer_driver = ComputerDriverManager(self.root, self.resources)
         self.music_runtime = MusicRuntimeManager(self.root, self.resources)
         self.owner, self.remote, self.private, self.groups = None, None, None, None
@@ -140,6 +148,9 @@ class BridgeState:
         self.speech = SpeechManager(self.root, self.resources, lambda identity: self.entry(identity, installed=True))
         self.tts = TtsManager(self.root, self.resources)
         self.variant_jobs = {}
+        self.admissions=PipelineAdmission()
+        for service in (self.images,self.generation,self.tts,self.computer,self.ocr):
+            service.before_inference=self.admissions.wait
         try:
             saved = _read_json(self.job_path, 1024 * 1024)
             if isinstance(saved, dict) and isinstance(saved.get("progress"), dict):
@@ -614,6 +625,9 @@ class BridgeState:
         return None
 
     def _download_entry(self, entry, pause, report, *, parallel_ranges=True):
+        if entry.get('id')=='hf-6e616e626569676565787472':
+            from hf_nanbeige_extreme import install
+            return install(entry,self.downloader,pause,report,parallel_ranges)
         if entry.get('nativeWeightProfile'):
             model, artifact = self._native_weight_binding(entry)
             return self.downloader.install_native(model, {artifact['id']: artifact}, pause, report, parallel_ranges=parallel_ranges)
@@ -668,31 +682,43 @@ class BridgeState:
         if supports_computer(entry):
             result['specialist'] = 'computer'
             result['specialistReady'] = self.computer.ready(result, entry.get('specialistPreparation'))
-        mode=entry.get('operatingMode','echo')
+        text_runtime=supports_text_generation(entry)
+        mode=entry.get('operatingMode','echo' if text_runtime else 'native')
         preparation = (entry.get('runtimePreparations') or {}).get(mode) or entry.get("runtimePreparation") or {}
-        if preparation.get('operatingMode','echo')!=mode:preparation={}
+        if text_runtime and preparation.get('operatingMode','echo')!=mode:preparation={}
         result['runtimePreparation']=copy.deepcopy(preparation)
         result['operatingMode']=mode
         if entry.get('format') == 'gguf' and supports_text_generation(entry):
             from managed_engines import engine_for, VULKAN_VARIANTS
             base = engine_for(entry) or 'lfm3-cpu-v1'
-            result['runtimeChoices'] = (['auto', 'cuda'] if base == 'dory-cuda13-v1' else
+            result['runtimeChoices'] = (['auto', 'cuda'] if base in ('dory-cuda13-v1','edge0-cuda13-v1','nanbeige-extreme-cuda12-v1') else
                                         ['auto', 'cuda', 'vulkan', 'cpu'] if base in VULKAN_VARIANTS else ['auto', 'cpu'])
         elif entry.get('format') == 'safetensors' and entry.get('runtime', {}).get('adapter') == 'transformers':
             result['runtimeChoices'] = ['auto', 'cuda', 'cpu']
+        if entry.get('id')=='hf-0a1ab2972368aa19f3cb9a62':
+            result['runtimeChoices']=['auto','cuda','cpu']
         if result.get('runtimeChoices'):
             result['runtimePreference'] = entry.get('runtimePreference', 'auto')
             if result['runtimePreference'] not in result['runtimeChoices']:
                 result['runtimePreference'] = 'auto'
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
-        if (entry.get('format') == 'gguf' and entry.get('runtimePreference', 'auto') == 'auto'
+        from managed_engines import INKLING_ENGINES
+        if (entry.get('format') == 'gguf' and entry.get('managedEngine') not in {*INKLING_ENGINES, 'raon-nano-cpu-v1'}
+                and entry.get('runtimePreference', 'auto') == 'auto'
                 and preparation.get('runtimeBackend') == 'cpu' and _has_gpu()):
-            # On a PC with a GPU, Automatic must not stay on a CPU build; without one, CPU is the right build.
             result['runtimeReady'] = False
         if (entry.get('format') == 'safetensors' and entry.get('runtime', {}).get('adapter') == 'transformers'
                 and result['runtimePreference'] != 'cpu' and not preparation.get('gpuModules')):
             result['runtimeReady'] = False
         if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
+        if supports_generation(entry):
+            result['generationRuntime']='budget3d-idol-v1'
+            result['runtimeReady']=self.generation.ready(result,preparation)
+            result['dependenciesPrepared']=bool(preparation.get('dependenciesPrepared') or result['runtimeReady']) and self.generation.dependencies_ready()
+            try:result['componentBytes']=sum(item['bytes'] for item in self.generation.components())
+            except (OSError,ValueError,KeyError):
+                result['runtimeReady']=False
+                result['runtimeError']='The bundled 3D component manifest is missing or invalid. Repair the OpenCore installation.'
         if result['runtimeReady'] and entry.get('category') in ('text','brain','omni','ocr','computer-use') and supports_text_generation(entry) and mode=='echo' and preparation.get('echoMode')!='main-context-v1':
             result['runtimeReady']=False
         if result['runtimeReady']:
@@ -708,6 +734,9 @@ class BridgeState:
         if supports_tts(entry):
             result['runtimeReady'] = self.tts.ready(result, preparation)
             result['hardwareFit'] = self.tts.fit(entry)
+        if supports_interactive(entry, 'haru'):
+            result['runtimeReady'] = self.duplex.ready(result, entry.get('runtimePreparation'))
+        result['modeAvailability'] = mode_availability(result)
         if receipt:
             result.update(localDirectory=receipt["localDirectory"], receiptPath=receipt["receiptPath"], installReceipt=copy.deepcopy(receipt))
         if self.progress and self.progress.get("id") == entry["id"] and self.progress.get("status") in ACTIVE | {"paused", "failed"}:
@@ -749,31 +778,64 @@ class BridgeState:
     def plan(self, repository):
         metadata = self.client.metadata(parse_repository(repository))
         plan = build_plan(metadata)
+        if metadata['id'].lower() == 'thejagstudio/tessera-small':
+            # The Hub's generic inspector does not recognize the publisher's .pt sprite package.
+            with self.lock:
+                reviewed = [copy.deepcopy(entry) for entry in self.entries.values()
+                            if entry.get('builtIn') and entry.get('imageRuntime') == 'tessera-small-v1'
+                            and entry['repository'].lower() == metadata['id'].lower() and entry['revision'] == metadata['sha']]
+            if reviewed:
+                plan.update(variants=reviewed, quantizationCount=len(reviewed), warning=None)
+        if metadata['id'] == 'software-mansion/Reverb-TTS':
+            with self.lock:
+                reviewed = [copy.deepcopy(entry) for entry in self.entries.values()
+                            if entry['repository'] == metadata['id'] and entry['revision'] == metadata['sha']
+                            and supports_tts(entry)]
+            if reviewed:
+                plan['variants'] = reviewed
+        # Compound engine bundles must retain their complete reviewed file plan,
+        # including experts, MTP weights and tokenizers, when re-added by URL.
+        compound=(metadata['id'].startswith('Edge0/Edge0-120B') or metadata['id'].startswith('Edge0/Edge0-145B')
+                  or metadata['id'] in ('BudgetAny/Budget3D-Idol','speridlabs/idol','KRAFTON/Raon-1-nano-gguf','sensenova/SenseNova-Loop-9B'))
+        if compound:
+            prepared=[copy.deepcopy(entry) for entry in self.entries.values() if entry['repository']==metadata['id'] and entry['revision']==metadata['sha']]
+            if prepared:plan['variants']=prepared
         if metadata['id'].lower() == 'fermionresearch/phonon-2.5':
             prepared = [copy.deepcopy(entry) for entry in self.entries.values() if supports_speech(entry)]
             if prepared: plan['variants'] = prepared
+        with self.lock:
+            inkling = [copy.deepcopy(entry) for entry in self.entries.values()
+                       if entry.get('builtIn') and entry.get('familyId') == 'publisher-inkling-2-mini'
+                       and entry['repository'].lower() == metadata['id'].lower()]
         canonical, identities = source_identity(metadata)
         with self.lock:
             family = next((entry for entry in self.entries.values() if entry.get('familyId') and (
                 str(entry.get('originalRepository', '')).lower() == canonical
                 or entry['repository'].lower() in identities)), None)
             family = copy.deepcopy(family) if family else None
-        for entry in plan['variants']:
-            entry.update(originalRepository=canonical, familyId=family['familyId'] if family else
-                         'checkpoint-' + hashlib.sha256(canonical.encode()).hexdigest()[:24],
-                         familyLabel=family['familyLabel'] if family else metadata['id'].split('/')[-1])
-            if family:
-                entry['nativeModelIds'] = family.get('nativeModelIds', [])
-                for field in ('builtIn', 'builtInDescription', 'libraryCategory'):
-                    if field in family:
-                        entry[field] = family[field]
-                if family.get('managedEngine'):
-                    entry['managedEngine'] = family['managedEngine']
-                if not entry.get('modelType') and family.get('modelType'):
-                    entry['modelType'] = family['modelType']
-            elif entry['format'] == 'gguf':
-                entry['managedEngine'] = 'flint-cpu-v1'
-        apply_operating_modes(plan['variants'],lambda _:metadata)
+        if inkling:
+            # These converters use different GGUF layouts. Retain each
+            # reviewed file set and its own engine, including on re-import.
+            canonical = inkling[0]['originalRepository']
+            plan.update(variants=inkling, revision=inkling[0]['revision'],
+                        quantizationCount=quantization_count(inkling))
+        else:
+            for entry in plan['variants']:
+                entry.update(originalRepository=canonical, familyId=family['familyId'] if family else
+                             'checkpoint-' + hashlib.sha256(canonical.encode()).hexdigest()[:24],
+                             familyLabel=family['familyLabel'] if family else metadata['id'].split('/')[-1])
+                if family:
+                    entry['nativeModelIds'] = family.get('nativeModelIds', [])
+                    for field in ('builtIn', 'builtInDescription', 'libraryCategory'):
+                        if field in family:
+                            entry[field] = family[field]
+                    if family.get('managedEngine'):
+                        entry['managedEngine'] = family['managedEngine']
+                    if not entry.get('modelType') and family.get('modelType'):
+                        entry['modelType'] = family['modelType']
+                elif entry['format'] == 'gguf':
+                    entry['managedEngine'] = 'flint-cpu-v1'
+            apply_operating_modes(plan['variants'],lambda _:metadata)
         plan['originalRepository'] = canonical
         plan['planId'] = hashlib.sha256(json.dumps(plan['variants'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
         with self.lock:
@@ -847,6 +909,7 @@ class BridgeState:
             if self.worker and self.worker.is_alive():
                 raise Conflict('The previous installation worker is still stopping')
             if self.images.operation.locked():raise Conflict('Wait for the current image operation before installing another model')
+            if self.generation.operation.locked():raise Conflict('Wait for the current 3D generation before installing another model')
             if self.computer.operation.locked():raise Conflict('Wait for the current computer-use prediction before installing another model')
             entry = self.entry(model_id, installed=kind == "prepare")
             if kind == 'download' and entry.get('origin') == 'autoloop':
@@ -866,7 +929,13 @@ class BridgeState:
         with self.lock:
             if mode not in ('native','echo'):raise ValueError('Choose Native or ECHO')
             entry=self.entry(model_id)
-            if not supports_text_generation(entry):raise ValueError('This is not a text-generation model')
+            choice=next(item for item in mode_availability(entry) if item['id']==mode)
+            if not choice['supported']:raise ValueError(choice.get('reason','This operating mode is unavailable'))
+            if not supports_text_generation(entry):
+                if entry.get('operatingMode')!=mode:
+                    self.entries[model_id]['operatingMode']=mode
+                    self.persist_catalog()
+                return self.entry(model_id)
             if self.progress and self.progress.get('status') in ACTIVE:raise Conflict('Wait for model installation before changing operating mode')
             if entry.get('operatingMode','echo')!=mode:
                 change=getattr(self.runtime,'change_mode',None)
@@ -949,12 +1018,32 @@ class BridgeState:
                 self.entries[entry['id']]['runtimePreparation'] = result
                 self.persist_catalog()
             return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
+        def prepare_haru():
+            result = self.duplex.prepare(self.entry(entry['id'], installed=True), 'haru', report, pause)
+            with self.lock:
+                self.entries[entry['id']]['runtimePreparation'] = result
+                self.persist_catalog()
+            return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
+        def prepare_generation():
+            result=self.generation.prepare(self.entry(entry['id'],installed=True),report,pause)
+            with self.lock:
+                self.entries[entry['id']]['runtimePreparation']=result
+                self.persist_catalog()
+            return {'status':'installed','stage':'dependencies-prepared','detail':'3D dependencies prepared. Generate an object to verify inference.',
+                    'bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
         try:
             if kind == "download":
+                if supports_generation(entry):
+                    report({'stage':'checking-access','detail':'Checking access to the pinned DINOv3 encoder before downloading 3D weights'})
+                    self.generation.check_access()
                 result = self._download_entry(entry, pause, report)
                 if pause.is_set(): raise Paused('Installation stopped after downloading; completed files were retained')
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
-                if supports_speech(entry):
+                if supports_generation(entry):
+                    final = prepare_generation()
+                elif supports_interactive(entry, 'haru'):
+                    final = prepare_haru()
+                elif supports_speech(entry):
                     final = prepare_speech()
                 elif supports_tts(entry):
                     final = prepare_tts()
@@ -984,6 +1073,10 @@ class BridgeState:
                         self.entries[entry['id']].setdefault('runtimePreparations',{})[entry.get('operatingMode','echo')]=copy.deepcopy(proof)
                         self.persist_catalog()
                     final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
+            elif supports_generation(entry):
+                final = prepare_generation()
+            elif supports_interactive(entry, 'haru'):
+                final = prepare_haru()
             elif supports_speech(entry):
                 final = prepare_speech()
             elif supports_tts(entry):
@@ -1041,6 +1134,7 @@ class BridgeState:
             ocr_job = supports_ocr(self.entries.get(self.progress.get('id'), {}))
             if supports_computer(self.entries.get(self.progress.get('id'), {})): self.computer.stop()
             if supports_image(self.entries.get(self.progress.get('id'),{})) and self.images.operation.locked():self.images.stop()
+            if supports_generation(self.entries.get(self.progress.get('id'),{})) and self.generation.operation.locked():self.generation.stop()
             if ocr_job and self.ocr.active():
                 self.ocr.stop()
             if not ocr_job and not supports_tts(self.entries.get(self.progress.get('id'), {})) and (self.progress.get('kind')=='prepare' or stage in ('preparing-runtime','installing-runtime','installing-dependencies','checking-hardware','loading-model','verifying-inference','preparing-echo','verifying-echo')):
@@ -1436,6 +1530,7 @@ class BridgeState:
         self.speech.close()
         self.tts.close()
         self.images.stop()
+        self.generation.stop()
         self.computer.stop()
         self.runtime.stop()
         if self.worker and self.worker is not threading.current_thread():
@@ -1529,6 +1624,21 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(401, {"error": "A valid OpenCore instance secret is required"})
             return False
         return True
+
+    def _artifact(self, path):
+        # Stream only manager-authorized job outputs; never construct paths from a URL.
+        self.send_response(200)
+        self.send_header('Content-Type','application/octet-stream' if path.suffix=='.ply' else 'image/png')
+        self.send_header('Content-Length',str(path.stat().st_size))
+        self.send_header('Content-Disposition','attachment; filename="'+path.name+'"')
+        self.send_header('Cache-Control','no-store')
+        self.send_header('X-Content-Type-Options','nosniff')
+        if self.headers.get('Origin') in TAURI_ORIGINS:
+            self.send_header('Access-Control-Allow-Origin',self.headers['Origin'])
+            self.send_header('Vary','Origin')
+        self.end_headers()
+        with path.open('rb') as source:
+            for chunk in iter(lambda:source.read(65536),b''):self.wfile.write(chunk)
 
     def do_OPTIONS(self):
         if self._authorize(True):
@@ -1637,6 +1747,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, {'models': state.speech_support()})
             elif route == '/tts/status':
                 self._send(200, {'status': state.tts.status(state.tts_entries())})
+            elif route == '/duplex/haru/status':
+                self._send(200, state.duplex.status())
             elif route == '/tts/jobs':
                 self._send(200, {'jobs': state.tts.list()})
             elif route == '/computer-driver/status':
@@ -1645,6 +1757,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.music_runtime.status())
             elif route == '/images/jobs':
                 self._send(200, {'jobs':state.images.list()})
+            elif route == '/generation/jobs':
+                self._send(200, {'jobs':state.generation.list()})
+            elif route == '/pipelines/catalog':
+                from hf_pipeline_tools import catalog
+                self._send(200, {'models':catalog(state)})
+            elif route == '/pipelines/pending':
+                self._send(200,{'jobs':state.admissions.list()})
             elif route == '/images/conversations':
                 self._send(200, {'conversations':state.images.conversation_summaries()})
             elif route == '/mobile/host/poll':
@@ -1660,7 +1779,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.command == "DELETE" and route == "/token":
             self._send(200, state.tokens.clear())
             return
-        body = self._body(17 * 1024 * 1024 if route == '/tts/jobs' else 48 * 1024 * 1024 if route.startswith('/mobile/host/') or route == '/speech/transcribe' else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 512 * 1024 if route.startswith('/groups/') else 256 * 1024)
+        body = self._body(24 * 1024 * 1024 if route == '/generation/input' else 8 * 1024 * 1024 if route == '/duplex/haru/start' else 17 * 1024 * 1024 if route == '/tts/jobs' else 48 * 1024 * 1024 if route.startswith('/mobile/host/') or route == '/speech/transcribe' else 8 * 1024 * 1024 if route in ('/specialist/ocr', '/specialist/computer') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 512 * 1024 if route.startswith('/groups/') else 256 * 1024)
         if body is None:
             return
         if self.command == "PUT" and route == "/token":
@@ -1673,6 +1792,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.music_runtime.cancel())
         elif route == '/computer-driver/install':
             self._send(202, state.computer_driver.start())
+        elif route == '/duplex/haru/start':
+            self._send(202, state.duplex.start(state.entry(body.get('id'), installed=True), body))
+        elif route == '/duplex/haru/frame':
+            self._send(200, state.duplex.step(body))
+        elif route == '/duplex/haru/stop':
+            if not isinstance(body.get('sessionId'), str): raise ValueError('Choose a live call to stop')
+            self._send(200, state.duplex.stop(body['sessionId']))
         elif route == '/computer-driver/cancel':
             self._send(200, state.computer_driver.cancel())
         elif route == '/computer-driver/connection':
@@ -1848,11 +1974,31 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.tts.preview(body.get('id')))
         elif route == '/tts/delete':
             self._send(200, state.tts.delete(body.get('id')))
+        elif route.startswith('/pipelines/'):
+            from hf_pipeline_tools import execute
+            self._send(200,execute(state,route.removeprefix('/pipelines/'),body))
+        elif route=='/generation/input':
+            self._send(200,state.generation.import_image(body.get('image')))
+        elif route=='/generation/generate':
+            with state.lock:
+                if state.progress and state.progress.get('status') in ACTIVE:raise Conflict('Wait for installation to finish before generating 3D')
+                from hf_pipeline_tools import require_idle
+                require_idle(state)
+                entry=state.entry((body.get('request') or {}).get('modelId'),installed=True)
+                self._send(202,state.generation.start(entry,body.get('request'),on_ready=lambda proof:state.image_generated(entry,proof)))
+        elif route=='/generation/cancel':
+            self._send(200,state.generation.stop(body.get('id')))
+        elif route=='/generation/preview':
+            self._send(200,state.generation.preview(body.get('id'),body.get('path')))
+        elif route=='/generation/artifact':
+            self._artifact(state.generation.artifact(body.get('id'),body.get('path')))
         elif route=='/images/upscaler/prepare':
             self._send(200,state.images.prepare_upscaler())
         elif route=='/images/generate':
             with state.lock:
                 if state.progress and state.progress.get('status') in ACTIVE:raise Conflict('Wait for the active installation before generating an image')
+                from hf_pipeline_tools import require_idle
+                require_idle(state)
                 entry=state.entry((body.get('request') or {}).get('modelId'),installed=True)
                 self._send(202,state.images.start(entry,body.get('request'),on_ready=lambda proof:state.image_generated(entry,proof)))
         elif route=='/images/preview':
@@ -1918,6 +2064,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             if not isinstance(body.get("messages"), list) or not body["messages"]:
                 raise ValueError("Chat messages are required")
             raw, content_type = state.runtime.chat(entry, body)
+            if entry.get('id')=='hf-0a1ab2972368aa19f3cb9a62':
+                content_type=content_type.split(';',1)[0].strip().lower()
             if content_type not in ("application/json", "text/event-stream") or not (isinstance(raw,bytes) or content_type=='text/event-stream' and hasattr(raw,'__iter__')):
                 raise ValueError("The managed runtime returned an invalid response")
             if isinstance(raw,bytes):

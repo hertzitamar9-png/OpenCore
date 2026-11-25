@@ -603,7 +603,12 @@
       "torchIndex": "https://download.pytorch.org/whl/cu126",
       "shareManagedTorch": true,
       "imports": {
-        "transformers": ["AutoTokenizer", "AutoModelForCausalLM", "AutoModelForImageTextToText", "AutoProcessor"],
+        "transformers": [
+          "AutoTokenizer",
+          "AutoModelForCausalLM",
+          "AutoModelForImageTextToText",
+          "AutoProcessor"
+        ],
         "accelerate": [],
         "safetensors": [],
         "psutil": []
@@ -884,6 +889,96 @@
       ],
       "limitations": "Bounded local model predictions. Platform-specific action execution is separate; downloaded repository Python is never executed.",
       "cpuOnly": true
+    },
+    {
+      "id": "sensenova-loop-cpu-v1",
+      "label": "SenseNova Loop CPU",
+      "kind": "text",
+      "modelIds": [],
+      "packages": {
+        "transformers": "5.18.0",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "psutil": "6.1.1",
+        "pillow": "11.3.0",
+        "sentencepiece": "0.2.1",
+        "jsonschema": "4.23.0"
+      },
+      "torchPackages": {
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cpu",
+      "shareManagedTorch": true,
+      "imports": {
+        "transformers": [
+          "AutoTokenizer",
+          "Qwen3VLProcessor",
+          "Qwen3_5Config"
+        ],
+        "accelerate": [],
+        "safetensors": [],
+        "psutil": [],
+        "jsonschema": [
+          "Draft202012Validator"
+        ]
+      },
+      "minimumDiskBytes": 400000000,
+      "fallbackDiskBytes": 2500000000,
+      "minimumRamBytes": 2000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://huggingface.co/sensenova/SenseNova-Loop-9B",
+        "https://github.com/OpenSenseNova/SenseNova-Loop"
+      ],
+      "limitations": "Uses the bundled, hash-reviewed publisher Loop/mHC code, preserves distinct cache slots per execution and FP32 routers. CPU or CUDA/RAM weight placement; disk offload is disabled. Real text generation is required before Ready. No model weights are downloaded by dependency setup.",
+      "torchFlavor": "cpu",
+      "cpuOnly": true
+    },
+    {
+      "id": "sensenova-loop-cuda-v1",
+      "label": "SenseNova Loop CUDA",
+      "kind": "text",
+      "modelIds": [],
+      "packages": {
+        "transformers": "5.18.0",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "psutil": "6.1.1",
+        "pillow": "11.3.0",
+        "sentencepiece": "0.2.1",
+        "jsonschema": "4.23.0"
+      },
+      "torchPackages": {
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cu130",
+      "shareManagedTorch": true,
+      "imports": {
+        "transformers": [
+          "AutoTokenizer",
+          "Qwen3VLProcessor",
+          "Qwen3_5Config"
+        ],
+        "accelerate": [],
+        "safetensors": [],
+        "psutil": [],
+        "jsonschema": [
+          "Draft202012Validator"
+        ]
+      },
+      "minimumDiskBytes": 400000000,
+      "fallbackDiskBytes": 10000000000,
+      "minimumRamBytes": 2000000000,
+      "requiresCuda": true,
+      "sourceUrls": [
+        "https://huggingface.co/sensenova/SenseNova-Loop-9B",
+        "https://github.com/OpenSenseNova/SenseNova-Loop"
+      ],
+      "limitations": "Uses the bundled, hash-reviewed publisher Loop/mHC code, preserves distinct cache slots per execution and FP32 routers. CPU or CUDA/RAM weight placement; disk offload is disabled. Real text generation is required before Ready. No model weights are downloaded by dependency setup.",
+      "torchFlavor": "cu130",
+      "cpuOnly": false
     }
   ],
   "pythonBootstrap": {

@@ -1,0 +1,14 @@
+{
+  "repository": "sensenova/SenseNova-Loop-9B",
+  "revision": "329a65f701ba8c48b73c30d0cbaa6f0449733673",
+  "license": "Apache-2.0",
+  "source": "modeling_sensenova_loop.py",
+  "gitBlobSha1": "b437a10fa8d157bcbde656b967015da7dc86ea94",
+  "sha256": "26e11d3522aa730c0ba031340ce42632bc2834da8cc0b6804006bb207d979a5b",
+  "publicCodeRepository": "sensenova/SenseNova-Loop-9B-Preview",
+  "publicCodeRevision": "89d7970926e215f8da61726700cd026ccffbb6cb",
+  "identityEvidence": "The public publisher source has the identical Git blob advertised by the full release.",
+  "modified": false,
+  "weightsDownloaded": false,
+  "inferenceVerified": false
+}

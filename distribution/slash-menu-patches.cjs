@@ -32,7 +32,7 @@ module.exports=function applySlashMenu(app,{editFunction,replaceOnce}) {
 };
 
 module.exports.featureInstallerSource=function() {
-  const source=['slash-menu.js','queued-prompt-editor.js','sophon-live.js','voice-call.js'].map(name=>
+  const source=['slash-menu.js','queued-prompt-editor.js','sophon-live.js','haru-live.js','voice-call.js'].map(name=>
     fs.readFileSync(path.join(__dirname,'../src',name),'utf8').replace(/^import .*?;\r?$/gm,'').replace(/^export /gm,'')).join('\n');
   const css=['slash-menu.css','voice-call.css'].map(name=>fs.readFileSync(path.join(__dirname,'../src',name),'utf8')).join('\n');
   if(!commandTable)throw Error('Apply slash menu patches before building its installer');

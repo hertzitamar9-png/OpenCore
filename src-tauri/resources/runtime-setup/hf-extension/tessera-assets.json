@@ -1,0 +1,130 @@
+{
+  "sourceRepository": "thejagstudio/tessera-pixel-studio",
+  "sourceRevision": "8de933771e65ab3931b456090d065a1044c9ff18",
+  "sourceFiles": [
+    {
+      "filename": "LICENSE",
+      "bytes": 1858,
+      "sha256": "02047cfa3c0254fb36918e59dd6532fa1b27c00784838c5fb960acdaa072bd74"
+    },
+    {
+      "filename": "tessera/__init__.py",
+      "bytes": 615,
+      "sha256": "0b84a6dbd74d70b02194053b35e0588ac57eaea30aed05b13d0ac37c8b307294"
+    },
+    {
+      "filename": "tessera/config.py",
+      "bytes": 7473,
+      "sha256": "464cfc923cba110e57da773c4359c74134a5103e96c82b252b5a5374c39a8b2e"
+    },
+    {
+      "filename": "tessera/model.py",
+      "bytes": 17811,
+      "sha256": "352a64cc0ad5882839486c1f56b9d6eb99203f79c1f83985915e70dfcf7b22f2"
+    },
+    {
+      "filename": "tessera/palette.py",
+      "bytes": 14850,
+      "sha256": "83a6df26264bb678dfdccb01a8ec157fc2f8c403fb2d9967446a7d1041a4db3e"
+    },
+    {
+      "filename": "tessera/sampler.py",
+      "bytes": 9988,
+      "sha256": "ed0d79679c7f3c2d545321769961079b5aee38d9b3dc3f1c648d7c6964e0c1c7"
+    },
+    {
+      "filename": "tessera/text_encoder.py",
+      "bytes": 2991,
+      "sha256": "9ff57d54f9e89a7c56150968e6be61daf0c3b6e80669df393a94e8b2a3faddce"
+    },
+    {
+      "filename": "tessera/utils.py",
+      "bytes": 2128,
+      "sha256": "4df3169cf529b362f0aafe6ea496c9b44f31a688c8ebcf4c6cc4df5dd9b476d9"
+    },
+    {
+      "filename": "tessera/viz.py",
+      "bytes": 2500,
+      "sha256": "32a6f5a4f346cc0a1ed62edb1d7a33d55ac44fe2f3915536b0fa1a0b49a19c6f"
+    }
+  ],
+  "encoder": {
+    "id": "hf-0260e0e4a3227696ca09e712",
+    "repository": "openai/clip-vit-base-patch32",
+    "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+    "installable": true,
+    "files": [
+      {
+        "repository": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "filename": "config.json",
+        "bytes": 4186,
+        "sha256": null,
+        "gitBlobSha1": "a2a88b96561196777ca173b15309ea859f4d2ce0",
+        "role": "support",
+        "pinned": true
+      },
+      {
+        "repository": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "filename": "merges.txt",
+        "bytes": 524657,
+        "sha256": null,
+        "gitBlobSha1": "bbfec752c9a675946c6dce106def6f35c882dcc2",
+        "role": "support",
+        "pinned": true
+      },
+      {
+        "repository": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "filename": "pytorch_model.bin",
+        "bytes": 605247071,
+        "sha256": "a63082132ba4f97a80bea76823f544493bffa8082296d62d71581a4feff1576f",
+        "gitBlobSha1": null,
+        "role": "model",
+        "pinned": true
+      },
+      {
+        "repository": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "filename": "special_tokens_map.json",
+        "bytes": 389,
+        "sha256": null,
+        "gitBlobSha1": "9bfb42aa97dcd61e89f279ccaee988bccb4fabae",
+        "role": "support",
+        "pinned": true
+      },
+      {
+        "repository": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "filename": "tokenizer.json",
+        "bytes": 2224041,
+        "sha256": null,
+        "gitBlobSha1": "564c0ebd5ce29c4ee4864004aee693deadd3128c",
+        "role": "support",
+        "pinned": true
+      },
+      {
+        "repository": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "filename": "tokenizer_config.json",
+        "bytes": 592,
+        "sha256": null,
+        "gitBlobSha1": "4fdaf6842dd5a725b940c92b6b692490ce59d548",
+        "role": "support",
+        "pinned": true
+      },
+      {
+        "repository": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "filename": "vocab.json",
+        "bytes": 862328,
+        "sha256": null,
+        "gitBlobSha1": "182766ce89b439768edadda342519f33802f5364",
+        "role": "support",
+        "pinned": true
+      }
+    ],
+    "bytes": 608863264
+  }
+}

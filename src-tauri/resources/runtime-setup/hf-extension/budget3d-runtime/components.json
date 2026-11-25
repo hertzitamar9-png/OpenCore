@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "components": [
+    {
+      "id": "idol",
+      "repository": "speridlabs/idol",
+      "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+      "license": "apache-2.0",
+      "gated": false,
+      "files": [
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "config.json",
+          "bytes": 1335,
+          "sha256": null,
+          "gitBlobSha1": "e73c149c65ba2195d9c0ee37f0a9a08194a5cf5a",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "birefnet.safetensors",
+          "bytes": 444466856,
+          "sha256": "44bbc97b041f879975d0d6d538b8e66a25eb04d1f49aab40697544cdd97eaa8e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "denoiser.safetensors",
+          "bytes": 1482258308,
+          "sha256": "ded2cacf671bf3978ebc62729087abdbd318ef4752e6805b4c9fc8ffa51fe716",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "decoder.safetensors",
+          "bytes": 203171696,
+          "sha256": "9da4d7676bfcadb1c3fdfbff796e6257dadf82d26ec05be7717c79b2b13a1c4e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "speridlabs/idol",
+          "revision": "2731c2291fc65a797c5cb627a5e5526fc1490902",
+          "filename": "decoder_gs.safetensors",
+          "bytes": 949083036,
+          "sha256": "3087eb8ee5763206a53e4078acf2a1bf382dab5147d407ec13a2cf39c04cc544",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 3078981231
+    },
+    {
+      "id": "dinov3",
+      "repository": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+      "revision": "c807c9eeea853df70aec4069e6f56b28ddc82acc",
+      "license": "dinov3",
+      "gated": true,
+      "files": [
+        {
+          "repository": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+          "revision": "c807c9eeea853df70aec4069e6f56b28ddc82acc",
+          "filename": "config.json",
+          "bytes": 744,
+          "sha256": null,
+          "gitBlobSha1": "136174e19cf92f5af441d1b42b4534a81e831b97",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+          "revision": "c807c9eeea853df70aec4069e6f56b28ddc82acc",
+          "filename": "model.safetensors",
+          "bytes": 3362432800,
+          "sha256": "3e1d4d18b9bfa9f28fad8e9de6a783f1313532d3460efa4cd0b12521d81d1a4d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "facebook/dinov3-vith16plus-pretrain-lvd1689m",
+          "revision": "c807c9eeea853df70aec4069e6f56b28ddc82acc",
+          "filename": "preprocessor_config.json",
+          "bytes": 585,
+          "sha256": null,
+          "gitBlobSha1": "0126173c1ab7b75bbd9102e37de8a56ffe0a012b",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 3362434129
+    },
+    {
+      "id": "flux2",
+      "repository": "black-forest-labs/FLUX.2-klein-4B",
+      "revision": "e7b7dc27f91deacad38e78976d1f2b499d76a294",
+      "license": "apache-2.0",
+      "gated": false,
+      "files": [
+        {
+          "repository": "black-forest-labs/FLUX.2-klein-4B",
+          "revision": "e7b7dc27f91deacad38e78976d1f2b499d76a294",
+          "filename": "vae/config.json",
+          "bytes": 821,
+          "sha256": null,
+          "gitBlobSha1": "c3f38eb4c188a96a462519159356bd0fcc28cd14",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "black-forest-labs/FLUX.2-klein-4B",
+          "revision": "e7b7dc27f91deacad38e78976d1f2b499d76a294",
+          "filename": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 168120878,
+          "sha256": "ca70d2202afe6415bdbcb8793ba8cd99fd159cfe6192381504d6c4d3036e0f04",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 168121699
+    }
+  ]
+}
