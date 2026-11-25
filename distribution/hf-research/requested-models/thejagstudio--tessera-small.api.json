@@ -1,0 +1,101 @@
+{
+  "_id": "6af24c71fe3d3d356acdb120",
+  "id": "thejagstudio/tessera-small",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "pytorch",
+  "tags": [
+    "pytorch",
+    "pixel-art",
+    "text-to-image",
+    "masked-diffusion",
+    "discrete-diffusion",
+    "diffusion-llm",
+    "dataset:Angais/pixel-art-atlas-1.4m",
+    "license:cc-by-nc-4.0",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 174,
+  "modelId": "thejagstudio/tessera-small",
+  "author": "thejagstudio",
+  "sha": "e019edd7b29367821c05e6261bc40294ce6f8d27",
+  "lastModified": "2026-11-09T22:46:00.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "cc-by-nc-4.0",
+    "pipeline_tag": "text-to-image",
+    "library_name": "pytorch",
+    "datasets": [
+      "Angais/pixel-art-atlas-1.4m"
+    ],
+    "tags": [
+      "pixel-art",
+      "text-to-image",
+      "masked-diffusion",
+      "discrete-diffusion",
+      "diffusion-llm"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "bc3fbc733a51b3e9e24fcdf94f47f84bfc64a3b0",
+      "size": 1858
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "8481a6f2a8ce5d17b77bc4bf43ba529cf59c00cd",
+      "size": 4124
+    },
+    {
+      "rfilename": "metrics.jsonl",
+      "blobId": "052dca0ee93197193a25a2ba83aea67b84d320c1",
+      "size": 773381
+    },
+    {
+      "rfilename": "model_config.json",
+      "blobId": "cca50ff4bc0fc87bdd2084cb5d0fd0f5c4f3c1e1",
+      "size": 301
+    },
+    {
+      "rfilename": "showcase.png",
+      "blobId": "6394bb30055cea4db5e571f7511a7c057840d2bc",
+      "size": 65911
+    },
+    {
+      "rfilename": "tessera-small-fp16.pt",
+      "blobId": "273ad46b66349839c9f82959ec9b84e98c5dd6bd",
+      "size": 95254426,
+      "lfs": {
+        "sha256": "772a289de232950bc411bbfeaa4d60c320450b04cf5b7d8280c9c0b36880fec3",
+        "size": 95254426,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "train_config.json",
+      "blobId": "97b1db5a6dbc041b587bc57738c1fa68678bc0af",
+      "size": 1731
+    }
+  ],
+  "spaces": [
+    "cfahlgren1/slack-moji",
+    "thejagstudio/tessera-pixel-studio",
+    "ysharma/slack-moji-gradio",
+    "matrixy/slack-moji",
+    "ysharma/slack-moji-webgpu",
+    "faecc/tessera-backend",
+    "FrameXlabs/Trout"
+  ],
+  "createdAt": "2026-11-09T22:42:57.000Z",
+  "usedStorage": 95254426
+}

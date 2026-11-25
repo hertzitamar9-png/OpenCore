@@ -1,0 +1,56 @@
+{
+  "repository": "https://github.com/higurashi-ai/Haru",
+  "revision": "7fe6b7665f8bf035998f401f8cb779fbe53f2751",
+  "files": [
+    {
+      "path": "haru/pyproject.toml",
+      "bytes": 1497,
+      "sha256": "684dccb3d757474d577b88b8237fb9bd171bf2e84bbfd74de7bd9334229f4768"
+    },
+    {
+      "path": "haru/haru/session.py",
+      "bytes": 7380,
+      "sha256": "18a6239e43c11de6af00c0634ecbee92e748765a185e91e65d8e51ece5f2c0c4"
+    },
+    {
+      "path": "haru/haru/models/haru.py",
+      "bytes": 4919,
+      "sha256": "3229dcfacc148381bb80a804ae261360065e32e27a69b95c8176577dc6062a6e"
+    },
+    {
+      "path": "haru/haru/models/loaders.py",
+      "bytes": 2007,
+      "sha256": "460e57963ff01b5f3e5b56a5a5794c72e38d91b866536e8e83f1e94800055d4c"
+    },
+    {
+      "path": "haru/haru/config.py",
+      "bytes": 3049,
+      "sha256": "c3ace58fb4d3fcc5ae8d157e751c4afb9836d858c30356386f77ed5857aa8f01"
+    },
+    {
+      "path": "haru/haru/audio.py",
+      "bytes": 3177,
+      "sha256": "cde6acd2be2b24dfdc32ef80d707f2bcd6699312d6d5215ec9639c7aa29aa76b"
+    },
+    {
+      "path": "haru/haru/prompt.py",
+      "bytes": 5605,
+      "sha256": "574c072e435fc846b1d00665130c8b1ec29a0ed134e4f925878b6dad53f519f3"
+    },
+    {
+      "path": "haru/haru/server.py",
+      "bytes": 33333,
+      "sha256": "e3bec32f5830f4b3616ca83e3dc4414afc126bc1044deca2b9a06fe17be5bdbf"
+    },
+    {
+      "path": "haru/haru/backends.py",
+      "bytes": 12419,
+      "sha256": "7181427aeba6039aa81c100aab5ee1336a3905c1e59a0261df4ad85be328e2c9"
+    },
+    {
+      "path": "haru/haru/sampling.py",
+      "bytes": 4269,
+      "sha256": "655063aff189f3d1f48b53656cffabc5334077fcfb8c8a155fb2aacbb30313d7"
+    }
+  ]
+}

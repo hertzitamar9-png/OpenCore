@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "repository": "BudgetAny/Budget3D",
+      "revision": "95bbeab46063375d560f9b20fa7b9d9fedb078f7",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "8d5738ce8ff8f726d8f57f5cdaef76a6810bde225334925604c4cb9c3ff2dc59",
+          "bytes": 1609
+        },
+        {
+          "path": "budget3d/__init__.py",
+          "sha256": "7456989a35b429bf0865d9301bec4c3f77618f104a94bd5ef7a0616dc965b09e",
+          "bytes": 859
+        },
+        {
+          "path": "budget3d/upstream.py",
+          "sha256": "0d3cb01f4bc4de3d70b463d987d227bc0bfeacbc1e7caca406c0fdbefa5a9b0e",
+          "bytes": 785
+        },
+        {
+          "path": "budget3d/octree.py",
+          "sha256": "d4259f7c27b03779ca397d3aa55a2ef51067cf2e0198b731ddd82352648adc06",
+          "bytes": 16584
+        },
+        {
+          "path": "budget3d/models/__init__.py",
+          "sha256": "ba7b5cf40d48943589a890aba88c3024bea83eb006c0900f9b62383eb11ccc2b",
+          "bytes": 591
+        },
+        {
+          "path": "budget3d/models/adapters.py",
+          "sha256": "073105a015e14ab5aaabed2d594a851e7a8a5cd743054b34f1749129f71ac2e8",
+          "bytes": 9581
+        },
+        {
+          "path": "budget3d/models/denoiser.py",
+          "sha256": "f76a01a2c4fe5ef471c51268620f1878daffc077f333126ef3c495f22eda0e1e",
+          "bytes": 23688
+        },
+        {
+          "path": "budget3d/models/encoders.py",
+          "sha256": "1ed9cc8a83f4839ed8fbe83ad4dec7e632dbfab46276844295f9fe8bd1652246",
+          "bytes": 3609
+        },
+        {
+          "path": "budget3d/models/load.py",
+          "sha256": "178b9bea5aa2dd5e0a1913b3c22c61702256831838b7f62b266a17411ec5c7da",
+          "bytes": 7484
+        },
+        {
+          "path": "budget3d/sampling/__init__.py",
+          "sha256": "4e59af91492cb4ab04cc5987d8a352044e4fb539194c09766b911b9c5f729e8f",
+          "bytes": 324
+        },
+        {
+          "path": "budget3d/sampling/sampler.py",
+          "sha256": "fdf3e314a5ed6c2922a140ca4dce062285a6671dc9bae489dae86c952242e152",
+          "bytes": 4795
+        }
+      ]
+    },
+    {
+      "repository": "speridlabs/idol-sdk",
+      "revision": "956439f5e664a7e8c5db25a8055e72d6365aafa5",
+      "files": [
+        {
+          "path": "idol-sdk/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "bytes": 11358
+        },
+        {
+          "path": "idol-sdk/idol/__init__.py",
+          "sha256": "609efc7390b29f2eb504e70dd274bf07e03e92d2e6a7adaff054b9abd7778e27",
+          "bytes": 101
+        },
+        {
+          "path": "idol-sdk/idol/camera.py",
+          "sha256": "5576043593454e492403b821d1e355433e71f515a2d4406a51c53c30fc097935",
+          "bytes": 826
+        },
+        {
+          "path": "idol-sdk/idol/conditioning.py",
+          "sha256": "f382917c6e5b94180c1a66b08e33b1ce9c159d819a8620c6e6a21e23d21965c8",
+          "bytes": 4824
+        },
+        {
+          "path": "idol-sdk/idol/device.py",
+          "sha256": "353e48eb5634932819f10a75ae1538708c944fcf5610093e2970ff346070ba82",
+          "bytes": 496
+        },
+        {
+          "path": "idol-sdk/idol/gaussian.py",
+          "sha256": "f181ae2eaf5e44fee3055bd032d57b5545ad2e38e4d2315ae3c21a2fb4f85217",
+          "bytes": 3516
+        },
+        {
+          "path": "idol-sdk/idol/preprocess.py",
+          "sha256": "b6ef41020760b1d1ffbee2f82a2eb22752797d8c474f7b3eaa25f2a6413a1ffe",
+          "bytes": 2043
+        },
+        {
+          "path": "idol-sdk/idol/pipeline.py",
+          "sha256": "23b93ba70ab7c1ac8a91662eb088ee2c8bed2cc7139af83e3d9458de154c5ba2",
+          "bytes": 8743
+        },
+        {
+          "path": "idol-sdk/idol/sample.py",
+          "sha256": "a2d09191a9691630ca611e8df499976f99a026655a147b2dea327ece53fd4fb2",
+          "bytes": 3312
+        },
+        {
+          "path": "idol-sdk/idol/sampler.py",
+          "sha256": "532987b5599be678361c2fcf566335bb3e1b0171696f985818d10b7460bfc8b0",
+          "bytes": 1498
+        },
+        {
+          "path": "idol-sdk/idol/models/__init__.py",
+          "sha256": "228d5d073a601cbd20e188bcee45135ee3313eafc2537549d0b33d5325436b4a",
+          "bytes": 148
+        },
+        {
+          "path": "idol-sdk/idol/models/birefnet.py",
+          "sha256": "7c8e5e1021978225740bc9e0a94beef2fba1545a2ffc739235fab6aadc244068",
+          "bytes": 20772
+        },
+        {
+          "path": "idol-sdk/idol/models/decoder.py",
+          "sha256": "ffaf304f0924360782f902a126efac72084ff907b23db8721b4937f0c3175bbd",
+          "bytes": 9913
+        },
+        {
+          "path": "idol-sdk/idol/models/dit.py",
+          "sha256": "fbe725cc478b0acd245d9404ac8d9df327ebfbf79fe51c954d94b005c5bd6af4",
+          "bytes": 5782
+        },
+        {
+          "path": "idol-sdk/idol/models/layers.py",
+          "sha256": "2dbf24107396194636c9a2e89e7acee1bcf91b14dba1b4cde0318cb85b3f482f",
+          "bytes": 15644
+        }
+      ]
+    }
+  ],
+  "localChanges": [
+    {
+      "path": "budget3d/sampling/sampler.py",
+      "description": "Optional progress/cancellation callback after each unchanged Euler step.",
+      "sha256": "4d38142f7c22aacb82a5a72d910ab1ec2904f77c2552bf00abbf1596658ff0eb"
+    }
+  ]
+}

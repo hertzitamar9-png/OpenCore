@@ -1,5 +1,6 @@
 """Managed offline text serving. No downloaded Python, disk offload, or background downloads."""
 import argparse
+from collections.abc import Mapping
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
@@ -64,6 +65,11 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
         config.backend='torch'
         config.prefill_chunk_size=256
         cls=EdgeRockForCausalLM
+    elif raw.get('model_type')=='sensenova_loop':
+        if experimental_fast:raise RuntimeError('SenseNova must preserve its trained Loop/mHC execution order')
+        from sensenova_loop.modeling_sensenova_loop import SenseNovaLoopConfig, SenseNovaLoopForConditionalGeneration
+        config=SenseNovaLoopConfig.from_pretrained(directory,local_files_only=True)
+        cls=SenseNovaLoopForConditionalGeneration
     else:
         if experimental_fast:raise RuntimeError('Experimental layer skipping is not implemented for this architecture')
         config=AutoConfig.from_pretrained(directory,local_files_only=True,trust_remote_code=False)
@@ -99,7 +105,12 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
     if device=='cpu' and psutil.virtual_memory().available<required:
         raise RuntimeError(f'Not enough available RAM for this checkpoint: approximately {required/1e9:.2f} GB including preparation headroom. Disk offload is disabled.')
     dtype={'fp32':torch.float32,'bf16':torch.bfloat16,'fp16':torch.float16}.get(precision,'auto')
-    if cls is AutoModelForImageTextToText:
+    if raw.get('model_type')=='sensenova_loop':
+        from transformers import Qwen3VLProcessor
+        tokenizer=Qwen3VLProcessor.from_pretrained(directory,local_files_only=True,trust_remote_code=False)
+        tokenizer._opencore_sensenova_loop=True
+        tokenizer.tokenizer._opencore_sensenova_loop=True
+    elif cls is AutoModelForImageTextToText:
         # Load the full trusted Transformers processor, not just a text
         # tokenizer: image-language models need vision tokens and pixel inputs.
         tokenizer=AutoProcessor.from_pretrained(directory,local_files_only=True,trust_remote_code=False)
@@ -110,7 +121,7 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
     if raw.get('model_type')=='edgerock':
         tokenizer.chat_template=(ROOT/'edgerock/chat_template.jinja').read_text(encoding='utf-8')
         tokenizer._opencore_edgerock=True
-    safe_loading={} if raw.get('model_type') in ('gptx3','edgerock','spark2_5') else {'trust_remote_code':False}
+    safe_loading={} if raw.get('model_type') in ('gptx3','edgerock','spark2_5','sensenova_loop') else {'trust_remote_code':False}
     placement = {}
     if hybrid:
         if cls in (AutoModelForCausalLM, AutoModelForImageTextToText):
@@ -122,7 +133,8 @@ def load(directory,context,precision='auto',device_preference='auto',experimenta
         estimate_dtype = (getattr(config, 'dtype', None) or getattr(getattr(config, 'text_config', None), 'dtype', None)) if dtype == 'auto' else dtype
         placement['device_map'] = cuda_device_map(model_factory, memory, estimate_dtype)
     model=cls.from_pretrained(directory,config=config,local_files_only=True,**safe_loading,
-        dtype=dtype,low_cpu_mem_usage=True,attn_implementation='eager',**placement).eval()
+        dtype=dtype,low_cpu_mem_usage=True,
+        attn_implementation='sdpa' if raw.get('model_type')=='sensenova_loop' else 'eager',**placement).eval()
     if hybrid:
         actual=device_placement(model)
         if not actual['gpuModules'] or actual['diskModules']:
@@ -227,6 +239,9 @@ def multimodal_messages(payload):
 def messages_prompt(tokenizer,payload):
     tokenizer=text_tokenizer(tokenizer)
     if isinstance(payload.get('prompt'),str):return payload['prompt']
+    if getattr(tokenizer,'_opencore_sensenova_loop',False):
+        from sensenova_loop.protocol import messages_prompt as native_prompt
+        return native_prompt(tokenizer,payload)
     messages=payload.get('messages')
     if not isinstance(messages,list) or not messages:raise ValueError('Supply messages or a text prompt')
     clean=[]
@@ -255,11 +270,16 @@ def generation_inputs(model,tokenizer,context,payload,stop):
             raise ValueError('This checkpoint has no verified vision-language processor; use a compatible image-to-text runtime')
         messages=multimodal_messages(payload)
         try:
+            options={}
+            if getattr(tokenizer,'_opencore_sensenova_loop',False):
+                from sensenova_loop.protocol import template_options, preserve_tool_fields, merge_instructions
+                messages=merge_instructions(preserve_tool_fields(messages,payload['messages']))
+                options=template_options(payload)
             encoded=tokenizer.apply_chat_template(messages,tokenize=True,add_generation_prompt=True,
-                                                   return_dict=True,return_tensors='pt')
+                                                   return_dict=True,return_tensors='pt',**options)
         except (TypeError,ValueError,KeyError) as error:
             raise ValueError('This local processor does not support the requested image/video-frame input format') from error
-        if not isinstance(encoded,dict) or 'input_ids' not in encoded:
+        if not isinstance(encoded,Mapping) or 'input_ids' not in encoded:
             raise ValueError('The vision-language processor did not return token inputs')
     else:
         prompt=messages_prompt(tokenizer,payload)
@@ -273,9 +293,10 @@ def generation_inputs(model,tokenizer,context,payload,stop):
     if str(input_device) == 'meta':
         input_device = next(device for device in model.hf_device_map.values()
                             if type(device) is int or str(device).startswith('cuda'))
+    token_ids=text_tokenizer(tokenizer)
     args={**{key:value.to(input_device) for key,value in encoded.items()},'max_new_tokens':maximum,
           'do_sample':temperature>0,'stopping_criteria':StoppingCriteriaList([Cancelled()]),
-          'pad_token_id':tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id}
+          'pad_token_id':token_ids.pad_token_id if token_ids.pad_token_id is not None else token_ids.eos_token_id}
     if temperature>0:args.update(temperature=temperature,top_p=float(payload.get('top_p',0.95)))
     if 'top_k' in payload and temperature>0:args['top_k']=int(payload['top_k'])
     if 'repeat_penalty' in payload:args['repetition_penalty']=float(payload['repeat_penalty'])
@@ -322,13 +343,22 @@ def serve(model,tokenizer,context,model_id,port,source_pin=''):
             elif self.path=='/props':self.send_json(200,{'n_ctx':context,'model':model_id,'model_fingerprint':source_pin,'tokenizer_fingerprint':source_pin,'cache_append_supported':False,'reasoning_min_tokens':False,**placement})
             else:self.send_json(404,{'error':'Unknown endpoint'})
         def do_POST(self):
+            if self.path=='/apply-template' and getattr(text_tokenizer(tokenizer),'_opencore_sensenova_loop',False):
+                try:
+                    size=int(self.headers.get('Content-Length','0'))
+                    if not 0<size<=8*1024**2:raise ValueError('Template request exceeds the limit')
+                    payload=json.loads(self.rfile.read(size))
+                    if has_multimodal_parts(payload):raise ValueError('Use the image processor to count multimodal inputs')
+                    self.send_json(200,{'prompt':messages_prompt(tokenizer,payload)})
+                except (ValueError,TypeError,AttributeError) as error:self.send_json(400,{'error':str(error)[:1000]})
+                return
             if self.path=='/tokenize':
                 try:
                     size=int(self.headers.get('Content-Length','0'))
                     if not 0<size<=8*1024**2:raise ValueError('Tokenization request exceeds the limit')
                     content=json.loads(self.rfile.read(size)).get('content')
                     if not isinstance(content,str):raise ValueError('Supply text content to tokenize')
-                    self.send_json(200,{'tokens':tokenizer.encode(content,add_special_tokens=False)})
+                    self.send_json(200,{'tokens':text_tokenizer(tokenizer).encode(content,add_special_tokens=False)})
                 except Exception as error:self.send_json(400,{'error':str(error)[:1000]})
                 return
             if self.path not in ('/v1/chat/completions','/v1/completions','/completion'):
@@ -342,10 +372,17 @@ def serve(model,tokenizer,context,model_id,port,source_pin=''):
                 payload=json.loads(self.rfile.read(size));args,prompt_tokens=generation_inputs(model,tokenizer,context,payload,stop)
                 if 'seed' in payload:torch.manual_seed(int(payload['seed']))
                 chat=self.path=='/v1/chat/completions';request_id='chatcmpl-'+uuid.uuid4().hex;created=int(time.time())
+                protocol=None
+                if chat and getattr(text_tokenizer(tokenizer),'_opencore_sensenova_loop',False):
+                    from sensenova_loop.protocol import OutputStream
+                    protocol=OutputStream(payload)
                 if not payload.get('stream'):
                     with torch.inference_mode():output=model.generate(**args)
                     tokens=output[0,prompt_tokens:];text=text_tokenizer(tokenizer).decode(tokens,skip_special_tokens=True)
                     choice={'index':0,'finish_reason':'stop',**({'message':{'role':'assistant','content':text}} if chat else {'text':text})}
+                    if protocol:
+                        protocol.feed(text,final=True);choice['message']=protocol.message()
+                        if protocol.calls:choice['finish_reason']='tool_calls'
                     result={'id':request_id,'object':'chat.completion' if chat else 'text_completion','created':created,'model':model_id,'choices':[choice],
                             'usage':{'prompt_tokens':prompt_tokens,'completion_tokens':len(tokens),'total_tokens':prompt_tokens+len(tokens)}}
                     if self.path=='/completion':result.update(content=text,tokens_predicted=len(tokens),tokens_evaluated=prompt_tokens,stop=True)
@@ -359,23 +396,39 @@ def serve(model,tokenizer,context,model_id,port,source_pin=''):
                         failure.append(str(error));streamer.end()
                 worker=threading.Thread(target=generate,daemon=True);worker.start()
                 self.send_response(200);self.send_header('Content-Type','text/event-stream');self.send_header('Cache-Control','no-cache');self.end_headers();stream_started=True
+                def emit_delta(delta):
+                    value={'id':request_id,'object':'chat.completion.chunk','created':created,'model':model_id,
+                           'choices':[{'index':0,'finish_reason':None,'delta':delta}]}
+                    self.wfile.write(('data: '+json.dumps(value)+'\n\n').encode());self.wfile.flush()
                 for text in streamer:
                     if not text:continue
+                    if protocol:
+                        for delta in protocol.feed(text):emit_delta(delta)
+                        continue
                     value={'id':request_id,'object':'chat.completion.chunk','created':created,'model':model_id,
                            'choices':[{'index':0,'finish_reason':None,**({'delta':{'content':text}} if chat else {'text':text})}]}
                     if self.path=='/completion':value.update(content=text,stop=False)
                     self.wfile.write(('data: '+json.dumps(value)+'\n\n').encode());self.wfile.flush()
                 if failure:raise RuntimeError(failure[0])
+                if protocol:
+                    for delta in protocol.feed('',final=True):emit_delta(delta)
                 count=streamer.generated_tokens;ended=time.perf_counter()
                 first=streamer.first_token_at or ended
                 prompt_seconds=max(first-started,0.000001);decode_seconds=max(ended-first,0.000001)
                 final={'id':request_id,'model':model_id,'choices':[{'index':0,'finish_reason':'length' if count>=args['max_new_tokens'] else 'stop',**({'delta':{}} if chat else {'text':''})}],
                        'usage':{'prompt_tokens':prompt_tokens,'completion_tokens':count,'total_tokens':prompt_tokens+count,'completion_tokens_details':{'reasoning_tokens':0}},
                        'timings':{'prompt_ms':prompt_seconds*1000,'predicted_ms':decode_seconds*1000,'prompt_per_second':prompt_tokens/prompt_seconds,'predicted_per_second':max(count-1,0)/decode_seconds}}
+                if protocol:
+                    if protocol.calls:final['choices'][0]['finish_reason']='tool_calls'
+                    reasoning=''.join(protocol.parts['reasoning_content'])
+                    final['usage']['completion_tokens_details']['reasoning_tokens']=len(text_tokenizer(tokenizer).encode(reasoning,add_special_tokens=False)) if reasoning else 0
                 self.wfile.write(('data: '+json.dumps(final)+'\n\ndata: [DONE]\n\n').encode());self.wfile.flush()
             except (BrokenPipeError,ConnectionResetError,TimeoutError):stop.set()
             except Exception as error:
                 if not stream_started:self.send_json(400,{'error':str(error)[:1000]})
+                elif not stop.is_set():
+                    try:self.wfile.write(('data: '+json.dumps({'error':{'message':str(error)[:1000]}})+'\n\ndata: [DONE]\n\n').encode());self.wfile.flush()
+                    except (BrokenPipeError,ConnectionResetError):pass
             finally:
                 stop.set()
                 if worker:worker.join(timeout=10)

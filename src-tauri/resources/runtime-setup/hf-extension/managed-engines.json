@@ -2,13 +2,25 @@
   "schema": 1,
   "engines": {
     "dory-cuda13-v1": {
-      "label": "Dory llama.cpp · CUDA 13.3",
+      "label": "Dory llama.cpp \u00b7 CUDA 13.3",
       "url": "https://github.com/hertzitamar9-png/OpenCore/releases/download/runtime-dory-cuda13-98a74c97/dory-llama-win-x64-cuda13-98a74c97.zip",
       "sha256": "1b9490d81c5dabe58f873ebc443b546dc4bd285e10adf5058d1b71e4f89eebb7",
       "bytes": 44061503,
       "source": "https://github.com/brianchmielNV/llama.cpp",
       "revision": "98a74c97ea09ac72f6ceda1559808fc0a2f447ce",
-      "requiredFiles": ["llama-server.exe", "llama-server-impl.dll", "llama.dll", "llama-common.dll", "mtmd.dll", "ggml.dll", "ggml-base.dll", "ggml-cpu.dll", "ggml-cuda.dll", "LICENSE", "build-info.json"]
+      "requiredFiles": [
+        "llama-server.exe",
+        "llama-server-impl.dll",
+        "llama.dll",
+        "llama-common.dll",
+        "mtmd.dll",
+        "ggml.dll",
+        "ggml-base.dll",
+        "ggml-cpu.dll",
+        "ggml-cuda.dll",
+        "LICENSE",
+        "build-info.json"
+      ]
     },
     "cuda13-libs-v1": {
       "label": "Shared CUDA 13.4 libraries",
@@ -17,7 +29,11 @@
       "bytes": 423535356,
       "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b11960",
       "revision": "8642541b255bfb5dc39cd351a178be09013a55d6",
-      "requiredFiles": ["cublas64_13.dll", "cublasLt64_13.dll", "cudart64_13.dll"]
+      "requiredFiles": [
+        "cublas64_13.dll",
+        "cublasLt64_13.dll",
+        "cudart64_13.dll"
+      ]
     },
     "cuda12-libs-v1": {
       "label": "Shared CUDA 12.4 libraries",
@@ -26,42 +42,50 @@
       "bytes": 391443627,
       "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b11960",
       "revision": "8642541b255bfb5dc39cd351a178be09013a55d6",
-      "requiredFiles": ["cublas64_12.dll", "cublasLt64_12.dll", "cudart64_12.dll"]
+      "requiredFiles": [
+        "cublas64_12.dll",
+        "cublasLt64_12.dll",
+        "cudart64_12.dll"
+      ]
     },
     "lfm3-cuda13-v1": {
-      "label": "llama.cpp b11960 · CUDA 13.4",
+      "label": "llama.cpp b11960 \u00b7 CUDA 13.4",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11960/llama-b11960-bin-win-cuda-13.4-x64.zip",
       "sha256": "31c75ea62b80f0816c855ea783ef68757bc2d48028edaa57d904e4982bddea4a",
       "bytes": 164986387,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b11960",
-      "revision": "8642541b255bfb5dc39cd351a178be09013a55d6", "version": "b11960"
+      "revision": "8642541b255bfb5dc39cd351a178be09013a55d6",
+      "version": "b11960"
     },
     "lfm3-cuda12-v1": {
-      "label": "llama.cpp b11960 · CUDA 12.4",
+      "label": "llama.cpp b11960 \u00b7 CUDA 12.4",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11960/llama-b11960-bin-win-cuda-12.4-x64.zip",
       "sha256": "8d9d819261de10cc2f03921b8b79f779c5c458e21edb60c170ee30a7d462d684",
       "bytes": 279763224,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b11960",
-      "revision": "8642541b255bfb5dc39cd351a178be09013a55d6", "version": "b11960"
+      "revision": "8642541b255bfb5dc39cd351a178be09013a55d6",
+      "version": "b11960"
     },
     "flint-cuda13-v1": {
-      "label": "llama.cpp b11860 · CUDA 13.4",
+      "label": "llama.cpp b11860 \u00b7 CUDA 13.4",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11860/llama-b11860-bin-win-cuda-13.4-x64.zip",
       "sha256": "121bf657a290817d4d1377cc2e05c2d9104f3a4088ab7a48274a4b37eebe7766",
       "bytes": 159950373,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b11860",
-      "revision": "df9beac71", "version": "b11860"
+      "revision": "df9beac71",
+      "version": "b11860"
     },
     "flint-cuda12-v1": {
-      "label": "llama.cpp b11860 · CUDA 12.4",
+      "label": "llama.cpp b11860 \u00b7 CUDA 12.4",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11860/llama-b11860-bin-win-cuda-12.4-x64.zip",
       "sha256": "e07bd25f1a01d386f67a9925ead9b61d2bd23be214633da3a18a35493da4f6d4",
       "bytes": 272425353,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b11860",
-      "revision": "df9beac71", "version": "b11860"
+      "revision": "df9beac71",
+      "version": "b11860"
     },
     "lfm3-vulkan-v1": {
-      "label": "llama.cpp b11960 · Vulkan GPU",
+      "label": "llama.cpp b11960 \u00b7 Vulkan GPU",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11960/llama-b11960-bin-win-vulkan-x64.zip",
       "sha256": "bac6914b5e83523eb008c6789eaa12669f93fbc196c3b9e8237b6672323b33e9",
       "bytes": 37345851,
@@ -70,7 +94,7 @@
       "version": "b11960"
     },
     "flint-vulkan-v1": {
-      "label": "llama.cpp b11860 · Vulkan GPU",
+      "label": "llama.cpp b11860 \u00b7 Vulkan GPU",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11860/llama-b11860-bin-win-vulkan-x64.zip",
       "sha256": "1b0ca61a1da62858371d7a6cfd75eb721772d2aac45db9e233ccb2755d821465",
       "bytes": 36995445,
@@ -132,36 +156,190 @@
       "version": "prism-b10831"
     },
     "minicpm-cpu-v1": {
-      "label": "llama.cpp b12032 · MiniCPM-V 4.7",
+      "label": "llama.cpp b12032 \u00b7 MiniCPM-V 4.7",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-cpu-x64.zip",
       "sha256": "5296f5d18bb7d422c7c26f4bb9bc796d9d4f41e1312a8c296cff475bdc60d0d4",
       "bytes": 24582754,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
-      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a",
+      "version": "b12032"
     },
     "minicpm-cuda12-v1": {
-      "label": "llama.cpp b12032 · CUDA 12.4",
+      "label": "llama.cpp b12032 \u00b7 CUDA 12.4",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-cuda-12.4-x64.zip",
       "sha256": "36c7e24ad048cceabf00c1b49d0f0411b954c6a410a7ff4300af8721a94fd00a",
       "bytes": 279952566,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
-      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a",
+      "version": "b12032"
     },
     "minicpm-cuda13-v1": {
-      "label": "llama.cpp b12032 · CUDA 13.4",
+      "label": "llama.cpp b12032 \u00b7 CUDA 13.4",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-cuda-13.4-x64.zip",
       "sha256": "4b2d4c4678192fbadc443e2c406fef06356d1b064ae9ab79b9f67e4329903511",
       "bytes": 165164493,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
-      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a",
+      "version": "b12032"
     },
     "minicpm-vulkan-v1": {
-      "label": "llama.cpp b12032 · Vulkan GPU",
+      "label": "llama.cpp b12032 \u00b7 Vulkan GPU",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12032/llama-b12032-bin-win-vulkan-x64.zip",
       "sha256": "19a8bbf269fa683ae7bc04f886c9c2a93e0655c2606f37d2b60069bf9e8bcc32",
       "bytes": 37523450,
       "source": "https://github.com/ggml-org/llama.cpp/tree/b12032",
-      "revision": "dde879bc4f954b809892fd0d660515f42536394a", "version": "b12032"
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a",
+      "version": "b12032"
+    },
+    "raon-nano-cpu-v1": {
+      "label": "KRAFTON Raon nano \u00b7 CPU",
+      "url": "https://codeload.github.com/krafton-ai/llama.cpp/zip/4d72ff0d45d5795aa4bd9655a77501269b52e1bc",
+      "bytes": 44243392,
+      "sha256": "18450d498c5df00f5c091b554d35b09405ae42c7ef5f3a477acb446f3929a22f",
+      "source": "https://github.com/krafton-ai/llama.cpp/tree/4d72ff0d45d5795aa4bd9655a77501269b52e1bc",
+      "revision": "4d72ff0d45d5795aa4bd9655a77501269b52e1bc",
+      "sourceBuild": true,
+      "stripPrefix": "llama.cpp-4d72ff0d45d5795aa4bd9655a77501269b52e1bc/",
+      "requiredFiles": [
+        "llama-server.exe",
+        "build-info.json"
+      ]
+    },
+    "inkling-loop-cpu-v1": {
+      "label": "Inkling 2 Mini upstream CPU",
+      "url": "https://codeload.github.com/ggml-org/llama.cpp/zip/29b52d398b294509746ec0a3f28948a3107c0213",
+      "sha256": "2edefe45fdf48b95c9be1bcc1e31a0655581b61a21f162125727f26658c19231",
+      "bytes": 42014109,
+      "source": "https://github.com/ggml-org/llama.cpp/tree/29b52d398b294509746ec0a3f28948a3107c0213",
+      "revision": "29b52d398b294509746ec0a3f28948a3107c0213",
+      "sourceBuild": true,
+      "modelArchitecture": "inkling2_loop",
+      "stripPrefix": "llama.cpp-29b52d398b294509746ec0a3f28948a3107c0213/",
+      "requiredFiles": [
+        "llama-server.exe",
+        "build-info.json",
+        "llama.dll",
+        "mtmd.dll"
+      ]
+    },
+    "inkling-unsloth-cpu-v1": {
+      "label": "Unsloth Inkling 2 Mini CPU",
+      "url": "https://github.com/unslothai/llama.cpp/releases/download/b12568-mix-8eebad4/app-b12568-mix-8eebad4-windows-x64-cpu.zip",
+      "sha256": "72491a4eee608e7f3a944ce168897927bd1aa2f93b3a2358d82a9f523a7b151e",
+      "bytes": 21243304,
+      "source": "https://github.com/unslothai/llama.cpp/releases/tag/b12568-mix-8eebad4",
+      "revision": "b9b9c0345715dc76ff8f874de3529b8a51251ee9",
+      "version": "b12568-mix-8eebad4",
+      "requiredFiles": [
+        "llama-server.exe",
+        "llama-server-impl.dll",
+        "llama.dll",
+        "mtmd.dll",
+        "ggml-cpu-x64.dll"
+      ]
+    },
+    "inkling-unsloth-cuda12-v1": {
+      "label": "Unsloth Inkling 2 Mini CUDA 12",
+      "url": "https://github.com/unslothai/llama.cpp/releases/download/b12568-mix-8eebad4/app-b12568-mix-8eebad4-windows-x64-cuda12-portable.zip",
+      "sha256": "721c45b86606201a233ad94f32aec4edff0abfd33a3d310b93bda28044f39baa",
+      "bytes": 465700911,
+      "source": "https://github.com/unslothai/llama.cpp/releases/tag/b12568-mix-8eebad4",
+      "revision": "b9b9c0345715dc76ff8f874de3529b8a51251ee9",
+      "version": "b12568-mix-8eebad4",
+      "requiredFiles": [
+        "llama-server.exe",
+        "llama-server-impl.dll",
+        "llama.dll",
+        "mtmd.dll",
+        "ggml-cuda.dll"
+      ]
+    },
+    "inkling-unsloth-cuda13-v1": {
+      "label": "Unsloth Inkling 2 Mini CUDA 13",
+      "url": "https://github.com/unslothai/llama.cpp/releases/download/b12568-mix-8eebad4/app-b12568-mix-8eebad4-windows-x64-cuda13-portable.zip",
+      "sha256": "77991bfc57d55ca8f8247d0d9d1b6a5fd3dccd5454cbe63741302bc898ffedf7",
+      "bytes": 413202655,
+      "source": "https://github.com/unslothai/llama.cpp/releases/tag/b12568-mix-8eebad4",
+      "revision": "b9b9c0345715dc76ff8f874de3529b8a51251ee9",
+      "version": "b12568-mix-8eebad4",
+      "requiredFiles": [
+        "llama-server.exe",
+        "llama-server-impl.dll",
+        "llama.dll",
+        "mtmd.dll",
+        "ggml-cuda.dll"
+      ]
+    },
+    "inkling-unsloth-vulkan-v1": {
+      "label": "Unsloth Inkling 2 Mini Vulkan",
+      "url": "https://github.com/unslothai/llama.cpp/releases/download/b12568-mix-8eebad4/app-b12568-mix-8eebad4-windows-x64-vulkan.zip",
+      "sha256": "7f08e01f775f94e969b26965d82c32a13794c0d63fa23c8e483bc592cc02dab4",
+      "bytes": 28449760,
+      "source": "https://github.com/unslothai/llama.cpp/releases/tag/b12568-mix-8eebad4",
+      "revision": "b9b9c0345715dc76ff8f874de3529b8a51251ee9",
+      "version": "b12568-mix-8eebad4",
+      "requiredFiles": [
+        "llama-server.exe",
+        "llama-server-impl.dll",
+        "llama.dll",
+        "mtmd.dll",
+        "ggml-vulkan.dll"
+      ]
+    },
+    "edge0-cuda13-v1": {
+      "label": "Edge0 CLI / Strata \u00b7 Windows CUDA 13",
+      "url": "https://github.com/Edge0-AI/Edge0/releases/download/v0.3.0/edge0-chat-0.3.0-windows-x64.zip",
+      "sha256": "3a14c033b8a8334f38e7c54caeb2335809b3b32a3cc0adb2ee23499dc2dc2560",
+      "bytes": 279838161,
+      "source": "https://github.com/Edge0-AI/Edge0/releases/tag/v0.3.0",
+      "revision": "bc2dc409d420097b4e864d511901180d7c2c6bac",
+      "stripPrefix": "edge0-chat-0.3.0-windows-x64/",
+      "maxFiles": 1500,
+      "includePaths": [
+        "edge0-infer.exe",
+        "edge0-strata/",
+        "licenses/",
+        "LICENSE",
+        "NOTICE"
+      ],
+      "executable": "edge0-infer.exe",
+      "requiredFiles": [
+        "edge0-infer.exe",
+        "edge0-strata/build/strata.exe",
+        "edge0-strata/.venv/Scripts/python.exe",
+        "edge0-strata/serve/server.py",
+        "edge0-strata/edge0/CONTRACT",
+        "edge0-strata/edge0/models/edge0-145b.json",
+        "edge0-strata/edge0/models/edge0-120b.json"
+      ]
+    },
+    "nanbeige-extreme-cuda12-v1": {
+      "label": "Nanbeige Extreme llama.cpp b12503 CUDA 12.4",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12503/llama-b12503-bin-win-cuda-12.4-x64.zip",
+      "sha256": "9df9b6316051ce258debb234b3475762eecd8721e6bb41474f0743d54aad08aa",
+      "bytes": 363875811,
+      "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b12503",
+      "revision": "4577932fab595eaa8b27ad71734d5de1f3c07d8c",
+      "requiredFiles": [
+        "llama-server.exe",
+        "llama-server-impl.dll",
+        "llama.dll",
+        "ggml-cuda.dll",
+        "ggml-base.dll"
+      ]
+    },
+    "nanbeige-extreme-cuda12-libs-v1": {
+      "label": "Nanbeige Extreme CUDA 12.4 libraries",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12503/cudart-llama-bin-win-cuda-12.4-x64.zip",
+      "sha256": "8c79a9b226de4b3cacfd1f83d24f962d0773be79f1e7b75c6af4ded7e32ae1d6",
+      "bytes": 391443627,
+      "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b12503",
+      "revision": "4577932fab595eaa8b27ad71734d5de1f3c07d8c",
+      "requiredFiles": [
+        "cublas64_12.dll",
+        "cublasLt64_12.dll",
+        "cudart64_12.dll"
+      ]
     }
   }
 }

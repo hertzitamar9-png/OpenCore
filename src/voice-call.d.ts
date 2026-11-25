@@ -14,5 +14,6 @@ export function VoiceCall(props: {
   brainLabel: string;
   brainPicker: ReactNode;
   disabled?: string;
+  initialKind?: 'haru' | 'sophon' | 'local';
   sendTurn: (text: string, signal: AbortSignal, computerUse: boolean) => Promise<string>;
 }): ReactNode;

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { startSophonLive, sophonEndpoint } from "./sophon-live.js";
+import { startHaruLive } from "./haru-live.js";
 import { isDesktopChromeLaunch } from "./slash-menu.js";
 
 const preferencesKey = "opencore.voice-call.v1";
@@ -73,9 +74,9 @@ function collectUtterance(onSpeech) {
   };
 }
 
-async function openMicrophone(session, onAudio) {
+async function openMicrophone(session, onAudio, rate = sampleRate) {
   if (!navigator.mediaDevices?.getUserMedia || !globalThis.AudioContext) throw Error("Microphone access is unavailable here.");
-  const context = new AudioContext({ sampleRate });
+  const context = new AudioContext({ sampleRate: rate });
   session.audio = context;
   await context.resume();
   session.signal.throwIfAborted();
@@ -94,7 +95,7 @@ async function openMicrophone(session, onAudio) {
   silence.gain.value = 0;
   source.connect(sampler).connect(silence).connect(context.destination);
   sampler.onaudioprocess = event => {
-    if (!session.muted && !session.signal.aborted) onAudio(event.inputBuffer.getChannelData(0));
+    if ((!session.muted || session.continuous) && !session.signal.aborted) onAudio(event.inputBuffer.getChannelData(0));
   };
   session.disconnect = () => { sampler.onaudioprocess = null; sampler.disconnect(); source.disconnect(); silence.disconnect(); };
   return context;
@@ -206,8 +207,9 @@ const stages = {
   voice: "Preparing voice…", speaking: "Speaking", live: "Live audio", muted: "Microphone muted",
 };
 
-export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn }) {
-  const [config, setConfig] = React.useState(readPreferences);
+export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn, initialKind }) {
+  const [config, setConfig] = React.useState(() => ({...readPreferences(), ...(initialKind ? {kind: initialKind} : {})}));
+  const [reference, setReference] = React.useState("");
   const [models, setModels] = React.useState(null);
   const [speech, setSpeech] = React.useState(null);
   const [voices, setVoices] = React.useState(nativeVoiceList);
@@ -245,7 +247,9 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
     };
   }, []);
 
-  const kind = config.kind === "sophon" ? "sophon" : "local";
+  const kind = ["sophon", "haru"].includes(config.kind) ? config.kind : "local";
+  const haruModels = (models || []).filter(model => model.hubEntry?.haruRuntime && model.installed && model.runtimeReady);
+  const haru = haruModels.find(model => model.id === config.haru) ?? haruModels[0];
   const speechModels = (models || []).filter(model => model.installed && model.category === "speech" &&
     (["phonon-2", "whisper-large-v3-turbo", "whisper-large-v3"].includes(model.id) ||
       model.hubEntry?.speechRuntime === "parakeet-phonon25-v1" && model.runtimeReady));
@@ -271,16 +275,18 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
       setError(disabled || (!stt ? "Install a supported speech-to-text model in Models." : "Choose a speech synthesis model or install a device voice."));
       return;
     }
+    if (kind === "haru" && (!haru || !reference)) { setError(!haru ? "Install and prepare Haru-4B in Models first." : "Choose a 3–30 second PCM16 WAV reference voice."); return; }
     let endpoint;
     try { if (kind === "sophon") endpoint = sophonEndpoint(config.endpoint); }
     catch (failure) { setError(failure.message); return; }
     const controller = new AbortController();
-    const session = { signal: controller.signal, muted: false, ready: false };
+    const session = { signal: controller.signal, muted: false, ready: false, continuous: kind === "haru" };
     session.close = () => {
       if (session.signal.aborted) return;
       controller.abort();
       session.turn?.abort();
       session.sophon?.close();
+      session.haru?.close();
       session.stream?.getTracks().forEach(track => track.stop());
       session.disconnect?.();
       void session.audio?.close().catch(() => {});
@@ -339,11 +345,18 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
     session.collect = collectUtterance(say);
     try {
       const context = await openMicrophone(session, frame => {
-        if (kind === "sophon") session.sophon?.input(frame);
+        if (kind === "haru") session.haru?.input(frame);
+        else if (kind === "sophon") session.sophon?.input(frame);
         else if (session.ready && !session.turn) session.collect.accept(frame);
-      });
+      }, kind === "haru" ? 24000 : sampleRate);
       session.signal.throwIfAborted();
-      if (kind === "sophon") {
+      if (kind === "haru") {
+        session.haru = await startHaruLive({id: haru.hubEntry.id, reference, persona: config.persona || "", context, signal: session.signal,
+          onTranscript: (source, delta) => setTranscript(previous => ({...previous, [source]: (previous[source] + delta).slice(-4000)})),
+          onError: reason => { setError(reason); session.close(); current.current = null; setStage(""); },
+        });
+        nextStage("live");
+      } else if (kind === "sophon") {
         session.sophon = await startSophonLive({
           endpoint, context, signal: session.signal, voice: config.sophonVoice?.trim(),
           onTranscript: (source, delta) => setTranscript(previous => ({ ...previous, [source]: (previous[source] + delta).slice(-4000) })),
@@ -381,6 +394,7 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
     if (!session) return;
     session.muted = !session.muted;
     session.collect.reset();
+    session.haru?.mute(session.muted);
     session.stream?.getAudioTracks().forEach(track => { track.enabled = !session.muted; });
     setMuted(session.muted);
   };
@@ -415,7 +429,7 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
 
   return h("section", { className: "voice-call", "aria-label": "Voice call" },
     h("div", { className: "voice-call-head" },
-      h("div", null, h("strong", null, kind === "sophon" ? "Sophon Realtime" : "Voice call"),
+      h("div", null, h("strong", null, kind === "haru" ? "Haru Realtime" : kind === "sophon" ? "Sophon Realtime" : "Voice call"),
         h("span", { role: "status" }, stage ? muted && ["listening", "live"].includes(stage) ? stages.muted : stages[stage] : brainLabel)),
       h("div", { className: "voice-call-actions" },
         stage && h("button", { type: "button", "aria-pressed": muted, onClick: toggleMute }, muted ? "Unmute" : "Mute"),
@@ -425,8 +439,16 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
     error && h("p", { role: "alert", className: "voice-call-error" }, error),
     !stage && h(React.Fragment, null,
       h("div", { className: "voice-call-config" },
-        field("Call mode", select("kind", kind, [["local", "Speech + Brain"], ["sophon", "Sophon Realtime v1"]])),
-        kind === "local" ? h(React.Fragment, null,
+        field("Call mode", select("kind", kind, [["local", "Speech + Brain"], ["sophon", "Sophon Realtime v1"], ...!globalThis.__OPENCORE_PHONE__ ? [["haru", "Haru Realtime"]] : []])),
+        kind === "haru" ? h(React.Fragment, null,
+          field("Haru model", select("haru", haru?.id ?? "", haruModels.length ? haruModels.map(model => [model.id, model.label]) : [["", "Install and prepare Haru-4B in Models"]])),
+          field("Reference voice (PCM16 WAV, 3–30 seconds)", h("input", {type: "file", accept: ".wav,audio/wav", onChange: async event => {
+            const file = event.currentTarget.files?.[0]; setReference("");
+            if (!file) return;
+            if (file.size > 6000000) { setError("Choose a WAV voice clip smaller than 6 MB."); return; }
+            setReference(bytesToBase64(new Uint8Array(await file.arrayBuffer())));
+          }})), field("Character", input("persona", "A friendly conversational partner")))
+        : kind === "local" ? h(React.Fragment, null,
           field("Speech-to-text", select("stt", stt?.id ?? "", speechModels.length ?
               speechModels.map(model => [model.id, model.label + (model.hubEntry?.speechRuntime ? " · " + model.precision : "")]) : [["", models ? "Install a speech model in Models" : "Checking installed speech models…"]])),
           field("Text-to-speech", select("tts", tts, [["device", "Device voice · low resource"], ...ttsModels.map(model => [model.id, model.label])])),
@@ -436,8 +458,8 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
           : h(React.Fragment, null,
             field("Sophon Live WebSocket", input("endpoint", "ws://127.0.0.1:8780/v1/live/sessions")),
             field("Voice", input("sophonVoice", "Server default")))),
-      h("details", { className: "voice-brain" }, h("summary", null, "Brain · " + brainLabel), brainPicker),
-      !globalThis.__OPENCORE_PHONE__ && h("label", { className: "voice-tool" },
+      kind !== "haru" && h("details", { className: "voice-brain" }, h("summary", null, "Brain · " + brainLabel), brainPicker),
+      kind !== "haru" && !globalThis.__OPENCORE_PHONE__ && h("label", { className: "voice-tool" },
         h("input", { type: "checkbox", checked: Boolean(config.computerUse),
           onChange: event => setPreference("computerUse", event.currentTarget.checked) }),
         "Enable Computer use for voice turns"),
@@ -446,6 +468,7 @@ export function VoiceCall({ onClose, brainLabel, brainPicker, disabled, sendTurn
         h("a", { href: "https://github.com/adventists-ai/sophon-realtime/blob/main/live/README.md", target: "_blank", rel: "noreferrer" }, "adventists-ai/Sophon-Realtime-v1 · gateway setup")),
       kind === "local" && (!stt || !playable || !speech?.enabled) && h("p", { className: "voice-call-note" },
         "Starting the call uses the selected speech model, Brain, voice, and chat approvals. It enables speech-to-text in Models if needed."),
+      kind === "haru" && h("p", {className: "voice-call-note"}, "Haru listens and speaks locally at the same time. The reference recording sets its voice. Haru is a conversational base model; tool tasks use Speech + Brain. Hang up releases its model memory."),
       h("button", { type: "button", className: "voice-start", disabled: kind === "local" && !models, onClick: () => void start() }, "Start call")),
     stage && (transcript.in || transcript.out) && h("div", { className: "voice-call-transcript" },
       transcript.in && h("span", null, h("b", null, "You "), transcript.in),

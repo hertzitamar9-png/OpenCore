@@ -1,0 +1,108 @@
+{
+  "repository": "higurashi-ai/Haru",
+  "revision": "7fe6b7665f8bf035998f401f8cb779fbe53f2751",
+  "files": [
+    {
+      "path": "__init__.py",
+      "upstreamPath": "haru/haru/__init__.py",
+      "sha256": "0b3c7ef128d261e0dbe10596ac649ef17dc400fae1e80c452315db3641afddd2",
+      "bytes": 323
+    },
+    {
+      "path": "config.py",
+      "upstreamPath": "haru/haru/config.py",
+      "sha256": "c3ace58fb4d3fcc5ae8d157e751c4afb9836d858c30356386f77ed5857aa8f01",
+      "bytes": 3049
+    },
+    {
+      "path": "audio.py",
+      "upstreamPath": "haru/haru/audio.py",
+      "sha256": "cde6acd2be2b24dfdc32ef80d707f2bcd6699312d6d5215ec9639c7aa29aa76b",
+      "bytes": 3177
+    },
+    {
+      "path": "prompt.py",
+      "upstreamPath": "haru/haru/prompt.py",
+      "sha256": "574c072e435fc846b1d00665130c8b1ec29a0ed134e4f925878b6dad53f519f3",
+      "bytes": 5605
+    },
+    {
+      "path": "sampling.py",
+      "upstreamPath": "haru/haru/sampling.py",
+      "sha256": "655063aff189f3d1f48b53656cffabc5334077fcfb8c8a155fb2aacbb30313d7",
+      "bytes": 4269
+    },
+    {
+      "path": "session.py",
+      "upstreamPath": "haru/haru/session.py",
+      "sha256": "18a6239e43c11de6af00c0634ecbee92e748765a185e91e65d8e51ece5f2c0c4",
+      "bytes": 7380
+    },
+    {
+      "path": "models/__init__.py",
+      "upstreamPath": "haru/haru/models/__init__.py",
+      "sha256": "cb73662f85893e93c47742c1a02f37a88db24ebc0171c6270db78a98995fe2e8",
+      "bytes": 337
+    },
+    {
+      "path": "models/haru.py",
+      "upstreamPath": "haru/haru/models/haru.py",
+      "sha256": "3229dcfacc148381bb80a804ae261360065e32e27a69b95c8176577dc6062a6e",
+      "bytes": 4919
+    },
+    {
+      "path": "models/loaders.py",
+      "upstreamPath": "haru/haru/models/loaders.py",
+      "sha256": "460e57963ff01b5f3e5b56a5a5794c72e38d91b866536e8e83f1e94800055d4c",
+      "bytes": 2007
+    },
+    {
+      "path": "models/meanflow_head.py",
+      "upstreamPath": "haru/haru/models/meanflow_head.py",
+      "sha256": "21d5075055d269f38611bf9063125ff63c0fc58500253b94059d9fcce1c7c236",
+      "bytes": 5177
+    },
+    {
+      "path": "models/vibevoice_codec.py",
+      "upstreamPath": "haru/haru/models/vibevoice_codec.py",
+      "sha256": "51a4fcb6ac8850d8b2801949dad10df7ff4fce5c5dc3267da6bd583c21e834f5",
+      "bytes": 11228
+    },
+    {
+      "path": "codec_triton/__init__.py",
+      "upstreamPath": "haru/haru/codec_triton/__init__.py",
+      "sha256": "72d7a6537d9ce901613bae383e806b40767a5a268297324fa5fe23401da63a12",
+      "bytes": 1141
+    },
+    {
+      "path": "codec_triton/stream.py",
+      "upstreamPath": "haru/haru/codec_triton/stream.py",
+      "sha256": "5c21a25d9fb67835f923491c7a7619eee3f7b20d5bf49b3d92a3b7d9f60daa66",
+      "bytes": 9966
+    },
+    {
+      "path": "codec_triton/kernels.py",
+      "upstreamPath": "haru/haru/codec_triton/kernels.py",
+      "sha256": "ecb296806757cee41288bfb6909044ab2ae1dd37660d823164cb737b05237ba6",
+      "bytes": 25586
+    },
+    {
+      "path": "assets/card_templates.json",
+      "upstreamPath": "haru/haru/assets/card_templates.json",
+      "sha256": "99f90f68fcbd1dd67dc7ee84b8d655c11bdfeb322657959b86e407a1a7254d46",
+      "bytes": 5518
+    },
+    {
+      "path": "LICENSE",
+      "upstreamPath": "haru/LICENSE",
+      "sha256": "1e881ecf2862d01e6e5bc2b861e46886d2a6fb01499c0c508a209a7271b13cf2",
+      "bytes": 10
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "upstreamPath": "haru/THIRD_PARTY_NOTICES.md",
+      "sha256": "ee449d522d013cb8a5d9647792b0c418c95a9b8003fd1bb9c9f848d71dec0e54",
+      "bytes": 25
+    }
+  ]
+}

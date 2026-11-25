@@ -1,0 +1,8 @@
+{
+  "repository": "llstar/deskpaw-cua-2b",
+  "revision": "b36bcd79729b8a81563ead920b9bb4aff3186658",
+  "filename": "modeling_qwen3vl.py",
+  "originalSha256": "a8a7830285915c1828146eeede8534cc6d223334479137e87626e54a65783cc5",
+  "localChange": "Skip unused per-image-token vocabulary logits during inference; pointer scores are unchanged.",
+  "license": "Apache-2.0"
+}

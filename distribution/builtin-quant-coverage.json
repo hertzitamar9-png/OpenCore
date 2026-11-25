@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 602,
-  "withFive": 238,
+  "families": 614,
+  "withFive": 241,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5191,6 +5191,17 @@
       ]
     },
     {
+      "id": "local-nanbeige-extreme",
+      "label": "Nanbeige Extreme",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "local/Nanbeige-Extreme"
+      ]
+    },
+    {
       "id": "publisher-alpie-seed-9b",
       "label": "Alpie Seed 9B",
       "category": "text",
@@ -5216,6 +5227,18 @@
       ]
     },
     {
+      "id": "publisher-baphomet-1-1-4b",
+      "label": "Baphomet-1.1-4B",
+      "category": "text",
+      "quantizations": 13,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "CloudGoat/Baphomet-1.1-4B",
+        "mradermacher/Baphomet-1.1-4B-GGUF"
+      ]
+    },
+    {
       "id": "publisher-breeze-tts-2",
       "label": "Breeze-TTS-2",
       "category": "tts",
@@ -5224,6 +5247,17 @@
       "source": "bundled packages",
       "repositories": [
         "BreezeBlue/Breeze-TTS-2"
+      ]
+    },
+    {
+      "id": "publisher-budget3d-idol",
+      "label": "Budget3D-Idol",
+      "category": "3d",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "BudgetAny/Budget3D-Idol"
       ]
     },
     {
@@ -5262,6 +5296,17 @@
       ]
     },
     {
+      "id": "publisher-deskpaw-cua-2b",
+      "label": "deskpaw-CUA-2B",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "llstar/deskpaw-cua-2b"
+      ]
+    },
+    {
       "id": "publisher-discoveryrsi-27b",
       "label": "DiscoveryRSI 27B",
       "category": "text",
@@ -5285,6 +5330,30 @@
       "source": "bundled packages",
       "repositories": [
         "dots-studio/dots.tts.edit"
+      ]
+    },
+    {
+      "id": "publisher-edge0-120b",
+      "label": "Edge0 120B",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Edge0/Edge0-120B-NVFP4",
+        "Edge0/Edge0-120B-q3k"
+      ]
+    },
+    {
+      "id": "publisher-edge0-145b",
+      "label": "Edge0 145B",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Edge0/Edge0-145B-NVFP4",
+        "Edge0/Edge0-145B-q3k"
       ]
     },
     {
@@ -5377,6 +5446,17 @@
       ]
     },
     {
+      "id": "publisher-haru-4b",
+      "label": "Haru-4B",
+      "category": "omni",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "higurashi-ai/Haru-4B"
+      ]
+    },
+    {
       "id": "publisher-herculis-cua-gui-actioner-4b",
       "label": "Herculis CUA GUI Actioner 4B",
       "category": "computer-use",
@@ -5420,6 +5500,27 @@
       "source": "bundled packages",
       "repositories": [
         "speridlabs/idol"
+      ]
+    },
+    {
+      "id": "publisher-inkling-2-mini",
+      "label": "Inkling 2 Mini",
+      "category": "text",
+      "quantizations": 26,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Inkling-2-Mini-GGUF",
+        "araysuter/Inkling-2-Mini-MLX-4bit",
+        "araysuter/Inkling-2-Mini-MLX-5bit",
+        "araysuter/Inkling-2-Mini-MLX-mixed-2bit",
+        "ggml-org/Inkling-2-Mini-GGUF",
+        "mlx-community/Inkling-2-Mini-4bit",
+        "nativ-community/Inkling-2-Mini-nvfp4",
+        "pipenetwork/Inkling-2-Mini-MLX-8bit",
+        "pipenetwork/Inkling-2-Mini-MLX-bf16",
+        "thinkingmachines/Inkling-2-Mini",
+        "unsloth/Inkling-2-Mini-GGUF"
       ]
     },
     {
@@ -6025,6 +6126,31 @@
       ]
     },
     {
+      "id": "publisher-raon-1-nano",
+      "label": "Raon 1 nano",
+      "category": "text",
+      "quantizations": 11,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "KRAFTON/Raon-1-nano",
+        "KRAFTON/Raon-1-nano-gguf",
+        "KRAFTON/Raon-1-nano-litert-lm",
+        "KRAFTON/Raon-1-nano-mlx"
+      ]
+    },
+    {
+      "id": "publisher-reverb-tts",
+      "label": "Reverb TTS",
+      "category": "tts",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "software-mansion/Reverb-TTS"
+      ]
+    },
+    {
       "id": "publisher-sakura-iris-3b",
       "label": "Sakura-Iris 3B Uncensored",
       "category": "image",
@@ -6033,6 +6159,17 @@
       "source": "bundled packages",
       "repositories": [
         "webmp3/Sakura-Iris-3B-Uncensored-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-sensenova-loop-9b",
+      "label": "SenseNova-Loop-9B",
+      "category": "omni",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "sensenova/SenseNova-Loop-9B"
       ]
     },
     {
@@ -6109,6 +6246,17 @@
       "source": "bundled packages",
       "repositories": [
         "adriandj3/TernaryPilot-v2-Computer-Browser-Use-LoRA"
+      ]
+    },
+    {
+      "id": "publisher-tessera-small",
+      "label": "Tessera Small",
+      "category": "image",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "thejagstudio/tessera-small"
       ]
     },
     {

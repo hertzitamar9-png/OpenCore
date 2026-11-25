@@ -31,7 +31,7 @@ export function installModelModes(React, catalog, service) {
   const storageKey=model=>'opencore.model-mode.'+(model.familyId||model.modeFamilyKey||keyFor(policy(model)||model));
   const mode=model=>{
     try{const saved=localStorage.getItem(storageKey(model));if(saved==='native'||saved==='echo')return saved;}catch{}
-    return model.operatingMode||'echo';
+    return model.operatingMode||(text(policy(model)||model)?'echo':'native');
   };
   const context=(model,selected=mode(model))=>{
     const item=(policy(model)?.operatingModes||[]).find(item=>item.id===selected);
@@ -39,6 +39,17 @@ export function installModelModes(React, catalog, service) {
     const limits=[model.publishedContextTokens,model.contextTokens,model.supportedContextTokens].map(positive).filter(Boolean);
     return limits.length?Math.min(...limits,selected==='echo'?32768:1048576):null;
   };
+  function availability(model){
+    const meta=policy(model)||model;
+    if(meta.modeAvailability?.length===2)return meta.modeAvailability;
+    if(text(meta))return ['native','echo'].map(id=>{
+      const declared=meta.operatingModes?.find(item=>item.id===id),supported=declared?.supported??!!(meta.runtime?.adapter||meta.preparedRuntime||meta.backend==='gguf'||meta.runtimeReady===true);
+      return {id,scope:'text',contextTokens:context(meta,id),supported,...supported?{}:{reason:meta.runtime?.reason||meta.note||'This checkpoint needs an integrated text-generation runtime.'}};
+    });
+    const supported=!!(meta.runtime?.adapter||meta.preparedRuntime||meta.runtimeConnected||meta.runtimeReady===true);
+    return [{id:'native',scope:'pipeline',contextTokens:null,supported,...supported?{}:{reason:meta.runtime?.reason||meta.note||'The model-specific runtime is not integrated.'}},
+      {id:'echo',scope:'text',contextTokens:null,supported:false,reason:'ECHO requires a conversational text-generation interface. This model uses a specialized pipeline; its outputs can be used by a separate ECHO chat model.'}];
+  }
   function augment(library){
     const groups=new Map(),rest=[];
     for(const model of library.models||[]){
@@ -61,7 +72,7 @@ export function installModelModes(React, catalog, service) {
   }
   function entry(value){
     if(!value||value.nativeProfile)return value;
-    if(!text(value))return value;
+    if(!text(value))return {...value,operatingMode:mode(value)};
     const selected=mode(value),proof=value.runtimePreparations?.[selected]||((value.runtimePreparation?.operatingMode||'echo')===selected?value.runtimePreparation:null);
     return {...value,operatingMode:selected,runtimePreparation:proof||{},runtimeReady:!!value.runtimeReady&&(value.operatingMode||'echo')===selected||!!(value.status==='installed'&&proof?.runtimeReady&&proof.receiptRevision===value.revision)};
   }
@@ -70,8 +81,9 @@ export function installModelModes(React, catalog, service) {
     if(snapshot.activeConversationIds?.length||['starting','stopping'].includes(snapshot.runtime?.status))throw Error('Wait for the current model request before changing operating mode.');
   }
   async function ensure(value){
-    if(!value||value.nativeProfile||!text(value))return value;
+    if(!value||value.nativeProfile)return value;
     const selected=mode(value);
+    if(!text(value)&&selected==='echo')await globalThis.__opencoreGenerationConnect?.();
     if((value.operatingMode||'echo')===selected)return value;
     await idle();return service.request('/runtime/mode',{id:value.id,operatingMode:selected});
   }
@@ -108,24 +120,29 @@ export function installModelModes(React, catalog, service) {
     React.useEffect(()=>setSelected(mode(model)),[model.id,model.operatingMode]);
     const [,refresh]=React.useState(0);
     React.useEffect(()=>{const update=()=>refresh(value=>value+1);listeners.add(update);return()=>listeners.delete(update);},[]);
-    if(!(meta?.supportsTextGeneration||text(model)))return null;
-    const cap=context(model,selected),target=selected==='native'?1048576:32768;
+    const generative=!!(meta?.supportsTextGeneration||text(model)),choices=availability(model);
+    const cap=generative?context(model,selected):null,target=selected==='native'?1048576:32768;
     async function change(next){
       if(busy)return;setBusy(true);setError('');
       try{
+        const choice=choices.find(item=>item.id===next);
+        if(!choice||!choice.supported){setError(choice?.reason||'This operating mode is unavailable.');return;}
         await idle();
+        if(!generative&&next==='echo')await globalThis.__opencoreGenerationConnect?.();
         if(!model.nativeProfile&&/^hf-[a-f0-9]{24}$/.test(model.id))await service.request('/runtime/mode',{id:model.id,operatingMode:next});
         localStorage.setItem(storageKey(model),next);setSelected(next);await service.changed();await onChanged?.();
       }catch(failure){setError(String(failure));}finally{setBusy(false);}
     }
     return h('section',{className:'model-operating-modes','aria-label':'Operating mode',style:{margin:'12px 0'}},
-      h('label',{className:'model-quantization-picker'},'Operating mode',h('select',{'aria-label':'Operating mode',value:selected,disabled:disabled||busy||!initialized,onChange:event=>void change(event.target.value)},
-        h('option',{value:'echo'},'ECHO · 32K working window'),h('option',{value:'native'},'Native · 1M target'))),
-      h('small',{style:{display:'block',color:'var(--theme-muted)'}},(selected==='echo'?'ECHO keeps archived history beyond the active window. ':'Native uses the model context directly. ')+
+      h('label',{className:'model-quantization-picker'},'Operating mode',h('select',{'aria-label':'Operating mode',value:selected,disabled:disabled||busy||!initialized,onChange:event=>change(event.target.value)},
+        ...choices.map(item=>h('option',{key:item.id,value:item.id,disabled:!item.supported},(item.id==='native'?'Regular (Native)':'ECHO')+(item.supported?'':' · unavailable'))))),
+      generative?h('small',{style:{display:'block',color:'var(--theme-muted)'}},(selected==='echo'?'ECHO keeps archived history beyond the active window. ':'Regular mode uses the model context directly. ')+
         (cap?'Supported window: '+cap.toLocaleString()+' tokens'+(cap<target?' · below the '+target.toLocaleString()+' target.':'.'):'The supported context window is unknown.')+' The loaded window also depends on available memory.'+
-        (meta?.operatingModes?.find(item=>item.id===selected)?.supported===false?' This format needs an integrated text runtime.':'')),
+        (choices.find(item=>item.id===selected)?.supported===false?' '+choices.find(item=>item.id===selected).reason:'')):
+        h('small',{style:{display:'block',color:'var(--theme-muted)'}},selected==='echo'&&choices.find(item=>item.id==='echo')?.scope==='tool'?'ECHO lets your chat agent run this model through its native pipeline tools.':'Regular mode uses this model’s own pipeline.'),
+      ...choices.filter(item=>!item.supported).map(item=>h('small',{key:item.id,'data-mode-unavailable':item.id,style:{display:'block',color:'var(--theme-muted)'}},(item.id==='native'?'Regular: ':'ECHO: ')+item.reason)),
       error?h('p',{role:'alert'},error):null);
   }
-  const api={augment,entry,mode,context,ensure,activate,policy,profileInfo,before,Control,ready};
+  const api={augment,entry,mode,context,ensure,activate,policy,availability,profileInfo,before,Control,ready};
   globalThis.__opencoreModelModes=api;return api;
 }

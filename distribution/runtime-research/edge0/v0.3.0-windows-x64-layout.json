@@ -1,0 +1,5502 @@
+[
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/Edge0 Chat.exe",
+    "bytes": 13688832,
+    "compressed": 4407991
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-infer.exe",
+    "bytes": 47911424,
+    "compressed": 15481871
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_asyncio.pyd",
+    "bytes": 74096,
+    "compressed": 34088
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_bz2.pyd",
+    "bytes": 86896,
+    "compressed": 46674
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_ctypes.pyd",
+    "bytes": 127480,
+    "compressed": 59680
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_decimal.pyd",
+    "bytes": 262000,
+    "compressed": 125776
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_elementtree.pyd",
+    "bytes": 135160,
+    "compressed": 62076
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_hashlib.pyd",
+    "bytes": 68976,
+    "compressed": 31515
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_lzma.pyd",
+    "bytes": 161136,
+    "compressed": 89965
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_msi.pyd",
+    "bytes": 46584,
+    "compressed": 23328
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_multiprocessing.pyd",
+    "bytes": 37368,
+    "compressed": 20511
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_overlapped.pyd",
+    "bytes": 57336,
+    "compressed": 28598
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_queue.pyd",
+    "bytes": 33784,
+    "compressed": 18915
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_socket.pyd",
+    "bytes": 85496,
+    "compressed": 40994
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_sqlite3.pyd",
+    "bytes": 126184,
+    "compressed": 59302
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_ssl.pyd",
+    "bytes": 179432,
+    "compressed": 72067
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_uuid.pyd",
+    "bytes": 27128,
+    "compressed": 15692
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_wmi.pyd",
+    "bytes": 40304,
+    "compressed": 22153
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/_zoneinfo.pyd",
+    "bytes": 49656,
+    "compressed": 27014
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/concrt140.dll",
+    "bytes": 324208,
+    "compressed": 144204
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/_yaml/__init__.py",
+    "bytes": 1402,
+    "compressed": 753
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi/__init__.py",
+    "bytes": 94,
+    "compressed": 82
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi/__main__.py",
+    "bytes": 243,
+    "compressed": 149
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi/cacert.pem",
+    "bytes": 238856,
+    "compressed": 131291
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi/core.py",
+    "bytes": 3394,
+    "compressed": 902
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi-2026.10.19.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi-2026.10.19.dist-info/licenses/LICENSE",
+    "bytes": 989,
+    "compressed": 574
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi-2026.10.19.dist-info/METADATA",
+    "bytes": 2526,
+    "compressed": 990
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi-2026.10.19.dist-info/RECORD",
+    "bytes": 1148,
+    "compressed": 611
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi-2026.10.19.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi-2026.10.19.dist-info/top_level.txt",
+    "bytes": 8,
+    "compressed": 10
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/certifi-2026.10.19.dist-info/WHEEL",
+    "bytes": 91,
+    "compressed": 92
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/__init__.py",
+    "bytes": 1630,
+    "compressed": 811
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/__main__.py",
+    "bytes": 115,
+    "compressed": 90
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/api.py",
+    "bytes": 36708,
+    "compressed": 8424
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/cd.cp312-win_amd64.pyd",
+    "bytes": 117248,
+    "compressed": 56888
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/cd.py",
+    "bytes": 16447,
+    "compressed": 4335
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/cli/__init__.py",
+    "bytes": 144,
+    "compressed": 101
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/cli/__main__.py",
+    "bytes": 12312,
+    "compressed": 3267
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/constant.py",
+    "bytes": 63245,
+    "compressed": 15901
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/legacy.py",
+    "bytes": 2730,
+    "compressed": 1164
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/md.cp312-win_amd64.pyd",
+    "bytes": 193536,
+    "compressed": 74122
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/md.py",
+    "bytes": 36302,
+    "compressed": 6753
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/models.py",
+    "bytes": 13917,
+    "compressed": 3819
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/utils.py",
+    "bytes": 14574,
+    "compressed": 4258
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer/version.py",
+    "bytes": 123,
+    "compressed": 103
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/entry_points.txt",
+    "bytes": 65,
+    "compressed": 57
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/licenses/LICENSE",
+    "bytes": 1092,
+    "compressed": 643
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/METADATA",
+    "bytes": 46746,
+    "compressed": 15618
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/RECORD",
+    "bytes": 2173,
+    "compressed": 1124
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/top_level.txt",
+    "bytes": 19,
+    "compressed": 21
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/charset_normalizer-3.5.1.dist-info/WHEEL",
+    "bytes": 101,
+    "compressed": 98
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama/__init__.py",
+    "bytes": 266,
+    "compressed": 198
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama/ansi.py",
+    "bytes": 2522,
+    "compressed": 906
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama/ansitowin32.py",
+    "bytes": 11128,
+    "compressed": 3132
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama/initialise.py",
+    "bytes": 3325,
+    "compressed": 1094
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama/win32.py",
+    "bytes": 6181,
+    "compressed": 1500
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama/winterm.py",
+    "bytes": 7134,
+    "compressed": 1773
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama-0.4.6.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama-0.4.6.dist-info/licenses/LICENSE.txt",
+    "bytes": 1491,
+    "compressed": 781
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama-0.4.6.dist-info/METADATA",
+    "bytes": 17158,
+    "compressed": 6476
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama-0.4.6.dist-info/RECORD",
+    "bytes": 1567,
+    "compressed": 899
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama-0.4.6.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/colorama-0.4.6.dist-info/WHEEL",
+    "bytes": 105,
+    "compressed": 90
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/__init__.py",
+    "bytes": 944,
+    "compressed": 306
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/__main__.py",
+    "bytes": 83,
+    "compressed": 74
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/cli.py",
+    "bytes": 4245,
+    "compressed": 1713
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/codec.py",
+    "bytes": 8002,
+    "compressed": 2171
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/compat.py",
+    "bytes": 1376,
+    "compressed": 569
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/core.py",
+    "bytes": 32580,
+    "compressed": 8310
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/idnadata.py",
+    "bytes": 45763,
+    "compressed": 10420
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/intranges.py",
+    "bytes": 1851,
+    "compressed": 787
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/package_data.py",
+    "bytes": 21,
+    "compressed": 23
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna/uts46data.py",
+    "bytes": 237174,
+    "compressed": 38588
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna-3.20.dist-info/entry_points.txt",
+    "bytes": 38,
+    "compressed": 37
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna-3.20.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna-3.20.dist-info/licenses/LICENSE.md",
+    "bytes": 1541,
+    "compressed": 811
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna-3.20.dist-info/METADATA",
+    "bytes": 7207,
+    "compressed": 3053
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna-3.20.dist-info/RECORD",
+    "bytes": 1431,
+    "compressed": 872
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna-3.20.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/idna-3.20.dist-info/WHEEL",
+    "bytes": 81,
+    "compressed": 81
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/__init__.py",
+    "bytes": 1928,
+    "compressed": 506
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/_identifier.py",
+    "bytes": 1958,
+    "compressed": 1396
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/async_utils.py",
+    "bytes": 2834,
+    "compressed": 1037
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/bccache.py",
+    "bytes": 14061,
+    "compressed": 4350
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/compiler.py",
+    "bytes": 74131,
+    "compressed": 16602
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/constants.py",
+    "bytes": 1433,
+    "compressed": 783
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/debug.py",
+    "bytes": 6297,
+    "compressed": 2148
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/defaults.py",
+    "bytes": 1267,
+    "compressed": 602
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/environment.py",
+    "bytes": 61513,
+    "compressed": 15139
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/exceptions.py",
+    "bytes": 5071,
+    "compressed": 1705
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/ext.py",
+    "bytes": 31875,
+    "compressed": 8610
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/filters.py",
+    "bytes": 55212,
+    "compressed": 14278
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/idtracking.py",
+    "bytes": 10555,
+    "compressed": 2436
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/lexer.py",
+    "bytes": 29786,
+    "compressed": 7808
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/loaders.py",
+    "bytes": 24055,
+    "compressed": 6341
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/meta.py",
+    "bytes": 4397,
+    "compressed": 1610
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/nativetypes.py",
+    "bytes": 4210,
+    "compressed": 1273
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/nodes.py",
+    "bytes": 34579,
+    "compressed": 8920
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/optimizer.py",
+    "bytes": 1651,
+    "compressed": 735
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/parser.py",
+    "bytes": 40383,
+    "compressed": 8190
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/runtime.py",
+    "bytes": 34249,
+    "compressed": 8545
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/sandbox.py",
+    "bytes": 15009,
+    "compressed": 4168
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/tests.py",
+    "bytes": 5926,
+    "compressed": 1510
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/utils.py",
+    "bytes": 24129,
+    "compressed": 7693
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2/visitor.py",
+    "bytes": 3557,
+    "compressed": 1153
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2-3.1.6.dist-info/entry_points.txt",
+    "bytes": 58,
+    "compressed": 45
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2-3.1.6.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2-3.1.6.dist-info/licenses/LICENSE.txt",
+    "bytes": 1475,
+    "compressed": 770
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2-3.1.6.dist-info/METADATA",
+    "bytes": 2871,
+    "compressed": 1394
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2-3.1.6.dist-info/RECORD",
+    "bytes": 2545,
+    "compressed": 1508
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2-3.1.6.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/jinja2-3.1.6.dist-info/WHEEL",
+    "bytes": 82,
+    "compressed": 82
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe/__init__.py",
+    "bytes": 13644,
+    "compressed": 3635
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe/_native.py",
+    "bytes": 218,
+    "compressed": 108
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe/_speedups.c",
+    "bytes": 4527,
+    "compressed": 1085
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe/_speedups.cp312-win_amd64.pyd",
+    "bytes": 13312,
+    "compressed": 5984
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe/_speedups.pyi",
+    "bytes": 42,
+    "compressed": 41
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe-3.0.3.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe-3.0.3.dist-info/licenses/LICENSE.txt",
+    "bytes": 1503,
+    "compressed": 785
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe-3.0.3.dist-info/METADATA",
+    "bytes": 2764,
+    "compressed": 1280
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe-3.0.3.dist-info/RECORD",
+    "bytes": 1094,
+    "compressed": 610
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe-3.0.3.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe-3.0.3.dist-info/top_level.txt",
+    "bytes": 11,
+    "compressed": 13
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/markupsafe-3.0.3.dist-info/WHEEL",
+    "bytes": 101,
+    "compressed": 98
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy.libs/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll",
+    "bytes": 20589056,
+    "compressed": 6571865
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll",
+    "bytes": 575056,
+    "compressed": 185294
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/__config__.py",
+    "bytes": 5638,
+    "compressed": 1680
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/__config__.pyi",
+    "bytes": 2486,
+    "compressed": 694
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/__init__.cython-30.pxd",
+    "bytes": 50898,
+    "compressed": 10842
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/__init__.pxd",
+    "bytes": 399,
+    "compressed": 260
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/__init__.py",
+    "bytes": 26470,
+    "compressed": 8333
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/__init__.pyi",
+    "bytes": 293273,
+    "compressed": 33596
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_array_api_info.py",
+    "bytes": 10864,
+    "compressed": 1993
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_array_api_info.pyi",
+    "bytes": 4785,
+    "compressed": 985
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_configtool.py",
+    "bytes": 1046,
+    "compressed": 447
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_configtool.pyi",
+    "bytes": 25,
+    "compressed": 27
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/__init__.py",
+    "bytes": 6865,
+    "compressed": 2842
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/__init__.pyi",
+    "bytes": 10639,
+    "compressed": 2717
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_add_newdocs.py",
+    "bytes": 222296,
+    "compressed": 55114
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_add_newdocs.pyi",
+    "bytes": 136,
+    "compressed": 81
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_add_newdocs_scalars.py",
+    "bytes": 13314,
+    "compressed": 4014
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_add_newdocs_scalars.pyi",
+    "bytes": 565,
+    "compressed": 250
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_asarray.py",
+    "bytes": 4024,
+    "compressed": 1528
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_asarray.pyi",
+    "bytes": 1120,
+    "compressed": 373
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_dtype.py",
+    "bytes": 10880,
+    "compressed": 3234
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_dtype.pyi",
+    "bytes": 1841,
+    "compressed": 595
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_dtype_ctypes.py",
+    "bytes": 3846,
+    "compressed": 1286
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_dtype_ctypes.pyi",
+    "bytes": 3765,
+    "compressed": 575
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_exceptions.py",
+    "bytes": 5321,
+    "compressed": 1667
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_exceptions.pyi",
+    "bytes": 1836,
+    "compressed": 539
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_internal.py",
+    "bytes": 30365,
+    "compressed": 8805
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_internal.pyi",
+    "bytes": 2085,
+    "compressed": 771
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_methods.py",
+    "bytes": 9645,
+    "compressed": 2733
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_methods.pyi",
+    "bytes": 531,
+    "compressed": 241
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_multiarray_tests.cp312-win_amd64.lib",
+    "bytes": 2418,
+    "compressed": 602
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_multiarray_tests.cp312-win_amd64.pyd",
+    "bytes": 65536,
+    "compressed": 29481
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_multiarray_umath.cp312-win_amd64.lib",
+    "bytes": 2192,
+    "compressed": 544
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_multiarray_umath.cp312-win_amd64.pyd",
+    "bytes": 3854848,
+    "compressed": 1250729
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_operand_flag_tests.cp312-win_amd64.lib",
+    "bytes": 2228,
+    "compressed": 551
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_operand_flag_tests.cp312-win_amd64.pyd",
+    "bytes": 12288,
+    "compressed": 5469
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_rational_tests.cp312-win_amd64.lib",
+    "bytes": 2156,
+    "compressed": 548
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_rational_tests.cp312-win_amd64.pyd",
+    "bytes": 43520,
+    "compressed": 18359
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_simd.cp312-win_amd64.lib",
+    "bytes": 1976,
+    "compressed": 532
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_simd.cp312-win_amd64.pyd",
+    "bytes": 831488,
+    "compressed": 179455
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_simd.pyi",
+    "bytes": 1013,
+    "compressed": 328
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_string_helpers.py",
+    "bytes": 2945,
+    "compressed": 863
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_string_helpers.pyi",
+    "bytes": 370,
+    "compressed": 151
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_struct_ufunc_tests.cp312-win_amd64.lib",
+    "bytes": 2228,
+    "compressed": 551
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_struct_ufunc_tests.cp312-win_amd64.pyd",
+    "bytes": 14336,
+    "compressed": 6438
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_type_aliases.py",
+    "bytes": 3927,
+    "compressed": 1388
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_type_aliases.pyi",
+    "bytes": 2289,
+    "compressed": 719
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_ufunc_config.py",
+    "bytes": 16126,
+    "compressed": 4236
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_ufunc_config.pyi",
+    "bytes": 1851,
+    "compressed": 612
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_umath_tests.cp312-win_amd64.lib",
+    "bytes": 2104,
+    "compressed": 542
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_umath_tests.cp312-win_amd64.pyd",
+    "bytes": 34304,
+    "compressed": 15913
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/_umath_tests.pyi",
+    "bytes": 2531,
+    "compressed": 870
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/arrayprint.py",
+    "bytes": 67483,
+    "compressed": 15929
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/arrayprint.pyi",
+    "bytes": 4746,
+    "compressed": 1203
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/cversions.py",
+    "bytes": 360,
+    "compressed": 213
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/defchararray.py",
+    "bytes": 39670,
+    "compressed": 7576
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/defchararray.pyi",
+    "bytes": 29124,
+    "compressed": 3189
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/einsumfunc.py",
+    "bytes": 59481,
+    "compressed": 15603
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/einsumfunc.pyi",
+    "bytes": 5156,
+    "compressed": 963
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/fromnumeric.py",
+    "bytes": 148231,
+    "compressed": 31159
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/fromnumeric.pyi",
+    "bytes": 99251,
+    "compressed": 6920
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/function_base.py",
+    "bytes": 20236,
+    "compressed": 5885
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/function_base.pyi",
+    "bytes": 11827,
+    "compressed": 998
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/getlimits.py",
+    "bytes": 15063,
+    "compressed": 4225
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/getlimits.pyi",
+    "bytes": 3921,
+    "compressed": 851
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/__multiarray_api.c",
+    "bytes": 13586,
+    "compressed": 2223
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/__multiarray_api.h",
+    "bytes": 66358,
+    "compressed": 9314
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/__ufunc_api.c",
+    "bytes": 1902,
+    "compressed": 440
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/__ufunc_api.h",
+    "bytes": 14042,
+    "compressed": 1875
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/_neighborhood_iterator_imp.h",
+    "bytes": 2547,
+    "compressed": 681
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/_numpyconfig.h",
+    "bytes": 902,
+    "compressed": 371
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/_public_dtype_api_table.h",
+    "bytes": 4660,
+    "compressed": 1027
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/arrayobject.h",
+    "bytes": 211,
+    "compressed": 106
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/arrayscalars.h",
+    "bytes": 5917,
+    "compressed": 1220
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/dtype_api.h",
+    "bytes": 22546,
+    "compressed": 7399
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/halffloat.h",
+    "bytes": 2029,
+    "compressed": 604
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/ndarrayobject.h",
+    "bytes": 11874,
+    "compressed": 3000
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/ndarraytypes.h",
+    "bytes": 72661,
+    "compressed": 18147
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_2_compat.h",
+    "bytes": 15549,
+    "compressed": 4673
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_2_complexcompat.h",
+    "bytes": 885,
+    "compressed": 353
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_3kcompat.h",
+    "bytes": 10309,
+    "compressed": 2785
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_common.h",
+    "bytes": 33943,
+    "compressed": 6265
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_cpu.h",
+    "bytes": 4478,
+    "compressed": 1163
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_endian.h",
+    "bytes": 2957,
+    "compressed": 606
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_math.h",
+    "bytes": 19460,
+    "compressed": 3936
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_no_deprecated_api.h",
+    "bytes": 698,
+    "compressed": 362
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/npy_os.h",
+    "bytes": 1298,
+    "compressed": 413
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/numpyconfig.h",
+    "bytes": 7644,
+    "compressed": 2106
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/random/bitgen.h",
+    "bytes": 508,
+    "compressed": 260
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/random/distributions.h",
+    "bytes": 10070,
+    "compressed": 1859
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/random/libdivide.h",
+    "bytes": 82217,
+    "compressed": 13220
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/random/LICENSE.txt",
+    "bytes": 1039,
+    "compressed": 539
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/ufuncobject.h",
+    "bytes": 12949,
+    "compressed": 4035
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/include/numpy/utils.h",
+    "bytes": 4280,
+    "compressed": 1762
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/lib/npymath.lib",
+    "bytes": 156678,
+    "compressed": 42868
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/lib/pkgconfig/numpy.pc",
+    "bytes": 198,
+    "compressed": 157
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/memmap.py",
+    "bytes": 13000,
+    "compressed": 4141
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/memmap.pyi",
+    "bytes": 2908,
+    "compressed": 853
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/multiarray.py",
+    "bytes": 58628,
+    "compressed": 15255
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/multiarray.pyi",
+    "bytes": 58422,
+    "compressed": 8512
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/numeric.py",
+    "bytes": 83290,
+    "compressed": 20697
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/numeric.pyi",
+    "bytes": 36695,
+    "compressed": 5820
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/numerictypes.py",
+    "bytes": 15392,
+    "compressed": 4354
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/numerictypes.pyi",
+    "bytes": 3699,
+    "compressed": 1048
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/overrides.py",
+    "bytes": 7666,
+    "compressed": 2338
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/overrides.pyi",
+    "bytes": 1731,
+    "compressed": 706
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/printoptions.py",
+    "bytes": 1088,
+    "compressed": 576
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/printoptions.pyi",
+    "bytes": 622,
+    "compressed": 305
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/records.py",
+    "bytes": 38365,
+    "compressed": 10077
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/records.pyi",
+    "bytes": 9656,
+    "compressed": 1472
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/shape_base.py",
+    "bytes": 33708,
+    "compressed": 8451
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/shape_base.pyi",
+    "bytes": 6922,
+    "compressed": 892
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/strings.py",
+    "bytes": 52381,
+    "compressed": 8750
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/strings.pyi",
+    "bytes": 12044,
+    "compressed": 1435
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/umath.py",
+    "bytes": 2176,
+    "compressed": 877
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_core/umath.pyi",
+    "bytes": 3925,
+    "compressed": 1249
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_distributor_init.py",
+    "bytes": 436,
+    "compressed": 274
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_distributor_init.pyi",
+    "bytes": 28,
+    "compressed": 30
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_expired_attrs_2_0.py",
+    "bytes": 3853,
+    "compressed": 1307
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_expired_attrs_2_0.pyi",
+    "bytes": 1300,
+    "compressed": 466
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_globals.py",
+    "bytes": 4277,
+    "compressed": 1796
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_globals.pyi",
+    "bytes": 297,
+    "compressed": 194
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_pyinstaller/__init__.py",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_pyinstaller/__init__.pyi",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_pyinstaller/hook-numpy.py",
+    "bytes": 1374,
+    "compressed": 684
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_pyinstaller/hook-numpy.pyi",
+    "bytes": 156,
+    "compressed": 93
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_pytesttester.py",
+    "bytes": 5844,
+    "compressed": 2165
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_pytesttester.pyi",
+    "bytes": 521,
+    "compressed": 264
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/__init__.py",
+    "bytes": 4744,
+    "compressed": 1034
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_add_docstring.py",
+    "bytes": 4055,
+    "compressed": 1331
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_array_like.py",
+    "bytes": 3483,
+    "compressed": 1166
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_char_codes.py",
+    "bytes": 6718,
+    "compressed": 1813
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_dtype_like.py",
+    "bytes": 3814,
+    "compressed": 1436
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_extended_precision.py",
+    "bytes": 449,
+    "compressed": 261
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_nbit.py",
+    "bytes": 553,
+    "compressed": 265
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_nbit_base.py",
+    "bytes": 3107,
+    "compressed": 1084
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_nbit_base.pyi",
+    "bytes": 811,
+    "compressed": 365
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_nested_sequence.py",
+    "bytes": 2725,
+    "compressed": 834
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_scalars.py",
+    "bytes": 893,
+    "compressed": 424
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_shape.py",
+    "bytes": 254,
+    "compressed": 155
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_ufunc.py",
+    "bytes": 163,
+    "compressed": 64
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_typing/_ufunc.pyi",
+    "bytes": 30251,
+    "compressed": 2700
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/__init__.py",
+    "bytes": 3572,
+    "compressed": 1294
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/__init__.pyi",
+    "bytes": 655,
+    "compressed": 308
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/_conversions.py",
+    "bytes": 347,
+    "compressed": 182
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/_conversions.pyi",
+    "bytes": 122,
+    "compressed": 73
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/_inspect.py",
+    "bytes": 7628,
+    "compressed": 2163
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/_inspect.pyi",
+    "bytes": 2243,
+    "compressed": 662
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/_pep440.py",
+    "bytes": 14474,
+    "compressed": 4307
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/_utils/_pep440.pyi",
+    "bytes": 3972,
+    "compressed": 934
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/char/__init__.py",
+    "bytes": 859,
+    "compressed": 420
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/char/__init__.pyi",
+    "bytes": 1710,
+    "compressed": 511
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/conftest.py",
+    "bytes": 9022,
+    "compressed": 3208
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/__init__.py",
+    "bytes": 1323,
+    "compressed": 670
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/__init__.pyi",
+    "bytes": 795,
+    "compressed": 298
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_dtype.py",
+    "bytes": 333,
+    "compressed": 183
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_dtype.pyi",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_dtype_ctypes.py",
+    "bytes": 361,
+    "compressed": 189
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_dtype_ctypes.pyi",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_internal.py",
+    "bytes": 976,
+    "compressed": 463
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_internal.pyi",
+    "bytes": 21,
+    "compressed": 23
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_multiarray_umath.py",
+    "bytes": 2155,
+    "compressed": 935
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/_utils.py",
+    "bytes": 944,
+    "compressed": 421
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/arrayprint.py",
+    "bytes": 349,
+    "compressed": 188
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/arrayprint.pyi",
+    "bytes": 116,
+    "compressed": 75
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/defchararray.py",
+    "bytes": 357,
+    "compressed": 190
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/defchararray.pyi",
+    "bytes": 120,
+    "compressed": 76
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/einsumfunc.py",
+    "bytes": 349,
+    "compressed": 188
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/einsumfunc.pyi",
+    "bytes": 116,
+    "compressed": 75
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/fromnumeric.py",
+    "bytes": 353,
+    "compressed": 184
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/fromnumeric.pyi",
+    "bytes": 118,
+    "compressed": 74
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/function_base.py",
+    "bytes": 361,
+    "compressed": 190
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/function_base.pyi",
+    "bytes": 122,
+    "compressed": 77
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/getlimits.py",
+    "bytes": 345,
+    "compressed": 186
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/getlimits.pyi",
+    "bytes": 114,
+    "compressed": 75
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/multiarray.py",
+    "bytes": 818,
+    "compressed": 397
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/multiarray.pyi",
+    "bytes": 116,
+    "compressed": 75
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/numeric.py",
+    "bytes": 372,
+    "compressed": 194
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/numeric.pyi",
+    "bytes": 110,
+    "compressed": 72
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/numerictypes.py",
+    "bytes": 357,
+    "compressed": 189
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/numerictypes.pyi",
+    "bytes": 120,
+    "compressed": 76
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/overrides.py",
+    "bytes": 345,
+    "compressed": 187
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/overrides.pyi",
+    "bytes": 532,
+    "compressed": 327
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/records.py",
+    "bytes": 337,
+    "compressed": 184
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/records.pyi",
+    "bytes": 110,
+    "compressed": 73
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/shape_base.py",
+    "bytes": 349,
+    "compressed": 188
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/shape_base.pyi",
+    "bytes": 116,
+    "compressed": 76
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/umath.py",
+    "bytes": 329,
+    "compressed": 183
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/core/umath.pyi",
+    "bytes": 106,
+    "compressed": 72
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ctypeslib/__init__.py",
+    "bytes": 206,
+    "compressed": 106
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ctypeslib/__init__.pyi",
+    "bytes": 382,
+    "compressed": 156
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ctypeslib/_ctypeslib.py",
+    "bytes": 19679,
+    "compressed": 5750
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ctypeslib/_ctypeslib.pyi",
+    "bytes": 8328,
+    "compressed": 1722
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/doc/ufuncs.py",
+    "bytes": 5562,
+    "compressed": 2278
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/dtypes.py",
+    "bytes": 2995,
+    "compressed": 1355
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/dtypes.pyi",
+    "bytes": 16143,
+    "compressed": 2869
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/exceptions.py",
+    "bytes": 7955,
+    "compressed": 2752
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/exceptions.pyi",
+    "bytes": 821,
+    "compressed": 313
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/__init__.py",
+    "bytes": 2356,
+    "compressed": 1091
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/__init__.pyi",
+    "bytes": 118,
+    "compressed": 97
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/__main__.py",
+    "bytes": 135,
+    "compressed": 116
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/__version__.py",
+    "bytes": 49,
+    "compressed": 44
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/__version__.pyi",
+    "bytes": 46,
+    "compressed": 35
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_backends/__init__.py",
+    "bytes": 194,
+    "compressed": 133
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_backends/__init__.pyi",
+    "bytes": 128,
+    "compressed": 108
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_backends/_backend.py",
+    "bytes": 1195,
+    "compressed": 361
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_backends/_backend.pyi",
+    "bytes": 1388,
+    "compressed": 398
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_backends/_meson.py",
+    "bytes": 8870,
+    "compressed": 2279
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_backends/_meson.pyi",
+    "bytes": 1930,
+    "compressed": 552
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_backends/meson.build.template",
+    "bytes": 1855,
+    "compressed": 641
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_isocbind.py",
+    "bytes": 2422,
+    "compressed": 786
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_isocbind.pyi",
+    "bytes": 352,
+    "compressed": 173
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_src_pyf.py",
+    "bytes": 7942,
+    "compressed": 2629
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/_src_pyf.pyi",
+    "bytes": 1039,
+    "compressed": 347
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/auxfuncs.py",
+    "bytes": 27940,
+    "compressed": 6235
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/auxfuncs.pyi",
+    "bytes": 8170,
+    "compressed": 1744
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/capi_maps.py",
+    "bytes": 30576,
+    "compressed": 7049
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/capi_maps.pyi",
+    "bytes": 1099,
+    "compressed": 333
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/cb_rules.py",
+    "bytes": 25171,
+    "compressed": 5265
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/cb_rules.pyi",
+    "bytes": 512,
+    "compressed": 213
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/cfuncs.py",
+    "bytes": 55740,
+    "compressed": 11495
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/cfuncs.pyi",
+    "bytes": 810,
+    "compressed": 279
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/common_rules.py",
+    "bytes": 5250,
+    "compressed": 1803
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/common_rules.pyi",
+    "bytes": 332,
+    "compressed": 189
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/crackfortran.py",
+    "bytes": 150558,
+    "compressed": 34513
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/crackfortran.pyi",
+    "bytes": 10455,
+    "compressed": 2397
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/diagnose.py",
+    "bytes": 1360,
+    "compressed": 410
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/diagnose.pyi",
+    "bytes": 24,
+    "compressed": 26
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/f2py2e.py",
+    "bytes": 28181,
+    "compressed": 8157
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/f2py2e.pyi",
+    "bytes": 2089,
+    "compressed": 773
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/f90mod_rules.py",
+    "bytes": 10341,
+    "compressed": 3076
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/f90mod_rules.pyi",
+    "bytes": 467,
+    "compressed": 234
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/func2subr.py",
+    "bytes": 10371,
+    "compressed": 2274
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/func2subr.pyi",
+    "bytes": 393,
+    "compressed": 201
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/rules.py",
+    "bytes": 65393,
+    "compressed": 12570
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/rules.pyi",
+    "bytes": 1272,
+    "compressed": 463
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/setup.cfg",
+    "bytes": 50,
+    "compressed": 41
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/src/fortranobject.c",
+    "bytes": 48832,
+    "compressed": 10599
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/src/fortranobject.h",
+    "bytes": 6026,
+    "compressed": 2032
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/symbolic.py",
+    "bytes": 54828,
+    "compressed": 11489
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/symbolic.pyi",
+    "bytes": 6364,
+    "compressed": 1679
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/use_rules.py",
+    "bytes": 3513,
+    "compressed": 1441
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/f2py/use_rules.pyi",
+    "bytes": 433,
+    "compressed": 215
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/__init__.py",
+    "bytes": 8369,
+    "compressed": 3110
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/__init__.pyi",
+    "bytes": 531,
+    "compressed": 162
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/_helper.py",
+    "bytes": 7032,
+    "compressed": 1792
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/_helper.pyi",
+    "bytes": 4492,
+    "compressed": 760
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/_pocketfft.py",
+    "bytes": 64302,
+    "compressed": 10058
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/_pocketfft.pyi",
+    "bytes": 35724,
+    "compressed": 1640
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/_pocketfft_umath.cp312-win_amd64.lib",
+    "bytes": 2176,
+    "compressed": 547
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/fft/_pocketfft_umath.cp312-win_amd64.pyd",
+    "bytes": 276480,
+    "compressed": 108662
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/__init__.py",
+    "bytes": 2784,
+    "compressed": 1046
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/__init__.pyi",
+    "bytes": 1547,
+    "compressed": 495
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_array_utils_impl.py",
+    "bytes": 1766,
+    "compressed": 682
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_array_utils_impl.pyi",
+    "bytes": 512,
+    "compressed": 307
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_arraypad_impl.py",
+    "bytes": 34445,
+    "compressed": 8171
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_arraypad_impl.pyi",
+    "bytes": 2510,
+    "compressed": 697
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_arraysetops_impl.py",
+    "bytes": 38499,
+    "compressed": 9761
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_arraysetops_impl.pyi",
+    "bytes": 14293,
+    "compressed": 1741
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_arrayterator_impl.py",
+    "bytes": 7442,
+    "compressed": 2478
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_arrayterator_impl.pyi",
+    "bytes": 2000,
+    "compressed": 762
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_datasource.py",
+    "bytes": 23423,
+    "compressed": 5774
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_datasource.pyi",
+    "bytes": 1008,
+    "compressed": 408
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_format_impl.py",
+    "bytes": 37920,
+    "compressed": 11139
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_format_impl.pyi",
+    "bytes": 2122,
+    "compressed": 774
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_function_base_impl.py",
+    "bytes": 200049,
+    "compressed": 52805
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_function_base_impl.pyi",
+    "bytes": 79044,
+    "compressed": 8079
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_histograms_impl.py",
+    "bytes": 39523,
+    "compressed": 11103
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_histograms_impl.pyi",
+    "bytes": 10968,
+    "compressed": 1252
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_index_tricks_impl.py",
+    "bytes": 32571,
+    "compressed": 8643
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_index_tricks_impl.pyi",
+    "bytes": 11424,
+    "compressed": 2429
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_iotools.py",
+    "bytes": 31789,
+    "compressed": 8193
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_iotools.pyi",
+    "bytes": 3733,
+    "compressed": 1086
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_nanfunctions_impl.py",
+    "bytes": 73411,
+    "compressed": 13130
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_nanfunctions_impl.pyi",
+    "bytes": 864,
+    "compressed": 350
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_npyio_impl.py",
+    "bytes": 98775,
+    "compressed": 25263
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_npyio_impl.pyi",
+    "bytes": 9231,
+    "compressed": 1963
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_polynomial_impl.py",
+    "bytes": 45689,
+    "compressed": 12421
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_polynomial_impl.pyi",
+    "bytes": 11076,
+    "compressed": 1728
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_scimath_impl.py",
+    "bytes": 16326,
+    "compressed": 3480
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_scimath_impl.pyi",
+    "bytes": 2867,
+    "compressed": 389
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_shape_base_impl.py",
+    "bytes": 39107,
+    "compressed": 9792
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_shape_base_impl.pyi",
+    "bytes": 8101,
+    "compressed": 1538
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_stride_tricks_impl.py",
+    "bytes": 22028,
+    "compressed": 6505
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_stride_tricks_impl.pyi",
+    "bytes": 2117,
+    "compressed": 560
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_twodim_base_impl.py",
+    "bytes": 36484,
+    "compressed": 9306
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_twodim_base_impl.pyi",
+    "bytes": 13879,
+    "compressed": 2111
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_type_check_impl.py",
+    "bytes": 20818,
+    "compressed": 5365
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_type_check_impl.pyi",
+    "bytes": 13696,
+    "compressed": 1790
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_ufunclike_impl.py",
+    "bytes": 6631,
+    "compressed": 1589
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_ufunclike_impl.pyi",
+    "bytes": 1428,
+    "compressed": 333
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_user_array_impl.py",
+    "bytes": 8336,
+    "compressed": 1793
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_user_array_impl.pyi",
+    "bytes": 9635,
+    "compressed": 1547
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_utils_impl.py",
+    "bytes": 17392,
+    "compressed": 5509
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_utils_impl.pyi",
+    "bytes": 638,
+    "compressed": 352
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_version.py",
+    "bytes": 4936,
+    "compressed": 1403
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/_version.pyi",
+    "bytes": 790,
+    "compressed": 251
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/array_utils.py",
+    "bytes": 151,
+    "compressed": 109
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/array_utils.pyi",
+    "bytes": 197,
+    "compressed": 103
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/format.py",
+    "bytes": 501,
+    "compressed": 252
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/format.pyi",
+    "bytes": 876,
+    "compressed": 304
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/introspect.py",
+    "bytes": 2843,
+    "compressed": 903
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/introspect.pyi",
+    "bytes": 155,
+    "compressed": 100
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/mixins.py",
+    "bytes": 7375,
+    "compressed": 2149
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/mixins.pyi",
+    "bytes": 3260,
+    "compressed": 609
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/npyio.py",
+    "bytes": 69,
+    "compressed": 68
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/npyio.pyi",
+    "bytes": 121,
+    "compressed": 85
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/recfunctions.py",
+    "bytes": 61205,
+    "compressed": 14577
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/recfunctions.pyi",
+    "bytes": 13933,
+    "compressed": 1869
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/scimath.py",
+    "bytes": 182,
+    "compressed": 107
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/scimath.pyi",
+    "bytes": 245,
+    "compressed": 117
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/stride_tricks.py",
+    "bytes": 89,
+    "compressed": 82
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/stride_tricks.pyi",
+    "bytes": 128,
+    "compressed": 86
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/user_array.py",
+    "bytes": 64,
+    "compressed": 64
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/lib/user_array.pyi",
+    "bytes": 82,
+    "compressed": 73
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/__init__.py",
+    "bytes": 2171,
+    "compressed": 980
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/__init__.pyi",
+    "bytes": 1087,
+    "compressed": 349
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/_linalg.py",
+    "bytes": 118366,
+    "compressed": 29663
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/_linalg.pyi",
+    "bytes": 59510,
+    "compressed": 7596
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/_umath_linalg.cp312-win_amd64.lib",
+    "bytes": 2120,
+    "compressed": 549
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/_umath_linalg.cp312-win_amd64.pyd",
+    "bytes": 112128,
+    "compressed": 44093
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/_umath_linalg.pyi",
+    "bytes": 1451,
+    "compressed": 426
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/lapack_lite.cp312-win_amd64.lib",
+    "bytes": 2084,
+    "compressed": 545
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/lapack_lite.cp312-win_amd64.pyd",
+    "bytes": 18944,
+    "compressed": 8271
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/linalg/lapack_lite.pyi",
+    "bytes": 2850,
+    "compressed": 615
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/__init__.py",
+    "bytes": 1459,
+    "compressed": 711
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/__init__.pyi",
+    "bytes": 7404,
+    "compressed": 1764
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/API_CHANGES.txt",
+    "bytes": 3540,
+    "compressed": 1336
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/core.py",
+    "bytes": 301140,
+    "compressed": 65456
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/core.pyi",
+    "bytes": 168096,
+    "compressed": 18424
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/extras.py",
+    "bytes": 70068,
+    "compressed": 15621
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/extras.pyi",
+    "bytes": 25178,
+    "compressed": 3714
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/LICENSE",
+    "bytes": 1616,
+    "compressed": 808
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/mrecords.py",
+    "bytes": 26311,
+    "compressed": 6973
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/mrecords.pyi",
+    "bytes": 11673,
+    "compressed": 1741
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/README.rst",
+    "bytes": 10110,
+    "compressed": 3861
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/testutils.py",
+    "bytes": 10507,
+    "compressed": 2425
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/ma/testutils.pyi",
+    "bytes": 2359,
+    "compressed": 565
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/matlib.py",
+    "bytes": 11017,
+    "compressed": 3171
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/matlib.pyi",
+    "bytes": 10387,
+    "compressed": 2629
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/matrixlib/__init__.py",
+    "bytes": 255,
+    "compressed": 152
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/matrixlib/__init__.pyi",
+    "bytes": 91,
+    "compressed": 68
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/matrixlib/defmatrix.py",
+    "bytes": 31951,
+    "compressed": 6870
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/matrixlib/defmatrix.pyi",
+    "bytes": 11209,
+    "compressed": 1561
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/__init__.py",
+    "bytes": 6913,
+    "compressed": 2525
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/__init__.pyi",
+    "bytes": 743,
+    "compressed": 289
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/_polybase.py",
+    "bytes": 40549,
+    "compressed": 9211
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/_polybase.pyi",
+    "bytes": 7997,
+    "compressed": 1518
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/_polytypes.pyi",
+    "bytes": 17449,
+    "compressed": 1974
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/chebyshev.py",
+    "bytes": 66272,
+    "compressed": 16112
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/chebyshev.pyi",
+    "bytes": 5335,
+    "compressed": 1239
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/hermite.py",
+    "bytes": 58441,
+    "compressed": 13875
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/hermite.pyi",
+    "bytes": 2820,
+    "compressed": 788
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/hermite_e.py",
+    "bytes": 55902,
+    "compressed": 13322
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/hermite_e.pyi",
+    "bytes": 2889,
+    "compressed": 794
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/laguerre.py",
+    "bytes": 56244,
+    "compressed": 13363
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/laguerre.pyi",
+    "bytes": 2567,
+    "compressed": 714
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/legendre.py",
+    "bytes": 54678,
+    "compressed": 13288
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/legendre.pyi",
+    "bytes": 2567,
+    "compressed": 715
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/polynomial.py",
+    "bytes": 56517,
+    "compressed": 13567
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/polynomial.pyi",
+    "bytes": 3201,
+    "compressed": 814
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/polyutils.py",
+    "bytes": 23394,
+    "compressed": 7061
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/polynomial/polyutils.pyi",
+    "bytes": 10664,
+    "compressed": 1655
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/__init__.pxd",
+    "bytes": 445,
+    "compressed": 216
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/__init__.py",
+    "bytes": 7693,
+    "compressed": 2013
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/__init__.pyi",
+    "bytes": 2247,
+    "compressed": 654
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_bounded_integers.cp312-win_amd64.lib",
+    "bytes": 18000,
+    "compressed": 3009
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_bounded_integers.cp312-win_amd64.pyd",
+    "bytes": 208896,
+    "compressed": 90370
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_bounded_integers.pxd",
+    "bytes": 1763,
+    "compressed": 358
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_bounded_integers.pyi",
+    "bytes": 25,
+    "compressed": 27
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_common.cp312-win_amd64.lib",
+    "bytes": 2012,
+    "compressed": 536
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_common.cp312-win_amd64.pyd",
+    "bytes": 174080,
+    "compressed": 72949
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_common.pxd",
+    "bytes": 5156,
+    "compressed": 1050
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_common.pyi",
+    "bytes": 474,
+    "compressed": 244
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_examples/cffi/extending.py",
+    "bytes": 926,
+    "compressed": 457
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_examples/cffi/parse.py",
+    "bytes": 1803,
+    "compressed": 596
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_examples/cython/extending.pyx",
+    "bytes": 2344,
+    "compressed": 806
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_examples/cython/extending_distributions.pyx",
+    "bytes": 3961,
+    "compressed": 1171
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_examples/cython/meson.build",
+    "bytes": 1747,
+    "compressed": 599
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_examples/numba/extending.py",
+    "bytes": 2045,
+    "compressed": 767
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_examples/numba/extending_distributions.py",
+    "bytes": 2103,
+    "compressed": 910
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_generator.cp312-win_amd64.lib",
+    "bytes": 18400,
+    "compressed": 3143
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_generator.cp312-win_amd64.pyd",
+    "bytes": 624640,
+    "compressed": 283518
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_generator.pyi",
+    "bytes": 36562,
+    "compressed": 3487
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_mt19937.cp312-win_amd64.lib",
+    "bytes": 2032,
+    "compressed": 534
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_mt19937.cp312-win_amd64.pyd",
+    "bytes": 92672,
+    "compressed": 44834
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_mt19937.pyi",
+    "bytes": 882,
+    "compressed": 375
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_pcg64.cp312-win_amd64.lib",
+    "bytes": 1996,
+    "compressed": 532
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_pcg64.cp312-win_amd64.pyd",
+    "bytes": 105984,
+    "compressed": 43823
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_pcg64.pyi",
+    "bytes": 1237,
+    "compressed": 386
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_philox.cp312-win_amd64.lib",
+    "bytes": 2012,
+    "compressed": 536
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_philox.cp312-win_amd64.pyd",
+    "bytes": 89088,
+    "compressed": 40441
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_philox.pyi",
+    "bytes": 1082,
+    "compressed": 421
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_pickle.py",
+    "bytes": 2830,
+    "compressed": 676
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_pickle.pyi",
+    "bytes": 1658,
+    "compressed": 451
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_sfc64.cp312-win_amd64.lib",
+    "bytes": 1996,
+    "compressed": 532
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_sfc64.cp312-win_amd64.pyd",
+    "bytes": 64000,
+    "compressed": 29952
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/_sfc64.pyi",
+    "bytes": 749,
+    "compressed": 346
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/bit_generator.cp312-win_amd64.lib",
+    "bytes": 2120,
+    "compressed": 549
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/bit_generator.cp312-win_amd64.pyd",
+    "bytes": 173056,
+    "compressed": 75500
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/bit_generator.pxd",
+    "bytes": 1044,
+    "compressed": 388
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/bit_generator.pyi",
+    "bytes": 3688,
+    "compressed": 1018
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/c_distributions.pxd",
+    "bytes": 6454,
+    "compressed": 1072
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/lib/npyrandom.lib",
+    "bytes": 149662,
+    "compressed": 58996
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/LICENSE.md",
+    "bytes": 3582,
+    "compressed": 1490
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/mtrand.cp312-win_amd64.lib",
+    "bytes": 17122,
+    "compressed": 2988
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/mtrand.cp312-win_amd64.pyd",
+    "bytes": 522752,
+    "compressed": 226108
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/random/mtrand.pyi",
+    "bytes": 27847,
+    "compressed": 2778
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/rec/__init__.py",
+    "bytes": 85,
+    "compressed": 55
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/rec/__init__.pyi",
+    "bytes": 370,
+    "compressed": 155
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/strings/__init__.py",
+    "bytes": 85,
+    "compressed": 57
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/strings/__init__.pyi",
+    "bytes": 1416,
+    "compressed": 423
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/__init__.py",
+    "bytes": 603,
+    "compressed": 309
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/__init__.pyi",
+    "bytes": 2354,
+    "compressed": 701
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/_private/__init__.py",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/_private/__init__.pyi",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/_private/extbuild.py",
+    "bytes": 7757,
+    "compressed": 2574
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/_private/extbuild.pyi",
+    "bytes": 678,
+    "compressed": 279
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/_private/utils.py",
+    "bytes": 104289,
+    "compressed": 25246
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/_private/utils.pyi",
+    "bytes": 13860,
+    "compressed": 3048
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/overrides.py",
+    "bytes": 2218,
+    "compressed": 682
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/overrides.pyi",
+    "bytes": 406,
+    "compressed": 202
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/print_coercion_tables.py",
+    "bytes": 6493,
+    "compressed": 1861
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/testing/print_coercion_tables.pyi",
+    "bytes": 846,
+    "compressed": 390
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/typing/__init__.py",
+    "bytes": 7041,
+    "compressed": 2790
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/typing/__init__.pyi",
+    "bytes": 184,
+    "compressed": 127
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/typing/mypy_plugin.py",
+    "bytes": 7035,
+    "compressed": 2618
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/version.py",
+    "bytes": 304,
+    "compressed": 200
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy/version.pyi",
+    "bytes": 278,
+    "compressed": 115
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/DELVEWHEEL",
+    "bytes": 462,
+    "compressed": 215
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/entry_points.txt",
+    "bytes": 220,
+    "compressed": 134
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/LICENSE.txt",
+    "bytes": 45831,
+    "compressed": 15049
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt",
+    "bytes": 1039,
+    "compressed": 539
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/src/common/pythoncapi-compat/COPYING",
+    "bytes": 704,
+    "compressed": 443
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/src/highway/LICENSE",
+    "bytes": 21155,
+    "compressed": 7195
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+    "bytes": 1441,
+    "compressed": 830
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+    "bytes": 1542,
+    "compressed": 807
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/src/umath/svml/LICENSE",
+    "bytes": 1573,
+    "compressed": 810
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md",
+    "bytes": 1523,
+    "compressed": 798
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/linalg/lapack_lite/LICENSE.txt",
+    "bytes": 2314,
+    "compressed": 1065
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/ma/LICENSE",
+    "bytes": 1616,
+    "compressed": 808
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/LICENSE.md",
+    "bytes": 3582,
+    "compressed": 1490
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/distributions/LICENSE.md",
+    "bytes": 2805,
+    "compressed": 1327
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md",
+    "bytes": 2986,
+    "compressed": 1424
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md",
+    "bytes": 1176,
+    "compressed": 691
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/philox/LICENSE.md",
+    "bytes": 1540,
+    "compressed": 801
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md",
+    "bytes": 1253,
+    "compressed": 763
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md",
+    "bytes": 340,
+    "compressed": 240
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/METADATA",
+    "bytes": 6635,
+    "compressed": 2613
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/RECORD",
+    "bytes": 88732,
+    "compressed": 42160
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/numpy-2.5.3.dist-info/WHEEL",
+    "bytes": 85,
+    "compressed": 82
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/__init__.py",
+    "bytes": 2122,
+    "compressed": 748
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/__main__.py",
+    "bytes": 140,
+    "compressed": 103
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_avif.cp312-win_amd64.pyd",
+    "bytes": 7893504,
+    "compressed": 4323208
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_avif.pyi",
+    "bytes": 66,
+    "compressed": 66
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_binary.py",
+    "bytes": 2664,
+    "compressed": 576
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_deprecate.py",
+    "bytes": 2106,
+    "compressed": 745
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imaging.cp312-win_amd64.pyd",
+    "bytes": 2632704,
+    "compressed": 1023247
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imaging.pyi",
+    "bytes": 924,
+    "compressed": 275
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingcms.cp312-win_amd64.pyd",
+    "bytes": 272384,
+    "compressed": 120291
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingcms.pyi",
+    "bytes": 4576,
+    "compressed": 1004
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingft.cp312-win_amd64.pyd",
+    "bytes": 2174976,
+    "compressed": 1003206
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingft.pyi",
+    "bytes": 1903,
+    "compressed": 521
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingmath.cp312-win_amd64.pyd",
+    "bytes": 21504,
+    "compressed": 7981
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingmath.pyi",
+    "bytes": 66,
+    "compressed": 66
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingmorph.cp312-win_amd64.pyd",
+    "bytes": 12288,
+    "compressed": 5783
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingmorph.pyi",
+    "bytes": 66,
+    "compressed": 66
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingtk.cp312-win_amd64.pyd",
+    "bytes": 14848,
+    "compressed": 6587
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_imagingtk.pyi",
+    "bytes": 66,
+    "compressed": 66
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_tkinter_finder.py",
+    "bytes": 558,
+    "compressed": 321
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_typing.py",
+    "bytes": 964,
+    "compressed": 481
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_util.py",
+    "bytes": 713,
+    "compressed": 379
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_version.py",
+    "bytes": 91,
+    "compressed": 84
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_webp.cp312-win_amd64.pyd",
+    "bytes": 416256,
+    "compressed": 211774
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/_webp.pyi",
+    "bytes": 66,
+    "compressed": 66
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/AvifImagePlugin.py",
+    "bytes": 9596,
+    "compressed": 2968
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/BdfFontFile.py",
+    "bytes": 3463,
+    "compressed": 1376
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/BlpImagePlugin.py",
+    "bytes": 17048,
+    "compressed": 4059
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/BmpImagePlugin.py",
+    "bytes": 20377,
+    "compressed": 5226
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/BufrStubImagePlugin.py",
+    "bytes": 1757,
+    "compressed": 731
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ContainerIO.py",
+    "bytes": 4777,
+    "compressed": 1403
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/CurImagePlugin.py",
+    "bytes": 2814,
+    "compressed": 1006
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/DcxImagePlugin.py",
+    "bytes": 2264,
+    "compressed": 1006
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/DdsImagePlugin.py",
+    "bytes": 19733,
+    "compressed": 5173
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/EpsImagePlugin.py",
+    "bytes": 17253,
+    "compressed": 5391
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ExifTags.py",
+    "bytes": 10339,
+    "compressed": 3443
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/features.py",
+    "bytes": 11118,
+    "compressed": 2732
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/FitsImagePlugin.py",
+    "bytes": 4875,
+    "compressed": 1557
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/FliImagePlugin.py",
+    "bytes": 5113,
+    "compressed": 1781
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/FontFile.py",
+    "bytes": 4419,
+    "compressed": 1412
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/FpxImagePlugin.py",
+    "bytes": 7724,
+    "compressed": 2527
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/FtexImagePlugin.py",
+    "bytes": 3685,
+    "compressed": 1445
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/GbrImagePlugin.py",
+    "bytes": 3156,
+    "compressed": 1175
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/GdImageFile.py",
+    "bytes": 2951,
+    "compressed": 1273
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/GifImagePlugin.py",
+    "bytes": 43596,
+    "compressed": 10458
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/GimpGradientFile.py",
+    "bytes": 4137,
+    "compressed": 1449
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/GimpPaletteFile.py",
+    "bytes": 1935,
+    "compressed": 827
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/GribStubImagePlugin.py",
+    "bytes": 1786,
+    "compressed": 743
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/Hdf5StubImagePlugin.py",
+    "bytes": 1768,
+    "compressed": 740
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/IcnsImagePlugin.py",
+    "bytes": 12798,
+    "compressed": 3895
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/IcoImagePlugin.py",
+    "bytes": 13499,
+    "compressed": 4422
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/Image.py",
+    "bytes": 158171,
+    "compressed": 38812
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageChops.py",
+    "bytes": 8257,
+    "compressed": 1645
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageCms.py",
+    "bytes": 41773,
+    "compressed": 9267
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageColor.py",
+    "bytes": 9761,
+    "compressed": 3048
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageDraw.py",
+    "bytes": 36421,
+    "compressed": 7892
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageDraw2.py",
+    "bytes": 7470,
+    "compressed": 1838
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageEnhance.py",
+    "bytes": 3740,
+    "compressed": 1151
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageFile.py",
+    "bytes": 30828,
+    "compressed": 8305
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageFilter.py",
+    "bytes": 19714,
+    "compressed": 5085
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageFont.py",
+    "bytes": 65080,
+    "compressed": 22002
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageGrab.py",
+    "bytes": 8475,
+    "compressed": 2413
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageMath.py",
+    "bytes": 10659,
+    "compressed": 2405
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageMode.py",
+    "bytes": 2480,
+    "compressed": 863
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageMorph.py",
+    "bytes": 10673,
+    "compressed": 2984
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageOps.py",
+    "bytes": 26446,
+    "compressed": 6614
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImagePalette.py",
+    "bytes": 9498,
+    "compressed": 2706
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImagePath.py",
+    "bytes": 391,
+    "compressed": 259
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageQt.py",
+    "bytes": 6903,
+    "compressed": 2530
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageSequence.py",
+    "bytes": 2341,
+    "compressed": 946
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageShow.py",
+    "bytes": 10684,
+    "compressed": 2723
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageStat.py",
+    "bytes": 5662,
+    "compressed": 1766
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageText.py",
+    "bytes": 19087,
+    "compressed": 4506
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageTk.py",
+    "bytes": 8398,
+    "compressed": 2527
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageTransform.py",
+    "bytes": 4052,
+    "compressed": 1391
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImageWin.py",
+    "bytes": 8345,
+    "compressed": 2479
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImImagePlugin.py",
+    "bytes": 11992,
+    "compressed": 3677
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/ImtImagePlugin.py",
+    "bytes": 2768,
+    "compressed": 1020
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/IptcImagePlugin.py",
+    "bytes": 6663,
+    "compressed": 2265
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/Jpeg2KImagePlugin.py",
+    "bytes": 15088,
+    "compressed": 4311
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/JpegImagePlugin.py",
+    "bytes": 32223,
+    "compressed": 9552
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/JpegPresets.py",
+    "bytes": 12621,
+    "compressed": 1930
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/McIdasImagePlugin.py",
+    "bytes": 1955,
+    "compressed": 852
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/MicImagePlugin.py",
+    "bytes": 2702,
+    "compressed": 1031
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/MpegImagePlugin.py",
+    "bytes": 2094,
+    "compressed": 807
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/MpoImagePlugin.py",
+    "bytes": 6987,
+    "compressed": 2419
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/MspImagePlugin.py",
+    "bytes": 6072,
+    "compressed": 2273
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PaletteFile.py",
+    "bytes": 1270,
+    "compressed": 612
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PalmImagePlugin.py",
+    "bytes": 8965,
+    "compressed": 2381
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PcdImagePlugin.py",
+    "bytes": 1842,
+    "compressed": 794
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PcfFontFile.py",
+    "bytes": 7240,
+    "compressed": 2261
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PcxImagePlugin.py",
+    "bytes": 6596,
+    "compressed": 2367
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PdfImagePlugin.py",
+    "bytes": 9720,
+    "compressed": 2827
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PdfParser.py",
+    "bytes": 39753,
+    "compressed": 8705
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PixarImagePlugin.py",
+    "bytes": 1830,
+    "compressed": 870
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PngImagePlugin.py",
+    "bytes": 53977,
+    "compressed": 12579
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PpmImagePlugin.py",
+    "bytes": 12719,
+    "compressed": 3443
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PsdImagePlugin.py",
+    "bytes": 9249,
+    "compressed": 2719
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/PSDraw.py",
+    "bytes": 7230,
+    "compressed": 2501
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/QoiImagePlugin.py",
+    "bytes": 8831,
+    "compressed": 2133
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/report.py",
+    "bytes": 105,
+    "compressed": 83
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/SgiImagePlugin.py",
+    "bytes": 6602,
+    "compressed": 2296
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/SpiderImagePlugin.py",
+    "bytes": 10626,
+    "compressed": 3456
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/SunImagePlugin.py",
+    "bytes": 4734,
+    "compressed": 1638
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/TarIO.py",
+    "bytes": 1503,
+    "compressed": 685
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/TgaImagePlugin.py",
+    "bytes": 8017,
+    "compressed": 2291
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/TiffImagePlugin.py",
+    "bytes": 88301,
+    "compressed": 22599
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/TiffTags.py",
+    "bytes": 17772,
+    "compressed": 6001
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/WalImageFile.py",
+    "bytes": 5891,
+    "compressed": 2088
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/WebPImagePlugin.py",
+    "bytes": 10289,
+    "compressed": 3135
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/WmfImagePlugin.py",
+    "bytes": 5390,
+    "compressed": 1830
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/XbmImagePlugin.py",
+    "bytes": 2767,
+    "compressed": 1168
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/XpmImagePlugin.py",
+    "bytes": 4539,
+    "compressed": 1590
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/PIL/XVThumbImagePlugin.py",
+    "bytes": 2209,
+    "compressed": 1002
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/licenses/LICENSE",
+    "bytes": 78016,
+    "compressed": 22470
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/METADATA",
+    "bytes": 9273,
+    "compressed": 2325
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/RECORD",
+    "bytes": 9675,
+    "compressed": 5266
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/sboms/pillow-12.3.0.cdx.json",
+    "bytes": 22279,
+    "compressed": 4699
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/top_level.txt",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/WHEEL",
+    "bytes": 101,
+    "compressed": 98
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pillow-12.3.0.dist-info/zip-safe",
+    "bytes": 2,
+    "compressed": 4
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/__init__.py",
+    "bytes": 92363,
+    "compressed": 24132
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_common.py",
+    "bytes": 26115,
+    "compressed": 7822
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_ntuples.py",
+    "bytes": 11399,
+    "compressed": 2116
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_psaix.py",
+    "bytes": 18162,
+    "compressed": 5101
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_psbsd.py",
+    "bytes": 30167,
+    "compressed": 7819
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_pslinux.py",
+    "bytes": 87056,
+    "compressed": 22603
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_psosx.py",
+    "bytes": 16462,
+    "compressed": 4388
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_psposix.py",
+    "bytes": 11938,
+    "compressed": 3853
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_pssunos.py",
+    "bytes": 24638,
+    "compressed": 6515
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_psutil_windows.pyd",
+    "bytes": 70656,
+    "compressed": 32858
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil/_pswindows.py",
+    "bytes": 36466,
+    "compressed": 10032
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil-7.2.2.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil-7.2.2.dist-info/LICENSE",
+    "bytes": 1577,
+    "compressed": 839
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil-7.2.2.dist-info/METADATA",
+    "bytes": 22729,
+    "compressed": 6853
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil-7.2.2.dist-info/RECORD",
+    "bytes": 1410,
+    "compressed": 849
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil-7.2.2.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil-7.2.2.dist-info/top_level.txt",
+    "bytes": 7,
+    "compressed": 9
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/psutil-7.2.2.dist-info/WHEEL",
+    "bytes": 99,
+    "compressed": 100
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pyyaml-6.0.3.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pyyaml-6.0.3.dist-info/licenses/LICENSE",
+    "bytes": 1101,
+    "compressed": 656
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pyyaml-6.0.3.dist-info/METADATA",
+    "bytes": 2410,
+    "compressed": 904
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pyyaml-6.0.3.dist-info/RECORD",
+    "bytes": 1984,
+    "compressed": 1216
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pyyaml-6.0.3.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pyyaml-6.0.3.dist-info/top_level.txt",
+    "bytes": 11,
+    "compressed": 9
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/pyyaml-6.0.3.dist-info/WHEEL",
+    "bytes": 101,
+    "compressed": 98
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex/__init__.py",
+    "bytes": 78,
+    "compressed": 51
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex/_main.py",
+    "bytes": 34169,
+    "compressed": 9087
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex/_regex.cp312-win_amd64.pyd",
+    "bytes": 726016,
+    "compressed": 185172
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex/_regex_core.py",
+    "bytes": 152010,
+    "compressed": 27813
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex-2026.9.10.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex-2026.9.10.dist-info/licenses/LICENSE.txt",
+    "bytes": 11792,
+    "compressed": 4075
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex-2026.9.10.dist-info/METADATA",
+    "bytes": 41625,
+    "compressed": 11337
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex-2026.9.10.dist-info/RECORD",
+    "bytes": 999,
+    "compressed": 612
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex-2026.9.10.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex-2026.9.10.dist-info/top_level.txt",
+    "bytes": 6,
+    "compressed": 8
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/regex-2026.9.10.dist-info/WHEEL",
+    "bytes": 101,
+    "compressed": 98
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/__init__.py",
+    "bytes": 5922,
+    "compressed": 2061
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/__version__.py",
+    "bytes": 435,
+    "compressed": 260
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/_internal_utils.py",
+    "bytes": 1542,
+    "compressed": 666
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/_types.py",
+    "bytes": 5838,
+    "compressed": 1788
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/adapters.py",
+    "bytes": 28064,
+    "compressed": 6784
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/api.py",
+    "bytes": 7152,
+    "compressed": 1782
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/auth.py",
+    "bytes": 12233,
+    "compressed": 3373
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/certs.py",
+    "bytes": 430,
+    "compressed": 276
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/compat.py",
+    "bytes": 2465,
+    "compressed": 1034
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/cookies.py",
+    "bytes": 21549,
+    "compressed": 5769
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/exceptions.py",
+    "bytes": 4564,
+    "compressed": 1528
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/help.py",
+    "bytes": 4210,
+    "compressed": 1294
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/hooks.py",
+    "bytes": 1138,
+    "compressed": 538
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/models.py",
+    "bytes": 41783,
+    "compressed": 11390
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/packages.py",
+    "bytes": 904,
+    "compressed": 382
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/sessions.py",
+    "bytes": 34248,
+    "compressed": 9423
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/status_codes.py",
+    "bytes": 4351,
+    "compressed": 1714
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/structures.py",
+    "bytes": 4134,
+    "compressed": 1515
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests/utils.py",
+    "bytes": 36322,
+    "compressed": 11338
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/licenses/LICENSE",
+    "bytes": 10142,
+    "compressed": 3552
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/licenses/NOTICE",
+    "bytes": 38,
+    "compressed": 40
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/METADATA",
+    "bytes": 4806,
+    "compressed": 2050
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/RECORD",
+    "bytes": 2233,
+    "compressed": 1272
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/top_level.txt",
+    "bytes": 9,
+    "compressed": 11
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/requests-2.34.2.dist-info/WHEEL",
+    "bytes": 91,
+    "compressed": 92
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/__init__.py",
+    "bytes": 1572,
+    "compressed": 510
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/__main__.py",
+    "bytes": 30,
+    "compressed": 29
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/_main.py",
+    "bytes": 283,
+    "compressed": 176
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/_monitor.py",
+    "bytes": 4013,
+    "compressed": 1426
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/_tqdm.py",
+    "bytes": 283,
+    "compressed": 172
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/_tqdm_gui.py",
+    "bytes": 287,
+    "compressed": 177
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/_tqdm_notebook.py",
+    "bytes": 307,
+    "compressed": 183
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/_tqdm_pandas.py",
+    "bytes": 888,
+    "compressed": 389
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/_utils.py",
+    "bytes": 559,
+    "compressed": 339
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/asyncio.py",
+    "bytes": 3196,
+    "compressed": 962
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/auto.py",
+    "bytes": 871,
+    "compressed": 409
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/autonotebook.py",
+    "bytes": 1440,
+    "compressed": 637
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/cli.py",
+    "bytes": 11011,
+    "compressed": 3585
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/completion.sh",
+    "bytes": 946,
+    "compressed": 477
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/__init__.py",
+    "bytes": 2479,
+    "compressed": 922
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/bells.py",
+    "bytes": 921,
+    "compressed": 370
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/concurrent.py",
+    "bytes": 9873,
+    "compressed": 2799
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/discord.py",
+    "bytes": 5337,
+    "compressed": 1805
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/itertools.py",
+    "bytes": 2949,
+    "compressed": 616
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/logging.py",
+    "bytes": 3902,
+    "compressed": 1244
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/slack.py",
+    "bytes": 4049,
+    "compressed": 1565
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/telegram.py",
+    "bytes": 5081,
+    "compressed": 1736
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/contrib/utils_worker.py",
+    "bytes": 1199,
+    "compressed": 517
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/dask.py",
+    "bytes": 1319,
+    "compressed": 548
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/gui.py",
+    "bytes": 5481,
+    "compressed": 1996
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/keras.py",
+    "bytes": 4396,
+    "compressed": 1334
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/notebook.py",
+    "bytes": 10888,
+    "compressed": 3519
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/rich.py",
+    "bytes": 5255,
+    "compressed": 1671
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/std.py",
+    "bytes": 58047,
+    "compressed": 15903
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/tk.py",
+    "bytes": 6702,
+    "compressed": 2242
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/tqdm.1",
+    "bytes": 7538,
+    "compressed": 3025
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/utils.py",
+    "bytes": 9746,
+    "compressed": 3070
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm/version.py",
+    "bytes": 233,
+    "compressed": 152
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/entry_points.txt",
+    "bytes": 39,
+    "compressed": 38
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/licenses/LICENCE",
+    "bytes": 1985,
+    "compressed": 1099
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/METADATA",
+    "bytes": 57366,
+    "compressed": 18197
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/RECORD",
+    "bytes": 3201,
+    "compressed": 1909
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/top_level.txt",
+    "bytes": 5,
+    "compressed": 7
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/tqdm-4.70.1.dist-info/WHEEL",
+    "bytes": 91,
+    "compressed": 92
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore/__init__.py",
+    "bytes": 1307,
+    "compressed": 605
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore/_api.py",
+    "bytes": 13160,
+    "compressed": 3199
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore/_macos.py",
+    "bytes": 20503,
+    "compressed": 5017
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore/_openssl.py",
+    "bytes": 2370,
+    "compressed": 1042
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore/_ssl_constants.py",
+    "bytes": 1106,
+    "compressed": 442
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore/_windows.py",
+    "bytes": 18035,
+    "compressed": 4118
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore/py.typed",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore-0.10.5.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore-0.10.5.dist-info/licenses/LICENSE",
+    "bytes": 1086,
+    "compressed": 637
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore-0.10.5.dist-info/METADATA",
+    "bytes": 4515,
+    "compressed": 1881
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore-0.10.5.dist-info/RECORD",
+    "bytes": 1064,
+    "compressed": 600
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore-0.10.5.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/truststore-0.10.5.dist-info/WHEEL",
+    "bytes": 82,
+    "compressed": 83
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/__init__.py",
+    "bytes": 6979,
+    "compressed": 2696
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/_base_connection.py",
+    "bytes": 5580,
+    "compressed": 1499
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/_collections.py",
+    "bytes": 17669,
+    "compressed": 5052
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/_request_methods.py",
+    "bytes": 9931,
+    "compressed": 2752
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/_version.py",
+    "bytes": 520,
+    "compressed": 232
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/connection.py",
+    "bytes": 47903,
+    "compressed": 12503
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/connectionpool.py",
+    "bytes": 45250,
+    "compressed": 11635
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/__init__.py",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/emscripten/__init__.py",
+    "bytes": 836,
+    "compressed": 290
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/emscripten/connection.py",
+    "bytes": 8960,
+    "compressed": 2349
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/emscripten/emscripten_fetch_worker.js",
+    "bytes": 3677,
+    "compressed": 1204
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/emscripten/fetch.py",
+    "bytes": 23520,
+    "compressed": 6246
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/emscripten/request.py",
+    "bytes": 566,
+    "compressed": 291
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/emscripten/response.py",
+    "bytes": 9719,
+    "compressed": 2885
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/pyopenssl.py",
+    "bytes": 21494,
+    "compressed": 6004
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/contrib/socks.py",
+    "bytes": 7566,
+    "compressed": 2329
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/exceptions.py",
+    "bytes": 9945,
+    "compressed": 3028
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/fields.py",
+    "bytes": 10801,
+    "compressed": 2929
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/filepost.py",
+    "bytes": 2388,
+    "compressed": 924
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/http2/__init__.py",
+    "bytes": 1741,
+    "compressed": 601
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/http2/connection.py",
+    "bytes": 12613,
+    "compressed": 3636
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/http2/probe.py",
+    "bytes": 3014,
+    "compressed": 1017
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/poolmanager.py",
+    "bytes": 25026,
+    "compressed": 7001
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/py.typed",
+    "bytes": 93,
+    "compressed": 86
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/response.py",
+    "bytes": 54628,
+    "compressed": 13030
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/__init__.py",
+    "bytes": 1001,
+    "compressed": 414
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/connection.py",
+    "bytes": 4444,
+    "compressed": 1735
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/proxy.py",
+    "bytes": 1148,
+    "compressed": 482
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/request.py",
+    "bytes": 10228,
+    "compressed": 3295
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/response.py",
+    "bytes": 3374,
+    "compressed": 1319
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/retry.py",
+    "bytes": 20151,
+    "compressed": 5843
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/ssl_.py",
+    "bytes": 17856,
+    "compressed": 5493
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/ssl_match_hostname.py",
+    "bytes": 5479,
+    "compressed": 2199
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/ssltransport.py",
+    "bytes": 8847,
+    "compressed": 2581
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/timeout.py",
+    "bytes": 10346,
+    "compressed": 3132
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/url.py",
+    "bytes": 19579,
+    "compressed": 6036
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/util.py",
+    "bytes": 1146,
+    "compressed": 391
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3/util/wait.py",
+    "bytes": 4423,
+    "compressed": 1631
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3-2.8.0.dist-info/INSTALLER",
+    "bytes": 4,
+    "compressed": 6
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3-2.8.0.dist-info/licenses/LICENSE.txt",
+    "bytes": 1093,
+    "compressed": 646
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3-2.8.0.dist-info/METADATA",
+    "bytes": 7389,
+    "compressed": 2847
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3-2.8.0.dist-info/RECORD",
+    "bytes": 3669,
+    "compressed": 2000
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3-2.8.0.dist-info/REQUESTED",
+    "bytes": 0,
+    "compressed": 0
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/urllib3-2.8.0.dist-info/WHEEL",
+    "bytes": 87,
+    "compressed": 85
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/__init__.py",
+    "bytes": 12311,
+    "compressed": 2182
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/_yaml.cp312-win_amd64.pyd",
+    "bytes": 253952,
+    "compressed": 108329
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/composer.py",
+    "bytes": 4883,
+    "compressed": 1065
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/constructor.py",
+    "bytes": 28639,
+    "compressed": 4962
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/cyaml.py",
+    "bytes": 3851,
+    "compressed": 511
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/dumper.py",
+    "bytes": 2837,
+    "compressed": 385
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/emitter.py",
+    "bytes": 43006,
+    "compressed": 6785
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/error.py",
+    "bytes": 2533,
+    "compressed": 729
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/events.py",
+    "bytes": 2445,
+    "compressed": 527
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/loader.py",
+    "bytes": 2061,
+    "compressed": 402
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/nodes.py",
+    "bytes": 1440,
+    "compressed": 391
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/parser.py",
+    "bytes": 25495,
+    "compressed": 3745
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/reader.py",
+    "bytes": 6794,
+    "compressed": 1875
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/representer.py",
+    "bytes": 14190,
+    "compressed": 2936
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/resolver.py",
+    "bytes": 9004,
+    "compressed": 2181
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/scanner.py",
+    "bytes": 51279,
+    "compressed": 9198
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/serializer.py",
+    "bytes": 4165,
+    "compressed": 915
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/Lib/site-packages/yaml/tokens.py",
+    "bytes": 2573,
+    "compressed": 560
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/libcrypto-3.dll",
+    "bytes": 5231472,
+    "compressed": 1868426
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/libffi-8.dll",
+    "bytes": 39696,
+    "compressed": 23208
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/libssl-3.dll",
+    "bytes": 794992,
+    "compressed": 284674
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/LICENSE.txt",
+    "bytes": 36874,
+    "compressed": 10244
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/msvcp140.dll",
+    "bytes": 557728,
+    "compressed": 184601
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/msvcp140_1.dll",
+    "bytes": 35952,
+    "compressed": 18211
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/msvcp140_2.dll",
+    "bytes": 280200,
+    "compressed": 109364
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/msvcp140_atomic_wait.dll",
+    "bytes": 50304,
+    "compressed": 26050
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/msvcp140_codecvt_ids.dll",
+    "bytes": 31872,
+    "compressed": 16809
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/pyexpat.pyd",
+    "bytes": 205304,
+    "compressed": 99773
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/python.cat",
+    "bytes": 574231,
+    "compressed": 186535
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/python.exe",
+    "bytes": 104952,
+    "compressed": 54820
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/python3.dll",
+    "bytes": 70376,
+    "compressed": 24130
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/python312._pth",
+    "bytes": 52,
+    "compressed": 52
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/python312.dll",
+    "bytes": 6945272,
+    "compressed": 2568652
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/python312.zip",
+    "bytes": 3835482,
+    "compressed": 3786410
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/pythonw.exe",
+    "bytes": 104304,
+    "compressed": 53422
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/select.pyd",
+    "bytes": 33136,
+    "compressed": 18855
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/sqlite3.dll",
+    "bytes": 1583608,
+    "compressed": 847631
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/unicodedata.pyd",
+    "bytes": 1140592,
+    "compressed": 420951
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/vccorlib140.dll",
+    "bytes": 352384,
+    "compressed": 113567
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/vcruntime140.dll",
+    "bytes": 124544,
+    "compressed": 60663
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/vcruntime140_1.dll",
+    "bytes": 49792,
+    "compressed": 26487
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/vcruntime140_threads.dll",
+    "bytes": 38528,
+    "compressed": 20501
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/.venv/Scripts/winsound.pyd",
+    "bytes": 31736,
+    "compressed": 17746
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/build/strata.exe",
+    "bytes": 373494784,
+    "compressed": 208414009
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/build/strata_kq.dll",
+    "bytes": 42193920,
+    "compressed": 18915119
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/edge0/CONTRACT",
+    "bytes": 2,
+    "compressed": 4
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/edge0/IMPORTED_UNCOMMITTED.txt",
+    "bytes": 3156,
+    "compressed": 1491
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/edge0/models/edge0-120b.json",
+    "bytes": 1126,
+    "compressed": 430
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/edge0/models/edge0-120b-metal.json",
+    "bytes": 1788,
+    "compressed": 632
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/edge0/models/edge0-145b.json",
+    "bytes": 1126,
+    "compressed": 430
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/edge0/models/edge0-145b-metal.json",
+    "bytes": 1788,
+    "compressed": 633
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/LICENSE",
+    "bytes": 1093,
+    "compressed": 644
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/__init__.py",
+    "bytes": 95,
+    "compressed": 88
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/cache_drop.py",
+    "bytes": 2648,
+    "compressed": 1198
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/chat_golden.json",
+    "bytes": 12284,
+    "compressed": 1559
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/chat_template.jinja",
+    "bytes": 9993,
+    "compressed": 2442
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/cpu_affinity.py",
+    "bytes": 2713,
+    "compressed": 1121
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/ds_pictures.py",
+    "bytes": 8781,
+    "compressed": 3359
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/dsml.py",
+    "bytes": 11253,
+    "compressed": 3751
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/fixtures/deepseek41/chat_template.jinja",
+    "bytes": 17672,
+    "compressed": 4309
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/fixtures/deepseek41/golden.json",
+    "bytes": 16316,
+    "compressed": 3320
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/fixtures/fake_sd_cli.py",
+    "bytes": 2379,
+    "compressed": 1114
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/fixtures/rcall_specimens.json",
+    "bytes": 14663,
+    "compressed": 3521
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/frontend.py",
+    "bytes": 100062,
+    "compressed": 26910
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/images.py",
+    "bytes": 23345,
+    "compressed": 7900
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/keepawake.py",
+    "bytes": 3156,
+    "compressed": 1151
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/launch_identity.py",
+    "bytes": 963,
+    "compressed": 530
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/lifeline.py",
+    "bytes": 14718,
+    "compressed": 5328
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/loader_diag.py",
+    "bytes": 4484,
+    "compressed": 1807
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/logit_bias.py",
+    "bytes": 4753,
+    "compressed": 1766
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/mcp.py",
+    "bytes": 34184,
+    "compressed": 9850
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/mcp_fake_server.py",
+    "bytes": 7426,
+    "compressed": 2503
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/owner_guard.py",
+    "bytes": 2700,
+    "compressed": 1107
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/prometheus.py",
+    "bytes": 9553,
+    "compressed": 3126
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/ready.py",
+    "bytes": 1660,
+    "compressed": 786
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/replicas.py",
+    "bytes": 25346,
+    "compressed": 8143
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/responses.py",
+    "bytes": 37781,
+    "compressed": 9915
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/runconfig.py",
+    "bytes": 9227,
+    "compressed": 3333
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/server.py",
+    "bytes": 583220,
+    "compressed": 160998
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/session_save_retry.py",
+    "bytes": 3292,
+    "compressed": 1248
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/split.py",
+    "bytes": 22220,
+    "compressed": 6704
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/structured.py",
+    "bytes": 11608,
+    "compressed": 3846
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/telemetry.py",
+    "bytes": 31745,
+    "compressed": 10045
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/test_web_history.js",
+    "bytes": 12373,
+    "compressed": 3789
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/test_web_i18n.js",
+    "bytes": 5238,
+    "compressed": 1930
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/test_web_math.js",
+    "bytes": 10984,
+    "compressed": 4200
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/test_web_preview.js",
+    "bytes": 7642,
+    "compressed": 2942
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/app.css",
+    "bytes": 24171,
+    "compressed": 5651
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/app.js",
+    "bytes": 92101,
+    "compressed": 28426
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/chatstore.js",
+    "bytes": 3378,
+    "compressed": 1360
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/chats-ui.js",
+    "bytes": 22012,
+    "compressed": 6786
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/components.css",
+    "bytes": 10548,
+    "compressed": 2674
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/favicon.svg",
+    "bytes": 614,
+    "compressed": 313
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/fonts/OFL.txt",
+    "bytes": 4389,
+    "compressed": 1940
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/fonts/outfit-latin-ext-wght.woff2",
+    "bytes": 14808,
+    "compressed": 14813
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/fonts/outfit-latin-wght.woff2",
+    "bytes": 32292,
+    "compressed": 32121
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/history.js",
+    "bytes": 5674,
+    "compressed": 2277
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/i18n.js",
+    "bytes": 4170,
+    "compressed": 1816
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/index.html",
+    "bytes": 23050,
+    "compressed": 5396
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/de.json",
+    "bytes": 14049,
+    "compressed": 4533
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/en.json",
+    "bytes": 12528,
+    "compressed": 3927
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/es.json",
+    "bytes": 13755,
+    "compressed": 4382
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/fr.json",
+    "bytes": 14619,
+    "compressed": 4567
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/ja.json",
+    "bytes": 15944,
+    "compressed": 4735
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/ko.json",
+    "bytes": 14645,
+    "compressed": 4608
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/pt.json",
+    "bytes": 13579,
+    "compressed": 4333
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/ru.json",
+    "bytes": 19684,
+    "compressed": 5198
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/locales/zh.json",
+    "bytes": 12525,
+    "compressed": 4481
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/math.js",
+    "bytes": 8809,
+    "compressed": 3365
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/math-adapter.js",
+    "bytes": 2073,
+    "compressed": 1041
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/monitor.html",
+    "bytes": 9556,
+    "compressed": 2926
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/monitor.js",
+    "bytes": 8410,
+    "compressed": 2978
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/preview.js",
+    "bytes": 5839,
+    "compressed": 2548
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/sprite.svg",
+    "bytes": 29112,
+    "compressed": 5459
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/tokens.css",
+    "bytes": 3991,
+    "compressed": 1593
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_AMS-Regular.woff2",
+    "bytes": 28076,
+    "compressed": 28086
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Caligraphic-Bold.woff2",
+    "bytes": 6912,
+    "compressed": 6917
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Caligraphic-Regular.woff2",
+    "bytes": 6908,
+    "compressed": 6913
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Fraktur-Bold.woff2",
+    "bytes": 11348,
+    "compressed": 11353
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Fraktur-Regular.woff2",
+    "bytes": 11316,
+    "compressed": 11321
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Main-Bold.woff2",
+    "bytes": 25324,
+    "compressed": 25334
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Main-BoldItalic.woff2",
+    "bytes": 16780,
+    "compressed": 16790
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Main-Italic.woff2",
+    "bytes": 16988,
+    "compressed": 16998
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Main-Regular.woff2",
+    "bytes": 26272,
+    "compressed": 26282
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Math-BoldItalic.woff2",
+    "bytes": 16400,
+    "compressed": 16405
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Math-Italic.woff2",
+    "bytes": 16440,
+    "compressed": 16448
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_SansSerif-Bold.woff2",
+    "bytes": 12216,
+    "compressed": 12221
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_SansSerif-Italic.woff2",
+    "bytes": 12028,
+    "compressed": 12033
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_SansSerif-Regular.woff2",
+    "bytes": 10344,
+    "compressed": 10349
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Script-Regular.woff2",
+    "bytes": 9644,
+    "compressed": 9649
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Size1-Regular.woff2",
+    "bytes": 5468,
+    "compressed": 5473
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Size2-Regular.woff2",
+    "bytes": 5208,
+    "compressed": 5213
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Size3-Regular.woff2",
+    "bytes": 3624,
+    "compressed": 3629
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Size4-Regular.woff2",
+    "bytes": 4928,
+    "compressed": 4933
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/fonts/KaTeX_Typewriter-Regular.woff2",
+    "bytes": 13568,
+    "compressed": 13573
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/katex.min.css",
+    "bytes": 22659,
+    "compressed": 3454
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/dist/katex.min.js",
+    "bytes": 272868,
+    "compressed": 76445
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/LICENSE",
+    "bytes": 1107,
+    "compressed": 654
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/web/vendor/katex/PROVENANCE.json",
+    "bytes": 3170,
+    "compressed": 1560
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/webfiles.py",
+    "bytes": 1658,
+    "compressed": 863
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/serve/winjob.py",
+    "bytes": 5327,
+    "compressed": 1951
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_cli/__init__.py",
+    "bytes": 1124,
+    "compressed": 619
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_cli/client.py",
+    "bytes": 28899,
+    "compressed": 7087
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/__init__.py",
+    "bytes": 78,
+    "compressed": 73
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/acquisition.py",
+    "bytes": 2882,
+    "compressed": 1273
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/amd_four_card.py",
+    "bytes": 5400,
+    "compressed": 2254
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/atomic.py",
+    "bytes": 1726,
+    "compressed": 867
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/autotune.py",
+    "bytes": 53945,
+    "compressed": 14995
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/benchmarking.py",
+    "bytes": 21486,
+    "compressed": 5537
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/calibration.py",
+    "bytes": 38843,
+    "compressed": 8859
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/calibration_jobs.py",
+    "bytes": 18466,
+    "compressed": 4602
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/components.py",
+    "bytes": 32661,
+    "compressed": 9245
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/discovery.py",
+    "bytes": 19491,
+    "compressed": 5851
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/doctor.py",
+    "bytes": 15562,
+    "compressed": 5090
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/draft_layer.py",
+    "bytes": 2842,
+    "compressed": 1314
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/drafting.py",
+    "bytes": 14453,
+    "compressed": 5253
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/drafting_fetch.py",
+    "bytes": 5460,
+    "compressed": 2209
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/driver_floor.py",
+    "bytes": 4314,
+    "compressed": 1736
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/dsv41_context.py",
+    "bytes": 3829,
+    "compressed": 1764
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/dsv41_engine.py",
+    "bytes": 16114,
+    "compressed": 4922
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/dsv41_fit.py",
+    "bytes": 55537,
+    "compressed": 15490
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/dsv41_sets.py",
+    "bytes": 6664,
+    "compressed": 2494
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/engine_component.py",
+    "bytes": 54780,
+    "compressed": 16901
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/feed.py",
+    "bytes": 26984,
+    "compressed": 8057
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/folders.py",
+    "bytes": 4758,
+    "compressed": 1768
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/gguf_preflight.py",
+    "bytes": 9813,
+    "compressed": 2897
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/gpu_fit.py",
+    "bytes": 14522,
+    "compressed": 4947
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/gpu_pick.py",
+    "bytes": 4785,
+    "compressed": 1843
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/gpu_roles.py",
+    "bytes": 22476,
+    "compressed": 7255
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/hipblaslt_tuning.py",
+    "bytes": 14114,
+    "compressed": 4753
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/intel_spec.py",
+    "bytes": 6470,
+    "compressed": 2699
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/journal.py",
+    "bytes": 26419,
+    "compressed": 5962
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/longpath.py",
+    "bytes": 5890,
+    "compressed": 2419
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/loopback.py",
+    "bytes": 1088,
+    "compressed": 581
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/mac_fit.py",
+    "bytes": 12823,
+    "compressed": 4937
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/management.py",
+    "bytes": 36021,
+    "compressed": 6965
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/models.py",
+    "bytes": 48044,
+    "compressed": 13495
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/models_move.py",
+    "bytes": 24308,
+    "compressed": 7433
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/offline.py",
+    "bytes": 8298,
+    "compressed": 3273
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/owner_transport.py",
+    "bytes": 7759,
+    "compressed": 3076
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/paths.py",
+    "bytes": 945,
+    "compressed": 502
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/posix_owner.py",
+    "bytes": 4144,
+    "compressed": 1689
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/preset_marks.py",
+    "bytes": 4841,
+    "compressed": 1837
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/presets.py",
+    "bytes": 24776,
+    "compressed": 7487
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/private_files.py",
+    "bytes": 26817,
+    "compressed": 7344
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/procs.py",
+    "bytes": 17895,
+    "compressed": 5342
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/profiles.py",
+    "bytes": 16581,
+    "compressed": 4497
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/progress_words.py",
+    "bytes": 6701,
+    "compressed": 2382
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/readiness.py",
+    "bytes": 6503,
+    "compressed": 2082
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/recipes.py",
+    "bytes": 22023,
+    "compressed": 5128
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/replica_profile.py",
+    "bytes": 7623,
+    "compressed": 2965
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/runtime.py",
+    "bytes": 75012,
+    "compressed": 17442
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/signing.py",
+    "bytes": 13813,
+    "compressed": 4537
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/speed_switches.py",
+    "bytes": 10293,
+    "compressed": 3701
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/targets.py",
+    "bytes": 2540,
+    "compressed": 1143
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/time_skip.py",
+    "bytes": 33042,
+    "compressed": 9508
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tls.py",
+    "bytes": 4455,
+    "compressed": 1944
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/transfer.py",
+    "bytes": 13377,
+    "compressed": 4365
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tune_api.py",
+    "bytes": 14721,
+    "compressed": 4783
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tune_apply.py",
+    "bytes": 17552,
+    "compressed": 5684
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tune_engine.py",
+    "bytes": 26505,
+    "compressed": 7877
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tune_history.py",
+    "bytes": 10672,
+    "compressed": 3818
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tune_knobs.py",
+    "bytes": 28269,
+    "compressed": 8888
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tune_machine.py",
+    "bytes": 14404,
+    "compressed": 4939
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tune_session.py",
+    "bytes": 24070,
+    "compressed": 7819
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/tuning.py",
+    "bytes": 40626,
+    "compressed": 12512
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/update_keys.json",
+    "bytes": 359,
+    "compressed": 287
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/updater.py",
+    "bytes": 82450,
+    "compressed": 23776
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/user_args.py",
+    "bytes": 6474,
+    "compressed": 2421
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/vision_reader.py",
+    "bytes": 8968,
+    "compressed": 3265
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/vram_fit.py",
+    "bytes": 8668,
+    "compressed": 3444
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/strata_control/winproc.py",
+    "bytes": 6561,
+    "compressed": 2067
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/tools/dflash2_pack.py",
+    "bytes": 7407,
+    "compressed": 2951
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/tools/gguf_reader.py",
+    "bytes": 8289,
+    "compressed": 3096
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/tools/mtp_gguf.py",
+    "bytes": 6365,
+    "compressed": 2566
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/edge0-strata/tools/strata_tokenizer.py",
+    "bytes": 28010,
+    "compressed": 10342
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/LICENSE",
+    "bytes": 11358,
+    "compressed": 3949
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/cpp-httplib-MIT.txt",
+    "bytes": 1075,
+    "compressed": 632
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/GGML-MIT.txt",
+    "bytes": 1078,
+    "compressed": 637
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/libstrix-NOTICE.md",
+    "bytes": 1333,
+    "compressed": 778
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/llama.cpp-MIT.txt",
+    "bytes": 1078,
+    "compressed": 637
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/llama.cpp-tokenizer-MIT.txt",
+    "bytes": 1078,
+    "compressed": 637
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/nlohmann-json-MIT.txt",
+    "bytes": 1076,
+    "compressed": 637
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/Project-Maya-MIT.txt",
+    "bytes": 1160,
+    "compressed": 668
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/Project-Maya-NOTICE.md",
+    "bytes": 1129,
+    "compressed": 615
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/Strata-MIT.txt",
+    "bytes": 1093,
+    "compressed": 644
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/licenses/THIRD-PARTY-NOTICES.txt",
+    "bytes": 639941,
+    "compressed": 75690
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/NOTICE",
+    "bytes": 2075,
+    "compressed": 835
+  },
+  {
+    "name": "edge0-chat-0.3.0-windows-x64/README.md",
+    "bytes": 10273,
+    "compressed": 4360
+  }
+]

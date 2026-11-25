@@ -14,6 +14,7 @@ import json
 from hf_catalog import _pin, stable_id
 from hf_download import validate_entry
 from hf_tts import COMPONENTS, FAMILIES
+import hf_reverb as reverb
 
 CODE = ('.py', '.pyc', '.sh', '.bat', '.cmd', '.ps1', '.exe', '.dll', '.so', '.dylib', '.swift', '.js')
 
@@ -95,6 +96,21 @@ def _qwen3_package(size, kind):
 PACKAGES += tuple(_qwen3_package(size, kind) for size, kind in
                   (('0.6B', 'base'), ('1.7B', 'base'), ('0.6B', 'customvoice'), ('1.7B', 'customvoice'), ('1.7B', 'voicedesign')))
 
+PACKAGES += tuple({
+    'runtime': runtime, 'familyId': 'publisher-reverb-tts', 'quantization': variant.upper(),
+    'include': (
+        f'model/safetensors/{variant}/config.json', f'model/safetensors/{variant}/model.safetensors',
+        'model/tokenizer.json', 'model/tokenizer_config.json', 'model/chat_template.jinja', 'README.md',
+        *(f'voices/{voice}.json' for voice in reverb.VOICE_IDS),
+    ),
+    'exclude': (), 'requireAllFiles': True, 'catalogOrder': order, 'license': 'cc-by-nc-4.0',
+    'description': ('Software Mansion’s local speech model for English, German, French, Spanish, Italian, Polish '
+                    'and Portuguese. Includes 16 preset voices and clones a voice from a short recording with '
+                    'its transcript. Runs on the CPU. Smaller editions reduce the download size and expand '
+                    'to FP32 in memory. The editions share an approximately 806 MB audio codec download. '
+                    'The weights are licensed for noncommercial use with attribution.'),
+} for order, (runtime, variant) in enumerate(reverb.VARIANTS.items()))
+
 
 def _read(snapshots, repository):
     value = json.loads((snapshots / (repository.replace('/', '--') + '.api.json')).read_text(encoding='utf-8'))
@@ -132,6 +148,8 @@ def append_tts(entries, snapshots):
             pins.append(_pin(repository, revision, item, role))
         if not pins or any(not pin['pinned'] for pin in pins) or not any(pin['role'] == 'model' for pin in pins):
             raise ValueError('Incomplete pinned TTS package: ' + repository)
+        if package.get('requireAllFiles') and {pin['filename'] for pin in pins} != set(package['include']):
+            raise ValueError('The pinned TTS variant is missing a required file: ' + repository)
         key = 'tts:' + package['runtime']
         identity = stable_id(repository, key)
         if identity in existing:
@@ -150,7 +168,7 @@ def append_tts(entries, snapshots):
             'status': 'not-installed', 'familyId': package['familyId'], 'familyLabel': family['label'],
             'originalRepository': repository, 'builtIn': True, 'nativeModelIds': list(package.get('nativeModelIds', ())),
             'builtInDescription': package['description'], 'contextTokens': 8192, 'license': package['license'],
-            'catalogOrder': 0, 'ttsRuntime': package['runtime'], 'ttsComponentBytes': extra,
+            'catalogOrder': package.get('catalogOrder', 0), 'ttsRuntime': package['runtime'], 'ttsComponentBytes': extra,
             'outputsText': False, 'supportsTextGeneration': False, 'operatingModes': [],
         }
         validate_entry(entry)

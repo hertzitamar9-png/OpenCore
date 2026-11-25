@@ -32,6 +32,14 @@
       "dependencyId": "hf-efd264abddcf623833514445",
       "recipe": null,
       "baseBytes": 1081518336
+    },
+    "deskpaw-v1": {
+      "id": "hf-2c4305a627e4356cdc35ce03",
+      "repository": "llstar/deskpaw-cua-2b",
+      "revision": "b36bcd79729b8a81563ead920b9bb4aff3186658",
+      "dependencyId": null,
+      "recipe": null,
+      "baseBytes": 0
     }
   },
   "dependencies": [

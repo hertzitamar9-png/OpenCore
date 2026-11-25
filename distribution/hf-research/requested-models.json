@@ -3036,6 +3036,1406 @@
           ]
         }
       ]
+    },
+    {
+      "repository": "Edge0/Edge0-145B-q3k",
+      "familyId": "publisher-edge0-145b",
+      "label": "Edge0 145B",
+      "category": "text",
+      "supportedContextTokens": 131072,
+      "description": "Official Edge0 145B latent-MoE coding model. Each precision downloads its complete expert, attention, per-layer embedding, tokenizer and MTP bundle with the default Q8 dense projections. Requires edge0-strata through edge0-infer on NVIDIA CUDA 13; publisher minimum is 16 GiB VRAM and 20 GiB system RAM. Memory and speed claims are publisher measurements, not OpenCore results. Edge0 Community Model License 1.0.",
+      "sources": [
+        {
+          "repository": "Edge0/Edge0-145B-q3k",
+          "runtimeReason": "Requires the publisher edge0-strata engine through edge0-infer on Windows/Linux with NVIDIA CUDA 13, at least 16 GiB VRAM and 20 GiB system RAM. This complete latent-MoE bundle cannot load in the ordinary llama.cpp engine. An OpenCore managed Edge0 adapter is not integrated; inference is unverified.",
+          "packages": [
+            {
+              "key": "edge0-bundle:q3k:du-q8",
+              "format": "gguf",
+              "quantization": "Q3_K",
+              "files": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja",
+                "tokenizer/token_type.json",
+                "LICENSE",
+                "NOTICE",
+                "README.md",
+                "third-party/Qwen-LICENSE.txt",
+                "release-scope.json",
+                "scales/*.f32"
+              ],
+              "requiredFiles": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja",
+                "scales/l0.f32",
+                "scales/l1.f32",
+                "scales/l2.f32",
+                "scales/l3.f32",
+                "scales/l4.f32",
+                "scales/l5.f32",
+                "scales/l6.f32",
+                "scales/l7.f32",
+                "scales/l8.f32",
+                "scales/l9.f32",
+                "scales/l10.f32",
+                "scales/l11.f32",
+                "scales/l12.f32",
+                "scales/l13.f32",
+                "scales/l14.f32",
+                "scales/l15.f32",
+                "scales/l16.f32",
+                "scales/l17.f32",
+                "scales/l18.f32",
+                "scales/l19.f32",
+                "scales/l20.f32",
+                "scales/l21.f32",
+                "scales/l22.f32",
+                "scales/l23.f32",
+                "scales/l24.f32",
+                "scales/l25.f32",
+                "scales/l26.f32",
+                "scales/l27.f32",
+                "scales/l28.f32",
+                "scales/l29.f32",
+                "scales/l30.f32",
+                "scales/l31.f32",
+                "scales/l32.f32",
+                "scales/l33.f32",
+                "scales/l34.f32",
+                "scales/l35.f32",
+                "scales/l36.f32",
+                "scales/l37.f32",
+                "scales/l38.f32",
+                "scales/l39.f32",
+                "scales/l40.f32",
+                "scales/l41.f32",
+                "scales/l42.f32",
+                "scales/l43.f32",
+                "scales/l44.f32",
+                "scales/l45.f32",
+                "scales/l46.f32",
+                "scales/l47.f32"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Edge0/Edge0-145B-NVFP4",
+      "familyId": "publisher-edge0-145b",
+      "label": "Edge0 145B",
+      "category": "text",
+      "supportedContextTokens": 131072,
+      "description": "Official Edge0 145B latent-MoE coding model. Each precision downloads its complete expert, attention, per-layer embedding, tokenizer and MTP bundle with the default Q8 dense projections. Requires edge0-strata through edge0-infer on NVIDIA CUDA 13; publisher minimum is 16 GiB VRAM and 20 GiB system RAM. Memory and speed claims are publisher measurements, not OpenCore results. Edge0 Community Model License 1.0.",
+      "sources": [
+        {
+          "repository": "Edge0/Edge0-145B-NVFP4",
+          "runtimeReason": "Requires the publisher edge0-strata engine through edge0-infer on Windows/Linux with NVIDIA CUDA 13, at least 16 GiB VRAM and 20 GiB system RAM. This complete latent-MoE bundle cannot load in the ordinary llama.cpp engine. An OpenCore managed Edge0 adapter is not integrated; inference is unverified.",
+          "packages": [
+            {
+              "key": "edge0-bundle:NVFP4:du-q8",
+              "format": "gguf",
+              "quantization": "NVFP4",
+              "files": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja",
+                "tokenizer/token_type.json",
+                "LICENSE",
+                "NOTICE",
+                "README.md",
+                "third-party/Qwen-LICENSE.txt",
+                "release-scope.json"
+              ],
+              "requiredFiles": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja"
+              ]
+            }
+          ]
+        }
+      ],
+      "reuseFamily": true
+    },
+    {
+      "repository": "Edge0/Edge0-120B-q3k",
+      "familyId": "publisher-edge0-120b",
+      "label": "Edge0 120B",
+      "category": "text",
+      "supportedContextTokens": 131072,
+      "description": "Official Edge0 120B latent-MoE coding model. Each precision downloads its complete expert, attention, per-layer embedding, tokenizer and MTP bundle with the default Q8 dense projections. Requires edge0-strata through edge0-infer on NVIDIA CUDA 13; publisher minimum is 16 GiB VRAM and 20 GiB system RAM. Memory and speed claims are publisher measurements, not OpenCore results. Edge0 Community Model License 1.0.",
+      "sources": [
+        {
+          "repository": "Edge0/Edge0-120B-q3k",
+          "runtimeReason": "Requires the publisher edge0-strata engine through edge0-infer on Windows/Linux with NVIDIA CUDA 13, at least 16 GiB VRAM and 20 GiB system RAM. This complete latent-MoE bundle cannot load in the ordinary llama.cpp engine. An OpenCore managed Edge0 adapter is not integrated; inference is unverified.",
+          "packages": [
+            {
+              "key": "edge0-bundle:q3k:du-q8",
+              "format": "gguf",
+              "quantization": "Q3_K",
+              "files": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja",
+                "tokenizer/token_type.json",
+                "LICENSE",
+                "NOTICE",
+                "README.md",
+                "third-party/Qwen-LICENSE.txt",
+                "release-scope.json",
+                "scales/*.f32"
+              ],
+              "requiredFiles": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja",
+                "scales/l0.f32",
+                "scales/l1.f32",
+                "scales/l2.f32",
+                "scales/l3.f32",
+                "scales/l4.f32",
+                "scales/l5.f32",
+                "scales/l6.f32",
+                "scales/l7.f32",
+                "scales/l8.f32",
+                "scales/l9.f32",
+                "scales/l10.f32",
+                "scales/l11.f32",
+                "scales/l12.f32",
+                "scales/l13.f32",
+                "scales/l14.f32",
+                "scales/l15.f32",
+                "scales/l16.f32",
+                "scales/l17.f32",
+                "scales/l18.f32",
+                "scales/l19.f32",
+                "scales/l20.f32",
+                "scales/l21.f32",
+                "scales/l22.f32",
+                "scales/l23.f32",
+                "scales/l24.f32",
+                "scales/l25.f32",
+                "scales/l26.f32",
+                "scales/l27.f32",
+                "scales/l28.f32",
+                "scales/l29.f32",
+                "scales/l30.f32",
+                "scales/l31.f32",
+                "scales/l32.f32",
+                "scales/l33.f32",
+                "scales/l34.f32",
+                "scales/l35.f32",
+                "scales/l36.f32",
+                "scales/l37.f32",
+                "scales/l38.f32",
+                "scales/l39.f32",
+                "scales/l40.f32",
+                "scales/l41.f32",
+                "scales/l42.f32",
+                "scales/l43.f32",
+                "scales/l44.f32",
+                "scales/l45.f32",
+                "scales/l46.f32",
+                "scales/l47.f32"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Edge0/Edge0-120B-NVFP4",
+      "familyId": "publisher-edge0-120b",
+      "label": "Edge0 120B",
+      "category": "text",
+      "supportedContextTokens": 131072,
+      "description": "Official Edge0 120B latent-MoE coding model. Each precision downloads its complete expert, attention, per-layer embedding, tokenizer and MTP bundle with the default Q8 dense projections. Requires edge0-strata through edge0-infer on NVIDIA CUDA 13; publisher minimum is 16 GiB VRAM and 20 GiB system RAM. Memory and speed claims are publisher measurements, not OpenCore results. Edge0 Community Model License 1.0.",
+      "sources": [
+        {
+          "repository": "Edge0/Edge0-120B-NVFP4",
+          "runtimeReason": "Requires the publisher edge0-strata engine through edge0-infer on Windows/Linux with NVIDIA CUDA 13, at least 16 GiB VRAM and 20 GiB system RAM. This complete latent-MoE bundle cannot load in the ordinary llama.cpp engine. An OpenCore managed Edge0 adapter is not integrated; inference is unverified.",
+          "packages": [
+            {
+              "key": "edge0-bundle:NVFP4:du-q8",
+              "format": "gguf",
+              "quantization": "NVFP4",
+              "files": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja",
+                "tokenizer/token_type.json",
+                "LICENSE",
+                "NOTICE",
+                "README.md",
+                "third-party/Qwen-LICENSE.txt",
+                "release-scope.json"
+              ],
+              "requiredFiles": [
+                "model.json",
+                "model-skeleton.gguf",
+                "ple-fp8.gguf",
+                "experts.bin",
+                "labels.bin",
+                "dense.bin",
+                "index.txt",
+                "native_experts.txt",
+                "latent_dense_q8.bin",
+                "profile.bin",
+                "mtp/experts.bin",
+                "mtp/dense.bin",
+                "mtp/dense.txt",
+                "mtp/draft_vocab.bin",
+                "tokenizer/tokenizer.json",
+                "tokenizer/vocab.json",
+                "tokenizer/merges.txt",
+                "tokenizer/chat_template.jinja"
+              ]
+            }
+          ]
+        }
+      ],
+      "reuseFamily": true
+    },
+    {
+      "repository": "KRAFTON/Raon-1-nano",
+      "familyId": "publisher-raon-1-nano",
+      "label": "Raon 1 nano",
+      "category": "text",
+      "supportedContextTokens": 262144,
+      "description": "KRAFTON Korean/English text and tool-calling model with 1.5B effective parameters and per-layer embeddings. Official GGUF F16, Q4_K_M, Q6_K and Q8_0 editions have separate full MTP-inclusive checkpoints; MTP execution is unverified. Transformers, MLX GPTQ 4-bit and the fixed 4096-token LiteRT-LM bundle remain separate publisher packages. Nano requires its own reviewed runtime, not the older Raon mini engine.",
+      "sources": [
+        {
+          "repository": "KRAFTON/Raon-1-nano-gguf",
+          "packages": [
+            {
+              "key": "gguf:raon-1-nano-F16.gguf",
+              "format": "gguf",
+              "quantization": "F16",
+              "files": [
+                "raon-1-nano-F16.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-F16.gguf"
+              ]
+            },
+            {
+              "key": "gguf:raon-1-nano-F16_MTP.gguf",
+              "format": "gguf",
+              "quantization": "F16 + MTP",
+              "files": [
+                "raon-1-nano-F16_MTP.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-F16_MTP.gguf"
+              ]
+            },
+            {
+              "key": "gguf:raon-1-nano-Q4_K_M.gguf",
+              "format": "gguf",
+              "quantization": "Q4_K_M",
+              "files": [
+                "raon-1-nano-Q4_K_M.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-Q4_K_M.gguf"
+              ]
+            },
+            {
+              "key": "gguf:raon-1-nano-Q4_K_M_MTP.gguf",
+              "format": "gguf",
+              "quantization": "Q4_K_M + MTP",
+              "files": [
+                "raon-1-nano-Q4_K_M_MTP.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-Q4_K_M_MTP.gguf"
+              ]
+            },
+            {
+              "key": "gguf:raon-1-nano-Q6_K.gguf",
+              "format": "gguf",
+              "quantization": "Q6_K",
+              "files": [
+                "raon-1-nano-Q6_K.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-Q6_K.gguf"
+              ]
+            },
+            {
+              "key": "gguf:raon-1-nano-Q6_K_MTP.gguf",
+              "format": "gguf",
+              "quantization": "Q6_K + MTP",
+              "files": [
+                "raon-1-nano-Q6_K_MTP.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-Q6_K_MTP.gguf"
+              ]
+            },
+            {
+              "key": "gguf:raon-1-nano-Q8_0.gguf",
+              "format": "gguf",
+              "quantization": "Q8_0",
+              "files": [
+                "raon-1-nano-Q8_0.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-Q8_0.gguf"
+              ]
+            },
+            {
+              "key": "gguf:raon-1-nano-Q8_0_MTP.gguf",
+              "format": "gguf",
+              "quantization": "Q8_0 + MTP",
+              "files": [
+                "raon-1-nano-Q8_0_MTP.gguf",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "raon-1-nano-Q8_0_MTP.gguf"
+              ]
+            }
+          ],
+          "managedEngine": "raon-nano-cpu-v1"
+        },
+        {
+          "repository": "KRAFTON/Raon-1-nano",
+          "packages": [
+            {
+              "key": "safetensors:bf16",
+              "format": "safetensors",
+              "quantization": "BF16",
+              "files": [
+                "LICENSE",
+                "README.md",
+                "chat_template.jinja",
+                "config.json",
+                "generation_config.json",
+                "model-00001-of-00002.safetensors",
+                "model-00002-of-00002.safetensors",
+                "model-tied-lm-head.safetensors",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00002.safetensors",
+                "model-00002-of-00002.safetensors",
+                "model-tied-lm-head.safetensors",
+                "config.json",
+                "tokenizer.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires the publisher Raon1Nano Transformers implementation and reviewed custom model code. OpenCore does not execute remote Python code automatically; this architecture has no managed Nano adapter yet."
+        },
+        {
+          "repository": "KRAFTON/Raon-1-nano-mlx",
+          "packages": [
+            {
+              "key": "mlx:gptq4-mtp8",
+              "format": "mlx",
+              "quantization": "MLX GPTQ 4-bit + MTP 8-bit",
+              "files": [
+                "model.safetensors",
+                "config.json",
+                "generation_config.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "mtp/*",
+                "requirements.txt",
+                "LICENSE",
+                "LICENSES/*",
+                "NOTICE",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "model.safetensors",
+                "mtp/model.safetensors",
+                "config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Official Apple Silicon MLX GPTQ 4-bit checkpoint with an 8-bit MTP module and publisher model code. No OpenCore Windows MLX/Nano adapter is integrated; this is not a BF16 export or a generic GGUF file."
+        },
+        {
+          "repository": "KRAFTON/Raon-1-nano-litert-lm",
+          "packages": [
+            {
+              "key": "litertlm:model.litertlm",
+              "format": "litertlm",
+              "quantization": "LiteRT-LM INT4 / FP16",
+              "files": [
+                "model.litertlm",
+                "LICENSE",
+                "README.md",
+                "SHA256SUMS"
+              ],
+              "requiredFiles": [
+                "model.litertlm"
+              ],
+              "supportedContextTokens": 4096
+            }
+          ],
+          "runtimeReason": "Official LiteRT-LM bundle with 4-bit weights, FP16 activations and a fixed 4096-token context; it answers without thinking. Requires a compatible LiteRT-LM runtime, which OpenCore does not integrate. Cannot load in llama.cpp."
+        }
+      ]
+    },
+    {
+      "repository": "CloudGoat/Baphomet-1.1-4B",
+      "familyId": "publisher-baphomet-1-1-4b",
+      "label": "Baphomet-1.1-4B",
+      "category": "text",
+      "supportedContextTokens": 262144,
+      "description": "CloudGoat's Qwen3.5-4B vision-language merge with evolved task-vector weights. Includes the original BF16 checkpoint and 12 GGUF editions converted by mradermacher from this exact model. GGUF downloads include a vision projector. The publisher declares a 262,144-token context; the loaded working window depends on the selected mode and available memory. Actual text and image generation are checked after installation.",
+      "sources": [
+        {
+          "repository": "CloudGoat/Baphomet-1.1-4B"
+        },
+        {
+          "repository": "mradermacher/Baphomet-1.1-4B-GGUF",
+          "managedEngine": "lfm3-cpu-v1",
+          "visionInput": true
+        }
+      ]
+    },
+    {
+      "repository": "llstar/deskpaw-cua-2b",
+      "familyId": "publisher-deskpaw-cua-2b",
+      "label": "deskpaw-CUA-2B",
+      "category": "computer-use",
+      "description": "llstar's fully fine-tuned Qwen3-VL-2B GUI-grounding model. Given a screenshot and an instruction, its custom pointer head predicts a target click location in one forward pass. The six-shard BF16 checkpoint uses an isolated, managed pointer runtime. Predictions return screen coordinates; execution is a separate action under the current computer-use permissions.",
+      "sources": [
+        {
+          "repository": "llstar/deskpaw-cua-2b",
+          "computerRuntime": "deskpaw-v1",
+          "inferenceCategory": "computer-use",
+          "runtimeReason": "Uses the publisher's reviewed custom pointer head through OpenCore's coordinate-prediction worker. Plain Qwen3-VL chat generation does not preserve this head. A real screenshot prediction must pass before the model becomes ready."
+        }
+      ]
+    },
+    {
+      "repository": "higurashi-ai/Haru-4B",
+      "familyId": "publisher-haru-4b",
+      "label": "Haru-4B",
+      "category": "omni",
+      "description": "higurashi-ai's multilingual full-duplex spoken-dialogue research model. It consumes microphone audio and produces speech and text together at 7.5 frames per second (24 kHz audio). The single BF16 checkpoint includes the language backbone, audio codec and speech head. Supports nine published languages and requires a reference voice recording; no voice clips are included. The publisher suggests an NVIDIA GPU with about 12 GB memory. Haru is a pretrained conversation model, not an instruction-tuned tool agent.",
+      "sources": [
+        {
+          "repository": "higurashi-ai/Haru-4B",
+          "capabilityProfile": "haru-full-duplex",
+          "runtimeReason": "Uses the pinned publisher Haru duplex engine through a dedicated streaming-call adapter for simultaneous 24 kHz audio input, audio output and text frames. Real model audio frames must pass verification before calls become available. Haru does not use the plain Transformers chat protocol."
+        }
+      ]
+    },
+    {
+      "repository": "BudgetAny/Budget3D-Idol",
+      "familyId": "publisher-budget3d-idol",
+      "label": "Budget3D-Idol",
+      "category": "3d",
+      "description": "BudgetAny's IDOL fine-tune generates 3D Gaussian splats (.ply) from an image. One denoiser checkpoint supports adaptive token budgets from 0.0625 to 1.0; changing that budget reuses the same weights. IDOL's image encoders and Gaussian decoders, DINOv3 and the FLUX.2 VAE are separate requirements and are not included in this download.",
+      "baseRepositories": [
+        "speridlabs/idol"
+      ],
+      "sources": [
+        {
+          "repository": "BudgetAny/Budget3D-Idol",
+          "packages": [
+            {
+              "key": "3d-pipeline:budget3d-idol",
+              "format": "3d-pipeline",
+              "quantization": "Publisher checkpoint",
+              "files": [
+                "budget3d_idol.safetensors",
+                "config.json",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "budget3d_idol.safetensors",
+                "config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires the Budget3D sampling engine, IDOL's shared image encoders and Gaussian decoders, the DINOv3 encoder and FLUX.2 VAE. The 1.512 GB download is the fine-tuned denoiser checkpoint, not all pipeline dependencies. OpenCore has no integrated Budget3D generation adapter; image-to-3D execution is unverified."
+        }
+      ]
+    },
+    {
+      "repository": "sensenova/SenseNova-Loop-9B",
+      "familyId": "publisher-sensenova-loop-9b",
+      "label": "SenseNova-Loop-9B",
+      "category": "omni",
+      "supportedContextTokens": 524288,
+      "description": "SenseNova's full November 17 release, with 9B stored parameters, two shared decoder passes and two-stream mHC routing. Accepts text and images and generates text; supports the publisher's native tool-call format. Includes all 11 BF16/FP32 weight shards, tokenizer and processors. The model has a published 512K context; actual working context and speed depend on available RAM and VRAM. Hugging Face access approval is required. This is the full release, separate from Preview.",
+      "sources": [
+        {
+          "repository": "sensenova/SenseNova-Loop-9B",
+          "textRuntime": "sensenova-loop-v1",
+          "packages": [
+            {
+              "key": "safetensors:bf16",
+              "format": "safetensors",
+              "quantization": "BF16",
+              "files": [
+                "model-00001.safetensors",
+                "model-00002.safetensors",
+                "model-00003.safetensors",
+                "model-00004.safetensors",
+                "model-00005.safetensors",
+                "model-00006.safetensors",
+                "model-00007.safetensors",
+                "model-00008.safetensors",
+                "model-00009.safetensors",
+                "model-00010.safetensors",
+                "model-00011.safetensors",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "video_preprocessor_config.json",
+                "README.md"
+              ],
+              "requiredFiles": [
+                "model-00001.safetensors",
+                "model-00002.safetensors",
+                "model-00003.safetensors",
+                "model-00004.safetensors",
+                "model-00005.safetensors",
+                "model-00006.safetensors",
+                "model-00007.safetensors",
+                "model-00008.safetensors",
+                "model-00009.safetensors",
+                "model-00010.safetensors",
+                "model-00011.safetensors",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "preprocessor_config.json",
+                "processor_config.json",
+                "video_preprocessor_config.json"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "thinkingmachines/Inkling-2-Mini",
+      "familyId": "publisher-inkling-2-mini",
+      "label": "Inkling 2 Mini",
+      "category": "text",
+      "supportedContextTokens": 1048576,
+      "description": "Thinking Machines’ 26.4B-parameter looped mixture-of-experts model for text and images. Choose from 18 GGUF editions with a vision projector, the original NVFP4/MXFP8 release, or seven distinct Apple Silicon MLX editions. The model publishes a 1,048,576-token context. The managed Windows runtimes start with up to 32,768 tokens, depending on available memory.",
+      "sources": [
+        {
+          "repository": "unsloth/Inkling-2-Mini-GGUF",
+          "managedEngine": "inkling-unsloth-cpu-v1",
+          "visionInput": true,
+          "packages": [
+            {
+              "key": "gguf:Inkling-2-Mini-UD-IQ1_S",
+              "format": "gguf",
+              "quantization": "UD-IQ1_S",
+              "files": [
+                "Inkling-2-Mini-UD-IQ1_S.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-IQ1_S.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-IQ1_M",
+              "format": "gguf",
+              "quantization": "UD-IQ1_M",
+              "files": [
+                "Inkling-2-Mini-UD-IQ1_M.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-IQ1_M.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-IQ2_XXS",
+              "format": "gguf",
+              "quantization": "UD-IQ2_XXS",
+              "files": [
+                "Inkling-2-Mini-UD-IQ2_XXS.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-IQ2_XXS.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-Q2_K_XL",
+              "format": "gguf",
+              "quantization": "UD-Q2_K_XL",
+              "files": [
+                "Inkling-2-Mini-UD-Q2_K_XL.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-Q2_K_XL.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-IQ3_XXS",
+              "format": "gguf",
+              "quantization": "UD-IQ3_XXS",
+              "files": [
+                "Inkling-2-Mini-UD-IQ3_XXS.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-IQ3_XXS.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-Q3_K_XL",
+              "format": "gguf",
+              "quantization": "UD-Q3_K_XL",
+              "files": [
+                "Inkling-2-Mini-UD-Q3_K_XL.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-Q3_K_XL.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-IQ4_XS",
+              "format": "gguf",
+              "quantization": "UD-IQ4_XS",
+              "files": [
+                "Inkling-2-Mini-UD-IQ4_XS.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-IQ4_XS.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-Q4_K_M",
+              "format": "gguf",
+              "quantization": "UD-Q4_K_M",
+              "files": [
+                "Inkling-2-Mini-UD-Q4_K_M.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-Q4_K_M.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-Q4_K_XL",
+              "format": "gguf",
+              "quantization": "UD-Q4_K_XL",
+              "files": [
+                "Inkling-2-Mini-UD-Q4_K_XL.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-Q4_K_XL.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-UD-Q8_K_XL",
+              "format": "gguf",
+              "quantization": "UD-Q8_K_XL",
+              "files": [
+                "Inkling-2-Mini-UD-Q8_K_XL.gguf",
+                "mmproj-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-UD-Q8_K_XL.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            }
+          ]
+        },
+        {
+          "repository": "ggml-org/Inkling-2-Mini-GGUF",
+          "managedEngine": "inkling-loop-cpu-v1",
+          "visionInput": true,
+          "packages": [
+            {
+              "key": "gguf:Inkling-2-Mini-IQ4_NL",
+              "format": "gguf",
+              "quantization": "IQ4_NL · ggml-org",
+              "files": [
+                "Inkling-2-Mini-IQ4_NL.gguf",
+                "mmproj-Inkling-2-Mini-BF16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-IQ4_NL.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-BF16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-Q8_0",
+              "format": "gguf",
+              "quantization": "Q8_0 · ggml-org",
+              "files": [
+                "Inkling-2-Mini-Q8_0.gguf",
+                "mmproj-Inkling-2-Mini-BF16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-Q8_0.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-BF16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-BF16",
+              "format": "gguf",
+              "quantization": "BF16 · ggml-org",
+              "files": [
+                "Inkling-2-Mini-BF16.gguf",
+                "mmproj-Inkling-2-Mini-BF16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-BF16.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-BF16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            }
+          ]
+        },
+        {
+          "repository": "AtomicChat/Inkling-2-Mini-GGUF",
+          "managedEngine": "inkling-unsloth-cpu-v1",
+          "visionInput": true,
+          "packages": [
+            {
+              "key": "gguf:Inkling-2-Mini-Q4_K_M",
+              "format": "gguf",
+              "quantization": "Q4_K_M · AtomicChat",
+              "files": [
+                "Inkling-2-Mini-Q4_K_M.gguf",
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-Q4_K_M.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-Q5_K_M",
+              "format": "gguf",
+              "quantization": "Q5_K_M · AtomicChat",
+              "files": [
+                "Inkling-2-Mini-Q5_K_M.gguf",
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-Q5_K_M.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-Q6_K",
+              "format": "gguf",
+              "quantization": "Q6_K · AtomicChat",
+              "files": [
+                "Inkling-2-Mini-Q6_K.gguf",
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-Q6_K.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:Inkling-2-Mini-Q8_0",
+              "format": "gguf",
+              "quantization": "Q8_0 · AtomicChat",
+              "files": [
+                "Inkling-2-Mini-Q8_0.gguf",
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "requiredFiles": [
+                "Inkling-2-Mini-Q8_0.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            },
+            {
+              "key": "gguf:BF16/Inkling-2-Mini-BF16-00001-of-00002",
+              "format": "gguf",
+              "quantization": "BF16 · AtomicChat",
+              "files": [
+                "BF16/Inkling-2-Mini-BF16-00001-of-00002.gguf",
+                "BF16/Inkling-2-Mini-BF16-00002-of-00002.gguf",
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "requiredFiles": [
+                "BF16/Inkling-2-Mini-BF16-00001-of-00002.gguf",
+                "BF16/Inkling-2-Mini-BF16-00002-of-00002.gguf"
+              ],
+              "companionFiles": [
+                "mmproj-Inkling-2-Mini-F16.gguf"
+              ],
+              "supportedContextTokens": 32768
+            }
+          ]
+        },
+        {
+          "repository": "thinkingmachines/Inkling-2-Mini",
+          "packages": [
+            {
+              "key": "safetensors:inkling-2-mini",
+              "format": "safetensors",
+              "quantization": "NVFP4 / MXFP8 · Thinking Machines",
+              "files": [
+                "model-00001-of-00001.safetensors",
+                "mtp.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model",
+                "hf_quant_config.json"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00001.safetensors",
+                "mtp.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model",
+                "hf_quant_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Thinking Machines’ original mixed-precision checkpoint requires the publisher-supported vLLM or SGLang setup and compatible hardware. Windows chat uses one of the GGUF editions."
+        },
+        {
+          "repository": "nativ-community/Inkling-2-Mini-nvfp4",
+          "packages": [
+            {
+              "key": "mlx:inkling-2-mini",
+              "format": "mlx",
+              "quantization": "MLX NVFP4 / MXFP8 · nativ-community",
+              "files": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "mtp.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model",
+                "hf_quant_config.json"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "mtp.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model",
+                "hf_quant_config.json"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires Apple Silicon and the converter’s Inkling-compatible MLX runtime. Windows chat uses one of the GGUF editions."
+        },
+        {
+          "repository": "mlx-community/Inkling-2-Mini-4bit",
+          "packages": [
+            {
+              "key": "mlx:inkling-2-mini",
+              "format": "mlx",
+              "quantization": "MLX mixed 4-bit · mlx-community",
+              "files": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires Apple Silicon and the converter’s Inkling-compatible MLX runtime. Windows chat uses one of the GGUF editions."
+        },
+        {
+          "repository": "araysuter/Inkling-2-Mini-MLX-mixed-2bit",
+          "packages": [
+            {
+              "key": "mlx:inkling-2-mini",
+              "format": "mlx",
+              "quantization": "MLX mixed 2-bit · araysuter",
+              "files": [
+                "model-00001-of-00003.safetensors",
+                "model-00002-of-00003.safetensors",
+                "model-00003-of-00003.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00003.safetensors",
+                "model-00002-of-00003.safetensors",
+                "model-00003-of-00003.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires Apple Silicon and the converter’s Inkling-compatible MLX runtime. Windows chat uses one of the GGUF editions."
+        },
+        {
+          "repository": "araysuter/Inkling-2-Mini-MLX-4bit",
+          "packages": [
+            {
+              "key": "mlx:inkling-2-mini",
+              "format": "mlx",
+              "quantization": "MLX 4-bit · araysuter",
+              "files": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires Apple Silicon and the converter’s Inkling-compatible MLX runtime. Windows chat uses one of the GGUF editions."
+        },
+        {
+          "repository": "araysuter/Inkling-2-Mini-MLX-5bit",
+          "packages": [
+            {
+              "key": "mlx:inkling-2-mini",
+              "format": "mlx",
+              "quantization": "MLX 5-bit · araysuter",
+              "files": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja",
+                "processor_config.json",
+                "special_tokens_map.json",
+                "tiktoken/tokenizer.model"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires Apple Silicon and the converter’s Inkling-compatible MLX runtime. Windows chat uses one of the GGUF editions."
+        },
+        {
+          "repository": "pipenetwork/Inkling-2-Mini-MLX-8bit",
+          "packages": [
+            {
+              "key": "mlx:inkling-2-mini",
+              "format": "mlx",
+              "quantization": "MLX mixed 8-bit · pipenetwork",
+              "files": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires Apple Silicon and the converter’s Inkling-compatible MLX runtime. Windows chat uses one of the GGUF editions."
+        },
+        {
+          "repository": "pipenetwork/Inkling-2-Mini-MLX-bf16",
+          "packages": [
+            {
+              "key": "mlx:inkling-2-mini",
+              "format": "mlx",
+              "quantization": "MLX BF16 dense / FP4–FP8 experts · pipenetwork",
+              "files": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja"
+              ],
+              "requiredFiles": [
+                "model-00001-of-00004.safetensors",
+                "model-00002-of-00004.safetensors",
+                "model-00003-of-00004.safetensors",
+                "model-00004-of-00004.safetensors",
+                "README.md",
+                "config.json",
+                "generation_config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "chat_template.jinja"
+              ]
+            }
+          ],
+          "runtimeReason": "Requires Apple Silicon and the converter’s Inkling-compatible MLX runtime. Windows chat uses one of the GGUF editions."
+        }
+      ]
+    },
+    {
+      "repository": "thejagstudio/tessera-small",
+      "familyId": "publisher-tessera-small",
+      "label": "Tessera Small",
+      "category": "image",
+      "description": "Tessera by Jagrat Patel (TheJagStudio) generates transparent 16×16 pixel-art sprites from short text prompts. The publisher licenses the model and its outputs for non-commercial use with attribution (CC BY-NC 4.0).",
+      "sources": [
+        {
+          "repository": "thejagstudio/tessera-small",
+          "imageRuntime": "tessera-small-v1",
+          "packages": [
+            {
+              "key": "pytorch:tessera-small-fp16.pt",
+              "format": "pytorch",
+              "quantization": "FP16",
+              "files": [
+                "tessera-small-fp16.pt",
+                "model_config.json",
+                "LICENSE"
+              ],
+              "requiredFiles": [
+                "tessera-small-fp16.pt",
+                "model_config.json",
+                "LICENSE"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

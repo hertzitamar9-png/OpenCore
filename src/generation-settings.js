@@ -48,7 +48,7 @@ export function GenerationSettings({modelId='echo',conversationId,image=false,de
   const group=groupControls!=null;
   React.useEffect(()=>{if(!image&&!group)captureGenerationProfile(modelId,conversationId);},[modelId,conversationId,image,group]);
   function save(mode,next=manualValues,cpuOffload=saved.cpuOffload===true){saveGenerationSettings(modelId,{mode,manualValues:next,cpuOffload});}
-  const fields=image?[['steps','Sampling steps',1,100,1],['guidanceScale','Guidance (CFG)',0,30,.1],['width','Output width',128,8192,16],['height','Output height',128,8192,16]]:
+  const fields=image?[['steps','Sampling steps',1,100,1],['guidanceScale','Guidance (CFG)',0,30,.1],...(defaults.width===16?[]:[['width','Output width',128,8192,16],['height','Output height',128,8192,16]])]:
     [['temperature','Temperature',0,2,.05],['top_p','Top P',.01,1,.01],['top_k','Top K',0,1000,1],['repeat_penalty','Repetition penalty',.5,2,.05],['max_tokens','Maximum output tokens',16,32768,1]];
   fields.push(['seed','Seed (blank = random)',0,4294967295,1]);
   return h(React.Fragment,null,h('button',{type:'button',className:'generation-settings-trigger','aria-label':'Generation settings','aria-expanded':open,title:group?'Generation settings':'Generation settings · '+(manual?'Manual':'Automatic'),disabled,onClick:()=>setOpen(true)},

@@ -169,7 +169,7 @@ class OCRManager:
         finally:
             self.operation.release()
 
-    def start(self, entry, encoded):
+    def start(self, entry, encoded, operating_mode='native'):
         image = decode_payload(encoded)
         if not supports(entry) or not entry.get('specialistReady'):
             raise ValueError('Prepare the OCR runtime before using this model')
@@ -178,19 +178,24 @@ class OCRManager:
         self.cancelled.clear()
         identity = uuid.uuid4().hex
         with self.lock:
-            self.job = {'id': identity, 'status': 'running'}
+            self.job = {'id': identity, 'status': 'running','category':'ocr','operatingMode':operating_mode,'requiresTurnHandoff':operating_mode=='echo'}
         def work():
             try:
+                if getattr(self,'before_inference',None):self.before_inference(self.job,self.cancelled,self._update_job)
                 result = self._worker(entry, 'recognize', image)
                 value = {'id': identity, 'status': 'complete', 'text': result.get('text', ''), 'raw': result.get('raw', '')}
             except Exception as error:
-                value = {'id': identity, 'status': 'failed', 'error': str(error)[:500]}
+                value = {'id': identity, 'status': 'cancelled' if self.cancelled.is_set() else 'failed', 'error': None if self.cancelled.is_set() else str(error)[:500]}
             finally:
                 with self.lock:
                     self.job = value
                 self.operation.release()
         threading.Thread(target=work, daemon=True).start()
-        return {'id': identity, 'status': 'running'}
+        return {'id': identity, 'status': 'running','requiresTurnHandoff':operating_mode=='echo'}
+
+    def _update_job(self,job,**values):
+        with self.lock:
+            if self.job is job:job.update(values)
 
     def status(self):
         with self.lock:

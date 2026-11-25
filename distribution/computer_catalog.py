@@ -33,4 +33,8 @@ def build_computer_catalog(snapshots, entries):
         entry = next(value for value in entries if value.get('computerRuntime') == runtime)
         profiles[runtime] = {'id': entry['id'], 'repository': repository, 'revision': entry['revision'],
                              'dependencyId': dependency['id'], 'recipe': recipe, 'baseBytes': dependency['bytes']}
+    deskpaw = next((entry for entry in entries if entry.get('computerRuntime') == 'deskpaw-v1'), None)
+    if deskpaw:
+        profiles['deskpaw-v1'] = {'id': deskpaw['id'], 'repository': deskpaw['repository'], 'revision': deskpaw['revision'],
+                                  'dependencyId': None, 'recipe': None, 'baseBytes': 0}
     return {'schema': 1, 'profiles': profiles, 'dependencies': dependencies}

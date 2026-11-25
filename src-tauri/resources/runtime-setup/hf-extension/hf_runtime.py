@@ -227,6 +227,15 @@ def _bundled_cuda_available(server, resources):
 
 def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None):
     root, resources = Path(root).resolve(), Path(resources).resolve()
+    if entry.get('id')=='hf-6e616e626569676565787472':
+        from hf_nanbeige_extreme import plan
+        return plan(entry,root,prefer_gpu,backend_override)
+    if entry.get('id')=='hf-0a1ab2972368aa19f3cb9a62':
+        from hf_continuum import plan
+        return plan(entry,root,prefer_gpu,backend_override)
+    if entry.get('runtime',{}).get('adapter')=='edge0':
+        from hf_edge0 import plan
+        return plan(entry,root,resources)
     fmt = entry.get('format', '')
     quant = str(entry.get('quantization', '')).upper()
     if fmt not in ('gguf', 'safetensors'):
@@ -243,10 +252,12 @@ def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None)
     managed_cuda = backend_override == 'managed-cuda'
     preference = 'cuda' if managed_cuda else backend_override or (entry.get('runtimePreference', 'auto') if prefer_gpu else 'cpu')
     if fmt == 'gguf':
-        from managed_engines import engine_for, executable, select_engine
+        from managed_engines import INKLING_GGUF, engine_for, executable, select_engine
         # The generic b11960 build and each publisher-specific build remain pinned
         # to their own tested llama.cpp revision.
         specialized_engine = engine_for(entry)
+        if str(entry.get('repository', '')).lower() in INKLING_GGUF and not specialized_engine:
+            raise ValueError('Select the reviewed Inkling 2 Mini edition in Models to use its matching runtime.')
         base_engine = specialized_engine or 'lfm3-cpu-v1'
         bundled = root / 'runtime/llama-server.exe'
         if not bundled.is_file():bundled = resources / 'opencore/runtime/llama-server.exe'
@@ -279,6 +290,8 @@ def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None)
                 command[command.index('--batch-size') + 1] = '512'
                 command[command.index('--ubatch-size') + 1] = '128'
                 command += ['--device', ','.join(dory_cuda_devices())]
+        if specialized_engine and str(entry.get('repository', '')).lower() in INKLING_GGUF:
+            command += ['--temp', '1.0', '--top-p', '1.0', '--top-k', '0', '--min-p', '0.0']
         template = _chat_template_path(entry, folder)
         if template is not None:
             command += ['--chat-template-file', str(template)]
@@ -291,6 +304,11 @@ def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None)
         if not (directory / 'config.json').is_file():
             raise ValueError('The selected checkpoint has no model configuration')
         raw = json.loads((directory / 'config.json').read_text(encoding='utf-8'))
+        sensenova = raw.get('model_type') == 'sensenova_loop'
+        if sensenova and (entry.get('repository') != 'sensenova/SenseNova-Loop-9B'
+                          or entry.get('revision') != '329a65f701ba8c48b73c30d0cbaa6f0449733673'
+                          or entry.get('textRuntime') != 'sensenova-loop-v1'):
+            raise ValueError('This SenseNova checkpoint has not been reviewed for the managed Loop runtime')
         quant_config = raw.get('quantization_config')
         if quant_config:
             raise ValueError('This checkpoint declares a specialized quantization runtime. A matching managed adapter must be integrated before execution.')
@@ -298,9 +316,13 @@ def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None)
         if preference not in ('auto', 'cuda', 'cpu'):
             raise ValueError('Choose Automatic, CUDA or CPU for the Transformers runtime')
         backend = 'cpu' if preference == 'cpu' else 'cuda'
-        if backend == 'cuda' and cuda_driver_version() < 12000:
+        if backend == 'cuda' and cuda_driver_version() < (13000 if sensenova else 12000):
+            if sensenova:
+                raise ValueError('SenseNova uses the CUDA 13 runtime. Update the NVIDIA driver or select CPU. The model files are kept.')
             raise ValueError('This Transformers runtime needs a compatible NVIDIA GPU and CUDA driver. The model files are kept. Choose CPU explicitly to run without CUDA.')
         recipe = 'managed-transformers-text-cuda-v1' if backend == 'cuda' else 'managed-transformers-text-v1'
+        if sensenova:
+            recipe = 'sensenova-loop-cuda-v1' if backend == 'cuda' else 'sensenova-loop-cpu-v1'
         interpreter = root / 'runtime-setup/environments' / recipe / 'Scripts/python.exe'
         command = [str(interpreter), '-I', str(Path(__file__).resolve()), '--worker', 'text',
                    '--resources', str(resources), '--model-dir', str(directory), '--model-id', entry['id'],
@@ -327,6 +349,19 @@ def _available_memory():
     data = Memory()
     data.length = ctypes.sizeof(data)
     return data.availablePhysical if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(data)) else None
+
+
+def _inkling_cpu_context(model_bytes, context, available):
+    if available is None:
+        return context
+    # Each of the 48 layer visits can retain K and V for eight 128-wide heads.
+    # Budget the cache at FP16 and reserve RAM for the worker and its buffers.
+    kv_bytes_per_token = 48 * 2 * 8 * 128 * 2
+    usable = available - model_bytes - 2 * 1024 ** 3
+    limit = min(context, usable // kv_bytes_per_token // 256 * 256)
+    if limit < 8192:
+        raise ValueError(f'Inkling 2 Mini needs more free RAM for this quant. {available / 1024 ** 3:.1f} GiB is free. Free RAM or select a smaller quant.')
+    return limit
 
 
 class ModelLoadError(RuntimeError):
@@ -574,6 +609,14 @@ class RuntimeManager:
         self._cancel.clear()
         self._stop_reason = ''
         plan = runtime_plan(entry, self.root, self.resources, backend_override=backend_override)
+        from managed_engines import INKLING_ENGINES
+        inkling = plan.get('engineFamily') in INKLING_ENGINES
+        inkling_probe = ({'reasoning_budget_tokens': 0,
+                          'chat_template_kwargs': {'enable_thinking': False, 'reasoning_effort': 'none'}}
+                         if inkling else {})
+        if inkling and plan['runtimeBackend'] == 'cpu':
+            plan['context'] = _inkling_cpu_context(entry['bytes'], plan['context'], _available_memory())
+            plan['command'][plan['command'].index('--ctx-size') + 1] = str(plan['context'])
         plan.setdefault('operatingMode',entry.get('operatingMode','echo'))
         plan.setdefault('requestedContextTokens',NATIVE_TARGET if plan['operatingMode']=='native' else ECHO_TARGET)
         self._report_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
@@ -609,7 +652,7 @@ class RuntimeManager:
                 ensure(self.root, plan['publisherEngine'], self._report_progress, check_cancel)
                 if plan.get('runtimeBackend') == 'cuda':
                     version = '13' if '-cuda13-' in plan['publisherEngine'] else '12'
-                    library_id = 'cuda' + version + '-libs-v1'
+                    library_id = plan.get('cudaLibraryId') or 'cuda' + version + '-libs-v1'
                     ensure(self.root, library_id, self._report_progress, check_cancel)
                     cuda_library_dir = folder(self.root, library_id)
             except (OSError, RuntimeError, ValueError) as error:
@@ -654,24 +697,32 @@ class RuntimeManager:
             plan['cpuModules'] = props.get('cpuModules', 0)
         plan['context'], context_verified = admitted_context(plan['context'], props)
         self._report_progress(stage='verifying-inference', detail='Checking an actual short generation')
-        with self._request(upstream + '/v1/chat/completions', {'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
-                'max_tokens': 8, 'temperature': 0, 'stream': False}, key, timeout=120) as response:
+        verification_request={'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
+                'max_tokens': 8, 'temperature': 0, 'stream': False}
+        if entry.get('textRuntime')=='sensenova-loop-v1':
+            verification_request.update(reasoning_budget_tokens=0,opencore_reasoning_effort='off',max_tokens=24)
+        if inkling:
+            verification_request.update(inkling_probe, max_tokens=64)
+        with self._request(upstream + '/v1/chat/completions', verification_request, key, timeout=120) as response:
             proof_result = json.load(response)
         choices = proof_result.get('choices', [])
         message = choices[0].get('message', {}) if choices else {}
         sample = message.get('content') or message.get('reasoning_content') or message.get('reasoning')
+        if inkling or entry.get('textRuntime')=='sensenova-loop-v1':sample=message.get('content')
         if not sample or proof_result.get('error'):
             raise RuntimeError('The runtime did not return a real generated response')
         media_probe=visual_text_probe(entry)
         media_verified=None
         if media_probe:
             kind,request=media_probe
+            if entry.get('textRuntime')=='sensenova-loop-v1':request.update(reasoning_budget_tokens=0,opencore_reasoning_effort='off')
+            request.update(inkling_probe)
             self._report_progress(stage='verifying-vision',detail='Verifying real generated text from '+kind)
             with self._request(upstream+'/v1/chat/completions',request,key,timeout=180) as response:
                 media_result=json.load(response)
             media_choices=media_result.get('choices',[])
             media_message=media_choices[0].get('message',{}) if media_choices else {}
-            media_sample=media_message.get('content') or media_message.get('reasoning_content')
+            media_sample=media_message.get('content') or (None if inkling else media_message.get('reasoning_content'))
             if not isinstance(media_sample,str) or not media_sample.strip() or media_result.get('error'):
                 raise RuntimeError('The multimodal checkpoint did not generate text from the supplied inline '+kind)
             media_verified=kind
@@ -696,11 +747,12 @@ class RuntimeManager:
                 'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
                 'max_tokens': 512, 'echo_max_total_tokens': 512, 'temperature': 0, 'stream': False,
                 'conversation_id': 'installation-check-' + uuid.uuid4().hex,
-                'opencore_reasoning_effort': 'off', 'chat_template_kwargs': {'enable_thinking': False}}, key, timeout=180) as response:
+                'opencore_reasoning_effort': 'off', 'chat_template_kwargs': {'enable_thinking': False},
+                **inkling_probe}, key, timeout=180) as response:
             echo_result = json.load(response)
         echo_choices = echo_result.get('choices', [])
         echo_message = echo_choices[0].get('message', {}) if echo_choices else {}
-        if not (echo_message.get('content') or echo_message.get('reasoning_content')):
+        if not (echo_message.get('content') or (None if inkling else echo_message.get('reasoning_content'))):
             raise RuntimeError('The ECHO endpoint did not return an actual generated reply')
         if media_probe:
             kind,request=media_probe
@@ -711,7 +763,7 @@ class RuntimeManager:
                 echo_media_result=json.load(response)
             choices=echo_media_result.get('choices',[])
             message=choices[0].get('message',{}) if choices else {}
-            text=message.get('content') or message.get('reasoning_content')
+            text=message.get('content') or (None if inkling else message.get('reasoning_content'))
             if not isinstance(text,str) or not text.strip() or echo_media_result.get('error'):
                 raise RuntimeError('ECHO did not preserve the '+kind+' input for text generation')
         proof=self._runtime_proof(entry,plan,files,proof_result,sample,context_verified,log_path)
@@ -736,6 +788,8 @@ class RuntimeManager:
             proof['engineArchiveSha256'] = definition(plan['publisherEngine'])['sha256']
         if plan.get('runtimeBackend'):
             proof['runtimeBackend'] = plan['runtimeBackend']
+        if plan.get('recipe'):
+            proof['recipe'] = plan['recipe']
         if plan.get('gpuOffloadedLayers'):
             proof['gpuOffloadedLayers'] = plan['gpuOffloadedLayers']
         if plan.get('gpuModules'):
@@ -807,6 +861,11 @@ class RuntimeManager:
                 return self._capture_memory(active, payload, active.get('conversationId') or conversation)
             active['conversationId'] = conversation
             body = {**payload, 'conversation_id': conversation}
+            if entry.get('id')=='hf-0a1ab2972368aa19f3cb9a62':
+                from hf_continuum import adapt
+                body,continuum_reply=adapt(self.root,active,body)
+                if continuum_reply is not None:
+                    return continuum_reply
             if active.get('mode')=='native':
                 active['usage']={}
                 for field in list(body):

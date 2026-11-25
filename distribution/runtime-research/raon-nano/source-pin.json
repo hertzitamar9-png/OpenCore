@@ -1,0 +1,14 @@
+{
+  "label": "KRAFTON Raon nano \u00b7 CPU",
+  "url": "https://codeload.github.com/krafton-ai/llama.cpp/zip/4d72ff0d45d5795aa4bd9655a77501269b52e1bc",
+  "bytes": 44243392,
+  "sha256": "18450d498c5df00f5c091b554d35b09405ae42c7ef5f3a477acb446f3929a22f",
+  "source": "https://github.com/krafton-ai/llama.cpp/tree/4d72ff0d45d5795aa4bd9655a77501269b52e1bc",
+  "revision": "4d72ff0d45d5795aa4bd9655a77501269b52e1bc",
+  "sourceBuild": true,
+  "stripPrefix": "llama.cpp-4d72ff0d45d5795aa4bd9655a77501269b52e1bc/",
+  "requiredFiles": [
+    "llama-server.exe",
+    "build-info.json"
+  ]
+}

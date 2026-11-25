@@ -229,6 +229,7 @@ app += '\nimport{createAppUpdatePreferences}from"./model-catalog-B8SfuDgQ.js";co
 app=require('./audio-studio-patches.cjs')(app,{editFunction,replaceOnce});
 app=require('./music-studio-patches.cjs')(app,{editFunction,replaceOnce});
 app=require('./receipt-ui-patches.cjs')(app,{editFunction,replaceOnce});
+app=require('./generation-ui-patches.cjs')(app);
 
 (async () => {
   const report = [];
@@ -244,7 +245,7 @@ app=require('./receipt-ui-patches.cjs')(app,{editFunction,replaceOnce});
   const conversationIndicatorCode='\n'+fs.readFileSync(path.join(root,'../src/conversation-indicators.js'),'utf8');
   const responseReceiptCode='\n'+fs.readFileSync(path.join(root,'../src/response-receipt.js'),'utf8');
   const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource()+require('./slash-menu-patches.cjs').featureInstallerSource()+workbench.featureInstallerSource()+require('./task-progress-patches.cjs').featureInstallerSource()+require('./group-ui-patches.cjs').featureInstallerSource()+require('./model-mode-patches.cjs').featureInstallerSource()+require('./autoloop-ui-patches.cjs').featureInstallerSource()+require('./computer-driver-ui-patches.cjs').featureInstallerSource()+require('./download-ui-patches.cjs').featureInstallerSource()+coordinatorCode+'\n'+require('./hub-patches.cjs').featureInstallerSource();
-  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+shellFeatures+preferencesCode+speechCode+ttsCode+updateProgressCode+updatePolicyCode+conversationIndicatorCode+responseReceiptCode]]) {
+  for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode+require('./generation-ui-patches.cjs').featureInstallerSource()+shellFeatures+preferencesCode+speechCode+ttsCode+updateProgressCode+updatePolicyCode+conversationIndicatorCode+responseReceiptCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,
       compress: { passes: name === 'App-kNA9sRUP.js' ? 3 : 1, unused: false },
