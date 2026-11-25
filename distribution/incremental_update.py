@@ -106,8 +106,11 @@ def update_script(output,version,icon,branding,webview):
 SectionEnd'''
     return script[:start]+body+script[end:]
 
-def build(app,python,output,version,commit,icon,branding,webview,nsis):
-    index=build_payload(app,python,output,version,commit)
+def build(app,python,output,version,commit,icon,branding,webview,nsis,*,index=None):
+    if index is None:
+        index=build_payload(app,python,output,version,commit)
+    if index['version'] != version or index['commit'] != commit:
+        raise ValueError('The prebuilt incremental payload does not match this release')
     source=output/'OpenCore Update.nsi'
     source.write_text(update_script(output,version,icon,branding,webview),encoding='utf-8-sig')
     subprocess.run([str(nsis),'/V2',str(source)],check=True)

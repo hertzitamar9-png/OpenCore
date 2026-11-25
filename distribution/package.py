@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
+from time import perf_counter
 
 FORBIDDEN_PARTS = {'secrets', 'logs', 'backups', 'codex-backups', 'repair-backups',
                    '__pycache__', '.git', '.cache', '.pytest_cache', 'test-python'}
@@ -69,8 +71,7 @@ OutFile "{nsis_literal(output / 'OpenCore Package.exe')}"
 InstallDir "$LOCALAPPDATA\\OpenCore"
 InstallDirRegKey HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "InstallLocation"
 RequestExecutionLevel user
-SetCompressor /SOLID lzma
-SetCompressorDictSize 32
+SetCompressor /SOLID zlib
 Icon "{nsis_literal(icon)}"
 UninstallIcon "{nsis_literal(icon)}"
 !define MUI_ICON "{nsis_literal(icon)}"
@@ -310,11 +311,20 @@ def main():
     source = args.output / 'OpenCore Setup.nsi'
     source.write_text(script, encoding='utf-8-sig')
     if args.nsis:
-        subprocess.run([str(args.nsis.resolve()), '/V2', str(source)], check=True)
-        installer = args.output / 'OpenCore Package.exe'
-        (args.output / 'SHA256SUMS.txt').write_text(file_hash(installer) + '  OpenCore Package.exe\n', encoding='ascii')
-        from incremental_update import build as build_incremental
-        build_incremental(args.app,args.python,args.output,args.version,args.commit,args.icon.resolve(),branding,args.webview.resolve(),args.nsis.resolve())
+        # NSIS and the range-addressable payload read the same immutable input
+        # files, but write disjoint outputs. Overlap their compression work.
+        from incremental_update import build as build_incremental, build_payload
+        started = perf_counter()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            pending = pool.submit(build_payload,args.app,args.python,args.output,args.version,args.commit)
+            subprocess.run([str(args.nsis.resolve()), '/V2', str(source)], check=True)
+            installer = args.output / 'OpenCore Package.exe'
+            if installer.stat().st_size >= 2 * 1024**3:
+                raise ValueError('Full installer exceeds the GitHub release asset size limit')
+            (args.output / 'SHA256SUMS.txt').write_text(file_hash(installer) + '  OpenCore Package.exe\n', encoding='ascii')
+            index = pending.result()
+        build_incremental(args.app,args.python,args.output,args.version,args.commit,args.icon.resolve(),branding,args.webview.resolve(),args.nsis.resolve(),index=index)
+        print(f'Parallel package and update compression: {perf_counter()-started:.1f}s',flush=True)
     print(json.dumps({'build': args.version, 'files': len(files), 'bytes': manifest['bytes'], 'output': str(args.output)}))
 
 

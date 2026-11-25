@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         id: engine-cache
         with:
           path: distribution/.output/agent-engine
@@ -32,7 +32,12 @@ jobs:
         run: |
           rustup toolchain install 1.95.0 --profile minimal
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python distribution/agent_engine.py --output distribution/.output/agent-engine --cache "$env:RUNNER_TEMP/opencore-agent-build" --jobs 2
+          python distribution/agent_engine.py --output distribution/.output/agent-engine --cache "$env:RUNNER_TEMP/opencore-agent-build" --jobs 4
+      - uses: actions/cache/save@v4
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        with:
+          path: distribution/.output/agent-engine
+          key: opencore-agent-windows-x64-${{ hashFiles('distribution/agent_engine.py', 'distribution/agent-engine/**') }}
       - uses: actions/upload-artifact@v4
         with:
           name: opencore-source-built-agent
@@ -41,11 +46,10 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  windows:
-    needs: agent-engine
+  validation:
+    permissions:
+      contents: read
     runs-on: windows-latest
-    outputs:
-      release_version: ${{ steps.version.outputs.version }}
     defaults:
       run:
         shell: pwsh
@@ -53,43 +57,25 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          # Pin the compressor used to fit the recovered executable's fixed
-          # asset slots. Node 22's Brotli exceeds the App slot on this build.
           node-version: '25.9.0'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            distribution/package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: android-actions/setup-android@v3
-        with:
-          # The action's default includes the obsolete SDK package "tools".
-          # Current SDK managers provide it through cmdline-tools instead.
-          packages: 'platform-tools'
-      - name: Require the existing Android signing key
-        env:
-          OPENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.OPENCORE_ANDROID_KEYSTORE_BASE64 }}
-          OPENCORE_ANDROID_STORE_PASSWORD: ${{ secrets.OPENCORE_ANDROID_STORE_PASSWORD }}
-        run: python distribution/android_release.py --check-signing
-      - name: Install the pinned Android build tools and platform
-        run: |
-          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install build dependencies
         run: |
           npm ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm --prefix distribution ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Assign a release newer than existing installed builds
-        id: version
+      - name: Assign validation the same release version
         run: |
           $version = node --input-type=module -e "import {releaseVersion} from './scripts/release-version.mjs'; console.log(releaseVersion(process.env.GITHUB_RUN_NUMBER));"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "OPENCORE_RELEASE_VERSION=$version" >> $env:GITHUB_ENV
-          "version=$version" >> $env:GITHUB_OUTPUT
       - name: Apply the official OpenCore logo to browser-extension surfaces
         run: python distribution/sync-branding.py
       - name: Test all frontend flows and release version ordering
@@ -174,6 +160,70 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx vitest run src/LearningStudio.test.tsx src/LearningAssistant.test.tsx src/learning-config.test.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify ECHO context continuity and cache ownership
+        run: |
+          python -m unittest discover -s src-tauri/resources/echo -p "test_echo*.py"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  windows:
+    needs: agent-engine
+    runs-on: windows-latest
+    outputs:
+      release_version: ${{ steps.version.outputs.version }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Pin the compressor used to fit the recovered executable's fixed
+          # asset slots. Node 22's Brotli exceeds the App slot on this build.
+          node-version: '25.9.0'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            distribution/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          # The action's default includes the obsolete SDK package "tools".
+          # Current SDK managers provide it through cmdline-tools instead.
+          packages: 'platform-tools'
+      - name: Require the existing Android signing key
+        env:
+          OPENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.OPENCORE_ANDROID_KEYSTORE_BASE64 }}
+          OPENCORE_ANDROID_STORE_PASSWORD: ${{ secrets.OPENCORE_ANDROID_STORE_PASSWORD }}
+        run: python distribution/android_release.py --check-signing
+      - name: Install the pinned Android build tools and platform
+        run: |
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install build dependencies
+        run: |
+          npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm --prefix distribution ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Assign a release newer than existing installed builds
+        id: version
+        run: |
+          $version = node --input-type=module -e "import {releaseVersion} from './scripts/release-version.mjs'; console.log(releaseVersion(process.env.GITHUB_RUN_NUMBER));"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "OPENCORE_RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Apply the official OpenCore logo to browser-extension surfaces
+        run: python distribution/sync-branding.py
+      - name: Install runtime test dependencies
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0 aiohttp==3.11.8 pytest==8.3.5
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify the pinned model catalog
         run: |
           python -m unittest discover -s distribution/hf-research -p test_build_catalog.py -v
@@ -181,10 +231,6 @@ jobs:
           python distribution/hf-research/build_catalog.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python distribution/build-publisher-catalog.py --check
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Verify ECHO context continuity and cache ownership
-        run: |
-          python -m unittest discover -s src-tauri/resources/echo -p "test_echo*.py"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/download-artifact@v4
         with:
@@ -403,7 +449,7 @@ jobs:
           retention-days: 7
 
   publish:
-    needs: windows
+    needs: [windows, validation]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
