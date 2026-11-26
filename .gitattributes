@@ -31,3 +31,5 @@ src-tauri/resources/agent-platform/TENCENT-MEMORY-LICENSE.txt -text -whitespace
 # These publisher-pinned loader bytes must not be rewritten by Windows line-ending conversion.
 src-tauri/resources/model-runtime-sources/moss-comfy/** -text -whitespace
 src-tauri/resources/model-runtime-sources/qwen-image-gguf/** -text -whitespace
+# Preserve exact publisher-pinned SenseNova source bytes on Windows.
+src-tauri/resources/text-runtime/sensenova_loop/modeling_sensenova_loop.py -text

@@ -94,7 +94,9 @@ fixture += String.raw`
       await page.reload();await card.waitFor();await settings.waitFor();
       await page.waitForFunction(()=>fixture.speech?.idleMode==='cold');
       assert.equal(await disk.isChecked(),true,'The real server must preserve disk mode across reload');
-      assert.equal(await card.getByRole('combobox').locator('option').count(),5);
+      const quant=card.getByRole('combobox',{name:/^Quantization for /});
+      const expected=await page.evaluate(()=>fixture.catalog.map(entry=>entry.id).sort());
+      assert.deepEqual((await quant.locator('option').evaluateAll(options=>options.map(option=>option.value))).sort(),expected,'Every exact pinned speech quantization must remain available');
       assert.equal(await settings.evaluate(element=>element.scrollWidth<=element.clientWidth+1),true);
       assert.equal(await settings.evaluate(element=>getComputedStyle(element).display),'grid');
       await page.screenshot({path:path.join(output,'phonon-settings-after-'+width+'.png'),fullPage:true});
