@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 615,
+  "families": 618,
   "withFive": 241,
   "models": [
     {
@@ -5747,6 +5747,17 @@
       ]
     },
     {
+      "id": "publisher-laya-cua",
+      "label": "Laya CUA",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "sodan/laya-cua"
+      ]
+    },
+    {
       "id": "publisher-lfm3-1-7b",
       "label": "LFM3 1.7B",
       "category": "text",
@@ -6044,6 +6055,28 @@
       "repositories": [
         "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB",
         "unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-nexi-cua",
+      "label": "NEXI-CUA",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "nexiloopofficial/nexi-cua"
+      ]
+    },
+    {
+      "id": "publisher-nexi-s1",
+      "label": "NEXI-S1",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "nexiloopofficial/nexi-s1"
       ]
     },
     {

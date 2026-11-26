@@ -1,0 +1,66 @@
+{
+  "id": "nexiloopofficial/nexi-cua",
+  "sha": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+  "gated": false,
+  "private": false,
+  "library_name": null,
+  "tags": [
+    "computer-use",
+    "browser-use",
+    "agent",
+    "driver",
+    "multi-agent",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "cardData": {
+    "license": "apache-2.0"
+  },
+  "siblings": [
+    {
+      "rfilename": "BENCHMARKS.md",
+      "blobId": "ebadbaa9358cbb7a6d587e2e1a9c49283fe83fde",
+      "size": 6078
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6c0b1707f95cdccbc6b388de982ecb74f1cecb6c",
+      "size": 2167
+    },
+    {
+      "rfilename": "nexi_cua/__init__.py",
+      "blobId": "be165ac93848c2b2b4cfb1d89067ef5109d24472",
+      "size": 200
+    },
+    {
+      "rfilename": "nexi_cua/browser.py",
+      "blobId": "59f0a21edfbd0855ddad1755e5a02a5e7b027b6e",
+      "size": 5488
+    },
+    {
+      "rfilename": "nexi_cua/decide.py",
+      "blobId": "f97a0f2e1c794c7360024feb82317cdb2f8f8474",
+      "size": 2672
+    },
+    {
+      "rfilename": "nexi_cua/driver.py",
+      "blobId": "bd30add913b310e0bbf6420c575fec1ac0195231",
+      "size": 3532
+    },
+    {
+      "rfilename": "nexi_cua/gates.py",
+      "blobId": "e2025726a208ee5f4368ca3ead03a3111132bd7e",
+      "size": 2187
+    },
+    {
+      "rfilename": "nexi_cua/loop.py",
+      "blobId": "410c6bc9d90eff0c3de9dbab05248ab5dfa7b818",
+      "size": 3243
+    },
+    {
+      "rfilename": "nexi_cua/observe.py",
+      "blobId": "fc23d648fbd1d160adbcfdc10facbaf237a19e1a",
+      "size": 2197
+    }
+  ]
+}

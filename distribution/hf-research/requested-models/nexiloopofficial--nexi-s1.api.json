@@ -1,0 +1,45 @@
+{
+  "id": "nexiloopofficial/nexi-s1",
+  "sha": "04d84ac9d98a7a51f4c32f4432bf60be687c2d33",
+  "gated": false,
+  "private": false,
+  "library_name": null,
+  "tags": [
+    "computer-use",
+    "agent",
+    "decision-model",
+    "small",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "cardData": {
+    "license": "apache-2.0"
+  },
+  "siblings": [
+    {
+      "rfilename": "README.md",
+      "blobId": "d353ae0c5bccf4e9a6f818d9afe6d2eabf7acd14",
+      "size": 2073
+    },
+    {
+      "rfilename": "data.py",
+      "blobId": "933807c536d183e30825f6dc9886c03b8d6a876a",
+      "size": 18104
+    },
+    {
+      "rfilename": "model.py",
+      "blobId": "6a1ab6bff755818a8d2c331681656494208a2990",
+      "size": 3972
+    },
+    {
+      "rfilename": "s1_v1.pt",
+      "blobId": "7f5127fb3e3ff664546673ca9fab2b71f135213e",
+      "size": 4556544,
+      "lfs": {
+        "sha256": "01267acfa0e9c0c477e184fbe0b06d8716a27270950c348f9a1700ef8cee4da4",
+        "size": 4556544,
+        "pointerSize": 132
+      }
+    }
+  ]
+}

@@ -3,6 +3,72 @@
   "scope": "Explicitly requested model checkpoints and their verified published packages. Frozen build inputs; no community search on built-in cards.",
   "models": [
     {
+      "repository": "nexiloopofficial/nexi-cua",
+      "familyId": "publisher-nexi-cua",
+      "label": "NEXI-CUA",
+      "category": "computer-use",
+      "description": "Local DOM browser-control driver and decision loop. The separate NEXI-S1 checkpoint scores typed browser action candidates.",
+      "sources": [
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "runtimeReason": "The publisher supplies a Python browser driver. Its OpenCore action adapter has not been integrated.",
+          "packages": [
+            {
+              "key": "driver:nexi-cua",
+              "format": "python-driver",
+              "quantization": "Browser driver",
+              "files": ["README.md", "BENCHMARKS.md", "nexi_cua/*.py"],
+              "requiredFiles": ["README.md", "BENCHMARKS.md", "nexi_cua/__init__.py", "nexi_cua/browser.py", "nexi_cua/decide.py", "nexi_cua/driver.py", "nexi_cua/gates.py", "nexi_cua/loop.py", "nexi_cua/observe.py"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "nexiloopofficial/nexi-s1",
+      "familyId": "publisher-nexi-s1",
+      "label": "NEXI-S1",
+      "category": "computer-use",
+      "description": "The CPU decision checkpoint used by the NEXI-CUA browser driver.",
+      "sources": [
+        {
+          "repository": "nexiloopofficial/nexi-s1",
+          "runtimeReason": "CPU decision head for NEXI-CUA. OpenCore can store the pinned checkpoint and does not execute the publisher's Python.",
+          "packages": [
+            {
+              "key": "pytorch:nexi-s1",
+              "format": "pytorch",
+              "quantization": "S1 checkpoint",
+              "files": ["README.md", "s1_v1.pt"],
+              "requiredFiles": ["README.md", "s1_v1.pt"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "sodan/laya-cua",
+      "familyId": "publisher-laya-cua",
+      "label": "Laya CUA",
+      "category": "computer-use",
+      "description": "Canonical 421M Laya decision model. It scores action types and task completion from a text description and short action history.",
+      "sources": [
+        {
+          "repository": "sodan/laya-cua",
+          "runtimeReason": "The canonical checkpoint uses the Laya runtime and requires a separate screen description and action executor.",
+          "packages": [
+            {
+              "key": "safetensors:laya-cua",
+              "format": "safetensors",
+              "quantization": "Canonical",
+              "files": ["README.md", "model.safetensors", "encoder/config.json", "rl_agent_config.json", "tokenizer/tokenizer.json", "tokenizer/tokenizer_config.json"],
+              "requiredFiles": ["model.safetensors", "encoder/config.json", "rl_agent_config.json", "tokenizer/tokenizer.json", "tokenizer/tokenizer_config.json"]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "repository": "Hobbylm/hobbylm-1B-computer-use",
       "familyId": "publisher-hobbylm-1b-computer-use",
       "label": "HobbyLM 1B Computer Use",

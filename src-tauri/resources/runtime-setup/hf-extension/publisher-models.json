@@ -139900,6 +139900,119 @@
       ]
     },
     {
+      "id": "hf-031d692810555682713e929a",
+      "variantKey": "safetensors:laya-cua",
+      "repository": "sodan/laya-cua",
+      "revision": "cd6469ed3fb37284424fa026ccf3a4c017fd2ce5",
+      "format": "safetensors",
+      "quantization": "Canonical",
+      "subdirectory": "",
+      "category": "computer-use",
+      "files": [
+        {
+          "repository": "sodan/laya-cua",
+          "revision": "cd6469ed3fb37284424fa026ccf3a4c017fd2ce5",
+          "filename": "README.md",
+          "bytes": 16891,
+          "sha256": null,
+          "gitBlobSha1": "abe8dec5981cace036de22d0b24996ee7d1fde0b",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "sodan/laya-cua",
+          "revision": "cd6469ed3fb37284424fa026ccf3a4c017fd2ce5",
+          "filename": "encoder/config.json",
+          "bytes": 2084,
+          "sha256": null,
+          "gitBlobSha1": "fb51872488c94546b1d5a2a6f0e6fd2d91d92a78",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "sodan/laya-cua",
+          "revision": "cd6469ed3fb37284424fa026ccf3a4c017fd2ce5",
+          "filename": "model.safetensors",
+          "bytes": 842609220,
+          "sha256": "0749d2ff0622132eab75ff480d4a6cef9ec6bd024878b785a717e2bdca91e569",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "sodan/laya-cua",
+          "revision": "cd6469ed3fb37284424fa026ccf3a4c017fd2ce5",
+          "filename": "rl_agent_config.json",
+          "bytes": 548,
+          "sha256": null,
+          "gitBlobSha1": "92310431415422476ab54a154a852a9dcdb9b524",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "sodan/laya-cua",
+          "revision": "cd6469ed3fb37284424fa026ccf3a4c017fd2ce5",
+          "filename": "tokenizer/tokenizer.json",
+          "bytes": 3583325,
+          "sha256": null,
+          "gitBlobSha1": "4ad424e76a4381cf378c052a1d20b988583c45f1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "sodan/laya-cua",
+          "revision": "cd6469ed3fb37284424fa026ccf3a4c017fd2ce5",
+          "filename": "tokenizer/tokenizer_config.json",
+          "bytes": 337,
+          "sha256": null,
+          "gitBlobSha1": "ed1ffabc2ce11120754705709569e365e46da71a",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 846212405,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/sodan/laya-cua",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The canonical checkpoint uses the Laya runtime and requires a separate screen description and action executor."
+      },
+      "familyId": "publisher-laya-cua",
+      "familyLabel": "Laya CUA",
+      "originalRepository": "sodan/laya-cua",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Canonical 421M Laya decision model. It scores action types and task completion from a text description and short action history.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "Laya CUA · Canonical",
+      "catalogOrder": 1,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": [],
+      "modeAvailability": [
+        {
+          "id": "native",
+          "scope": "pipeline",
+          "contextTokens": null,
+          "supported": false,
+          "reason": "The canonical checkpoint uses the Laya runtime and requires a separate screen description and action executor."
+        },
+        {
+          "id": "echo",
+          "scope": "text",
+          "contextTokens": null,
+          "supported": false,
+          "reason": "ECHO requires an integrated pipeline tool or a conversational text-generation interface for this architecture."
+        }
+      ]
+    },
+    {
       "id": "hf-e0ca700fd7aadc535eb26c2b",
       "repository": "LiquidAI/LFM3-1.7B-GGUF",
       "revision": "bad5729bba61d076fff20d2548e62526665af215",
@@ -162532,6 +162645,222 @@
           "contextTokens": 32768,
           "supported": true,
           "scope": "text"
+        }
+      ]
+    },
+    {
+      "id": "hf-3bfdf62d63ef41c4f9223afb",
+      "variantKey": "driver:nexi-cua",
+      "repository": "nexiloopofficial/nexi-cua",
+      "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+      "format": "python-driver",
+      "quantization": "Browser driver",
+      "subdirectory": "",
+      "category": "computer-use",
+      "files": [
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "BENCHMARKS.md",
+          "bytes": 6078,
+          "sha256": null,
+          "gitBlobSha1": "ebadbaa9358cbb7a6d587e2e1a9c49283fe83fde",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "README.md",
+          "bytes": 2167,
+          "sha256": null,
+          "gitBlobSha1": "6c0b1707f95cdccbc6b388de982ecb74f1cecb6c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "nexi_cua/__init__.py",
+          "bytes": 200,
+          "sha256": null,
+          "gitBlobSha1": "be165ac93848c2b2b4cfb1d89067ef5109d24472",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "nexi_cua/browser.py",
+          "bytes": 5488,
+          "sha256": null,
+          "gitBlobSha1": "59f0a21edfbd0855ddad1755e5a02a5e7b027b6e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "nexi_cua/decide.py",
+          "bytes": 2672,
+          "sha256": null,
+          "gitBlobSha1": "f97a0f2e1c794c7360024feb82317cdb2f8f8474",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "nexi_cua/driver.py",
+          "bytes": 3532,
+          "sha256": null,
+          "gitBlobSha1": "bd30add913b310e0bbf6420c575fec1ac0195231",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "nexi_cua/gates.py",
+          "bytes": 2187,
+          "sha256": null,
+          "gitBlobSha1": "e2025726a208ee5f4368ca3ead03a3111132bd7e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "nexi_cua/loop.py",
+          "bytes": 3243,
+          "sha256": null,
+          "gitBlobSha1": "410c6bc9d90eff0c3de9dbab05248ab5dfa7b818",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-cua",
+          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
+          "filename": "nexi_cua/observe.py",
+          "bytes": 2197,
+          "sha256": null,
+          "gitBlobSha1": "fc23d648fbd1d160adbcfdc10facbaf237a19e1a",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 27764,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/nexiloopofficial/nexi-cua",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The publisher supplies a Python browser driver. Its OpenCore action adapter has not been integrated."
+      },
+      "familyId": "publisher-nexi-cua",
+      "familyLabel": "NEXI-CUA",
+      "originalRepository": "nexiloopofficial/nexi-cua",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "Local DOM browser-control driver and decision loop. The separate NEXI-S1 checkpoint scores typed browser action candidates.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "NEXI-CUA · Browser driver",
+      "catalogOrder": 1,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": [],
+      "modeAvailability": [
+        {
+          "id": "native",
+          "scope": "pipeline",
+          "contextTokens": null,
+          "supported": false,
+          "reason": "The publisher supplies a Python browser driver. Its OpenCore action adapter has not been integrated."
+        },
+        {
+          "id": "echo",
+          "scope": "text",
+          "contextTokens": null,
+          "supported": false,
+          "reason": "ECHO requires an integrated pipeline tool or a conversational text-generation interface for this architecture."
+        }
+      ]
+    },
+    {
+      "id": "hf-a84d96aff0674b68d34625a8",
+      "variantKey": "pytorch:nexi-s1",
+      "repository": "nexiloopofficial/nexi-s1",
+      "revision": "04d84ac9d98a7a51f4c32f4432bf60be687c2d33",
+      "format": "pytorch",
+      "quantization": "S1 checkpoint",
+      "subdirectory": "",
+      "category": "computer-use",
+      "files": [
+        {
+          "repository": "nexiloopofficial/nexi-s1",
+          "revision": "04d84ac9d98a7a51f4c32f4432bf60be687c2d33",
+          "filename": "README.md",
+          "bytes": 2073,
+          "sha256": null,
+          "gitBlobSha1": "d353ae0c5bccf4e9a6f818d9afe6d2eabf7acd14",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "nexiloopofficial/nexi-s1",
+          "revision": "04d84ac9d98a7a51f4c32f4432bf60be687c2d33",
+          "filename": "s1_v1.pt",
+          "bytes": 4556544,
+          "sha256": "01267acfa0e9c0c477e184fbe0b06d8716a27270950c348f9a1700ef8cee4da4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 4558617,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/nexiloopofficial/nexi-s1",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "CPU decision head for NEXI-CUA. OpenCore can store the pinned checkpoint and does not execute the publisher's Python."
+      },
+      "familyId": "publisher-nexi-s1",
+      "familyLabel": "NEXI-S1",
+      "originalRepository": "nexiloopofficial/nexi-s1",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "computer-use",
+      "builtInDescription": "The CPU decision checkpoint used by the NEXI-CUA browser driver.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "NEXI-S1 · S1 checkpoint",
+      "catalogOrder": 1,
+      "outputsText": false,
+      "supportsTextGeneration": false,
+      "operatingModes": [],
+      "modeAvailability": [
+        {
+          "id": "native",
+          "scope": "pipeline",
+          "contextTokens": null,
+          "supported": false,
+          "reason": "CPU decision head for NEXI-CUA. OpenCore can store the pinned checkpoint and does not execute the publisher's Python."
+        },
+        {
+          "id": "echo",
+          "scope": "text",
+          "contextTokens": null,
+          "supported": false,
+          "reason": "ECHO requires an integrated pipeline tool or a conversational text-generation interface for this architecture."
         }
       ]
     },
