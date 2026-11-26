@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { availableComposerSkills, filterComposerSkills, resolveSlashSkill, exactSlashSkill } from "./composer-skills";
+import { applySlashSelection } from "./slash-menu.js";
 
 describe("composer skills", () => {
   it('keeps development skills available without a media model', () => {
@@ -42,5 +43,18 @@ describe("composer skills", () => {
     expect(resolveSlashSkill("/chrome", "chrome-control")).toBe("");
     const draft = "Open Chrome/computer-use and show the page";
     expect(resolveSlashSkill(draft, "computer-use", draft.indexOf(" and"))).toBe("Open Chrome and show the page");
+  });
+
+  it("updates the composer text and caret before the next edit", () => {
+    const editor = document.createElement("textarea");
+    editor.value = "Update this /web and check it";
+    editor.setSelectionRange(16, 16);
+
+    let draft = editor.value;
+    applySlashSelection(editor, draft, (text) => { draft = text; });
+
+    expect(draft).toBe("Update this and check it");
+    expect(editor.value).toBe(draft);
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([12, 12]);
   });
 });

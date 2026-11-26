@@ -31,10 +31,12 @@ export function takeSlashCommand(text, caret) {
 
 export function applySlashSelection(editor, text, update) {
   const next = takeSlashCommand(text, editor?.selectionStart ?? text.length);
+  if (editor) {
+    // Restore the selection before the browser can start another edit.
+    editor.value = next.text;
+    editor.setSelectionRange(next.caret, next.caret);
+  }
   update(next.text);
-  requestAnimationFrame(() => {
-    if (editor?.value === next.text) editor.setSelectionRange(next.caret, next.caret);
-  });
 }
 
 export function ComposerSkillLinks({ skills, table, remove }) {
