@@ -385,7 +385,10 @@ class RequestedCatalogTests(unittest.TestCase):
             'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'}.issubset({row['repository'] for row in self.rows}))
         self.assertEqual({entry['familyId'] for entry in self.entries}, {row['familyId'] for row in self.rows})
         self.assertEqual(len({entry['id'] for entry in self.entries}), len(self.entries))
-        self.assertTrue(all(entry['builtIn'] and entry['installable'] for entry in self.entries))
+        self.assertTrue(all(entry['builtIn'] for entry in self.entries))
+        references = [entry for entry in self.entries if not entry['installable']]
+        self.assertEqual([entry['repository'] for entry in references], ['nexiloopofficial/nexi-cua'])
+        self.assertEqual({pin['filename'] for pin in references[0]['files']}, {'README.md', 'BENCHMARKS.md'})
         self.assertTrue(all(entry['originalRepository'] != 'Qwen/Qwen3.8-27B' for entry in self.entries))
 
     def test_full_models_have_real_preset_quants_and_pinned_projectors(self):
@@ -415,7 +418,11 @@ class RequestedCatalogTests(unittest.TestCase):
 
     def test_no_package_is_marked_ready_and_specialized_formats_keep_actual_requirements(self):
         for entry in self.entries:
-            validate_entry(entry)
+            if entry['installable']:
+                validate_entry(entry)
+            else:
+                self.assertEqual(entry['format'], 'documentation')
+                self.assertIsNone(entry['runtime']['adapter'])
             self.assertFalse(entry['runtime'].get('inferenceVerified'))
             self.assertFalse(entry.get('runtimeReady'))
             self.assertFalse(any(pin['filename'].endswith(('.py', '.sh', '.swift', '.exe')) for pin in entry['files']))

@@ -162653,8 +162653,8 @@
       "variantKey": "driver:nexi-cua",
       "repository": "nexiloopofficial/nexi-cua",
       "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-      "format": "python-driver",
-      "quantization": "Browser driver",
+      "format": "documentation",
+      "quantization": "Browser driver reference",
       "subdirectory": "",
       "category": "computer-use",
       "files": [
@@ -162677,80 +162677,10 @@
           "gitBlobSha1": "6c0b1707f95cdccbc6b388de982ecb74f1cecb6c",
           "role": "support",
           "pinned": true
-        },
-        {
-          "repository": "nexiloopofficial/nexi-cua",
-          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-          "filename": "nexi_cua/__init__.py",
-          "bytes": 200,
-          "sha256": null,
-          "gitBlobSha1": "be165ac93848c2b2b4cfb1d89067ef5109d24472",
-          "role": "support",
-          "pinned": true
-        },
-        {
-          "repository": "nexiloopofficial/nexi-cua",
-          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-          "filename": "nexi_cua/browser.py",
-          "bytes": 5488,
-          "sha256": null,
-          "gitBlobSha1": "59f0a21edfbd0855ddad1755e5a02a5e7b027b6e",
-          "role": "support",
-          "pinned": true
-        },
-        {
-          "repository": "nexiloopofficial/nexi-cua",
-          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-          "filename": "nexi_cua/decide.py",
-          "bytes": 2672,
-          "sha256": null,
-          "gitBlobSha1": "f97a0f2e1c794c7360024feb82317cdb2f8f8474",
-          "role": "support",
-          "pinned": true
-        },
-        {
-          "repository": "nexiloopofficial/nexi-cua",
-          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-          "filename": "nexi_cua/driver.py",
-          "bytes": 3532,
-          "sha256": null,
-          "gitBlobSha1": "bd30add913b310e0bbf6420c575fec1ac0195231",
-          "role": "support",
-          "pinned": true
-        },
-        {
-          "repository": "nexiloopofficial/nexi-cua",
-          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-          "filename": "nexi_cua/gates.py",
-          "bytes": 2187,
-          "sha256": null,
-          "gitBlobSha1": "e2025726a208ee5f4368ca3ead03a3111132bd7e",
-          "role": "support",
-          "pinned": true
-        },
-        {
-          "repository": "nexiloopofficial/nexi-cua",
-          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-          "filename": "nexi_cua/loop.py",
-          "bytes": 3243,
-          "sha256": null,
-          "gitBlobSha1": "410c6bc9d90eff0c3de9dbab05248ab5dfa7b818",
-          "role": "support",
-          "pinned": true
-        },
-        {
-          "repository": "nexiloopofficial/nexi-cua",
-          "revision": "9236a76e7fccaeb3f5d0b854b9c4e7f5a3141cc1",
-          "filename": "nexi_cua/observe.py",
-          "bytes": 2197,
-          "sha256": null,
-          "gitBlobSha1": "fc23d648fbd1d160adbcfdc10facbaf237a19e1a",
-          "role": "support",
-          "pinned": true
         }
       ],
-      "bytes": 27764,
-      "installable": true,
+      "bytes": 8245,
+      "installable": false,
       "status": "not-installed",
       "sourceUrl": "https://huggingface.co/nexiloopofficial/nexi-cua",
       "gated": false,
@@ -162758,7 +162688,7 @@
         "adapter": null,
         "available": false,
         "inferenceVerified": false,
-        "reason": "The publisher supplies a Python browser driver. Its OpenCore action adapter has not been integrated."
+        "reason": "Publisher browser driver reference. The separate NEXI-S1 checkpoint is available in the catalog. OpenCore does not have a runtime for this driver."
       },
       "familyId": "publisher-nexi-cua",
       "familyLabel": "NEXI-CUA",
@@ -162769,7 +162699,7 @@
       "builtInDescription": "Local DOM browser-control driver and decision loop. The separate NEXI-S1 checkpoint scores typed browser action candidates.",
       "contextTokens": 8192,
       "license": "apache-2.0",
-      "name": "NEXI-CUA · Browser driver",
+      "name": "NEXI-CUA · Browser driver reference",
       "catalogOrder": 1,
       "outputsText": false,
       "supportsTextGeneration": false,
@@ -162780,7 +162710,7 @@
           "scope": "pipeline",
           "contextTokens": null,
           "supported": false,
-          "reason": "The publisher supplies a Python browser driver. Its OpenCore action adapter has not been integrated."
+          "reason": "Publisher browser driver reference. The separate NEXI-S1 checkpoint is available in the catalog. OpenCore does not have a runtime for this driver."
         },
         {
           "id": "echo",

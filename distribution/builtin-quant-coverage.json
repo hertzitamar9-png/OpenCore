@@ -6061,7 +6061,7 @@
       "id": "publisher-nexi-cua",
       "label": "NEXI-CUA",
       "category": "computer-use",
-      "quantizations": 1,
+      "quantizations": 0,
       "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [

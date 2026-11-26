@@ -82,7 +82,8 @@ def append_requested(entries, manifest, snapshots):
                     variant = {'id': stable_id(repository, key), 'variantKey': key, 'repository': repository,
                         'revision': metadata['sha'], 'format': package['format'], 'quantization': package['quantization'],
                         'subdirectory': '', 'category': row['category'], 'files': pins, 'bytes': sum(pin['bytes'] for pin in pins),
-                        'installable': True, 'status': 'not-installed', 'sourceUrl': 'https://huggingface.co/' + repository,
+                        'installable': package['format'] != 'documentation',
+                        'status': 'not-installed', 'sourceUrl': 'https://huggingface.co/' + repository,
                         'gated': bool(metadata.get('gated')), 'runtime': {'adapter': None, 'available': False, 'inferenceVerified': False}}
                     if 'supportedContextTokens' in package:
                         variant['supportedContextTokens'] = package['supportedContextTokens']
@@ -262,7 +263,8 @@ def append_requested(entries, manifest, snapshots):
                     if source['computerRuntime'] == 'deskpaw-v1':
                         entry['runtime']['reason'] = 'The reviewed pointer head and isolated Windows CUDA runtime prepare automatically. A real screenshot-grounding prediction must pass before Ready. Executing the predicted click is a separate approved action.'
                     entry.pop('managedEngine', None)
-                validate_entry(entry)
+                if entry['installable']:
+                    validate_entry(entry)
                 entries.append(entry)
                 existing.add(entry['id'])
                 known.add(identity)
