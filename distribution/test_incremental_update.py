@@ -126,7 +126,11 @@ $bad=Join-Path {quoted(staged)} 'bad';[IO.File]::WriteAllText($bad,'wrong checks
 $rollback=@(@{{entry=$plan[0].entry;staged=$again}},@{{entry=$index.files[1];staged=$bad}})
 try{{Apply-VerifiedUpdate $rollback {quoted(staged)};throw 'Expected failed transaction'}}catch{{if($_.Exception.Message -eq 'Expected failed transaction'){{throw}}}}
 if((Get-UpdateHash $target) -ne $plan[0].entry.sha256){{throw 'Rollback lost the installed executable'}}
-foreach($path in @('app/../outside','app/models/personal.gguf','app/C:/other','python/../../outside')){{try{{Get-UpdateTarget $path;throw 'Path was accepted'}}catch{{if($_.Exception.Message -eq 'Path was accepted'){{throw}}}}}}
+foreach($path in @('app/../outside','app/models/personal.gguf','app/models/personal.py','app/C:/other','python/../../outside','app/runtime-setup/hf-extension/haru/models/../outside.py','app/runtime-setup/hf-extension/haru/models/personal.gguf')){{try{{Get-UpdateTarget $path;throw 'Path was accepted'}}catch{{if($_.Exception.Message -eq 'Path was accepted'){{throw}}}}}}
+foreach($package in @('budget3d-runtime/budget3d','budget3d-runtime/idol-sdk/idol','haru')){{
+    $path="app/runtime-setup/hf-extension/$package/models/__init__.py"
+    if(-not (Get-UpdateTarget $path).EndsWith('models\\__init__.py')){{throw 'Bundled model source was not resolved'}}
+}}
 Write-Output 'TRANSACTION_OK'
 """
             script=root/'test.ps1';script.write_text(code,encoding='utf-8-sig')

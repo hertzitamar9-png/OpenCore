@@ -3,7 +3,11 @@ $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression
 
 function Get-UpdatePath([string]$Relative){
-  if($Relative -notmatch '^(app|python)/[^:]+$' -or $Relative.Contains('\') -or $Relative -match '(^|/)(\.\.?|secrets|models|logs|backups)(/|$)'){throw 'Invalid packaged update path'}
+  if($Relative -notmatch '^(app|python)/[^:]+$' -or $Relative.Contains('\') -or $Relative -match '(^|/)(\.\.?|secrets|logs|backups)(/|$)'){throw 'Invalid packaged update path'}
+  if($Relative -match '(^|/)models(/|$)' -and
+     $Relative -notmatch '^app/runtime-setup/hf-extension/(budget3d-runtime/(budget3d|idol-sdk/idol)|haru)/models/([a-z0-9_-]+/)*[a-z0-9_-]+\.py$'){
+    throw 'Invalid packaged update path'
+  }
   $parts=$Relative.Split('/',2)
   $root=if($parts[0] -eq 'app'){$AppRoot}else{$PythonRoot}
   $root=[IO.Path]::GetFullPath($root).TrimEnd('\')
