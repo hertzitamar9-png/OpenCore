@@ -24,6 +24,19 @@ function nativeCatalog(catalog) {
   const artifactFields = new Set('id path repo revision filename sha256 bytes compatibleLocalSha256'.split(' '));
   const project = (row, fields) => Object.fromEntries(Object.entries(row).filter(([k]) => fields.has(k)));
   const models = catalog.models.map(model => project(model, modelFields));
+  const artifactsById = new Map(catalog.artifacts.map(artifact => [artifact.id, artifact]));
+  for (const model of models) {
+    const directory = model.runtimeModelPath;
+    if (model.backend !== 'managed-text' || !directory || model.preparedRuntime) continue;
+    const files = model.artifacts.map(id => artifactsById.get(id)?.path);
+    if (files.includes(directory)) continue;
+    if (!files.length || !files.every(file => file?.startsWith(directory + '/'))) {
+      throw new Error(`Unpinned managed model directory for ${model.id}`);
+    }
+    // Managed workers use the full catalogue. The older native manifest
+    // validates this field as an individual pinned file.
+    delete model.runtimeModelPath;
+  }
   const byId = new Map(models.map(model => [model.id, model]));
 
   // When a root's legacy name resolves to its own child, make that child the

@@ -12,6 +12,7 @@ function $hubTitle(entry){
 function $hubPublish(value) {
   if(value.connectorProfiles&&typeof $publishConnectorProfiles==='function'&&JSON.stringify(value.connectorProfiles.disconnected)!==JSON.stringify($connectorProfiles.disconnected))$publishConnectorProfiles(value.connectorProfiles);
   if(value.catalog){
+    globalThis.__opencoreManagedModelIds=new Set(value.catalog.map(entry=>entry.id));
     const local=value.catalog.filter(entry=>entry.profileId&&(entry.category||entry.libraryCategory||'text')==='text');
     globalThis.__opencoreHubEchoProfiles=new Set(local.filter(entry=>entry.operatingMode!=='native').map(entry=>entry.profileId));
     globalThis.__opencoreLocalProfiles=new Map(local.map(entry=>[entry.profileId,{label:$hubTitle(entry),

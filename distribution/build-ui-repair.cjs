@@ -65,6 +65,7 @@ index+='\nif(!globalThis.__OPENCORE_MOBILE__){const style=document.createElement
 index+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+entryCss('update-progress.css')+';document.head.appendChild($updateProgressStyle);\n';
 index+='\nconst $speechControlsStyle=document.createElement("style");$speechControlsStyle.textContent='+entryCss('speech-controls.css')+';document.head.appendChild($speechControlsStyle);\n';
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
+app=require('./model-sort-patch.cjs').patchModelSort(app);
 index=require('./conversation-indicator-patches.cjs').patchIndex(index,{editFunction,replaceOnce});
 app=require('./model-selection-patches.cjs')(app,{editFunction,replaceOnce});
 app=require('./conversation-indicator-patches.cjs')(app,{editFunction,replaceOnce});
@@ -75,14 +76,22 @@ app=replaceOnce(app,'t==="stopped"?"Stopped":t','t==="stopped"?"No model selecte
 app=replaceOnce(app,'Tn=t=>{var e,n,s;return','Tn=t=>{var e,n,s;return globalThis.__opencoreLocalProfiles?.get(t)?.label??');
 app=replaceOnce(app,'label:`${t.name} · ${e.id}`,description:`API provider · ${e.contextTokens.toLocaleString()} context tokens · ${e.status}`',
   'label:globalThis.__opencoreLocalProfiles?.get(e.profileId)?.label??`${t.name} · ${e.id}`,description:globalThis.__opencoreLocalProfiles?.get(e.profileId)?.description??`API provider · ${e.contextTokens.toLocaleString()} context tokens · ${e.status}`');
+app=replaceOnce(app,'t.models.filter(e=>e.enabled&&e.available&&',
+  't.models.filter(e=>!globalThis.__opencoreManagedModelIds?.has(e.id)&&e.enabled&&e.available&&');
 app=editFunction(app,'WO',text=>replaceOnce(text,'t.profile.startsWith("api:")','t.profile.startsWith("api:")&&!globalThis.__opencoreLocalProfiles?.has(t.profile)'));
 app=editFunction(app,'w8',text=>replaceOnce(text,'p.useEffect(()=>{!l||Pe.current',
   'p.useEffect(()=>{const resolved=event=>at(event.detail);window.addEventListener("opencore-profile-resolved",resolved);return()=>window.removeEventListener("opencore-profile-resolved",resolved)},[at]);p.useEffect(()=>{!l||Pe.current'));
 app=editFunction(app,'w8',text=>replaceOnce(text,'!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch',
   'v==="stopped"&&globalThis.__OPENCORE_PHONE__!==true||!l||Pe.current||["running","starting"].includes(l.runtime.status)||tb(v).catch'));
+app=replaceOnce(app,';++Na,an=e.models.filter(n=>n.installed&&n.selectable).map(Rp),oi.local=!1',
+  ';++Na,$refreshTextChoices(e),oi.local=!1');
 app=editFunction(app,'Gp',text=>replaceOnce(text,
   'f&&(an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])',
-  'f&&(globalThis.__opencoreInstallableTextModels=b.status==="fulfilled"?globalThis.__opencoreTextInstall.pick(b.value.models):[],globalThis.__opencoreUnreadyTextModels=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&!g.selectable&&["text","brain","omni"].includes(g.category)).map(g=>({id:g.id,label:g.label,precision:g.precision})):[],an=b.status==="fulfilled"?b.value.models.filter(g=>g.installed&&g.selectable).map(Rp):[])'));
+  'f&&$refreshTextChoices(b.status==="fulfilled"?b.value:null)'));
+app += '\nfunction $refreshTextChoices(library){const models=library?.models||[];'+
+  'globalThis.__opencoreInstallableTextModels=globalThis.__opencoreTextInstall.pick(models);'+
+  'globalThis.__opencoreUnreadyTextModels=models.filter(model=>model.installed&&!model.selectable&&["text","brain","omni"].includes(model.category));'+
+  'an=models.filter(model=>model.installed&&model.selectable).map(Rp);}\n';
 // Show the known local list while provider configuration loads; an unavailable
 // provider must not make every subsequent opening rescan otherwise-ready models.
 app=editFunction(app,'Gp',text=>replaceOnce(replaceOnce(text,
@@ -93,11 +102,19 @@ app=editFunction(app,'Gp',text=>replaceOnce(replaceOnce(text,
   'm.status==="fulfilled"?m.value.flatMap(Dp)','m.status==="fulfilled"&&Array.isArray(m.value)?m.value.flatMap(Dp)'),
   'provider:m.status==="rejected"','provider:m.status==="rejected"||!Array.isArray(m.value)'));
 app=editFunction(app,'Hp',text=>{
+  text=replaceOnce(text,'c=Up(a||[],t);',
+    '$localOnly=s==="statusbar-model-profile-options-text",c=Up($localOnly?(an||[]):(a||[]),t);');
+  text=replaceOnce(text,':null,l?i.jsx("p",', ':null,l&&!$localOnly?i.jsx("p",');
+  text=replaceOnce(text,'children:"Checking models and API providers…"',
+    'children:$localOnly?"Checking installed models…":"Checking models and API providers…"');
+  text=replaceOnce(text,'!o&&!l&&c.length===0?', '!o&&($localOnly||!l)&&c.length===0&&(!$localOnly||!(globalThis.__opencoreUnreadyTextModels||[]).length)?');
   text=replaceOnce(text,'Could not check API providers. Close and reopen to retry.',
     'Could not check API providers. Check API settings or restart OpenCore.');
   text=replaceOnce(text,'No downloaded text models or API providers. Download a local model in Models or add a provider in API.',
     'No ready text model or API provider. Download a model, or prepare a downloaded model in Models.');
-  text=replaceOnce(text,':null]},d))]})}',':null]},d)),globalThis.__opencoreTextInstall.options(i,n)]})}');
+  text=replaceOnce(text,'children:"No ready text model or API provider. Download a model, or prepare a downloaded model in Models."',
+    'children:$localOnly?"No installed text models. Manage models in Models.":"No ready text model or API provider. Download a model, or prepare a downloaded model in Models."');
+  text=replaceOnce(text,':null]},d))]})}',':null]},d)),$localOnly?null:globalThis.__opencoreTextInstall.options(i,n)]})}');
   return replaceOnce(text,'c.map(({id:d,label:u,description:b})=>',
     '(globalThis.__opencoreUnreadyTextModels||[]).map(d=>i.jsxs("button",{className:"model-picker-option",type:"button",disabled:n,onClick:()=>window.dispatchEvent(new Event("opencore-open-models")),children:[i.jsxs("span",{children:[i.jsx("strong",{children:d.label}),i.jsx("small",{children:"Downloaded · prepare runtime in Models"})]})]},"unready-"+d.id)),c.map(({id:d,label:u,description:b})=>');
 });
