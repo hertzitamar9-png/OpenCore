@@ -145,8 +145,8 @@ def build():
     from hf_catalog import echo_context_tokens
     publisher_echo_policy(entries,HERE/'hf-research',echo_context_tokens)
     apply_operating_modes(entries,snapshot_metadata(HERE/'hf-research'))
-    from hf_nanbeige_extreme import catalog_entry as extreme_catalog_entry
-    entries.append(validate_entry(extreme_catalog_entry()))
+    from hf_nanbeige_extreme import catalog_entry as extreme_catalog_entry, original_catalog_entry
+    entries.extend((validate_entry(extreme_catalog_entry()), validate_entry(original_catalog_entry())))
     entries.sort(key=lambda e: (e['familyId'], e.get('catalogOrder', 0), e['format'] != 'gguf', e['bytes'], e['id']))
     from speech_support import speech_support
     return {'schema': 1, 'entries': entries, 'speechSupport': speech_support(catalog, entries)}

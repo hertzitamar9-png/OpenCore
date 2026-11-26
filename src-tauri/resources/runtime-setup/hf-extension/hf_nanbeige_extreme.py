@@ -1,7 +1,4 @@
-"""Pinned local derivation and CUDA profile for Nanbeige Extreme.
-
-No arbitrary executable paths, remote model code, or lower-precision target.
-"""
+"""Pinned Q8 targets and CUDA profiles for Nanbeige Extreme."""
 import base64
 import hashlib
 import json
@@ -11,11 +8,19 @@ import shutil
 import time
 import uuid
 
+from hf_catalog import stable_id
+
 IDENTITY = "hf-6e616e626569676565787472"
 REVISION = "527d4a61bdbac641176cd1677d269c7eb4a50e72"
 REPO = "local/Nanbeige-Extreme"
+ORIGINAL_VARIANT = "local:nanbeige-extreme-original-q8"
+ORIGINAL_IDENTITY = stable_id(REPO, ORIGINAL_VARIANT)
+MODEL_IDS = frozenset((IDENTITY, ORIGINAL_IDENTITY))
 TARGET = "Nanbeige4.2-3B-SAT-Q8_0.gguf"
 DRAFT = "Nanbeige4.2-3B-DSpark-Q8_0.gguf"
+ORIGINAL_DRAFT = "Nanbeige4.2-3B-DSpark-Q4_K_M.gguf"
+ORIGINAL_DRAFT_SHA = "0353056c7bb2551af448fe491973b19e95be8a3cecf2ac727cc75644db0a2158"
+ORIGINAL_DRAFT_BYTES = 499718400
 ENGINE = "nanbeige-extreme-cuda12-v1"
 LIBS = "nanbeige-extreme-cuda12-libs-v1"
 STOCK_REPO = "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF"
@@ -53,8 +58,23 @@ def catalog_entry():
         memoryMode="echo",echoWorkingWindowTokens=8192,operatingMode="native",operatingModes=modes,modeAvailability=[dict(x,scope="text") for x in modes],
         runtimePreference="cuda")
 
+def original_catalog_entry():
+    target, draft = (source["files"][0] for source in original_sources())
+    # The local package revision identifies these two published artifacts.
+    revision = hashlib.sha256((target["sha256"] + draft["sha256"]).encode("ascii")).hexdigest()[:40]
+    files = [_pin(REPO, revision, pin["filename"], pin["bytes"], pin["sha256"], role)
+             for pin, role in ((target, "model"), (draft, "support"))]
+    label = "Nanbeige Extreme (Original Q8)"
+    return dict(catalog_entry(), id=ORIGINAL_IDENTITY, revision=revision, variantKey=ORIGINAL_VARIANT,
+        files=files, bytes=sum(pin["bytes"] for pin in files), familyId="local-nanbeige-extreme-original",
+        familyLabel=label, name=label, localDerived=False,
+        builtInDescription="Original Nanbeige4.2 Q8 checkpoint with DSpark acceleration.",
+        description="The original Q8 target checks draft tokens before accepting them. 8K context with NVIDIA CUDA.",
+        sourceUrl="https://huggingface.co/" + target["repository"])
+
+
 def check_entry(entry):
-    expected=catalog_entry()
+    expected=original_catalog_entry() if entry.get("id")==ORIGINAL_IDENTITY else catalog_entry()
     for key in ("id","repository","revision","files","bytes"):
         if entry.get(key)!=expected[key]:raise ValueError("Nanbeige Extreme package pin differs")
 
@@ -101,7 +121,6 @@ def reconstruct(source, target, pause):
     finally:temp.unlink(missing_ok=True)
 
 def _source_entry(repo,rev,name,size,digest):
-    from hf_catalog import stable_id
     return dict(id=stable_id(repo,"gguf:"+name),repository=repo,revision=rev,
                 format="gguf",subdirectory="",installable=True,bytes=size,
                 files=[_pin(repo,rev,name,size,digest,"model")])
@@ -110,15 +129,44 @@ def sources():
     return (_source_entry(STOCK_REPO,STOCK_REV,STOCK_NAME,STOCK_BYTES,STOCK_SHA),
             _source_entry(DRAFT_REPO,DRAFT_REV,DRAFT,DRAFT_BYTES,DRAFT_SHA))
 
+
+def original_sources():
+    from hf_continuum import catalog_entry as original_q8
+    return (original_q8(),
+            _source_entry(DRAFT_REPO, DRAFT_REV, ORIGINAL_DRAFT, ORIGINAL_DRAFT_BYTES, ORIGINAL_DRAFT_SHA))
+
+
+def _stage_verified(source, target, pin, pause, disk_reserve):
+    from hf_download import Downloader
+    staging = target.with_name(target.name + "." + uuid.uuid4().hex + ".tmp")
+    try:
+        try:
+            os.link(source, staging)
+        except OSError:
+            if shutil.disk_usage(target.parent).free < pin["bytes"] + disk_reserve:
+                raise ValueError("Additional disk space is needed to copy the verified checkpoint")
+            with source.open("rb") as incoming, staging.open("xb") as outgoing:
+                for block in iter(lambda: incoming.read(8 << 20), b""):
+                    Downloader._pause(pause)
+                    outgoing.write(block)
+        if staging.stat().st_size != pin["bytes"] or _digest(staging, pause) != pin["sha256"]:
+            raise ValueError("Nanbeige checkpoint checksum mismatch")
+        Downloader._pause(pause)
+        staging.replace(target)
+    finally:
+        staging.unlink(missing_ok=True)
+
+
 def install(entry,downloader,pause,report,parallel_ranges=True):
     from hf_download import atomic_json,managed_path,Downloader
     check_entry(entry)
     folder=downloader.directory(entry)
     folder.mkdir(parents=True,exist_ok=True)
     targets=[managed_path(folder,pin["filename"]) for pin in entry["files"]]
+    upstream_files = original_sources() if entry["id"] == ORIGINAL_IDENTITY else sources()
     with downloader.owned_targets(targets,pause,report):
         done=0
-        for pin,target,upstream in zip(entry["files"],targets,sources()):
+        for pin,target,upstream in zip(entry["files"],targets,upstream_files):
             if downloader._verify(target,pin,pause) is None:
                 def progress(v):
                     report({**v,"bytesDone":min(entry["bytes"],done+v.get("bytesDone",0)),
@@ -132,19 +180,11 @@ def install(entry,downloader,pause,report,parallel_ranges=True):
                     report(dict(stage="verifying",detail="Reconstructing the exact pinned Q8 derivative"))
                     reconstruct(source,target,pause)
                 else:
-                    tmp=target.with_name(target.name+"."+uuid.uuid4().hex+".tmp")
-                    try:
-                        try:os.link(source,tmp)
-                        except OSError:
-                            with source.open("rb") as a,tmp.open("xb") as b:
-                                for chunk in iter(lambda:a.read(8<<20),b""):
-                                    Downloader._pause(pause);b.write(chunk)
-                        if _digest(tmp,pause)!=DRAFT_SHA:raise ValueError("Draft checksum mismatch")
-                        tmp.replace(target)
-                    finally:tmp.unlink(missing_ok=True)
+                    report(dict(stage="verifying", detail="Verifying the staged Nanbeige checkpoint"))
+                    _stage_verified(source, target, pin, pause, downloader.disk_reserve)
             done+=pin["bytes"]
         receipt_path=managed_path(folder,"install-receipt.json")
-        receipt=dict(schema=1,id=IDENTITY,repository=REPO,revision=REVISION,bytes=entry["bytes"],
+        receipt=dict(schema=1,id=entry["id"],repository=REPO,revision=entry["revision"],bytes=entry["bytes"],
             files=[dict(pin,localPath=str(target),actualSha256=pin["sha256"]) for pin,target in zip(entry["files"],targets)],
             installedAt=time.time(),inferenceVerified=False,localDirectory=str(folder),receiptPath=str(receipt_path))
         Downloader._pause(pause)
@@ -165,10 +205,13 @@ def plan(entry,root,prefer_gpu=True,override=None):
     ctx=mode_context(entry)
     if ctx!=8192:raise ValueError("Nanbeige Extreme is verified at 8192 context tokens")
     mode=entry.get("operatingMode","native")
-    cmd=[str(executable(root,ENGINE)),"-m",str(folder/TARGET),"-a",IDENTITY,"-ngl","99","-fa","on",
+    original = entry["id"] == ORIGINAL_IDENTITY
+    target, draft = (folder / pin["filename"] for pin in entry["files"])
+    speculation = "draft-dspark" if original else "ngram-simple,draft-dspark"
+    cmd=[str(executable(root,ENGINE)),"-m",str(target),"-a",entry["id"],"-ngl","99","-fa","on",
          "-c",str(ctx),"-np","1","--host","127.0.0.1","--port","{port}","--api-key-file","{keyfile}",
-         "--no-webui","--no-cache-prompt","--cache-ram","0","--spec-type","ngram-simple,draft-dspark",
-         "-md",str(folder/DRAFT),"-ngld","99","--spec-draft-n-max","7","--spec-draft-p-min","0",
+         "--no-webui","--no-cache-prompt","--cache-ram","0","--spec-type",speculation,
+         "-md",str(draft),"-ngld","99","--spec-draft-n-max","7","--spec-draft-p-min","0",
          "--spec-ngram-simple-size-n","8","--spec-ngram-simple-size-m","48","-t","4","-tb","4",
          "--backend-sampling","--no-context-shift","--jinja","--offline","-lv","4","--fit","off"]
     return dict(command=cmd,context=ctx,operatingMode=mode,

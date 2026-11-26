@@ -11,6 +11,7 @@ import urllib.request
 import uuid
 import zipfile
 from contextlib import contextmanager
+from hf_nanbeige_extreme import ENGINE as NANBEIGE_ENGINE, MODEL_IDS as NANBEIGE_EXTREME_IDS
 
 HERE = Path(__file__).resolve().parent
 INKLING_GGUF = {
@@ -182,8 +183,8 @@ def runtime_lock(path):
 def engine_for(entry):
     if entry.get('format') != 'gguf':
         return None
-    if entry.get('id')=='hf-6e616e626569676565787472':
-        return 'nanbeige-extreme-cuda12-v1'
+    if entry.get('id') in NANBEIGE_EXTREME_IDS:
+        return NANBEIGE_ENGINE
     model_type = str(entry.get('modelType') or '').lower()
     repository = str(entry.get('repository') or '').lower()
     reviewed = INKLING_GGUF.get(repository)

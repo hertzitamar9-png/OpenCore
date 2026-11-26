@@ -20,6 +20,7 @@ if __name__ == '__main__':
     # -I workers resolve only these installed, app-owned sibling modules.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_modes import mode_context, supports_text_generation, NATIVE_TARGET, ECHO_TARGET
+from hf_nanbeige_extreme import MODEL_IDS as NANBEIGE_EXTREME_IDS
 
 
 def automatic_memory_request(payload):
@@ -227,7 +228,7 @@ def _bundled_cuda_available(server, resources):
 
 def runtime_plan(entry, root, resources, prefer_gpu=True, backend_override=None):
     root, resources = Path(root).resolve(), Path(resources).resolve()
-    if entry.get('id')=='hf-6e616e626569676565787472':
+    if entry.get('id') in NANBEIGE_EXTREME_IDS:
         from hf_nanbeige_extreme import plan
         return plan(entry,root,prefer_gpu,backend_override)
     if entry.get('id')=='hf-0a1ab2972368aa19f3cb9a62':

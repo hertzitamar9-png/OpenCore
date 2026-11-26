@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 614,
+  "families": 615,
   "withFive": 241,
   "models": [
     {
@@ -5193,6 +5193,17 @@
     {
       "id": "local-nanbeige-extreme",
       "label": "Nanbeige Extreme",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "local/Nanbeige-Extreme"
+      ]
+    },
+    {
+      "id": "local-nanbeige-extreme-original",
+      "label": "Nanbeige Extreme (Original Q8)",
       "category": "text",
       "quantizations": 1,
       "readyToInstallChoices": false,

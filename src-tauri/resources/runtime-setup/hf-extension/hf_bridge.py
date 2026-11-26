@@ -46,15 +46,15 @@ from model_modes import apply_operating_modes, supports_text_generation, mode_co
 from hf_download_queue import DownloadQueue
 from hf_speech import SpeechManager, supports as supports_speech
 from hf_tts import TtsManager, supports as supports_tts
+from hf_nanbeige_extreme import ENGINE as NANBEIGE_ENGINE, LIBS as NANBEIGE_LIBS, MODEL_IDS as NANBEIGE_EXTREME_IDS
 import hardware_profile
 
 
 def _engine_demand(entry, preparations, root):
     """Engine build folders an installed model needs, as runtime inventory ids."""
     needs = set()
-    if entry.get('id')=='hf-6e616e626569676565787472':
-        from hf_nanbeige_extreme import ENGINE, LIBS
-        return {'engine:'+ENGINE,'engine:'+LIBS}
+    if entry.get('id') in NANBEIGE_EXTREME_IDS:
+        return {'engine:' + NANBEIGE_ENGINE, 'engine:' + NANBEIGE_LIBS}
     for item in preparations:
         engine = item.get('engineId') if isinstance(item, dict) else None
         if isinstance(engine, str) and re.fullmatch(r'[a-z0-9.-]{1,64}', engine):
@@ -625,7 +625,7 @@ class BridgeState:
         return None
 
     def _download_entry(self, entry, pause, report, *, parallel_ranges=True):
-        if entry.get('id')=='hf-6e616e626569676565787472':
+        if entry.get('id') in NANBEIGE_EXTREME_IDS:
             from hf_nanbeige_extreme import install
             return install(entry,self.downloader,pause,report,parallel_ranges)
         if entry.get('nativeWeightProfile'):

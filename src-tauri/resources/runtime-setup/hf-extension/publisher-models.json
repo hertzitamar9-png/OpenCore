@@ -89262,6 +89262,107 @@
       "runtimePreference": "cuda"
     },
     {
+      "id": "hf-07f6d08270470c243c2e94c6",
+      "repository": "local/Nanbeige-Extreme",
+      "revision": "b3542e0b85612e6756fdcf0e8ca55e6c84477755",
+      "variantKey": "local:nanbeige-extreme-original-q8",
+      "format": "gguf",
+      "quantization": "Q8_0",
+      "subdirectory": "",
+      "category": "text",
+      "files": [
+        {
+          "repository": "local/Nanbeige-Extreme",
+          "revision": "b3542e0b85612e6756fdcf0e8ca55e6c84477755",
+          "filename": "Nanbeige4.2-3B-Q8_0.gguf",
+          "bytes": 4434787488,
+          "sha256": "384052dcd12a32834d952bfd2ac3ea8072c6b4306c2b25fd53e91df1662b96cb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "local/Nanbeige-Extreme",
+          "revision": "b3542e0b85612e6756fdcf0e8ca55e6c84477755",
+          "filename": "Nanbeige4.2-3B-DSpark-Q4_K_M.gguf",
+          "bytes": 499718400,
+          "sha256": "0353056c7bb2551af448fe491973b19e95be8a3cecf2ac727cc75644db0a2158",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "bytes": 4934505888,
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires NVIDIA CUDA; install and verify actual generation."
+      },
+      "familyId": "local-nanbeige-extreme-original",
+      "familyLabel": "Nanbeige Extreme (Original Q8)",
+      "name": "Nanbeige Extreme (Original Q8)",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "origin": "nanbeige-extreme",
+      "managedEngine": "nanbeige-extreme-cuda12-v1",
+      "modelType": "nanbeige",
+      "localDerived": false,
+      "builtInDescription": "Original Nanbeige4.2 Q8 checkpoint with DSpark acceleration.",
+      "description": "The original Q8 target checks draft tokens before accepting them. 8K context with NVIDIA CUDA.",
+      "originalRepository": "Nanbeige/Nanbeige4.2-3B",
+      "sourceUrl": "https://huggingface.co/nicolasembleton/Nanbeige4.2-3B-GGUF",
+      "license": "apache-2.0",
+      "supportsTextChat": true,
+      "supportsTextGeneration": true,
+      "outputsText": true,
+      "inputModalities": [
+        "text"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "contextTokens": 8192,
+      "supportedContextTokens": 8192,
+      "memoryMode": "echo",
+      "echoWorkingWindowTokens": 8192,
+      "operatingMode": "native",
+      "operatingModes": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 8192,
+          "supported": true
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 8192,
+          "supported": true
+        }
+      ],
+      "modeAvailability": [
+        {
+          "id": "native",
+          "targetContextTokens": 1048576,
+          "contextTokens": 8192,
+          "supported": true,
+          "scope": "text"
+        },
+        {
+          "id": "echo",
+          "targetContextTokens": 32768,
+          "contextTokens": 8192,
+          "supported": true,
+          "scope": "text"
+        }
+      ],
+      "runtimePreference": "cuda"
+    },
+    {
       "id": "hf-b558ae5f9f71a51a00377034",
       "repository": "169Pi/Alpie_Seed_GGUF",
       "revision": "cc6b82d39c66ea85de09f6f8c797c10a7af86ff2",

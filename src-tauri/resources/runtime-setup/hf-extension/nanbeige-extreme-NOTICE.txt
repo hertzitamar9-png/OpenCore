@@ -3,3 +3,7 @@ Source: https://huggingface.co/Nanbeige/Nanbeige4.2-3B
 Base GGUF: https://huggingface.co/bartowski/Nanbeige_Nanbeige4.2-3B-GGUF
 Draft: https://huggingface.co/Anbeeld/Nanbeige4.2-3B-DSpark-GGUF
 Changes: four Q8 output.weight rows calibrated on synthetic CNF labels; added one auxiliary GGUF metadata field. Exact local reconstruction uses nanbeige-extreme-patch.json. Other standard tensors remain unchanged. See nanbeige-extreme-LICENSE.txt.
+
+Nanbeige Extreme (Original Q8) uses the published Q8 GGUF as its target and a Q4_K_M DSpark draft.
+Original target GGUF: https://huggingface.co/nicolasembleton/Nanbeige4.2-3B-GGUF
+The target verifies each accepted draft token during speculative decoding.
