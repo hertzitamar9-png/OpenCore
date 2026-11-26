@@ -415,6 +415,27 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "OPENCORE_RELEASE_VERSION=$version" >> $env:GITHUB_ENV
           "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Prepare the Windows installer compiler
+        run: |
+          $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS/makensis.exe'
+          if (!(Test-Path -LiteralPath $nsis -PathType Leaf)) {
+            $archive = Join-Path $env:RUNNER_TEMP 'nsis-3.11.zip'
+            $url = 'https://downloads.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11.zip'
+            curl.exe --fail --location --retry 2 --connect-timeout 10 --max-time 30 --output $archive $url
+            if ($LASTEXITCODE -eq 0) {
+              $expected = 'C7D27F780DDB6CFFB4730138CD1591E841F4B7EDB155856901CDF5F214394FA1'
+              if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $expected) {
+                throw 'The NSIS 3.11 archive failed SHA-256 verification.'
+              }
+              Expand-Archive -LiteralPath $archive -DestinationPath $env:RUNNER_TEMP
+              $nsis = Join-Path $env:RUNNER_TEMP 'nsis-3.11/makensis.exe'
+            } else {
+              choco install nsis --version 3.11 --yes --no-progress
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
+          }
+          if (!(Test-Path -LiteralPath $nsis -PathType Leaf)) { throw 'makensis.exe is missing.' }
+          "OPENCORE_MAKENSIS=$nsis" >> $env:GITHUB_ENV
       - name: Apply the official OpenCore logo to browser-extension surfaces
         run: python distribution/sync-branding.py
       - name: Install runtime test dependencies
@@ -455,21 +476,11 @@ jobs:
         run: python distribution/android_release.py --output distribution/.output/release
       - name: Test installer update handoff and reopening
         run: |
-          $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS/makensis.exe'
-          if (!(Test-Path -LiteralPath $nsis)) {
-            choco install nsis --version 3.11 --yes --no-progress
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
-          python distribution/qa-update-installer.py --nsis $nsis
+          python distribution/qa-update-installer.py --nsis $env:OPENCORE_MAKENSIS
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build the complete app package with the official logo and runtime
         run: |
-          $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS/makensis.exe'
-          if (!(Test-Path -LiteralPath $nsis)) {
-            choco install nsis --version 3.11 --yes --no-progress
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
-          python distribution/package.py --app distribution/.output/inputs/app --python distribution/.output/inputs/app/test-python --output distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION --commit $env:GITHUB_SHA --icon src-tauri/icons/icon.ico --logo src-tauri/icons/icon.png --webview distribution/.output/inputs/MicrosoftEdgeWebview2Setup.exe --nsis $nsis
+          python distribution/package.py --app distribution/.output/inputs/app --python distribution/.output/inputs/app/test-python --output distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION --commit $env:GITHUB_SHA --icon src-tauri/icons/icon.ico --logo src-tauri/icons/icon.png --webview distribution/.output/inputs/MicrosoftEdgeWebview2Setup.exe --nsis $env:OPENCORE_MAKENSIS
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify an isolated install, the uninstall catalog and packaged dependencies
         run: |
@@ -509,8 +520,7 @@ jobs:
         run: |
           python -m unittest discover -s distribution -p test_incremental_update.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS/makensis.exe'
-          python distribution/qa-incremental-update.py --directory distribution/.output/release --nsis $nsis
+          python distribution/qa-incremental-update.py --directory distribution/.output/release --nsis $env:OPENCORE_MAKENSIS
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Retain the verified signed installer for independent publication retries
         uses: actions/upload-artifact@v4
@@ -525,7 +535,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: opencore-release-checks-${{ github.run_number }}
+          name: opencore-release-checks-${{ github.run_number }}-attempt-${{ github.run_attempt }}
           path: |
             distribution/.output/agent-engine-verification.json
             distribution/.output/update-controls.png
